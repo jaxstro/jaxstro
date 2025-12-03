@@ -1,0 +1,95 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jaxstro"
+version = "0.0.1"
+description = "Core utilities for the jaxstro differentiable astrophysics ecosystem (units, constants, helpers)."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "BSD-3-Clause" }
+authors = [
+  { name = "Anna Rosen", email = "your-email@example.com" }
+]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "License :: OSI Approved :: BSD License",
+  "Operating System :: OS Independent",
+]
+
+# Keep runtime deps minimal here; add more when core actually needs them.
+dependencies = [
+  "jax>=0.4.28",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "ruff",
+  "mypy",
+  "uv>=0.4",        # cli tool, optional; or you can keep it out and install globally
+]
+
+[project.urls]
+Homepage = "https://github.com/jaxstro/jaxstro"
+Source = "https://github.com/jaxstro/jaxstro"
+Issues = "https://github.com/jaxstro/jaxstro/issues"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# -----------------------
+# uv configuration
+# -----------------------
+# This is optional; uv will still work without it, but this makes intent explicit.
+[tool.uv]
+# Tell uv to treat this as the primary project
+default-groups = ["dev"]
+
+# -----------------------
+# Ruff configuration
+# -----------------------
+[tool.ruff]
+target-version = "py310"
+line-length = 88
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+# Start light; you can tighten later.
+select = ["E", "F", "I"]  # pyflakes, pycodestyle errors, isort
+ignore = [
+  "E203",  # whitespace before ':' (black compat)
+  "E501",  # line length – rely on formatter / your judgment
+]
+fix = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+# -----------------------
+# mypy configuration
+# -----------------------
+[tool.mypy]
+python_version = "3.10"
+mypy_path = ["src"]
+packages = ["jaxstro"]
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_unused_configs = true
+strict_optional = true
+# You can turn on full strictness later; this is a sane starting point.
+
+# -----------------------
+# pytest (optional but handy)
+# -----------------------
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-ra"
+testpaths = ["tests"]
+
