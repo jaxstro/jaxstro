@@ -122,3 +122,6 @@ def enable_high_precision() -> None:
     jax_config.update("jax_enable_x64", True)
     jax_config.update("jax_default_matmul_precision", "highest")
 
+
+__all__ = ["enable_high_precision"]
+

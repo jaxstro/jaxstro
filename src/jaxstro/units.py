@@ -203,3 +203,12 @@ ASTRO_PLANETARY = UnitSystem(
 
 # Default for generic astro work (you can override per package)
 DEFAULT = CGS
+
+__all__ = [
+    "UnitSystem",
+    "CGS",
+    "ASTRO_STELLAR",
+    "ASTRO_DYNAMICAL",
+    "ASTRO_PLANETARY",
+    "DEFAULT",
+]

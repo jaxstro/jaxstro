@@ -33,7 +33,7 @@ def safe_log(x: jnp.ndarray, eps: float = 1e-30) -> jnp.ndarray:
     ndarray
         log(clipped x).
     """
-    return jnp.log(jnp.clip(x, a_min=eps, a_max=None))
+    return jnp.log(jnp.clip(x, min=eps))
 
 
 @jax.jit
