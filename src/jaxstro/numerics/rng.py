@@ -9,6 +9,8 @@ randomness design.
 
 from typing import Tuple
 
+from functools import partial
+
 import jax
 import jax.numpy as jnp
 import jax.random as jrandom
@@ -18,7 +20,7 @@ from .types import Array
 KeyArray = Array  # For annotations; shape (..., 2) for PRNG keys.
 
 
-@jax.jit
+@partial(jax.jit, static_argnames=("num",))
 def split_key(key: KeyArray, num: int) -> KeyArray:
     """
     Split a key into `num` new keys.
