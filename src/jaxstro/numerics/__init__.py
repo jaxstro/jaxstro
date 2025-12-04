@@ -18,6 +18,8 @@ rootfinding
     Simple, JAX-friendly root-finding routines.
 integration
     Lightweight quadrature and cumulative integral helpers.
+checks
+    Numerical validation helpers (finiteness, monotonicity, ranges).
 linear_algebra
     Small linear algebra convenience utilities.
 rng
@@ -30,6 +32,7 @@ from . import stats
 from . import interpolation
 from . import rootfinding
 from . import integration
+from . import checks
 from . import linear_algebra
 from . import rng
 
@@ -41,6 +44,7 @@ __all__ = [
     "interpolation",
     "rootfinding",
     "integration",
+    "checks",
     "linear_algebra",
     "rng",
 ]
