@@ -133,20 +133,22 @@ parallax_mas = compute_parallax(distance_pc=100.0)  # → 10 mas
 
 Different astrophysical regimes have natural scales. Choose the right unit system to keep $G$ and other quantities $\mathcal{O}(1)$:
 
-| System | Mass | Length | Time | $G$ | Best for |
-|--------|------|--------|------|-----|----------|
-| `CGS` | g | cm | s | $6.674 \times 10^{-8}$ | Microphysics, EOS |
-| `ASTRO_STELLAR` | $M_\odot$ | $R_\odot$ | Myr | $\sim 2942$ | Stellar structure, SSE/BSE |
-| `ASTRO_DYNAMICAL` | $M_\odot$ | pc | Myr | $\sim 0.0045$ | Star clusters, $N$-body |
-| `ASTRO_PLANETARY` | $M_\odot$ | AU | yr | $\approx 4\pi^2$ | Exoplanets, close binaries |
+| System | Alias | Mass | Length | Time | $G$ | Best for |
+|--------|-------|------|--------|------|-----|----------|
+| `CGS` | — | g | cm | s | $6.674 \times 10^{-8}$ | Microphysics, EOS |
+| `ASTRO_STELLAR` | `STAR` | $M_\odot$ | $R_\odot$ | Myr | $\sim 2942$ | Individual stars (startrax, stellax) |
+| `ASTRO_DYNAMICAL` | `STELLAR` | $M_\odot$ | pc | Myr | $\sim 0.0045$ | Star clusters, $N$-body |
+| `ASTRO_PLANETARY` | `BINARY` | $M_\odot$ | AU | yr | $\approx 4\pi^2$ | Exoplanets, close binaries |
 
 ### Usage
 
 ```python
 from jaxstro import units as U
 
-# Pick a unit system
-us = U.ASTRO_DYNAMICAL  # (M⊙, pc, Myr)
+# Use short aliases
+us = U.STELLAR  # Star clusters (Msun, pc, Myr)
+us = U.STAR     # Individual stars (Msun, Rsun, Myr)
+us = U.BINARY   # Binary systems (Msun, AU, yr)
 
 # Convert to/from CGS
 m_cgs, r_cgs, t_cgs = us.to_cgs(mass=1.0, length=1.0, time=1.0)
