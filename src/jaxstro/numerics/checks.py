@@ -26,10 +26,10 @@ import jax.numpy as jnp
 
 from .types import Array
 
-
 # ---------------------------------------------------------------------------
 # Finiteness
 # ---------------------------------------------------------------------------
+
 
 @jax.jit
 def is_finite(x: Array) -> Array:
@@ -100,6 +100,7 @@ def assert_all_finite(x: Array, name: str = "x") -> None:
 # ---------------------------------------------------------------------------
 # Monotonicity
 # ---------------------------------------------------------------------------
+
 
 @partial(jax.jit, static_argnames=("strict",))
 def is_monotonic_increasing(x: Array, *, strict: bool = True) -> Array:
@@ -217,6 +218,7 @@ def assert_monotonic(
 # ---------------------------------------------------------------------------
 # Range checks
 # ---------------------------------------------------------------------------
+
 
 @partial(jax.jit, static_argnames=("inclusive",))
 def in_range(

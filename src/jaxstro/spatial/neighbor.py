@@ -47,7 +47,6 @@ from jaxtyping import Array, Bool, Float, Int
 
 from jaxstro.spatial.morton import MAX_BITS_3D, morton_decode_3d, morton_encode_3d
 
-
 # =============================================================================
 # Core Candidate Gathering: Fixed Stencil
 # =============================================================================
@@ -178,7 +177,9 @@ def gather_candidates_with_stencil(
     offs = jnp.arange(-half, half + 1, dtype=jnp.int32)  # shape: (stencil_width,)
 
     # Broadcast to get all stencil_width^3 combinations
-    nbx = jnp.clip(bx[:, None] + offs[None, :], 0, Nbins_per_dim - 1)  # [N, stencil_width]
+    nbx = jnp.clip(
+        bx[:, None] + offs[None, :], 0, Nbins_per_dim - 1
+    )  # [N, stencil_width]
     nby = jnp.clip(by[:, None] + offs[None, :], 0, Nbins_per_dim - 1)
     nbz = jnp.clip(bz[:, None] + offs[None, :], 0, Nbins_per_dim - 1)
 
@@ -223,7 +224,9 @@ def gather_candidates_with_stencil(
     _, top_per_bin = jax.lax.top_k(r2_for_topk, K_bin)  # [N, n_cells, K_bin]
 
     # Gather selected indices and masks
-    idx_per_bin = jnp.take_along_axis(members, top_per_bin, axis=2)  # [N, n_cells, K_bin]
+    idx_per_bin = jnp.take_along_axis(
+        members, top_per_bin, axis=2
+    )  # [N, n_cells, K_bin]
     mask_per_bin = jnp.take_along_axis(valid, top_per_bin, axis=2)
 
     # Flatten to [N, n_cells*K_bin]

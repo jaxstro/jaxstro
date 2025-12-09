@@ -26,25 +26,28 @@ def trapz(
     """
     y = jnp.asarray(y)
     if x is None:
-        dx = 1.0
-        slice1 = jnp.take(y, indices=range(y.shape[axis] - 1), axis=axis)
-        slice2 = jnp.take(y, indices=range(1, y.shape[axis]), axis=axis)
-        return 0.5 * dx * jnp.sum(slice1 + slice2, axis=axis)
+        idx_left = jnp.arange(0, y.shape[axis] - 1)
+        idx_right = jnp.arange(1, y.shape[axis])
+        slice1 = jnp.take(y, indices=idx_left, axis=axis)
+        slice2 = jnp.take(y, indices=idx_right, axis=axis)
+        return 0.5 * jnp.sum(slice1 + slice2, axis=axis)
     else:
         x = jnp.asarray(x)
         if x.ndim != 1:
             raise ValueError("x must be 1D if provided")
         if x.shape[0] != y.shape[axis]:
-            raise ValueError("x and y must have matching lengths along the integration axis")
+            raise ValueError(
+                "x and y must have matching lengths along the integration axis"
+            )
 
-        dx = jnp.diff(x)
+        dx_arr = jnp.diff(x)
         idx_left = jnp.arange(0, x.shape[0] - 1)
         idx_right = jnp.arange(1, x.shape[0])
 
         y_left = jnp.take(y, idx_left, axis=axis)
         y_right = jnp.take(y, idx_right, axis=axis)
 
-        integrand = 0.5 * (y_left + y_right) * dx
+        integrand = 0.5 * (y_left + y_right) * dx_arr
         return jnp.sum(integrand, axis=axis)
 
 
@@ -74,15 +77,17 @@ def cumulative_trapz(
         if x.ndim != 1:
             raise ValueError("x must be 1D if provided")
         if x.shape[0] != y.shape[axis]:
-            raise ValueError("x and y must have matching lengths along the integration axis")
-        dx = jnp.diff(x)
+            raise ValueError(
+                "x and y must have matching lengths along the integration axis"
+            )
+        dx_arr = jnp.diff(x)
 
         idx_left = jnp.arange(0, x.shape[0] - 1)
         idx_right = jnp.arange(1, x.shape[0])
 
         y_left = jnp.take(y, idx_left, axis=axis)
         y_right = jnp.take(y, idx_right, axis=axis)
-        contrib = 0.5 * (y_left + y_right) * dx
+        contrib = 0.5 * (y_left + y_right) * dx_arr
 
     cumsum = jnp.cumsum(contrib, axis=axis)
 
@@ -112,13 +117,15 @@ def simpson(
         raise ValueError("simpson requires an odd number of points >= 3")
 
     if x is None:
-        dx = 1.0
+        dx: Array = jnp.asarray(1.0)
     else:
         x = jnp.asarray(x)
         if x.ndim != 1:
             raise ValueError("x must be 1D if provided")
         if x.shape[0] != n:
-            raise ValueError("x and y must have matching lengths along the integration axis")
+            raise ValueError(
+                "x and y must have matching lengths along the integration axis"
+            )
         dx = (x[-1] - x[0]) / (n - 1)
 
     idx = jnp.arange(n)

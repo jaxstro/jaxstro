@@ -86,25 +86,21 @@ def compensated_sum_array(terms: jnp.ndarray) -> jnp.ndarray:
     if terms.ndim == 0:
         return terms
 
-    # Handle 1D case: sum scalars
-    if terms.ndim == 1:
-        def scan_fn(carry, y):
-            s, c = carry
-            s_new, c_new = neumaier_add(s, c, y)
-            return (s_new, c_new), None
-
-        init = (jnp.zeros((), dtype=terms.dtype), jnp.zeros((), dtype=terms.dtype))
-        (s_final, c_final), _ = lax.scan(scan_fn, init, terms)
-        return s_final + c_final
-
-    # Handle ND case: sum along axis 0
-    def scan_fn(carry, y):
+    # Scan function for compensated sum (works for any shape)
+    def _scan_fn(carry, y):
         s, c = carry
         s_new, c_new = neumaier_add(s, c, y)
         return (s_new, c_new), None
 
+    # Handle 1D case: sum scalars
+    if terms.ndim == 1:
+        init = (jnp.zeros((), dtype=terms.dtype), jnp.zeros((), dtype=terms.dtype))
+        (s_final, c_final), _ = lax.scan(_scan_fn, init, terms)
+        return s_final + c_final
+
+    # Handle ND case: sum along axis 0
     init = (jnp.zeros_like(terms[0]), jnp.zeros_like(terms[0]))
-    (s_final, c_final), _ = lax.scan(scan_fn, init, terms)
+    (s_final, c_final), _ = lax.scan(_scan_fn, init, terms)
     return s_final + c_final
 
 
@@ -169,7 +165,9 @@ def compensated_vector_sum(vectors: jnp.ndarray) -> jnp.ndarray:
     >>> compensated_vector_sum(vecs)  # Returns [2.0, 2.0]
     """
     if vectors.ndim != 2:
-        raise ValueError(f"compensated_vector_sum expects (N, D) array, got shape {vectors.shape}")
+        raise ValueError(
+            f"compensated_vector_sum expects (N, D) array, got shape {vectors.shape}"
+        )
 
     # Use lax.scan over the N dimension
     def scan_fn(carry, vec):
@@ -205,7 +203,9 @@ def compensated_dot(a: jnp.ndarray, b: jnp.ndarray) -> jnp.ndarray:
     >>> compensated_dot(a, b)  # Returns 1.0, not 0.0
     """
     if a.shape != b.shape:
-        raise ValueError(f"compensated_dot expects same-shaped vectors, got {a.shape} and {b.shape}")
+        raise ValueError(
+            f"compensated_dot expects same-shaped vectors, got {a.shape} and {b.shape}"
+        )
     if a.ndim != 1:
         raise ValueError(f"compensated_dot expects 1D vectors, got ndim={a.ndim}")
 

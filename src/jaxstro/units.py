@@ -107,8 +107,11 @@ class UnitSystem:
         >>> ASTRO_PLANETARY.G  # ~39.48 AU³ Msun⁻¹ yr⁻² (≈ 4π²)
         >>> CGS.G              # 6.67430e-8 cm³ g⁻¹ s⁻²
         """
-        return C.G_CGS * self.mass_scale_cgs * (self.time_scale_cgs ** 2) / (
-            self.length_scale_cgs ** 3
+        return (
+            C.G_CGS
+            * self.mass_scale_cgs
+            * (self.time_scale_cgs**2)
+            / (self.length_scale_cgs**3)
         )
 
     def convert_length(self, value: float, *, to: "UnitSystem") -> float:
@@ -308,8 +311,8 @@ DEFAULT = ASTRO_DYNAMICAL
 # ---------------------------------------------------------------------------
 
 STELLAR = ASTRO_DYNAMICAL  # Star clusters: Msun, pc, Myr
-BINARY = ASTRO_PLANETARY   # Binary stars: Msun, AU, yr
-SOLAR = ASTRO_STELLAR      # Stellar structure: Msun, Rsun, Myr
+BINARY = ASTRO_PLANETARY  # Binary stars: Msun, AU, yr
+SOLAR = ASTRO_STELLAR  # Stellar structure: Msun, Rsun, Myr
 PLANETARY = ASTRO_PLANETARY  # Alias for BINARY
 
 # ---------------------------------------------------------------------------

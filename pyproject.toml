@@ -59,6 +59,7 @@ default-groups = ["dev"]
 target-version = "py310"
 line-length = 88
 src = ["src", "tests"]
+fix = true
 
 [tool.ruff.lint]
 # Start light; you can tighten later.
@@ -66,8 +67,10 @@ select = ["E", "F", "I"]  # pyflakes, pycodestyle errors, isort
 ignore = [
   "E203",  # whitespace before ':' (black compat)
   "E501",  # line length – rely on formatter / your judgment
+  "E741",  # ambiguous variable name (l is standard for galactic longitude)
+  "F722",  # syntax error in forward annotation (jaxtyping uses "N 3" patterns)
+  "F821",  # undefined name (jaxtyping pattern variables like N, Array)
 ]
-fix = true
 
 [tool.ruff.format]
 quote-style = "double"

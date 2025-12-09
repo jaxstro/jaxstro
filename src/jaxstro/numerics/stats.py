@@ -12,8 +12,8 @@ MCX or your preferred stack.
 from typing import Optional
 
 import jax
-import jax.numpy as jnp
 import jax.nn as jnn
+import jax.numpy as jnp
 
 
 @jax.jit
@@ -88,7 +88,7 @@ def gaussian_logpdf(
     ndarray
         log p(x | mu, sigma).
     """
-    var = sigma ** 2
+    var = sigma**2
     norm_const = -0.5 * jnp.log(2.0 * jnp.pi * var)
     return norm_const - 0.5 * (x - mu) ** 2 / var
 

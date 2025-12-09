@@ -1,45 +1,54 @@
 # jaxstro
 
-Core utilities for the **jaxstro** differentiable astrophysics ecosystem.
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![JAX](https://img.shields.io/badge/JAX-0.4.28+-green.svg)](https://github.com/google/jax)
+[![License](https://img.shields.io/badge/license-BSD--3--Clause-lightgrey.svg)](LICENSE)
 
-`jaxstro` is a shared library that provides:
+**Core utilities for differentiable astrophysics in JAX.**
 
-- Physical **constants** and **unit systems** compatible with JAX
-- **Coordinate transformations** (sky-tangent, galactic, spherical, astrometry)
-- **Spatial algorithms** (Morton encoding, grid binning, neighbor queries)
-- Lightweight **numerical helpers** that work cleanly with `jax.jit`, `vmap`, and `grad`
+> 🔬 Compute gradients through your simulations for Bayesian inference,
+> parameter optimization, and machine learning applications.
 
 ---
 
-## Overview
+## ✨ Features
+
+- 🌟 **Physical constants** — CODATA 2018 values in CGS units
+- 📐 **Unit systems** — Seamless conversion between stellar, dynamical, and planetary scales
+- 🌍 **Coordinate transforms** — Sky projections, galactic/equatorial, parallax, proper motions
+- 🔢 **Numerical helpers** — Root-finding, interpolation, compensated summation
+- 📦 **Spatial algorithms** — Morton encoding, grid binning, neighbor queries
+
+Everything works with `jax.jit`, `jax.vmap`, and `jax.grad`.
+
+---
+
+## 🏗️ Ecosystem
 
 `jaxstro` is the foundation layer for a family of JAX-native astrophysics packages:
 
-| Package | Description |
-|---------|-------------|
-| **gravax** | N-body dynamics and star cluster evolution |
-| **startrax** | Rapid single/binary stellar evolution (SSE/BSE fits) |
-| **stellax** | 1D stellar evolution (MESA-like, inference-ready) |
-| **nucleax** | Microphysics: EOS, nuclear networks, opacities |
-| **nebulax** | Hydro/MHD and ISM physics |
-| **radax** | Radiative transfer and ray tracing |
-| **fluxax** | Synthetic observables and survey rendering |
-| **progenax** | Initial conditions and population synthesis |
+| Package | Description | Status |
+|---------|-------------|--------|
+| [**gravax**](https://github.com/jaxstro/gravax) | $N$-body dynamics and star cluster evolution | 🚧 Active |
+| **progenax** | Initial conditions and population synthesis | 🚧 Active |
+| **fluxax** | Synthetic observables and survey rendering | 🚧 Active |
+| **stellax** | 1D stellar structure (MESA-like) | 📋 Planned |
+| **startrax** | Rapid stellar evolution (SSE/BSE fits) | 📋 Planned |
 
 ### Design Principles
 
-1. **Infrastructure only** - No domain-specific models; just shared building blocks
-2. **JAX-first** - Everything works with `jit`, `vmap`, and `grad`
-3. **Minimal dependencies** - Only JAX and Python standard library
-4. **One-way arrows** - Higher-level packages depend on jaxstro, not the reverse
+1. **Infrastructure only** — No domain-specific physics; just shared building blocks
+2. **JAX-first** — Full compatibility with `jit`, `vmap`, and `grad`
+3. **Minimal dependencies** — Only JAX and `jaxtyping`
+4. **One-way arrows** — Higher-level packages depend on jaxstro, not the reverse
 
 ---
 
-## Installation
+## 📦 Installation
 
-**Python 3.10+** and **JAX >= 0.4.28** required.
+**Requirements:** Python 3.10+ and JAX $\geq$ 0.4.28
 
-### From source (current)
+### From source
 
 ```bash
 git clone https://github.com/jaxstro/jaxstro.git
@@ -52,46 +61,42 @@ uv pip install -e ".[dev]"
 pip install -e ".[dev]"
 ```
 
-### Future PyPI
+### PyPI (coming soon)
 
 ```bash
 pip install jaxstro
-# or: uv pip install jaxstro
 ```
 
 ---
 
-## Quick Start
+## 🚀 Quick Start
 
 ### Enable float64 precision
 
-Call this before importing other JAX modules:
+Call this **before** importing other JAX modules. This is the standard approach across the jaxstro ecosystem - high precision is configured before any JAX arrays are created:
 
 ```python
 from jaxstro.jaxconfig import enable_high_precision
-enable_high_precision()  # Sets jax_enable_x64=True
+enable_high_precision()  # Sets jax_enable_x64=True, matmul_precision="highest"
 ```
 
-### Use constants and units
+**Note:** Higher-level packages (gravax, progenax, etc.) call this automatically at import time, so you typically don't need to call it yourself.
+
+### Constants and units
 
 ```python
 import jax.numpy as jnp
 from jaxstro import constants as C, units as U
 
 # Solar mass and radius in CGS
-M = 1.0 * C.MSUN_G     # 1.9884e33 g
-R = 1.0 * C.RSUN_CM    # 6.957e10 cm
+M = 1.0 * C.MSUN_G     # 1.9884×10³³ g
+R = 1.0 * C.RSUN_CM    # 6.957×10¹⁰ cm
 
-# Escape velocity
+# Escape velocity: v_esc = √(2GM/R)
 v_esc = jnp.sqrt(2.0 * C.G_CGS * M / R)
 
-# Use a unit system
-stellar = U.ASTRO_STELLAR  # (Msun, Rsun, Myr)
-m_cgs, r_cgs, t_cgs = stellar.to_cgs(1.0, 1.0, 1.0)
-
 # Get G in any unit system
-G_dynamical = U.ASTRO_DYNAMICAL.G  # ~0.00450 pc³ Msun⁻¹ Myr⁻²
-G_planetary = U.ASTRO_PLANETARY.G  # ~39.48 AU³ Msun⁻¹ yr⁻² (≈ 4π²)
+G = U.ASTRO_DYNAMICAL.G  # ≈ 0.00450 pc³ M⊙⁻¹ Myr⁻²
 ```
 
 ### Coordinate transforms
@@ -99,37 +104,118 @@ G_planetary = U.ASTRO_PLANETARY.G  # ~39.48 AU³ Msun⁻¹ yr⁻² (≈ 4π²)
 ```python
 from jaxstro.coords import sky_tangent, galactic_to_equatorial, compute_parallax
 
-# Project cluster positions to sky coordinates
+# Project 3D positions to (RA, Dec)
 positions_pc = jnp.array([[1.0, 0.5, -0.2], [0.0, 1.0, 0.3]])
 ra_dec = sky_tangent(positions_pc, distance_pc=1000.0, ra_center_deg=180.0)
 
-# Convert galactic to equatorial
-l_deg, b_deg = 45.0, 30.0
-ra, dec = galactic_to_equatorial(l_deg, b_deg)
+# Galactic → Equatorial
+l, b = 45.0, 30.0  # degrees
+ra, dec = galactic_to_equatorial(l, b)
 
-# Compute parallax from distance
-parallax_mas = compute_parallax(distance_pc=100.0)  # 10 mas
+# Distance → Parallax
+parallax_mas = compute_parallax(distance_pc=100.0)  # → 10 mas
 ```
 
-### Spatial binning and neighbor queries
+---
+
+## 📐 Unit Systems
+
+Different astrophysical regimes have natural scales. Choose the right unit system to keep $G$ and other quantities $\mathcal{O}(1)$:
+
+| System | Mass | Length | Time | $G$ | Best for |
+|--------|------|--------|------|-----|----------|
+| `CGS` | g | cm | s | $6.67 \times 10^{-8}$ | Microphysics, EOS |
+| `ASTRO_STELLAR` | $M_\odot$ | $R_\odot$ | Myr | 2942.2 | Stellar interiors, binary evolution |
+| `ASTRO_DYNAMICAL` | $M_\odot$ | pc | Myr | 0.00450 | Star clusters, galaxies, $N$-body |
+| `ASTRO_PLANETARY` | $M_\odot$ | AU | yr | $39.48 \approx 4\pi^2$ | Planetary systems, Kepler's laws |
+
+### Usage
+
+```python
+from jaxstro import units as U
+
+# Pick a unit system
+us = U.ASTRO_DYNAMICAL  # (M⊙, pc, Myr)
+
+# Convert to/from CGS
+m_cgs, r_cgs, t_cgs = us.to_cgs(mass=1.0, length=1.0, time=1.0)
+m, r, t = us.from_cgs(m_cgs, r_cgs, t_cgs)
+
+# Access G in this system
+G = us.G  # 0.00449... pc³ M⊙⁻¹ Myr⁻²
+
+# Velocity scale
+v_kms = us.velocity_scale_km_s  # ~0.978 km/s per (pc/Myr)
+```
+
+**Why this matters:** In `ASTRO_PLANETARY` units, Kepler's third law simplifies to $P^2 = a^3$ (for $M = 1\,M_\odot$) because $G \approx 4\pi^2$.
+
+---
+
+## 🔢 Numerical Utilities
+
+### Safe math (no NaN/inf surprises)
+
+```python
+from jaxstro.numerics import stats
+
+stats.safe_log(x, eps=1e-30)      # log with floor
+stats.safe_exp(x, max_exp=100.0)  # exp with ceiling
+stats.safe_div(a, b)              # division with ε
+```
+
+### Root-finding (fully differentiable)
+
+All solvers use `lax.scan` with fixed iterations — compatible with `jit`, `vmap`, `grad`:
+
+```python
+from jaxstro.numerics import rootfinding
+
+# Find √2 via bisection
+root = rootfinding.bisect(lambda x: x**2 - 2.0, a=1.0, b=2.0)
+
+# Newton's method (auto-differentiated)
+root = rootfinding.newton(lambda x: x**2 - 2.0, x0=1.5)
+```
+
+### Compensated summation
+
+Reduce floating-point error when summing many terms:
+
+```python
+from jaxstro.numerics.compensated import compensated_sum_array
+
+# Standard sum loses precision
+terms = jnp.array([1e16, 1.0, -1e16, 1.0])
+jnp.sum(terms)  # → 0.0 (wrong!)
+
+# Compensated sum preserves it
+compensated_sum_array(terms)  # → 2.0 (correct)
+```
+
+---
+
+## 📦 Spatial Algorithms
+
+Efficient spatial data structures for particle simulations:
 
 ```python
 import jax
 import jax.numpy as jnp
 from jaxstro.spatial import assign_particles_to_bins, fill_bins, approx_knn_candidates
 
-# Random particle positions
+# Random particle positions in [-2, 2]³
 key = jax.random.PRNGKey(42)
-pos = jax.random.uniform(key, (1000, 3)) * 4.0 - 2.0  # [-2, 2]³
+pos = jax.random.uniform(key, (1000, 3)) * 4.0 - 2.0
 
-# Assign to spatial bins (Morton-ordered)
+# Assign to Morton-ordered spatial bins
 bin_of = assign_particles_to_bins(pos, L_box=4.0, Nbins_per_dim=16)
 
-# Fill bin arrays with overflow handling
+# Fill bin arrays (with overflow handling)
 particle_ids = jnp.arange(1000, dtype=jnp.int32)
 bin_members, bin_mask = fill_bins(particle_ids, bin_of, Nbins=16**3, Bcap=32)
 
-# Get approximate neighbor candidates (add sentinel for safe indexing)
+# Get approximate neighbor candidates
 pos_sentinel = jnp.concatenate([pos, jnp.zeros((1, 3))], axis=0)
 cand_idx, cand_mask = approx_knn_candidates(
     pos_sentinel, bin_members, bin_mask, bin_of,
@@ -137,261 +223,107 @@ cand_idx, cand_mask = approx_knn_candidates(
 )
 ```
 
-### Basic numerics
-
-```python
-from jaxstro.numerics import stats, rootfinding
-
-# Safe log (no -inf)
-x = jnp.array([1e-30, 1.0, 10.0])
-y = stats.safe_log(x)
-
-# Root finding (works with jit, vmap, grad)
-root = rootfinding.bisect(lambda x: x**2 - 2.0, 1.0, 2.0)  # √2
-```
-
 ---
 
-## API Reference
+## 📚 API Reference
 
-### `jaxstro.constants`
-
-Physical constants in CGS units.
+<details>
+<summary><b>jaxstro.constants</b> — Physical constants (CGS)</summary>
 
 | Constant | Value | Description |
 |----------|-------|-------------|
-| `G_CGS` | 6.67430e-8 | Gravitational constant [cm³ g⁻¹ s⁻²] |
-| `C_CGS` | 2.99792458e10 | Speed of light [cm/s] |
-| `K_B` | 1.380649e-16 | Boltzmann constant [erg/K] |
-| `SIGMA_SB` | 5.670374e-5 | Stefan-Boltzmann [erg cm⁻² s⁻¹ K⁻⁴] |
-| `MSUN_G` | 1.9884e33 | Solar mass [g] |
-| `RSUN_CM` | 6.957e10 | Solar radius [cm] |
-| `LSUN_ERG_S` | 3.828e33 | Solar luminosity [erg/s] |
-| `TEFF_SUN` | 5772.0 | Solar effective temperature [K] |
-| `X_SUN`, `Y_SUN`, `Z_SUN` | 0.738, 0.249, 0.013 | Solar composition |
-| `PC_CM` | 3.086e18 | Parsec [cm] |
-| `AU_CM` | 1.496e13 | Astronomical unit [cm] |
-| `MYR_S`, `YR_S` | 3.156e13, 3.156e7 | Time conversions [s] |
+| `G_CGS` | $6.674 \times 10^{-8}$ | Gravitational constant [cm³ g⁻¹ s⁻²] |
+| `C_CGS` | $2.998 \times 10^{10}$ | Speed of light [cm/s] |
+| `K_B` | $1.381 \times 10^{-16}$ | Boltzmann constant [erg/K] |
+| `SIGMA_SB` | $5.670 \times 10^{-5}$ | Stefan-Boltzmann [erg cm⁻² s⁻¹ K⁻⁴] |
+| `MSUN_G` | $1.988 \times 10^{33}$ | Solar mass [g] |
+| `RSUN_CM` | $6.957 \times 10^{10}$ | Solar radius [cm] |
+| `LSUN_ERG_S` | $3.828 \times 10^{33}$ | Solar luminosity [erg/s] |
+| `PC_CM` | $3.086 \times 10^{18}$ | Parsec [cm] |
+| `AU_CM` | $1.496 \times 10^{13}$ | Astronomical unit [cm] |
 
-### `jaxstro.units`
+</details>
 
-Unit systems for different astrophysical regimes.
-
-```python
-from jaxstro import units as U
-
-# Available systems
-U.CGS              # (g, cm, s)
-U.ASTRO_STELLAR    # (Msun, Rsun, Myr)
-U.ASTRO_DYNAMICAL  # (Msun, pc, Myr)
-U.ASTRO_PLANETARY  # (Msun, AU, yr)
-
-# UnitSystem methods and properties
-us = U.ASTRO_STELLAR
-m_cgs, r_cgs, t_cgs = us.to_cgs(mass, length, time)
-m, r, t = us.from_cgs(m_cgs, r_cgs, t_cgs)
-v_kms = us.velocity_scale_km_s
-G = us.G  # Gravitational constant in this unit system
-
-# Convert between systems
-length_pc = U.ASTRO_DYNAMICAL.convert_length(1.0, to=U.CGS)  # 1 pc -> cm
-```
-
-### `jaxstro.coords`
-
-Coordinate transformations (all JAX-native and differentiable).
+<details>
+<summary><b>jaxstro.coords</b> — Coordinate transforms</summary>
 
 ```python
 from jaxstro.coords import (
-    sky_tangent,           # 3D positions -> (RA, Dec)
-    galactic_to_equatorial,  # (l, b) -> (RA, Dec)
-    equatorial_to_galactic,  # (RA, Dec) -> (l, b)
-    cartesian_to_spherical,  # (x, y, z) -> (r, theta, phi)
-    spherical_to_cartesian,  # (r, theta, phi) -> (x, y, z)
-    compute_parallax,        # distance [pc] -> parallax [mas]
-    compute_proper_motions,  # 3D velocity -> (μ_α*, μ_δ) [mas/yr]
+    sky_tangent,             # 3D positions → (RA, Dec)
+    galactic_to_equatorial,  # (l, b) → (RA, Dec)
+    equatorial_to_galactic,  # (RA, Dec) → (l, b)
+    cartesian_to_spherical,  # (x, y, z) → (r, θ, φ)
+    spherical_to_cartesian,  # (r, θ, φ) → (x, y, z)
+    compute_parallax,        # distance [pc] → parallax [mas]
+    compute_proper_motions,  # 3D velocity → (μ_α*, μ_δ) [mas/yr]
 )
 ```
 
-### `jaxstro.spatial`
+</details>
 
-Spatial algorithms for particle simulations.
+<details>
+<summary><b>jaxstro.spatial</b> — Spatial algorithms</summary>
 
 ```python
 from jaxstro.spatial import (
     # Morton (Z-order) encoding
-    morton_encode_3d,      # 3D coords -> 1D Morton code
-    morton_decode_3d,      # Morton code -> (x, y, z)
-    wyhash32,              # Fast 32-bit hash
+    morton_encode_3d,       # 3D coords → 1D Morton code
+    morton_decode_3d,       # Morton code → (x, y, z)
 
     # Grid binning
-    assign_particles_to_bins,  # positions -> bin IDs
+    assign_particles_to_bins,  # positions → bin IDs
     fill_bins,                 # bin arrays with overflow handling
 
     # Neighbor queries
-    gather_candidates_from_bins,    # 27-cell stencil
-    gather_candidates_with_stencil, # configurable stencil
-    gather_candidates_two_stencil,  # adaptive coarse/dense
-    approx_knn_candidates,          # high-level API
+    approx_knn_candidates,     # high-level API
 )
 ```
 
-### `jaxstro.astrometry`
+</details>
 
-Astrometric constants and angular conversions.
+<details>
+<summary><b>jaxstro.numerics</b> — Numerical utilities</summary>
 
-```python
-from jaxstro.astrometry import K_PROPER_MOTION, MAS_PER_RAD
+- `stats` — `safe_log`, `safe_exp`, `safe_div`, `logsumexp`
+- `rootfinding` — `bisect`, `newton`, `newton_with_grad`
+- `interpolation` — `interp1d`, `TabulatedFunction1D`
+- `integration` — `trapz`, `cumulative_trapz`, `simpson`
+- `checks` — `all_finite`, `is_monotonic`, `in_range`
+- `compensated` — Neumaier summation for reduced FP error
+- `linear_algebra` — `norm2`, `project_onto`, `condition_number`
 
-# Convert proper motion to velocity
-# mu [mas/yr] at distance d [kpc] -> v [km/s]
-v_kms = mu_mas_yr * K_PROPER_MOTION * d_kpc  # K = 4.74047
-```
-
-### `jaxstro.jaxconfig`
-
-JAX configuration helpers.
-
-```python
-from jaxstro.jaxconfig import enable_high_precision
-enable_high_precision()  # jax_enable_x64=True, matmul_precision="highest"
-```
-
-### `jaxstro.numerics`
-
-Numerical utilities organized by submodule.
-
-#### `numerics.stats`
-
-```python
-from jaxstro.numerics import stats
-
-stats.safe_log(x, eps=1e-30)           # log with floor
-stats.safe_exp(x, max_exp=100.0)       # exp with ceiling
-stats.safe_div(a, b, epsilon=1e-100)   # division with epsilon
-stats.logsumexp(x, axis=None)          # stable log-sum-exp
-stats.gaussian_logpdf(x, mu, sigma)    # normal log-PDF
-stats.relative_error(x_new, x_old)     # |x_new - x_old| / |x_old|
-stats.check_convergence(x_new, x_old, tol=1e-6)  # bool
-```
-
-#### `numerics.interpolation`
-
-```python
-from jaxstro.numerics import interpolation
-
-# Linear interpolation
-y_new = interpolation.interp1d(x, y, x_new)
-
-# Pytree-compatible tabulated function
-table = interpolation.TabulatedFunction1D(x, y)
-y_eval = table(x_query)
-```
-
-#### `numerics.rootfinding`
-
-All solvers use `lax.scan` with fixed iteration count for full `jit`/`vmap`/`grad` compatibility.
-
-```python
-from jaxstro.numerics import rootfinding
-
-# Bisection (bracketed)
-root = rootfinding.bisect(f, a, b, max_steps=50)
-
-# Newton with automatic derivative
-root = rootfinding.newton(f, x0, max_steps=30)
-
-# Newton with user-provided derivative
-root = rootfinding.newton_with_grad(f, df, x0, max_steps=30)
-```
-
-#### `numerics.integration`
-
-```python
-from jaxstro.numerics import integration
-
-integration.trapz(y, x=None, axis=-1)           # trapezoidal rule
-integration.cumulative_trapz(y, x=None)         # cumulative integral
-integration.simpson(y, x=None, axis=-1)         # Simpson's rule
-```
-
-#### `numerics.checks`
-
-Numerical validation helpers. Pure predicates (`is_*`, `all_*`) are JIT-compatible; `assert_*` functions are for eager code and tests.
-
-```python
-from jaxstro.numerics import checks
-
-# JIT-compatible predicates
-checks.all_finite(x)                    # no NaN/inf
-checks.is_monotonic_increasing(x)       # strictly increasing
-checks.is_monotonic_decreasing(x)       # strictly decreasing
-checks.in_range(x, lo=0.0, hi=1.0)      # elementwise range check
-checks.all_positive(x)                  # all > 0
-checks.all_non_negative(x)              # all >= 0
-
-# Eager assertions (for tests/debug)
-checks.assert_all_finite(x, name="density")
-checks.assert_monotonic(x, strict=True, decreasing=False)
-checks.assert_in_range(x, lo=0.0, hi=1.0)
-```
-
-#### `numerics.compensated`
-
-Compensated summation for reduced floating-point error.
-
-```python
-from jaxstro.numerics import compensated
-
-compensated.neumaier_add(s, c, y)       # single update step
-compensated.compensated_sum(*arrays)    # sum with compensation
-compensated.compensated_dot(a, b)       # dot product
-```
-
-#### `numerics.linear_algebra`
-
-```python
-from jaxstro.numerics import linear_algebra as la
-
-la.norm2(x, axis=None)                  # Euclidean norm
-la.project_onto(a, b, axis=-1)          # vector projection
-la.condition_number(A)                  # 2-norm condition number
-```
-
-#### `numerics.rng`
-
-PRNG key management helpers.
-
-```python
-from jaxstro.numerics import rng
-
-keys = rng.split_key(key, num=4)                 # split into N keys
-keys = rng.split_tree(key, shape=(3, 4))         # reshape split
-keys = rng.fold_in_indices(key, indices)         # fold indices
-```
+</details>
 
 ---
 
-## Project Status
+## 👩‍🔬 Author
 
-**Version 0.1.0** - First development release. The core API is stabilizing but may still evolve.
+**Anna Rosen** — Lead developer
+
+- 📧 [alrosen@sdsu.edu](mailto:alrosen@sdsu.edu)
+- 🏛️ San Diego State University
 
 ---
 
-## Contributing
+## 📊 Project Status
 
-Contributions welcome, especially around:
+**Version 0.1.0** — Development release. Core API is stabilizing but may evolve.
+
+---
+
+## 🤝 Contributing
+
+Contributions welcome! Areas of interest:
 
 - Constants and units coverage
-- Useful JAX-friendly numerical helpers
 - Coordinate transform utilities
 - Spatial algorithm optimizations
-- Tests, typing, and documentation
+- Tests and documentation
 
-Please open an issue to discuss larger changes before submitting a pull request.
+Please open an issue to discuss larger changes before submitting a PR.
 
 ---
 
-## License
+## 📄 License
 
 BSD 3-Clause. See [LICENSE](LICENSE) for details.

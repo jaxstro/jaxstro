@@ -66,18 +66,18 @@ M_N: float = 1.67492749804e-24
 # https://www.iau.org/static/resolutions/IAU2015_English.pdf
 # ===========================================================================
 
-MSUN_G: float = 1.9884e33       # Solar mass [g]
-RSUN_CM: float = 6.957e10       # Solar radius [cm]
-LSUN_ERG_S: float = 3.828e33    # Solar luminosity [erg/s]
-TEFF_SUN: float = 5772.0        # Solar effective temperature [K]
+MSUN_G: float = 1.9884e33  # Solar mass [g]
+RSUN_CM: float = 6.957e10  # Solar radius [cm]
+LSUN_ERG_S: float = 3.828e33  # Solar luminosity [erg/s]
+TEFF_SUN: float = 5772.0  # Solar effective temperature [K]
 
 # ===========================================================================
 # Solar composition (Asplund et al. 2009)
 # ===========================================================================
 
-X_SUN: float = 0.7381           # Solar hydrogen mass fraction
-Y_SUN: float = 0.2485           # Solar helium mass fraction
-Z_SUN: float = 0.0134           # Solar metals mass fraction
+X_SUN: float = 0.7381  # Solar hydrogen mass fraction
+Y_SUN: float = 0.2485  # Solar helium mass fraction
+Z_SUN: float = 0.0134  # Solar metals mass fraction
 
 # ===========================================================================
 # Astronomical distance and time units
@@ -90,11 +90,11 @@ PC_CM: float = 3.0856775814913673e18
 AU_CM: float = 1.495978707e13
 
 # Time units
-MYR_S: float = 3.15576e13       # s in 1 Myr (1e6 tropical years)
-YR_S: float = 3.15576e7         # s in 1 yr (tropical year)
+MYR_S: float = 3.15576e13  # s in 1 Myr (1e6 tropical years)
+YR_S: float = 3.15576e7  # s in 1 yr (tropical year)
 
 # Metric conversion
-KM_CM: float = 1.0e5            # 1 km = 1e5 cm
+KM_CM: float = 1.0e5  # 1 km = 1e5 cm
 
 # ===========================================================================
 # Radiation / thermodynamics

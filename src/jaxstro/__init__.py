@@ -11,11 +11,7 @@ The design intent is:
 - avoid any domain-specific simulation logic here.
 """
 
-from . import constants
-from . import units
-from . import astrometry
-from . import numerics
-from . import coords
+from . import astrometry, constants, coords, numerics, units
 
 __all__ = ["constants", "units", "astrometry", "numerics", "coords"]
 __version__ = "0.1.0"

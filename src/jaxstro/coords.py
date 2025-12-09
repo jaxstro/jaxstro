@@ -536,10 +536,12 @@ def compute_proper_motions(
     los_z = r_vec_z / r_safe
 
     # Project velocity perpendicular to line of sight (transverse velocity)
-    v_radial = velocities[:, 0] * los_x + velocities[:, 1] * los_y + velocities[:, 2] * los_z
+    v_radial = (
+        velocities[:, 0] * los_x + velocities[:, 1] * los_y + velocities[:, 2] * los_z
+    )
     v_trans_x = velocities[:, 0] - v_radial * los_x
     v_trans_y = velocities[:, 1] - v_radial * los_y
-    v_trans_z = velocities[:, 2] - v_radial * los_z
+    _v_trans_z = velocities[:, 2] - v_radial * los_z  # noqa: F841 - computed for completeness
 
     # Distance to each star in kpc
     distance_kpc = r / 1000.0

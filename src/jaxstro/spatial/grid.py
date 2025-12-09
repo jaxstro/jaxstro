@@ -44,7 +44,6 @@ from jaxtyping import Array, Bool, Float, Int
 
 from jaxstro.spatial.morton import MAX_BITS_3D, morton_encode_3d, wyhash32
 
-
 # =============================================================================
 # Bin Assignment
 # =============================================================================

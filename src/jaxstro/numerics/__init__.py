@@ -26,15 +26,17 @@ rng
     PRNG key management helpers for JAX.
 """
 
+from . import (
+    checks,
+    compensated,
+    integration,
+    interpolation,
+    linear_algebra,
+    rng,
+    rootfinding,
+    stats,
+)
 from .types import Array, ScalarFn
-from . import compensated
-from . import stats
-from . import interpolation
-from . import rootfinding
-from . import integration
-from . import checks
-from . import linear_algebra
-from . import rng
 
 __all__ = [
     "Array",

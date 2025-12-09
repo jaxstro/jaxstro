@@ -23,8 +23,8 @@ Usage:
 """
 
 import jax
-import jax.numpy as jnp
 import jax.lax as lax
+import jax.numpy as jnp
 
 from .types import Array, ScalarFn
 
