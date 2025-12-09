@@ -136,9 +136,9 @@ Different astrophysical regimes have natural scales. Choose the right unit syste
 | System | Mass | Length | Time | $G$ | Best for |
 |--------|------|--------|------|-----|----------|
 | `CGS` | g | cm | s | $6.674 \times 10^{-8}$ | Microphysics, EOS |
-| `ASTRO_STELLAR` | $M_\odot$ | $R_\odot$ | Myr | $\sim 2942$ | Stellar interiors, binary evolution |
-| `ASTRO_DYNAMICAL` | $M_\odot$ | pc | Myr | $\sim 0.0045$ | Star clusters, galaxies, $N$-body |
-| `ASTRO_PLANETARY` | $M_\odot$ | AU | yr | $\approx 4\pi^2$ | Planetary systems, Kepler's laws |
+| `ASTRO_STELLAR` | $M_\odot$ | $R_\odot$ | Myr | $\sim 2942$ | Stellar structure, SSE/BSE |
+| `ASTRO_DYNAMICAL` | $M_\odot$ | pc | Myr | $\sim 0.0045$ | Star clusters, $N$-body |
+| `ASTRO_PLANETARY` | $M_\odot$ | AU | yr | $\approx 4\pi^2$ | Exoplanets, close binaries |
 
 ### Usage
 
