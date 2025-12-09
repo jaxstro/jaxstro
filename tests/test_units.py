@@ -222,11 +222,15 @@ class TestSingleQuantityConversions:
 
 
 class TestShortAliases:
-    """Tests for short alias names: STELLAR, BINARY, SOLAR, PLANETARY."""
+    """Tests for short alias names: STELLAR, STAR, BINARY, SOLAR, PLANETARY."""
 
     def test_stellar_is_astro_dynamical(self):
         """STELLAR should alias ASTRO_DYNAMICAL (pc, Msun, Myr)."""
         assert U.STELLAR is U.ASTRO_DYNAMICAL
+
+    def test_star_is_astro_stellar(self):
+        """STAR should alias ASTRO_STELLAR (Rsun, Msun, Myr) for startrax/stellax."""
+        assert U.STAR is U.ASTRO_STELLAR
 
     def test_binary_is_astro_planetary(self):
         """BINARY should alias ASTRO_PLANETARY (AU, Msun, yr)."""
@@ -247,6 +251,10 @@ class TestGetUnits:
     def test_get_stellar(self):
         """get_units('stellar') should return STELLAR."""
         assert U.get_units("stellar") is U.STELLAR
+
+    def test_get_star(self):
+        """get_units('star') should return STAR (for startrax/stellax)."""
+        assert U.get_units("star") is U.STAR
 
     def test_get_binary(self):
         """get_units('binary') should return BINARY."""

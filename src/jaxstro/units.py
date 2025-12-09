@@ -311,6 +311,7 @@ DEFAULT = ASTRO_DYNAMICAL
 # ---------------------------------------------------------------------------
 
 STELLAR = ASTRO_DYNAMICAL  # Star clusters: Msun, pc, Myr
+STAR = ASTRO_STELLAR  # Individual stars: Msun, Rsun, Myr (startrax, stellax)
 BINARY = ASTRO_PLANETARY  # Binary stars: Msun, AU, yr
 SOLAR = ASTRO_STELLAR  # Stellar structure: Msun, Rsun, Myr
 PLANETARY = ASTRO_PLANETARY  # Alias for BINARY
@@ -322,6 +323,7 @@ PLANETARY = ASTRO_PLANETARY  # Alias for BINARY
 UNIT_SYSTEMS: dict[str, UnitSystem] = {
     "cgs": CGS,
     "stellar": STELLAR,
+    "star": STAR,
     "binary": BINARY,
     "solar": SOLAR,
     "planetary": PLANETARY,
@@ -372,6 +374,7 @@ __all__ = [
     "DEFAULT",
     # Short aliases
     "STELLAR",
+    "STAR",
     "BINARY",
     "SOLAR",
     "PLANETARY",
