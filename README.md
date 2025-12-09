@@ -2,11 +2,12 @@
 
 Core utilities for the **jaxstro** differentiable astrophysics ecosystem.
 
-`jaxstro` is a small, shared library that provides:
+`jaxstro` is a shared library that provides:
 
 - Physical **constants** and **unit systems** compatible with JAX
+- **Coordinate transformations** (sky-tangent, galactic, spherical, astrometry)
+- **Spatial algorithms** (Morton encoding, grid binning, neighbor queries)
 - Lightweight **numerical helpers** that work cleanly with `jax.jit`, `vmap`, and `grad`
-- Common utilities and types for higher-level astrophysics codes
 
 ---
 
@@ -36,13 +37,18 @@ Core utilities for the **jaxstro** differentiable astrophysics ecosystem.
 
 ## Installation
 
-**Python 3.10+** and **JAX ≥ 0.4.28** required.
+**Python 3.10+** and **JAX >= 0.4.28** required.
 
 ### From source (current)
 
 ```bash
 git clone https://github.com/jaxstro/jaxstro.git
 cd jaxstro
+
+# With uv (recommended, 10-100× faster)
+uv pip install -e ".[dev]"
+
+# Or with pip
 pip install -e ".[dev]"
 ```
 
@@ -50,6 +56,7 @@ pip install -e ".[dev]"
 
 ```bash
 pip install jaxstro
+# or: uv pip install jaxstro
 ```
 
 ---
@@ -81,6 +88,53 @@ v_esc = jnp.sqrt(2.0 * C.G_CGS * M / R)
 # Use a unit system
 stellar = U.ASTRO_STELLAR  # (Msun, Rsun, Myr)
 m_cgs, r_cgs, t_cgs = stellar.to_cgs(1.0, 1.0, 1.0)
+
+# Get G in any unit system
+G_dynamical = U.ASTRO_DYNAMICAL.G  # ~0.00450 pc³ Msun⁻¹ Myr⁻²
+G_planetary = U.ASTRO_PLANETARY.G  # ~39.48 AU³ Msun⁻¹ yr⁻² (≈ 4π²)
+```
+
+### Coordinate transforms
+
+```python
+from jaxstro.coords import sky_tangent, galactic_to_equatorial, compute_parallax
+
+# Project cluster positions to sky coordinates
+positions_pc = jnp.array([[1.0, 0.5, -0.2], [0.0, 1.0, 0.3]])
+ra_dec = sky_tangent(positions_pc, distance_pc=1000.0, ra_center_deg=180.0)
+
+# Convert galactic to equatorial
+l_deg, b_deg = 45.0, 30.0
+ra, dec = galactic_to_equatorial(l_deg, b_deg)
+
+# Compute parallax from distance
+parallax_mas = compute_parallax(distance_pc=100.0)  # 10 mas
+```
+
+### Spatial binning and neighbor queries
+
+```python
+import jax
+import jax.numpy as jnp
+from jaxstro.spatial import assign_particles_to_bins, fill_bins, approx_knn_candidates
+
+# Random particle positions
+key = jax.random.PRNGKey(42)
+pos = jax.random.uniform(key, (1000, 3)) * 4.0 - 2.0  # [-2, 2]³
+
+# Assign to spatial bins (Morton-ordered)
+bin_of = assign_particles_to_bins(pos, L_box=4.0, Nbins_per_dim=16)
+
+# Fill bin arrays with overflow handling
+particle_ids = jnp.arange(1000, dtype=jnp.int32)
+bin_members, bin_mask = fill_bins(particle_ids, bin_of, Nbins=16**3, Bcap=32)
+
+# Get approximate neighbor candidates (add sentinel for safe indexing)
+pos_sentinel = jnp.concatenate([pos, jnp.zeros((1, 3))], axis=0)
+cand_idx, cand_mask = approx_knn_candidates(
+    pos_sentinel, bin_members, bin_mask, bin_of,
+    Nbins_per_dim=16, K_target=32
+)
 ```
 
 ### Basic numerics
@@ -132,11 +186,54 @@ U.ASTRO_STELLAR    # (Msun, Rsun, Myr)
 U.ASTRO_DYNAMICAL  # (Msun, pc, Myr)
 U.ASTRO_PLANETARY  # (Msun, AU, yr)
 
-# UnitSystem methods
+# UnitSystem methods and properties
 us = U.ASTRO_STELLAR
 m_cgs, r_cgs, t_cgs = us.to_cgs(mass, length, time)
 m, r, t = us.from_cgs(m_cgs, r_cgs, t_cgs)
 v_kms = us.velocity_scale_km_s
+G = us.G  # Gravitational constant in this unit system
+
+# Convert between systems
+length_pc = U.ASTRO_DYNAMICAL.convert_length(1.0, to=U.CGS)  # 1 pc -> cm
+```
+
+### `jaxstro.coords`
+
+Coordinate transformations (all JAX-native and differentiable).
+
+```python
+from jaxstro.coords import (
+    sky_tangent,           # 3D positions -> (RA, Dec)
+    galactic_to_equatorial,  # (l, b) -> (RA, Dec)
+    equatorial_to_galactic,  # (RA, Dec) -> (l, b)
+    cartesian_to_spherical,  # (x, y, z) -> (r, theta, phi)
+    spherical_to_cartesian,  # (r, theta, phi) -> (x, y, z)
+    compute_parallax,        # distance [pc] -> parallax [mas]
+    compute_proper_motions,  # 3D velocity -> (μ_α*, μ_δ) [mas/yr]
+)
+```
+
+### `jaxstro.spatial`
+
+Spatial algorithms for particle simulations.
+
+```python
+from jaxstro.spatial import (
+    # Morton (Z-order) encoding
+    morton_encode_3d,      # 3D coords -> 1D Morton code
+    morton_decode_3d,      # Morton code -> (x, y, z)
+    wyhash32,              # Fast 32-bit hash
+
+    # Grid binning
+    assign_particles_to_bins,  # positions -> bin IDs
+    fill_bins,                 # bin arrays with overflow handling
+
+    # Neighbor queries
+    gather_candidates_from_bins,    # 27-cell stencil
+    gather_candidates_with_stencil, # configurable stencil
+    gather_candidates_two_stencil,  # adaptive coarse/dense
+    approx_knn_candidates,          # high-level API
+)
 ```
 
 ### `jaxstro.astrometry`
@@ -287,6 +384,8 @@ Contributions welcome, especially around:
 
 - Constants and units coverage
 - Useful JAX-friendly numerical helpers
+- Coordinate transform utilities
+- Spatial algorithm optimizations
 - Tests, typing, and documentation
 
 Please open an issue to discuss larger changes before submitting a pull request.
