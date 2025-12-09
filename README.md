@@ -1,13 +1,23 @@
 # jaxstro
 
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![JAX](https://img.shields.io/badge/JAX-0.4.28+-green.svg)](https://github.com/google/jax)
-[![License](https://img.shields.io/badge/license-BSD--3--Clause-lightgrey.svg)](LICENSE)
+<h3 align="center">simulate → observe → optimize</h3>
 
-**Core utilities for differentiable astrophysics in JAX.**
+<p align="center">
+  <em>GPU-accelerated • End-to-end differentiable • JAX-native</em>
+</p>
 
-> 🔬 Compute gradients through your simulations for Bayesian inference,
-> parameter optimization, and machine learning applications.
+<p align="center">
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python 3.10+"></a>
+  <a href="https://github.com/google/jax"><img src="https://img.shields.io/badge/JAX-0.4.28+-green.svg" alt="JAX"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-BSD--3--Clause-lightgrey.svg" alt="License: BSD-3-Clause"></a>
+  <a href="#"><img src="https://img.shields.io/badge/status-v0.1.0--dev-yellow.svg" alt="Development Status"></a>
+</p>
+
+---
+
+**jaxstro** is the foundation layer for a family of JAX-native astrophysics packages. It provides units, constants, numerics, and coordinate transforms — the shared building blocks for end-to-end differentiable simulations.
+
+*Why run 10,000 simulations when you can compute one gradient?*
 
 ---
 
@@ -29,11 +39,12 @@ Everything works with `jax.jit`, `jax.vmap`, and `jax.grad`.
 
 | Package | Description | Status |
 |---------|-------------|--------|
-| [**gravax**](https://github.com/jaxstro/gravax) | $N$-body dynamics and star cluster evolution | 🚧 Active |
-| **progenax** | Initial conditions and population synthesis | 🚧 Active |
-| **fluxax** | Synthetic observables and survey rendering | 🚧 Active |
+| **gravax** | $N$-body dynamics and star cluster evolution | 🚧 Active dev |
+| **progenax** | Initial conditions and population synthesis | 🚧 Active dev |
+| **fluxax** | Synthetic observables and survey rendering | 🚧 Active dev |
+| **startrax** | Rapid stellar evolution (SSE/BSE fits) | 🚧 Active dev |
 | **stellax** | 1D stellar structure (MESA-like) | 📋 Planned |
-| **startrax** | Rapid stellar evolution (SSE/BSE fits) | 📋 Planned |
+| **nebulax** | Feedback bubbles & ISM response | 📋 Planned |
 
 ### Design Principles
 
