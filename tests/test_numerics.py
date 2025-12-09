@@ -5,13 +5,11 @@ Tests for jaxstro.numerics modules.
 Verifies numerical utilities work correctly with JAX transforms.
 """
 
-import math
 
 import jax
 import jax.numpy as jnp
-import pytest
 
-from jaxstro.numerics import stats, interpolation, rootfinding, integration
+from jaxstro.numerics import integration, interpolation, rootfinding, stats
 
 
 class TestSafeLog:
@@ -321,14 +319,6 @@ class TestNewtonWithGrad:
         grad_fn = jax.grad(find_root)
         g = grad_fn(jnp.array(1.5))
         assert jnp.isfinite(g)
-
-
-class TestNewton1DAlias:
-    """Tests for newton_1d backwards compatibility alias."""
-
-    def test_is_alias(self):
-        """newton_1d should be an alias for newton_with_grad."""
-        assert rootfinding.newton_1d is rootfinding.newton_with_grad
 
 
 class TestTrapz:

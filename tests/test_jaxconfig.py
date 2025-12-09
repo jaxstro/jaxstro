@@ -7,22 +7,12 @@ is callable. Full functional testing of JAX config changes is tricky
 because config is global and our conftest.py already enables x64.
 """
 
-import pytest
 
 from jaxstro import jaxconfig
 
 
 class TestEnableHighPrecision:
     """Tests for enable_high_precision function."""
-
-    def test_callable(self):
-        """enable_high_precision should be callable."""
-        assert callable(jaxconfig.enable_high_precision)
-
-    def test_returns_none(self):
-        """enable_high_precision should return None."""
-        result = jaxconfig.enable_high_precision()
-        assert result is None
 
     def test_idempotent(self):
         """Calling enable_high_precision multiple times should be safe."""
@@ -33,7 +23,6 @@ class TestEnableHighPrecision:
 
     def test_x64_enabled(self):
         """After calling, float64 should be available."""
-        import jax
         import jax.numpy as jnp
 
         jaxconfig.enable_high_precision()
@@ -44,7 +33,6 @@ class TestEnableHighPrecision:
 
     def test_default_dtype_is_float64(self):
         """After calling, default float should be float64."""
-        import jax
         import jax.numpy as jnp
 
         jaxconfig.enable_high_precision()

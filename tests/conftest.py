@@ -5,7 +5,6 @@ Pytest configuration for jaxstro tests.
 Ensures float64 is enabled before any tests run.
 """
 
-import pytest
 
 
 def pytest_configure(config):

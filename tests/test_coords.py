@@ -6,17 +6,16 @@ TDD: Write tests FIRST, verify they FAIL, then implement.
 
 import jax
 import jax.numpy as jnp
-import pytest
 
 # These imports should fail until implementation exists
 from jaxstro.coords import (
-    sky_tangent,
-    galactic_to_equatorial,
-    equatorial_to_galactic,
     cartesian_to_spherical,
-    spherical_to_cartesian,
     compute_parallax,
     compute_proper_motions,
+    equatorial_to_galactic,
+    galactic_to_equatorial,
+    sky_tangent,
+    spherical_to_cartesian,
 )
 
 
@@ -88,7 +87,8 @@ class TestSkyTangent:
 
         # With roll, RA should be near center, Dec should have offset
         assert jnp.abs(result_no_roll[0, 0] - 180.0) > 0.01  # RA offset
-        # Note: exact behavior depends on implementation
+        # Roll should change the output (different coordinate mapping)
+        assert not jnp.allclose(result_no_roll, result_roll)
 
 
 class TestGalacticEquatorial:

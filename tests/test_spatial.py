@@ -28,7 +28,6 @@ from jaxstro.spatial import (
 )
 from jaxstro.spatial.morton import MAX_BITS_3D
 
-
 # =============================================================================
 # Morton Encoding/Decoding Tests
 # =============================================================================
