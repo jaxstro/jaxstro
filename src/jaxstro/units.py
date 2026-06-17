@@ -25,6 +25,8 @@ Example
 from dataclasses import dataclass
 from typing import Tuple
 
+import jax.numpy as jnp
+
 from . import constants as C
 
 
@@ -317,6 +319,178 @@ SOLAR = ASTRO_STELLAR  # Stellar structure: Msun, Rsun, Myr
 PLANETARY = ASTRO_PLANETARY  # Alias for BINARY
 
 # ---------------------------------------------------------------------------
+# Photometric unit systems
+# ---------------------------------------------------------------------------
+
+
+# Resolution tables: unit-label -> CGS scale factor (host-side floats).
+# These mirror UnitSystem's pattern: the unit choice is a *static* host-side
+# string, and the per-call conversion is a constant float multiply, so all
+# methods are jit/vmap/grad-safe (no data-dependent branching on the
+# differentiated path).
+_LUMINOSITY_SCALES_CGS: dict[str, float] = {
+    "Lsun": C.LSUN_ERG_S,  # Lsun -> erg/s
+    "cgs": 1.0,  # erg/s (identity)
+}
+_RADIUS_SCALES_CGS: dict[str, float] = {
+    "Rsun": C.RSUN_CM,  # Rsun -> cm
+    "cm": 1.0,  # cm (identity)
+}
+# Linear flux-density scales (Jy / cgs). "AB" is magnitude-based and handled
+# via the AB zeropoint, NOT a linear scale; it is intentionally absent here.
+_FLUX_SCALES_CGS: dict[str, float] = {
+    "Jy": C.JY_CGS,  # Jy -> erg/s/cm^2/Hz
+    "cgs": 1.0,  # erg/s/cm^2/Hz (identity)
+}
+
+
+@dataclass(frozen=True)
+class PhotometricUnits:
+    """
+    Photometric unit system for luminosity / radius / flux-density outputs.
+
+    Parallel to :class:`UnitSystem` but for *photometric* quantities that the
+    dynamical (mass/length/time) basis cannot represent (L☉, R☉, Jy, AB mag).
+    The unit choices are static host-side strings; their CGS scale factors are
+    resolved once at construction time into plain Python floats, so every
+    conversion method is a constant float multiply — JAX jit/vmap/grad-safe
+    with no data-dependent branching on the differentiated path.
+
+    Attributes
+    ----------
+    luminosity : str
+        Luminosity unit, ``"Lsun"`` or ``"cgs"`` (erg/s).
+    radius : str
+        Radius unit, ``"Rsun"`` or ``"cm"``.
+    flux_density : str
+        Flux-density unit: ``"Jy"`` | ``"cgs"`` (erg/s/cm²/Hz) | ``"AB"`` (mag).
+        ``"AB"`` is magnitude-based; use the ``ab_mag_*`` methods rather than
+        the linear ``*_flux`` scale.
+    name : str
+        Optional descriptive name.
+
+    Notes
+    -----
+    Resolved scale factors (read-only, set at construction):
+
+    - ``luminosity_scale_cgs`` — value of 1 [luminosity] in erg/s.
+    - ``radius_scale_cgs`` — value of 1 [radius] in cm.
+    - ``flux_scale_cgs`` — value of 1 [flux_density] in erg/s/cm²/Hz
+      (defined for ``"Jy"`` / ``"cgs"``; for ``"AB"`` it is ``JY_CGS`` as a
+      placeholder — AB conversions go through the zeropoint, not this scale).
+    """
+
+    luminosity: str = "Lsun"
+    radius: str = "Rsun"
+    flux_density: str = "Jy"
+    name: str = ""
+
+    # Resolved at construction (frozen dataclass; set via object.__setattr__).
+    luminosity_scale_cgs: float = 0.0
+    radius_scale_cgs: float = 0.0
+    flux_scale_cgs: float = 0.0
+
+    def __post_init__(self) -> None:
+        if self.luminosity not in _LUMINOSITY_SCALES_CGS:
+            raise ValueError(
+                f"Unknown luminosity unit: {self.luminosity!r}. "
+                f"Choose from {sorted(_LUMINOSITY_SCALES_CGS)}."
+            )
+        if self.radius not in _RADIUS_SCALES_CGS:
+            raise ValueError(
+                f"Unknown radius unit: {self.radius!r}. "
+                f"Choose from {sorted(_RADIUS_SCALES_CGS)}."
+            )
+        if self.flux_density not in {"Jy", "cgs", "AB"}:
+            raise ValueError(
+                f"Unknown flux_density unit: {self.flux_density!r}. "
+                "Choose from ['AB', 'Jy', 'cgs']."
+            )
+        # Resolve scales host-side (constant multiplies downstream).
+        object.__setattr__(
+            self, "luminosity_scale_cgs", _LUMINOSITY_SCALES_CGS[self.luminosity]
+        )
+        object.__setattr__(
+            self, "radius_scale_cgs", _RADIUS_SCALES_CGS[self.radius]
+        )
+        # "AB" carries no linear flux scale; use JY_CGS as a neutral placeholder.
+        flux_key = self.flux_density if self.flux_density in _FLUX_SCALES_CGS else "Jy"
+        object.__setattr__(self, "flux_scale_cgs", _FLUX_SCALES_CGS[flux_key])
+
+    # --- Luminosity conversions (constant multiplies) ----------------------
+    def to_cgs_luminosity(self, value):
+        """Convert luminosity from this system to CGS (erg/s)."""
+        return value * self.luminosity_scale_cgs
+
+    def from_cgs_luminosity(self, value_cgs):
+        """Convert luminosity from CGS (erg/s) to this system."""
+        return value_cgs / self.luminosity_scale_cgs
+
+    # --- Radius conversions ------------------------------------------------
+    def to_cgs_radius(self, value):
+        """Convert radius from this system to CGS (cm)."""
+        return value * self.radius_scale_cgs
+
+    def from_cgs_radius(self, value_cgs):
+        """Convert radius from CGS (cm) to this system."""
+        return value_cgs / self.radius_scale_cgs
+
+    # --- Linear flux-density conversions (Jy / cgs) ------------------------
+    def to_cgs_flux(self, value):
+        """Convert flux density from this system to CGS (erg/s/cm²/Hz).
+
+        Defined for the linear ``"Jy"``/``"cgs"`` choices; for ``"AB"`` use
+        :meth:`ab_mag_to_cgs_flux` instead.
+        """
+        return value * self.flux_scale_cgs
+
+    def from_cgs_flux(self, value_cgs):
+        """Convert flux density from CGS (erg/s/cm²/Hz) to this system."""
+        return value_cgs / self.flux_scale_cgs
+
+    # --- AB-magnitude flux conversions (zeropoint-based) -------------------
+    def ab_mag_to_cgs_flux(self, mag):
+        """AB magnitude -> CGS flux density (erg/s/cm²/Hz).
+
+        f = f_AB(zeropoint) × 10^(-0.4 m), with the AB zeropoint
+        3631 Jy = 3.631e-20 erg/s/cm²/Hz (Oke & Gunn 1983). Differentiable
+        in ``mag`` (smooth exponential, no branching).
+        """
+        return C.AB_ZEROPOINT_CGS * (10.0 ** (-0.4 * mag))
+
+    def cgs_flux_to_ab_mag(self, flux_cgs):
+        """CGS flux density (erg/s/cm²/Hz) -> AB magnitude.
+
+        m = -2.5 log10(f / f_AB). Differentiable for positive flux.
+        """
+        return -2.5 * (jnp.log10(flux_cgs / C.AB_ZEROPOINT_CGS))
+
+    def __str__(self) -> str:  # pragma: no cover - cosmetic
+        return (
+            f"{self.name or 'PhotometricUnits'} "
+            f"(L=[{self.luminosity}], R=[{self.radius}], "
+            f"F=[{self.flux_density}])"
+        )
+
+
+# Conventional default: solar luminosity/radius, Jy flux density.
+SOLAR_PHOTOMETRIC = PhotometricUnits(
+    luminosity="Lsun",
+    radius="Rsun",
+    flux_density="Jy",
+    name="Solar photometric (Lsun, Rsun, Jy)",
+)
+
+# Pure-CGS photometric system.
+CGS_PHOTOMETRIC = PhotometricUnits(
+    luminosity="cgs",
+    radius="cm",
+    flux_density="cgs",
+    name="CGS photometric (erg/s, cm, erg/s/cm^2/Hz)",
+)
+
+
+# ---------------------------------------------------------------------------
 # Unit system registry and lookup
 # ---------------------------------------------------------------------------
 
@@ -378,6 +552,10 @@ __all__ = [
     "BINARY",
     "SOLAR",
     "PLANETARY",
+    # Photometric units
+    "PhotometricUnits",
+    "SOLAR_PHOTOMETRIC",
+    "CGS_PHOTOMETRIC",
     # Lookup
     "UNIT_SYSTEMS",
     "get_units",

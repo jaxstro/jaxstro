@@ -104,6 +104,23 @@ KM_CM: float = 1.0e5  # 1 km = 1e5 cm
 SIGMA_SB: float = 5.670374419e-5
 
 # ===========================================================================
+# Photometric units and zeropoints
+# ===========================================================================
+
+# Jansky [erg s⁻¹ cm⁻² Hz⁻¹ per Jy].
+# Definition: 1 Jy = 1e-26 W m⁻² Hz⁻¹ (SI) = 1e-23 erg s⁻¹ cm⁻² Hz⁻¹ (CGS),
+# since 1 W = 1e7 erg/s and 1 m⁻² = 1e-4 cm⁻² → 1e7 × 1e-4 × 1e-26 = 1e-23.
+JY_CGS: float = 1e-23
+
+# AB magnitude system zeropoint flux density [Jy].
+# f_AB = 3631 Jy at AB mag 0 (Oke & Gunn 1983, ApJ, 266, 713).
+AB_ZEROPOINT_JY: float = 3631.0
+
+# AB zeropoint flux density in CGS [erg s⁻¹ cm⁻² Hz⁻¹].
+# = AB_ZEROPOINT_JY × JY_CGS = 3631 × 1e-23 (Oke & Gunn 1983, ApJ, 266, 713).
+AB_ZEROPOINT_CGS: float = AB_ZEROPOINT_JY * JY_CGS  # 3.631e-20
+
+# ===========================================================================
 # Derived velocity conversions
 # ===========================================================================
 
@@ -152,6 +169,10 @@ __all__ = [
     "KM_CM",
     # Radiation
     "SIGMA_SB",
+    # Photometric units and zeropoints
+    "JY_CGS",
+    "AB_ZEROPOINT_JY",
+    "AB_ZEROPOINT_CGS",
     # Velocity conversions
     "PC_PER_MYR_TO_KM_PER_S",
     "AU_PER_YR_TO_KM_PER_S",
