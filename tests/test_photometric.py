@@ -155,3 +155,36 @@ def test_ab_flux_conversion_differentiable():
     h = 1e-4
     fd = (f(m0 + h) - f(m0 - h)) / (2.0 * h)
     assert jnp.allclose(ad, fd, rtol=1e-6, atol=0.0)
+
+
+# ---------------------------------------------------------------------------
+# AB linear-path footgun: must fail loud, not return a plausible-wrong number
+# ---------------------------------------------------------------------------
+
+
+def test_ab_flux_density_poisons_linear_scale():
+    """An AB system carries no linear flux scale.
+
+    AB is magnitude-based; the linear ``to_cgs_flux``/``from_cgs_flux`` path is
+    meaningless for it. The resolved ``flux_scale_cgs`` must be NaN so any
+    accidental linear use poisons loudly (NaN propagates) instead of silently
+    returning a wrong-by-construction linear result keyed to JY_CGS.
+    """
+    u = PhotometricUnits(flux_density="AB")
+    assert jnp.isnan(jnp.asarray(u.flux_scale_cgs))
+    # Accidental linear use yields NaN (loud), not a plausible-but-wrong number.
+    assert jnp.isnan(u.to_cgs_flux(jnp.asarray(1.0)))
+    assert jnp.isnan(u.from_cgs_flux(jnp.asarray(1.0)))
+
+
+def test_ab_zeropoint_methods_unaffected_by_poison():
+    """The AB zeropoint conversion path must still work (it never touches the
+    linear flux scale)."""
+    u = PhotometricUnits(flux_density="AB")
+    # 0 mag -> exactly the AB zeropoint flux; finite, not NaN.
+    f0 = u.ab_mag_to_cgs_flux(jnp.asarray(0.0))
+    assert jnp.allclose(f0, C.AB_ZEROPOINT_CGS, rtol=1e-12)
+    assert jnp.isfinite(f0)
+    # Linear ("Jy"/"cgs") systems keep a real, finite flux scale.
+    assert jnp.isfinite(jnp.asarray(SOLAR_PHOTOMETRIC.flux_scale_cgs))
+    assert jnp.isfinite(jnp.asarray(CGS_PHOTOMETRIC.flux_scale_cgs))

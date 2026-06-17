@@ -376,8 +376,9 @@ class PhotometricUnits:
     - ``luminosity_scale_cgs`` — value of 1 [luminosity] in erg/s.
     - ``radius_scale_cgs`` — value of 1 [radius] in cm.
     - ``flux_scale_cgs`` — value of 1 [flux_density] in erg/s/cm²/Hz
-      (defined for ``"Jy"`` / ``"cgs"``; for ``"AB"`` it is ``JY_CGS`` as a
-      placeholder — AB conversions go through the zeropoint, not this scale).
+      (defined for ``"Jy"`` / ``"cgs"``; for ``"AB"`` it is ``NaN`` — AB
+      conversions go through the zeropoint methods, and NaN poisons any
+      accidental use of the linear ``*_flux`` path).
     """
 
     luminosity: str = "Lsun"
@@ -413,9 +414,12 @@ class PhotometricUnits:
         object.__setattr__(
             self, "radius_scale_cgs", _RADIUS_SCALES_CGS[self.radius]
         )
-        # "AB" carries no linear flux scale; use JY_CGS as a neutral placeholder.
-        flux_key = self.flux_density if self.flux_density in _FLUX_SCALES_CGS else "Jy"
-        object.__setattr__(self, "flux_scale_cgs", _FLUX_SCALES_CGS[flux_key])
+        # "AB" is magnitude-based and carries NO linear flux scale. Poison it
+        # with NaN so any accidental linear use (to_cgs_flux/from_cgs_flux)
+        # fails loud (NaN propagates) instead of silently returning a
+        # wrong-by-construction result; AB conversions go through the zeropoint.
+        flux_scale = _FLUX_SCALES_CGS.get(self.flux_density, float("nan"))
+        object.__setattr__(self, "flux_scale_cgs", flux_scale)
 
     # --- Luminosity conversions (constant multiplies) ----------------------
     def to_cgs_luminosity(self, value):
