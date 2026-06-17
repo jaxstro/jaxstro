@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=69", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "jaxstro"
@@ -8,14 +8,22 @@ version = "0.1.0"
 description = "Core utilities for the jaxstro differentiable astrophysics ecosystem (units, constants, helpers)."
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "BSD-3-Clause" }
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 authors = [
   { name = "Anna Rosen", email = "alrosen@sdsu.edu" }
 ]
+keywords = ["jax", "astrophysics", "units", "constants", "coordinates", "numerics", "differentiable"]
 classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
-  "License :: OSI Approved :: BSD License",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering :: Astronomy",
   "Operating System :: OS Independent",
 ]
 
@@ -23,6 +31,7 @@ classifiers = [
 dependencies = [
   "jax>=0.4.28",
   "jaxtyping>=0.2.0",
+  "equinox>=0.11.0",
 ]
 
 [project.optional-dependencies]
@@ -30,7 +39,6 @@ dev = [
   "pytest",
   "ruff",
   "mypy",
-  "uv>=0.4",        # cli tool, optional; or you can keep it out and install globally
 ]
 
 [project.urls]
@@ -38,19 +46,20 @@ Homepage = "https://github.com/jaxstro/jaxstro"
 Source = "https://github.com/jaxstro/jaxstro.git"
 Issues = "https://github.com/jaxstro/jaxstro/issues"
 
-[tool.setuptools]
-package-dir = {"" = "src"}
-
-[tool.setuptools.packages.find]
-where = ["src"]
+[tool.hatch.build.targets.wheel]
+packages = ["src/jaxstro"]
 
 # -----------------------
 # uv configuration
 # -----------------------
-# This is optional; uv will still work without it, but this makes intent explicit.
-[tool.uv]
-# Tell uv to treat this as the primary project
-default-groups = ["dev"]
+# Dev tooling declared via PEP 735 dependency groups (uv installs the `dev`
+# group by default). Mirrors the [project.optional-dependencies] dev extra.
+[dependency-groups]
+dev = [
+  "pytest",
+  "ruff",
+  "mypy",
+]
 
 # -----------------------
 # Ruff configuration
@@ -96,4 +105,3 @@ strict_optional = true
 minversion = "8.0"
 addopts = "-ra"
 testpaths = ["tests"]
-
