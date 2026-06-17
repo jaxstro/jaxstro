@@ -121,9 +121,15 @@ class TestUnitSystemImmutability:
 class TestDefaultSystem:
     """Tests for the DEFAULT unit system."""
 
-    def test_default_is_dynamical(self):
-        """DEFAULT should be ASTRO_DYNAMICAL."""
-        assert U.DEFAULT is U.ASTRO_DYNAMICAL
+    def test_default_is_cgs(self):
+        """DEFAULT should be CGS."""
+        assert U.DEFAULT is U.CGS
+
+    def test_default_units_export(self):
+        """jaxstro.DEFAULT_UNITS should match units.DEFAULT."""
+        import jaxstro
+
+        assert jaxstro.DEFAULT_UNITS is U.DEFAULT
 
 
 # =============================================================================

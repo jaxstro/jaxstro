@@ -12,6 +12,7 @@ The design intent is:
 """
 
 from . import astrometry, constants, coords, numerics, units
+from .units import DEFAULT as DEFAULT_UNITS
 
-__all__ = ["constants", "units", "astrometry", "numerics", "coords"]
+__all__ = ["DEFAULT_UNITS", "constants", "units", "astrometry", "numerics", "coords"]
 __version__ = "0.1.0"

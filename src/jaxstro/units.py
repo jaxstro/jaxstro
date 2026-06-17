@@ -304,7 +304,7 @@ ASTRO_PLANETARY = UnitSystem(
 )
 
 # Default for generic astro work (you can override per package)
-DEFAULT = ASTRO_DYNAMICAL
+DEFAULT = CGS
 
 # ---------------------------------------------------------------------------
 # Short aliases for common use cases
