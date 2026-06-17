@@ -18,6 +18,8 @@ rootfinding
     Simple, JAX-friendly root-finding routines.
 integration
     Lightweight quadrature and cumulative integral helpers.
+sampling
+    Differentiable inverse-CDF (PPF) sampling primitives.
 checks
     Numerical validation helpers (finiteness, monotonicity, ranges).
 linear_algebra
@@ -34,8 +36,10 @@ from . import (
     linear_algebra,
     rng,
     rootfinding,
+    sampling,
     stats,
 )
+from .sampling import inverse_cdf_draw
 from .types import Array, ScalarFn
 
 __all__ = [
@@ -46,6 +50,8 @@ __all__ = [
     "interpolation",
     "rootfinding",
     "integration",
+    "sampling",
+    "inverse_cdf_draw",
     "checks",
     "linear_algebra",
     "rng",
