@@ -209,4 +209,6 @@ __marimo__/
 # Claude Code
 .claude/
 .claude-work/
-CLAUDE.md
+# CLAUDE.md is tracked (project guidance + brain-spoke handshake), matching the sibling repos
+
+.adr/
