@@ -9,7 +9,7 @@
 <p align="center">
   <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python 3.10+"></a>
   <a href="https://github.com/google/jax"><img src="https://img.shields.io/badge/JAX-0.4.28+-green.svg" alt="JAX"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-BSD--3--Clause-lightgrey.svg" alt="License: BSD-3-Clause"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License: Apache-2.0"></a>
   <a href="#"><img src="https://img.shields.io/badge/status-v0.1.0--dev-yellow.svg" alt="Development Status"></a>
 </p>
 
@@ -339,4 +339,4 @@ Please open an issue to discuss larger changes before submitting a PR.
 
 ## 📄 License
 
-BSD 3-Clause. See [LICENSE](LICENSE) for details.
+Apache-2.0. See [LICENSE](LICENSE) for details.
