@@ -7,8 +7,8 @@
 </p>
 
 <p align="center">
-  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python 3.10+"></a>
-  <a href="https://github.com/google/jax"><img src="https://img.shields.io/badge/JAX-0.4.28+-green.svg" alt="JAX"></a>
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.11+-blue.svg" alt="Python 3.11+"></a>
+  <a href="https://github.com/google/jax"><img src="https://img.shields.io/badge/JAX-0.10.1+-green.svg" alt="JAX"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License: Apache-2.0"></a>
   <a href="#"><img src="https://img.shields.io/badge/status-v0.1.0--dev-yellow.svg" alt="Development Status"></a>
 </p>
@@ -50,14 +50,14 @@ Everything works with `jax.jit`, `jax.vmap`, and `jax.grad`.
 
 1. **Infrastructure only** — No domain-specific physics; just shared building blocks
 2. **JAX-first** — Full compatibility with `jit`, `vmap`, and `grad`
-3. **Minimal dependencies** — Only JAX and `jaxtyping`
+3. **Minimal dependencies** — Only `jax`, `jaxlib`, `equinox`, and `jaxtyping`
 4. **One-way arrows** — Higher-level packages depend on jaxstro, not the reverse
 
 ---
 
 ## 📦 Installation
 
-**Requirements:** Python 3.10+ and JAX $\geq$ 0.4.28
+**Requirements:** Python 3.11+ and JAX $\geq$ 0.10.1
 
 ### From source
 
