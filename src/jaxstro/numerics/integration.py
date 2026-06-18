@@ -12,6 +12,7 @@ from typing import Optional
 import jax
 import jax.numpy as jnp
 
+from .checks import try_concrete_bool
 from .types import Array
 
 
@@ -120,7 +121,6 @@ def cumulative_trapz(
     return result
 
 
-@jax.jit
 def simpson(
     y: Array,
     x: Optional[Array] = None,
@@ -131,7 +131,41 @@ def simpson(
     Simpson's rule integration along a given axis.
 
     Requires an odd number of samples along the integration axis.
+
+    Simpson's rule as implemented here assumes **uniform spacing**: the step is
+    taken as ``(x[-1] - x[0]) / (n - 1)``, so a non-uniform ``x`` would be
+    silently mis-integrated. This is validated by an *eager/debug* check in this
+    thin Python wrapper: when ``x`` is a concrete (non-traced) array, non-uniform
+    spacing raises ``ValueError`` before the jitted core runs. Under ``jax.jit``
+    the grid is a tracer whose values are unknown at trace time, so the check is
+    skipped (a value-dependent ``raise`` cannot fire on a tracer); callers inside
+    ``jit`` must pass a uniform grid. The numerics live in ``_simpson_core``.
     """
+    if x is not None:
+        x = jnp.asarray(x)
+        n = jnp.asarray(y).shape[axis]
+        if x.ndim == 1 and x.shape[0] == n:
+            dx = (x[-1] - x[0]) / (n - 1)
+            spacings = jnp.diff(x)
+            # Eager/debug guard: skipped under tracing (returns None in a trace).
+            is_uniform = try_concrete_bool(jnp.allclose(spacings, dx))
+            if is_uniform is False:
+                raise ValueError(
+                    "simpson assumes uniform spacing in x; got a non-uniform "
+                    "grid. Resample to a uniform grid or use trapz for "
+                    "arbitrary spacing."
+                )
+    return _simpson_core(y, x, axis=axis)
+
+
+@partial(jax.jit, static_argnames=("axis",))
+def _simpson_core(
+    y: Array,
+    x: Optional[Array] = None,
+    *,
+    axis: int = -1,
+) -> Array:
+    """Jitted core for :func:`simpson` (no uniform-spacing validation)."""
     y = jnp.asarray(y)
     n = y.shape[axis]
     if n < 3 or (n % 2) == 0:

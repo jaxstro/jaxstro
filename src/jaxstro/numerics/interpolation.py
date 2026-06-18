@@ -8,11 +8,13 @@ opacities, cooling curves).
 """
 
 from dataclasses import dataclass
+from functools import partial
 from typing import Optional, Tuple
 
 import jax
 import jax.numpy as jnp
 
+from .checks import try_concrete_bool
 from .types import Array
 
 
@@ -22,7 +24,6 @@ def _move_axis_to_last(x: Array, axis: int) -> Array:
     return jnp.moveaxis(x, axis, -1)
 
 
-@jax.jit
 def interp1d(
     x: Array,
     y: Array,
@@ -36,8 +37,40 @@ def interp1d(
     """
     Linear interpolation along one axis.
 
-    Assumes that x is strictly increasing.
+    Assumes that ``x`` is strictly increasing. This is validated by an
+    *eager/debug* check in this thin Python wrapper: when ``x`` is a concrete
+    (non-traced) array, a non-strictly-increasing grid raises ``ValueError``
+    before the jitted core runs. Under ``jax.jit`` the grid is a tracer whose
+    values are unknown at trace time, so the wrapper's check is skipped (a
+    value-dependent ``raise`` cannot fire on a tracer); callers inside ``jit``
+    are responsible for passing a valid monotonic grid. The numerics live in
+    the jitted ``_interp1d_core``.
     """
+    x = jnp.asarray(x)
+    # Eager/debug guard: reject non-strictly-increasing grids when x is concrete.
+    # Skipped under tracing (try_concrete_bool returns None inside a JAX trace).
+    is_increasing = try_concrete_bool(jnp.all(jnp.diff(x) > 0))
+    if is_increasing is False:
+        raise ValueError(
+            "interp1d requires x to be strictly increasing (x[i+1] > x[i])."
+        )
+    return _interp1d_core(
+        x, y, x_new, axis=axis, left=left, right=right, extrapolate=extrapolate
+    )
+
+
+@partial(jax.jit, static_argnames=("axis", "left", "right", "extrapolate"))
+def _interp1d_core(
+    x: Array,
+    y: Array,
+    x_new: Array,
+    *,
+    axis: int = -1,
+    left: Optional[float] = None,
+    right: Optional[float] = None,
+    extrapolate: bool = False,
+) -> Array:
+    """Jitted core for :func:`interp1d` (no input validation)."""
     y_moved = _move_axis_to_last(y, axis)
     x = jnp.asarray(x)
     x_new = jnp.asarray(x_new)

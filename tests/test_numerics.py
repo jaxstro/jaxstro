@@ -8,8 +8,15 @@ Verifies numerical utilities work correctly with JAX transforms.
 
 import jax
 import jax.numpy as jnp
+import pytest
 
-from jaxstro.numerics import integration, interpolation, rootfinding, stats
+from jaxstro.numerics import (
+    compensated,
+    integration,
+    interpolation,
+    rootfinding,
+    stats,
+)
 
 
 class TestSafeLog:
@@ -492,3 +499,138 @@ class TestJAXTransforms:
 
         result = jax.vmap(lambda xn: interpolation.interp1d(x, y, xn))(x_new)
         assert result.shape == (2, 1)
+
+
+class TestCompensatedAccuracy:
+    """Accuracy tests for Neumaier compensated summation.
+
+    The whole point of the module is to beat naive float summation under
+    catastrophic cancellation. The classic witness is [1e16, 1, -1e16, 1]:
+    naive float64 summation loses the small terms and returns 0.0, while
+    Neumaier summation recovers the exact answer 2.0.
+    """
+
+    def test_catastrophic_cancellation_array(self):
+        terms = jnp.array([1e16, 1.0, -1e16, 1.0])
+        # Sanity: naive summation loses precision and does NOT recover 2.0
+        # (float64 left-to-right gives 1.0; float32 gives 0.0).
+        naive = jnp.sum(terms)
+        assert not jnp.allclose(naive, 2.0)
+        # Neumaier recovers the exact answer.
+        result = compensated.compensated_sum_array(terms)
+        assert jnp.allclose(result, 2.0)
+
+    def test_catastrophic_cancellation_variadic(self):
+        result = compensated.compensated_sum(
+            jnp.array(1e16), jnp.array(1.0), jnp.array(-1e16), jnp.array(1.0)
+        )
+        assert jnp.allclose(result, 2.0)
+
+    def test_compensated_dot_cancellation(self):
+        a = jnp.array([1e16, 1.0, -1e16, 1.0])
+        b = jnp.array([1.0, 1.0, 1.0, 1.0])
+        # Naive dot loses precision and does NOT recover the exact 2.0.
+        assert not jnp.allclose(jnp.dot(a, b), 2.0)
+        result = compensated.compensated_dot(a, b)
+        assert jnp.allclose(result, 2.0)
+
+    def test_vector_sum_cancellation(self):
+        vecs = jnp.array(
+            [[1e16, 1.0], [1.0, -1e16], [-1e16, 1e16], [1.0, 1.0]]
+        )
+        result = compensated.compensated_vector_sum(vecs)
+        assert jnp.allclose(result, jnp.array([2.0, 2.0]))
+
+    def test_grad_through_compensated_sum(self):
+        # Compensated sum is linear in its inputs; gradient should be all-ones.
+        def f(terms):
+            return compensated.compensated_sum_array(terms)
+
+        g = jax.grad(f)(jnp.array([1e16, 1.0, -1e16, 1.0]))
+        assert jnp.allclose(g, jnp.ones(4))
+
+
+class TestSimpson:
+    """Tests for Simpson's rule, including uniform-spacing validation."""
+
+    def test_sin_integral(self):
+        # ∫_0^π sin(x) dx = 2.
+        x = jnp.linspace(0.0, jnp.pi, 101)
+        y = jnp.sin(x)
+        result = integration.simpson(y, x)
+        assert jnp.allclose(result, 2.0, atol=1e-6)
+
+    def test_polynomial_exact(self):
+        # Simpson is exact for cubics: ∫_0^2 x^3 dx = 4.
+        x = jnp.linspace(0.0, 2.0, 5)
+        y = x**3
+        result = integration.simpson(y, x)
+        assert jnp.allclose(result, 4.0, atol=1e-10)
+
+    def test_default_dx(self):
+        # Without x, dx defaults to 1; ∫ over indices 0..2 of [1,1,1] = 2.
+        y = jnp.ones(3)
+        result = integration.simpson(y)
+        assert jnp.allclose(result, 2.0)
+
+    def test_even_points_raises(self):
+        with pytest.raises(ValueError, match="odd number"):
+            integration.simpson(jnp.ones(4))
+
+    def test_too_few_points_raises(self):
+        with pytest.raises(ValueError, match="odd number"):
+            integration.simpson(jnp.ones(1))
+
+    def test_nonuniform_spacing_raises(self):
+        # Simpson assumes uniform spacing; a non-uniform x must be rejected
+        # (eager/host-side debug check) rather than silently mis-integrate.
+        x = jnp.array([0.0, 1.0, 3.0])  # spacings 1.0 and 2.0 differ
+        y = x**2
+        with pytest.raises(ValueError, match="uniform"):
+            integration.simpson(y, x)
+
+    def test_uniform_spacing_ok(self):
+        x = jnp.array([0.0, 1.0, 2.0])  # uniform
+        y = x**2
+        result = integration.simpson(y, x)
+        # ∫_0^2 x^2 dx = 8/3.
+        assert jnp.allclose(result, 8.0 / 3.0)
+
+    def test_jit_compatible(self):
+        # Under jit the eager uniformity check is skipped (tracers); the
+        # numerics must still work for a uniform grid.
+        x = jnp.linspace(0.0, jnp.pi, 101)
+        y = jnp.sin(x)
+        result = jax.jit(lambda x, y: integration.simpson(y, x))(x, y)
+        assert jnp.allclose(result, 2.0, atol=1e-6)
+
+
+class TestInterp1dValidation:
+    """Monotonic-x validation for interp1d."""
+
+    def test_non_monotonic_raises(self):
+        x = jnp.array([0.0, 2.0, 1.0])  # not strictly increasing
+        y = jnp.array([0.0, 1.0, 2.0])
+        with pytest.raises(ValueError, match="strictly increasing"):
+            interpolation.interp1d(x, y, jnp.array(0.5))
+
+    def test_repeated_x_raises(self):
+        x = jnp.array([0.0, 1.0, 1.0, 2.0])  # not strictly increasing (tie)
+        y = jnp.array([0.0, 1.0, 2.0, 3.0])
+        with pytest.raises(ValueError, match="strictly increasing"):
+            interpolation.interp1d(x, y, jnp.array(0.5))
+
+    def test_monotonic_x_ok(self):
+        x = jnp.array([0.0, 1.0, 2.0])
+        y = jnp.array([0.0, 1.0, 4.0])
+        result = interpolation.interp1d(x, y, jnp.array(1.5))
+        assert jnp.allclose(result, 2.5)
+
+    def test_jit_skips_check(self):
+        # Under jit the eager check is skipped; a valid monotonic grid works.
+        x = jnp.array([0.0, 1.0, 2.0])
+        y = jnp.array([0.0, 1.0, 4.0])
+        result = jax.jit(lambda xn: interpolation.interp1d(x, y, xn))(
+            jnp.array(0.5)
+        )
+        assert jnp.allclose(result, 0.5)
