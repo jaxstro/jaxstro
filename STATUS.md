@@ -1,7 +1,10 @@
 # jaxstro — status
 
-next: jaxstro.params MERGED to local main (FF → b6d65b3, NOT pushed — push held per Anna). Phase B + jaxstro.params both on local main, ahead of origin/main, unpushed. NEXT: Phase C (release hardening) in a FRESH session — 3-tier test reorg, CI (GitHub Actions), MyST/Diátaxis docs, CHANGELOG, progenax-grade CLAUDE.md. Brainstorm→writing-plans→subagent-driven, same as params.
-blocker: none (push/tag still held — Phase D deferred pending release-staging decision: jaxstro namespace? rename jaxstro→jaxstro-core?).
+next: jaxstro.params + Phase B PUSHED to origin/main (2026-06-17, c409e9a — in sync). NEXT: Phase C
+(release hardening) in a FRESH session — 3-tier test reorg, CI (GitHub Actions), MyST/Diátaxis docs,
+CHANGELOG, progenax-grade CLAUDE.md. Brainstorm→writing-plans→subagent-driven, same as params.
+blocker: none (TAG/release still held — Phase D deferred pending release-staging decision: jaxstro
+namespace? rename jaxstro→jaxstro-core?).
 due:
 
 ## jaxstro.params — DONE (merged to local main 2026-06-17, b6d65b3, 14 commits, 444 tests green)
