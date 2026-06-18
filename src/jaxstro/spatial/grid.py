@@ -150,6 +150,16 @@ def fill_bins(
     This approach is much faster than O(N x Nbins) per-bin scans for large N,
     and the hash-based selection ensures reproducible, unbiased overflow handling.
 
+    Provenance:
+        The "sort-by-(bin, hash) then take the first Bcap per segment" overflow
+        rule is an ORIGINAL heuristic for this codebase (not taken from a
+        specific paper). It is a deterministic, order-independent reservoir-style
+        downsample: because the per-particle key mixes a hash of the particle ID
+        with the bin ID (wyhash32, a standard non-cryptographic mixer), the
+        retained subset is independent of input ordering and uniform over the
+        bin's members, while remaining a single lax.sort (GPU/TPU-friendly).
+        Treat the specific selection rule as project-local, not literature.
+
     Args:
         particle_ids: Particle indices [N]. These are the values stored in bins.
         bin_of: Bin assignment per particle [N], from assign_particles_to_bins.

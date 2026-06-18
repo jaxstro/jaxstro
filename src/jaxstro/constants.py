@@ -36,8 +36,12 @@ H_CGS: float = 6.62607015e-27
 # Boltzmann constant [erg/K] (exact)
 K_B: float = 1.380649e-16
 
-# Radiation constant [erg cm⁻³ K⁻⁴]
-A_RAD: float = 7.565767e-15
+# Radiation constant a = 4σ/c [erg cm⁻³ K⁻⁴].
+# CODATA-derived: a = 4 * SIGMA_SB / C_CGS, with the CODATA-2018 Stefan–Boltzmann
+# constant and the exact speed of light below
+# (4 * 5.670374419e-5 / 2.99792458e10 = 7.565733250e-15). Kept internally
+# consistent with SIGMA_SB and C_CGS rather than an independent rounding.
+A_RAD: float = 7.565733250e-15
 
 # Avogadro's number [mol⁻¹]
 N_A: float = 6.02214076e23
@@ -89,9 +93,11 @@ PC_CM: float = 3.0856775814913673e18
 # Astronomical unit [cm] (IAU 2012 definition: 149,597,870,700 m)
 AU_CM: float = 1.495978707e13
 
-# Time units
-MYR_S: float = 3.15576e13  # s in 1 Myr (1e6 tropical years)
-YR_S: float = 3.15576e7  # s in 1 yr (tropical year)
+# Time units — JULIAN year (IAU): 1 yr = 365.25 d × 86400 s = 31557600 s exactly.
+# (This is the Julian year, NOT the tropical year ≈ 365.2422 d; the IAU defines
+# the Julian year/century for ephemerides and the light-year.)
+YR_S: float = 3.15576e7  # s in 1 Julian yr = 365.25 × 86400 = 31557600 s exactly
+MYR_S: float = 3.15576e13  # s in 1 Myr = 1e6 Julian yr = 1e6 × 31557600 s
 
 # Metric conversion
 KM_CM: float = 1.0e5  # 1 km = 1e5 cm
@@ -100,7 +106,10 @@ KM_CM: float = 1.0e5  # 1 km = 1e5 cm
 # Radiation / thermodynamics
 # ===========================================================================
 
-# Stefan–Boltzmann constant [erg cm⁻² s⁻¹ K⁻⁴]
+# Stefan–Boltzmann constant σ = 2π⁵k⁴/(15h³c²) [erg cm⁻² s⁻¹ K⁻⁴].
+# CODATA 2018: 5.670374419e-8 W m⁻² K⁻⁴ = 5.670374419e-5 erg cm⁻² s⁻¹ K⁻⁴
+# (×1e3 for the W→erg/s and m⁻²→cm⁻² CGS conversion). Tiesinga et al. (2021),
+# Rev. Mod. Phys., 93, 025010.
 SIGMA_SB: float = 5.670374419e-5
 
 # ===========================================================================

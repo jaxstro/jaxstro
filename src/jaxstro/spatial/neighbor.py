@@ -34,9 +34,28 @@ candidate indices and distances, and a small layer on top to support:
     - neighbors within a given radius
 to be consumed by N-body integrators, IC builders, and analysis code.
 
+Provenance:
+    The general idea of grid-/cell-based neighbour search and of maintaining a
+    neighbour list to avoid the O(N^2) all-pairs cost is standard in collisional
+    N-body work (see the references below). HOWEVER, the specific design choices
+    in this module are ORIGINAL heuristics for this codebase, NOT taken from any
+    paper, and the magic numbers are tuned, not derived:
+
+      - the **two-stencil adaptive fallback** (coarse 3x3x3, then dense 5x5x5
+        only for particles whose coarse pool is thin),
+      - the dense-fallback trigger threshold ``2 * K_target``,
+      - the per-bin keep counts ``K_bin_coarse = 18`` and ``K_bin_dense = 2``,
+      - and the pool caps ``384`` (coarse) and ``512`` (dense), chosen for JIT
+        shape stability, not from theory.
+
+    Treat all of the above as project-local heuristics: they are reasonable
+    defaults for roughly uniform-to-clustered point sets, but have not been
+    validated against a literature benchmark. The cited papers motivate the
+    neighbour-list *concept*, not these particular constants.
+
 References:
-    Makino, J. & Aarseth, S. J. (1992). PASJ, 44, 141.
-    Ahmad, A. & Cohen, L. (1973). J. Comp. Phys., 12, 389.
+    Makino, J. & Aarseth, S. J. (1992). PASJ, 44, 141.  (neighbour-scheme concept)
+    Ahmad, A. & Cohen, L. (1973). J. Comp. Phys., 12, 389.  (Ahmad-Cohen lists)
 """
 
 from __future__ import annotations

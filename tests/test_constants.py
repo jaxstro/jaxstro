@@ -41,10 +41,20 @@ class TestFundamentalConstants:
         )
         assert C.SIGMA_SB == pytest.approx(sigma_computed, rel=1e-6)
 
+    def test_stefan_boltzmann_codata_value(self):
+        """sigma_SB should match the CODATA 2018 CGS value exactly."""
+        # CODATA 2018: 5.670374419e-8 W m^-2 K^-4 = 5.670374419e-5 erg cm^-2 s^-1 K^-4
+        assert C.SIGMA_SB == 5.670374419e-5
+
     def test_radiation_constant(self):
-        """a_rad should be 4 * sigma_SB / c."""
+        """a_rad should be 4 * sigma_SB / c (CODATA-derived, tight).
+
+        Compares as a ratio to dodge pytest.approx's default abs=1e-12 floor,
+        which would otherwise swamp these ~1e-14 magnitudes and make the check
+        vacuous. A_RAD is stored to match 4*sigma/c to better than 1e-7.
+        """
         a_computed = 4 * C.SIGMA_SB / C.C_CGS
-        assert C.A_RAD == pytest.approx(a_computed, rel=1e-6)
+        assert C.A_RAD / a_computed == pytest.approx(1.0, rel=1e-7)
 
 
 class TestParticleMasses:
@@ -141,9 +151,19 @@ class TestDistanceUnits:
 class TestTimeUnits:
     """Tests for time unit conversions."""
 
+    def test_julian_year_exact_seconds(self):
+        """YR_S is the JULIAN year: 365.25 d * 86400 s = 31557600 s exactly."""
+        assert 365.25 * 86400 == 31557600.0  # arithmetic identity
+        assert C.YR_S == 31557600.0  # exact, not tropical (365.2422 d)
+
     def test_year(self):
-        """1 tropical year should be ~3.1558e7 s."""
+        """1 Julian year should be ~3.15576e7 s."""
         assert C.YR_S == pytest.approx(3.15576e7, rel=1e-4)
+
+    def test_megayear_exact_seconds(self):
+        """MYR_S is 1e6 Julian years = 1e6 * 31557600 = 3.15576e13 s exactly."""
+        assert C.MYR_S == 31557600.0 * 1e6
+        assert C.MYR_S == 3.15576e13
 
     def test_megayear(self):
         """1 Myr should be 1e6 years."""
