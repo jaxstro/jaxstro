@@ -104,6 +104,14 @@ RSUN_CM: float = 6.957e10  # Solar radius [cm]
 LSUN_ERG_S: float = 3.828e33  # Solar luminosity [erg/s]
 TEFF_SUN: float = 5772.0  # Solar effective temperature [K]
 
+# Nominal solar absolute bolometric magnitude [mag].
+# IAU 2015 Resolution B2 fixes the absolute bolometric magnitude zero point at
+# L_0 = 3.0128e28 W (M_bol = 0 at L_0). With the IAU nominal solar luminosity
+# L_sun = 3.828e26 W, M_bol,sun = -2.5 * log10(L_sun / L_0)
+#       = -2.5 * log10(3.828e26 / 3.0128e28) = 4.74.
+# https://www.iau.org/static/resolutions/IAU2015_English.pdf
+M_BOL_SUN: float = 4.74
+
 # ===========================================================================
 # Solar composition (Asplund et al. 2009)
 # ===========================================================================
@@ -201,6 +209,7 @@ __all__ = [
     "RSUN_CM",
     "LSUN_ERG_S",
     "TEFF_SUN",
+    "M_BOL_SUN",
     # Solar composition
     "X_SUN",
     "Y_SUN",

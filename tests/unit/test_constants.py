@@ -150,6 +150,16 @@ class TestSolarParameters:
         # Allow ~0.5% tolerance due to nominal value definitions
         assert C.LSUN_ERG_S == pytest.approx(L_computed, rel=0.005)
 
+    def test_m_bol_sun_value_and_consistency(self):
+        """M_bol_sun should be 4.74 and consistent with the IAU 2015 zero point."""
+        from jaxstro.constants import M_BOL_SUN
+
+        assert M_BOL_SUN == 4.74
+        # IAU 2015 Res B2: M_bol = -2.5 log10(L / L_0), L_0 = 3.0128e28 W;
+        # nominal L_sun = 3.828e26 W
+        L_sun_W, L_0_W = 3.828e26, 3.0128e28
+        assert abs(M_BOL_SUN - (-2.5 * math.log10(L_sun_W / L_0_W))) < 5e-3
+
 
 class TestSolarComposition:
     """Tests for solar composition (Asplund et al. 2009)."""
