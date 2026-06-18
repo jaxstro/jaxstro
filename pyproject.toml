@@ -107,5 +107,11 @@ strict_optional = true
 # -----------------------
 [tool.pytest.ini_options]
 minversion = "8.0"
-addopts = "-ra"
+addopts = "-ra --strict-markers"
 testpaths = ["tests"]
+markers = [
+    "unit: fast isolated unit tests (functional correctness, shapes, bounds, round-trips)",
+    "integration: cross-module / JAX-transform tests (jit, grad, vmap, parity)",
+    "validation: scientific validation (FD-vs-AD numerical truth, convergence)",
+    "slow: expensive tests excluded from the fast gate",
+]
