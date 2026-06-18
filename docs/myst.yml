@@ -1,0 +1,90 @@
+version: 1
+project:
+  id: jaxstro-docs
+  title: jaxstro
+  description: >-
+    The differentiable, dependency-light foundation of the jaxstro
+    astrophysics ecosystem — units, constants, coordinates, and AD-safe numerics.
+  github: https://github.com/drannarosen/jaxstro
+  keywords:
+    - JAX
+    - automatic differentiation
+    - astrophysics
+    - numerics
+    - units
+  bibliography:
+    - 99-bibliography/references.bib
+  exclude:
+    - plans/**
+    - _build/**
+  # The ported ADRs (30-decisions/) keep their original working-log frontmatter
+  # keys (id/status/supersedes/decided_by/last_read) verbatim. MyST's page-
+  # frontmatter schema does not know these keys; silence the resulting per-page
+  # warning rather than strip the provenance. (Documented pattern for custom ADR
+  # frontmatter — myst-projects-and-workflows.)
+  error_rules:
+    - rule: valid-page-frontmatter
+      severity: ignore
+  math:
+    '\Msun': '\mathrm{M}_\odot'
+    '\Rsun': '\mathrm{R}_\odot'
+    '\Lsun': '\mathrm{L}_\odot'
+    '\erg': '\mathrm{erg}'
+  numbering:
+    headings: false
+    figure:
+      enabled: true
+    equation:
+      enabled: true
+    table:
+      enabled: true
+  toc:
+    - file: index.md
+    - title: Getting started
+      children:
+        - file: 00-getting-started/index.md
+    - title: Theory — AD-safe numerics
+      children:
+        - file: 10-theory/index.md
+        - file: 10-theory/rootfinding.md
+        - file: 10-theory/cumulative-trapz.md
+    - title: Architecture
+      children:
+        - file: 20-architecture/index.md
+    - title: Decisions (ADRs)
+      children:
+        - file: 30-decisions/index.md
+        - file: 30-decisions/0001-thin-foundation-posture.md
+        - file: 30-decisions/0002-adopt-equinox-foundation.md
+        - file: 30-decisions/0003-standalone-uv-hatchling-project.md
+        - file: 30-decisions/0004-apache-2-0-license.md
+        - file: 30-decisions/0005-diataxis-docs-with-adr-meta.md
+        - file: 30-decisions/0006-build-own-quantity-not-unxt.md
+        - file: 30-decisions/0007-cgs-as-default-units.md
+        - file: 30-decisions/0008-reject-ift-from-core.md
+        - file: 30-decisions/0009-jaxstro-params-selective-inference.md
+        - file: 30-decisions/0010-ecosystem-config-architecture.md
+        - file: 30-decisions/0011-apache-2-0-standardization.md
+    - title: API reference
+      children:
+        - file: 40-api/index.md
+    - title: How-to
+      children:
+        - file: 50-howto/index.md
+    - title: Validation
+      children:
+        - file: 60-validation/index.md
+    - title: Development log
+      children:
+        - file: 90-development-log/index.md
+    - title: Release notes
+      children:
+        - file: 95-release/index.md
+    - title: Bibliography
+      children:
+        - file: 99-bibliography/index.md
+site:
+  template: book-theme
+  options:
+    logo_text: jaxstro
+    github_url: https://github.com/drannarosen/jaxstro
