@@ -56,6 +56,9 @@ here are the canonical record.
 * - [0011](./0011-apache-2-0-standardization.md)
   - Apache-2.0 license standardization
   - accepted
+* - [0012](./0012-ecosystem-multi-package-maintenance.md)
+  - Ecosystem multi-package maintenance
+  - accepted
 ```
 
 The narrative "why" — the software's shape rather than its atomic decisions —

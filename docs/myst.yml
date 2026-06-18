@@ -65,6 +65,7 @@ project:
         - file: 30-decisions/0009-jaxstro-params-selective-inference.md
         - file: 30-decisions/0010-ecosystem-config-architecture.md
         - file: 30-decisions/0011-apache-2-0-standardization.md
+        - file: 30-decisions/0012-ecosystem-multi-package-maintenance.md
     - title: API reference
       children:
         - file: 40-api/index.md
