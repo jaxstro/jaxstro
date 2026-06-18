@@ -24,19 +24,40 @@ Design notes
   exactly on its array leaves (identity), and gradients flow through the flat
   vector into the reconstructed model (see the module tests).
 
-This Task-1 core supports the *identity* parameterization only (the flat vector
-lives in the same space as the free leaves). Unconstrained-space transforms
-(bijectors) are layered on in a later task.
+Unconstrained-space transforms
+------------------------------
+Each free leaf may carry a :class:`~jaxstro.params.transforms.AbstractBijector`
+that maps it to/from an *unconstrained* real space. The flat vector then lives in
+:math:`\\mathbb{R}^n` even when the physical parameters are bounded (e.g.
+``r_h > 0`` via :class:`~jaxstro.params.transforms.Exp`, or ``0 < Q < 1`` via
+:class:`~jaxstro.params.transforms.Sigmoid`). With the default
+(``transforms=None``) every free leaf uses
+:class:`~jaxstro.params.transforms.Identity`, recovering the identity
+parameterization byte-for-byte.
+
+The bijectors are stored **co-aligned with the free leaves** as a static
+leaf-aligned PyTree (``transform_spec``), built by riding the *same*
+:func:`equinox.tree_at` lowering used for ``free_spec``. The flat vector is
+ordered by PyTree-leaf order, so each leaf's bijector travels with its leaf by
+construction -- the ``where``-tuple order is irrelevant.
 """
 
 from __future__ import annotations
 
-from typing import Callable
+from typing import Callable, Optional, Sequence
 
 import equinox as eqx
 import jax
+import jax.numpy as jnp
 from jax.flatten_util import ravel_pytree
 from jaxtyping import Array, Float, PyTree
+
+from .transforms import AbstractBijector, Identity
+
+
+def _is_bijector(x: object) -> bool:
+    """Leaf predicate: treat a whole bijector as a single PyTree leaf."""
+    return isinstance(x, AbstractBijector)
 
 
 class Parameterization(eqx.Module):
@@ -82,36 +103,59 @@ class Parameterization(eqx.Module):
     """
 
     free_spec: PyTree = eqx.field(static=True)
+    transform_spec: PyTree = eqx.field(static=True)
+    free_shapes: tuple = eqx.field(static=True)
 
     @classmethod
     def from_filter(
-        cls, model: PyTree, free_spec: PyTree
+        cls,
+        model: PyTree,
+        free_spec: PyTree,
+        transforms: Optional[Sequence[AbstractBijector]] = None,
     ) -> "Parameterization":
         """Construct from an explicit boolean filter spec.
 
         Parameters
         ----------
         model : PyTree
-            The Equinox model whose leaves ``free_spec`` is aligned with. Only
-            used for documentation/symmetry with :meth:`from_where`; the spec is
-            stored as-is.
+            The Equinox model whose leaves ``free_spec`` is aligned with. Used
+            both to lower ``transforms`` to a leaf-aligned ``transform_spec``
+            and for API symmetry with :meth:`from_where`.
         free_spec : PyTree of bool
             Boolean PyTree marking free (``True``) vs fixed (``False``) array
             leaves of ``model``.
+        transforms : sequence of AbstractBijector, optional
+            Bijectors aligned with the *free* leaves of ``free_spec`` in PyTree
+            order (one per free leaf). ``None`` (default) uses
+            :class:`~jaxstro.params.transforms.Identity` for every free leaf.
 
         Returns
         -------
         Parameterization
-            A parameterization carrying ``free_spec``.
+            A parameterization carrying ``free_spec`` and a leaf-aligned
+            ``transform_spec``.
         """
-        del model  # stored spec is authoritative; kept for API symmetry
-        return cls(free_spec=free_spec)
+        transform_spec = cls._build_transform_spec(model, free_spec, transforms)
+        return cls(
+            free_spec=free_spec,
+            transform_spec=transform_spec,
+            free_shapes=cls._free_shapes(model, free_spec),
+        )
+
+    @staticmethod
+    def _free_shapes(model: PyTree, free_spec: PyTree) -> tuple:
+        """Per-free-leaf shapes in PyTree order (static; for vec unraveling)."""
+        free = eqx.filter(model, free_spec)
+        return tuple(
+            jnp.shape(leaf) for leaf in jax.tree_util.tree_leaves(free)
+        )
 
     @classmethod
     def from_where(
         cls,
         model: PyTree,
         where: Callable[[PyTree], object],
+        transforms: Optional[Sequence[AbstractBijector]] = None,
     ) -> "Parameterization":
         """Construct from a ``where`` selector over the model's leaves.
 
@@ -128,11 +172,20 @@ class Parameterization(eqx.Module):
             of free leaves, e.g. ``lambda m: (m.a, m.b)``. Returning an empty
             tuple ``()`` marks *no* leaves free, in which case
             :meth:`to_vector` returns a vector of shape ``(0,)``.
+        transforms : sequence of AbstractBijector, optional
+            Bijectors aligned with the ``where`` *selection* order (one per
+            selected leaf). They are lowered to a static leaf-aligned
+            ``transform_spec`` by riding the *same* :func:`equinox.tree_at`
+            lowering as ``free_spec``, so each bijector travels with its leaf
+            irrespective of the ``where``-tuple ordering. ``None`` (default)
+            uses :class:`~jaxstro.params.transforms.Identity` for every free
+            leaf.
 
         Returns
         -------
         Parameterization
-            A parameterization with the selected leaves marked free.
+            A parameterization with the selected leaves marked free and a
+            leaf-aligned ``transform_spec``.
 
         Notes
         -----
@@ -140,7 +193,7 @@ class Parameterization(eqx.Module):
         explicitly: :func:`equinox.tree_at` is not invoked (it requires a
         non-empty replacement), so the all-``False`` template is used directly.
         """
-        template = jax.tree_util.tree_map(
+        bool_template = jax.tree_util.tree_map(
             lambda _: False, eqx.filter(model, eqx.is_array)
         )
         selected = where(model)
@@ -150,12 +203,70 @@ class Parameterization(eqx.Module):
 
         if len(selected) == 0:
             # No free leaves: the all-False template is already correct.
-            free_spec = template
+            free_spec = bool_template
         else:
             free_spec = eqx.tree_at(
-                where, template, replace=tuple(True for _ in selected)
+                where, bool_template, replace=tuple(True for _ in selected)
             )
-        return cls.from_filter(model, free_spec)
+
+        if transforms is None:
+            return cls.from_filter(model, free_spec, transforms=None)
+
+        if len(transforms) != len(selected):
+            raise ValueError(
+                "transforms must align 1:1 with the where selection: got "
+                f"{len(transforms)} transforms for {len(selected)} selected "
+                "leaves."
+            )
+        # Lower transforms onto an Identity template by riding the SAME tree_at
+        # lowering as free_spec; tuple order is discarded exactly as for it.
+        identity_template = jax.tree_util.tree_map(
+            lambda _: Identity(), eqx.filter(model, eqx.is_array)
+        )
+        transform_spec = eqx.tree_at(
+            where,
+            identity_template,
+            replace=tuple(transforms),
+            is_leaf=_is_bijector,
+        )
+        return cls(
+            free_spec=free_spec,
+            transform_spec=transform_spec,
+            free_shapes=cls._free_shapes(model, free_spec),
+        )
+
+    @staticmethod
+    def _build_transform_spec(
+        model: PyTree,
+        free_spec: PyTree,
+        transforms: Optional[Sequence[AbstractBijector]],
+    ) -> PyTree:
+        """Build a leaf-aligned ``transform_spec`` (all-``Identity`` default).
+
+        For the explicit-spec path (:meth:`from_filter`), ``transforms`` are
+        aligned with the free leaves of ``free_spec`` in PyTree order.
+        """
+        identity_template = jax.tree_util.tree_map(
+            lambda _: Identity(), eqx.filter(model, eqx.is_array)
+        )
+        if transforms is None:
+            return identity_template
+        transforms = list(transforms)
+        it = iter(transforms)
+        # Walk array leaves in PyTree order; assign the next bijector at each
+        # free (True) leaf, Identity at fixed (False) leaves.
+        spec = jax.tree_util.tree_map(
+            lambda is_free, ident: (next(it) if is_free else ident),
+            free_spec,
+            identity_template,
+            is_leaf=_is_bijector,
+        )
+        leftover = list(it)
+        if leftover:
+            raise ValueError(
+                "transforms has more entries than free leaves in free_spec."
+            )
+        return spec
 
     def _partition(self, model: PyTree) -> tuple[PyTree, PyTree]:
         """Split ``model`` into (free, fixed) subtrees per ``free_spec``.
@@ -176,8 +287,25 @@ class Parameterization(eqx.Module):
         """
         return eqx.partition(model, self.free_spec)
 
+    def _free_transforms(self) -> PyTree:
+        """Bijector tree aligned with the *free* partition structure.
+
+        Returns the leaf-aligned ``transform_spec`` filtered to free leaves
+        (bijectors at free leaves, ``None`` elsewhere), so it shares the exact
+        PyTree structure of ``eqx.filter(model, free_spec)`` and can be paired
+        with it under :func:`jax.tree_util.tree_map`.
+        """
+        return eqx.filter(
+            self.transform_spec, self.free_spec, is_leaf=_is_bijector
+        )
+
     def to_vector(self, model: PyTree) -> Float[Array, " n"]:
-        """Flatten the free leaves of ``model`` into a 1-D vector.
+        r"""Flatten the free leaves of ``model`` into an unconstrained vector.
+
+        Each free leaf is mapped to unconstrained :math:`\mathbb{R}` by its
+        bijector's :meth:`~jaxstro.params.transforms.AbstractBijector.inverse`
+        (the identity under the default all-``Identity`` spec), then all free
+        leaves are raveled in PyTree order.
 
         Parameters
         ----------
@@ -187,21 +315,30 @@ class Parameterization(eqx.Module):
         Returns
         -------
         jax.Array, shape ``(n,)``
-            The concatenation of all free leaves in PyTree order, where ``n`` is
-            the total number of scalar entries across free leaves. If no leaves
-            are free, the result has shape ``(0,)``.
+            The concatenation of all (inverse-transformed) free leaves in
+            PyTree order, where ``n`` is the total number of scalar entries
+            across free leaves. If no leaves are free, the result has shape
+            ``(0,)``.
         """
         free = eqx.filter(model, self.free_spec)
-        return ravel_pytree(free)[0]
+        unconstrained = jax.tree_util.tree_map(
+            lambda leaf, bij: bij.inverse(leaf),
+            free,
+            self._free_transforms(),
+            is_leaf=_is_bijector,
+        )
+        return ravel_pytree(unconstrained)[0]
 
     def from_vector(
         self, model: PyTree, vec: Float[Array, " n"]
     ) -> PyTree:
-        """Reconstruct a model from ``vec``, keeping fixed leaves from ``model``.
+        r"""Reconstruct a model from an unconstrained ``vec``.
 
-        The free leaves are unflattened from ``vec`` (using the structure of
-        ``model``'s free partition), and recombined with ``model``'s fixed and
-        static leaves.
+        The vector is unflattened into the free-partition structure, each free
+        leaf is mapped back to physical space by its bijector's
+        :meth:`~jaxstro.params.transforms.AbstractBijector.forward` (identity
+        under the default spec), and the result is recombined with ``model``'s
+        fixed and static leaves.
 
         Parameters
         ----------
@@ -209,14 +346,14 @@ class Parameterization(eqx.Module):
             The reference model supplying both the free-leaf structure and the
             fixed/static leaves to carry through.
         vec : jax.Array, shape ``(n,)``
-            Flat vector of free-parameter values, in the same ordering produced
-            by :meth:`to_vector`.
+            Flat vector of free-parameter values in *unconstrained* space, in
+            the same ordering produced by :meth:`to_vector`.
 
         Returns
         -------
         PyTree
             A new model identical to ``model`` except with free leaves replaced
-            by the values unflattened from ``vec``.
+            by the (forward-transformed) values unflattened from ``vec``.
 
         Notes
         -----
@@ -225,4 +362,59 @@ class Parameterization(eqx.Module):
         """
         free, fixed = self._partition(model)
         _, unravel = ravel_pytree(free)
-        return eqx.combine(unravel(vec), fixed)
+        unconstrained = unravel(vec)
+        physical = jax.tree_util.tree_map(
+            lambda leaf, bij: bij.forward(leaf),
+            unconstrained,
+            self._free_transforms(),
+            is_leaf=_is_bijector,
+        )
+        return eqx.combine(physical, fixed)
+
+    def log_det_jacobian(self, vec: Float[Array, " n"]) -> Float[Array, ""]:
+        r"""Total log-abs-det Jacobian of the unconstrained -> physical map.
+
+        For a change of variables from the unconstrained vector ``vec`` to the
+        physical free leaves, the log absolute determinant of the (diagonal)
+        Jacobian is the sum over free leaves of each bijector's
+        :meth:`~jaxstro.params.transforms.AbstractBijector.forward_log_det_jacobian`.
+        Use this as the change-of-variables term when sampling/optimizing in
+        unconstrained space (e.g. a numpyro model on ``vec``).
+
+        Parameters
+        ----------
+        vec : jax.Array, shape ``(n,)``
+            Flat vector in *unconstrained* space, ordered as :meth:`to_vector`.
+
+        Returns
+        -------
+        jax.Array, scalar
+            :math:`\sum_i \log\left|\partial\,\mathrm{forward}_i / \partial u_i\right|`
+            over all scalar entries of all free leaves. Zero (scalar) when no
+            leaves are free or every bijector is :class:`Identity`.
+        """
+        free_transforms = self._free_transforms()
+        # Split vec into per-free-leaf segments using the statically-stored
+        # leaf shapes, then apply each leaf's analytic log-det and sum. The
+        # bijectors act element-wise, so the diagonal Jacobian's log-abs-det is
+        # the sum over all scalar entries of every free leaf.
+        bijectors = [
+            b
+            for b in jax.tree_util.tree_leaves(
+                free_transforms, is_leaf=_is_bijector
+            )
+            if _is_bijector(b)
+        ]
+        if not bijectors:
+            return jnp.zeros(())
+
+        total = jnp.zeros(())
+        offset = 0
+        for shape, bij in zip(self.free_shapes, bijectors):
+            size = 1
+            for d in shape:
+                size *= d
+            seg = jax.lax.dynamic_slice_in_dim(vec, offset, size)
+            total = total + jnp.sum(bij.forward_log_det_jacobian(seg))
+            offset += size
+        return total
