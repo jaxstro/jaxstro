@@ -22,6 +22,8 @@ Usage:
     jax.grad(lambda a: solve(a, 2.0))(1.0)
 """
 
+from typing import Optional
+
 import jax
 import jax.lax as lax
 import jax.numpy as jnp
@@ -204,7 +206,122 @@ def newton_with_grad(
     return x_f
 
 
+def newton_ppf(
+    u: Array,
+    cdf: ScalarFn,
+    x0: Array,
+    lo: Array,
+    hi: Array,
+    pdf: Optional[ScalarFn] = None,
+    n_iter: int = 20,
+    pdf_floor: float = 1e-30,
+) -> Array:
+    r"""
+    Generic percent-point-function (PPF / inverse-CDF) solver via Newton.
+
+    Solves ``cdf(x) = u`` for ``x`` using a fixed number of Newton
+    iterations. This is the inverse-CDF inversion at the heart of
+    reparameterized sampling (e.g. IMF sampling): given a uniform draw
+    ``u`` in ``(0, 1)``, it returns the quantile ``x = F^{-1}(u)``.
+
+    Algorithm
+    ---------
+    Newton's method applied to the residual ``g(x) = cdf(x) - u``.
+    Since ``g'(x) = cdf'(x) = pdf(x)``, each step is::
+
+        x_{k+1} = x_k - (cdf(x_k) - u) / pdf(x_k)
+
+    The PDF (CDF derivative) is supplied via ``pdf`` if available, else
+    obtained automatically as ``jax.grad(cdf)`` (vmapped to handle array
+    ``x``). The update is clipped to ``[lo, hi]`` after every step so the
+    iterate never leaves the support. A small ``pdf_floor`` guards the
+    division when the density is near zero (flat-CDF regions), preventing
+    NaNs without biasing well-conditioned steps.
+
+    This is deliberately decoupled from any specific distribution: callers
+    pass their own ``cdf`` (closing over distribution parameters), an
+    initial guess ``x0``, and the support bounds. A good ``x0`` (e.g. a
+    closed-form approximate inverse) reduces the iterations needed.
+
+    Parameters
+    ----------
+    u : Array
+        Target CDF value(s) in ``(0, 1)``. Shape broadcasts with ``x0``.
+    cdf : callable
+        Cumulative distribution function ``cdf(x) -> F(x)``. Must be
+        differentiable if ``pdf`` is not supplied.
+    x0 : Array
+        Initial guess for the quantile(s), same shape as ``u``.
+    lo, hi : Array
+        Lower/upper bounds of the support; iterates are clipped to
+        ``[lo, hi]``.
+    pdf : callable, optional
+        Density ``pdf(x) = cdf'(x)``. If ``None`` (default), computed via
+        automatic differentiation of ``cdf``.
+    n_iter : int
+        Number of Newton iterations (fixed; NOT convergence-based). Default
+        20 gives ample precision for smooth unimodal CDFs from a reasonable
+        guess.
+    pdf_floor : float
+        Additive floor on the density in the denominator (default 1e-30)
+        guarding against division by ~0 in flat-CDF regions.
+
+    Returns
+    -------
+    Array
+        Quantile(s) ``x`` such that ``cdf(x) ~= u``.
+
+    Notes
+    -----
+    Fully compatible with ``jit``, ``vmap``, and ``grad``: uses ``lax.scan``
+    with a fixed iteration count (no ``while_loop``), additive (not
+    branching) safe division, and ``clip`` for bounds. Gradients flow
+    through every iteration, so the result is differentiable BOTH w.r.t.
+    ``u`` AND w.r.t. any distribution parameters captured inside ``cdf``
+    (or ``pdf``) — verified by FD-vs-AD grad-checks against the analytic
+    exponential PPF.
+
+    Example
+    -------
+    >>> import jax.numpy as jnp
+    >>> # Exponential: F(x) = 1 - exp(-lam x), true PPF = -ln(1-u)/lam
+    >>> lam = 2.0
+    >>> u = jnp.array([0.1, 0.5, 0.9])
+    >>> x = newton_ppf(u, lambda x: 1.0 - jnp.exp(-lam * x),
+    ...                x0=jnp.ones_like(u), lo=0.0, hi=100.0)
+    >>> jnp.allclose(x, -jnp.log1p(-u) / lam, atol=1e-6)
+    Array(True, dtype=bool)
+    """
+    u = jnp.asarray(u)
+    x0 = jnp.asarray(x0)
+    lo = jnp.asarray(lo)
+    hi = jnp.asarray(hi)
+
+    if pdf is None:
+        # Elementwise derivative of the (possibly vectorized) CDF. vmap over
+        # a raveled view so jax.grad sees a scalar->scalar map, then restore
+        # shape. This keeps the AD path correct for array-valued x.
+        grad_scalar = jax.grad(lambda xi: jnp.reshape(cdf(xi), ()))
+
+        def pdf_fn(x):
+            x_arr = jnp.asarray(x)
+            flat = jax.vmap(grad_scalar)(x_arr.ravel())
+            return flat.reshape(x_arr.shape)
+    else:
+        pdf_fn = pdf
+
+    def step(x, _):
+        residual = cdf(x) - u
+        dens = pdf_fn(x)
+        x_new = x - residual / (dens + pdf_floor)
+        x_new = jnp.clip(x_new, lo, hi)
+        return x_new, None
+
+    x_f, _ = lax.scan(step, x0, None, length=n_iter)
+    return x_f
+
+
 # Keep newton_1d as alias for backwards compatibility
 newton_1d = newton_with_grad
 
-__all__ = ["bisect", "newton", "newton_with_grad", "newton_1d"]
+__all__ = ["bisect", "newton", "newton_with_grad", "newton_1d", "newton_ppf"]

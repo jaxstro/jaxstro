@@ -39,6 +39,7 @@ from . import (
     sampling,
     stats,
 )
+from .rootfinding import newton_ppf
 from .sampling import inverse_cdf_draw
 from .types import Array, ScalarFn
 
@@ -49,6 +50,7 @@ __all__ = [
     "stats",
     "interpolation",
     "rootfinding",
+    "newton_ppf",
     "integration",
     "sampling",
     "inverse_cdf_draw",

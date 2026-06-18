@@ -321,6 +321,119 @@ class TestNewtonWithGrad:
         assert jnp.isfinite(g)
 
 
+class TestNewtonPPF:
+    """Tests for newton_ppf: generic fixed-iteration Newton PPF inversion.
+
+    Analytic case: exponential distribution.
+        CDF: F(x) = 1 - exp(-lam * x)
+        PPF: x = -ln(1 - u) / lam   (closed form)
+    """
+
+    @staticmethod
+    def _exp_cdf(x, lam):
+        return 1.0 - jnp.exp(-lam * x)
+
+    @staticmethod
+    def _exp_ppf_true(u, lam):
+        return -jnp.log1p(-u) / lam
+
+    def test_matches_analytic_ppf(self):
+        """newton_ppf should match the closed-form exponential PPF to ~1e-6."""
+        lam = 1.7
+        u = jnp.linspace(0.01, 0.99, 99)
+        x0 = jnp.full_like(u, 1.0)  # neutral starting guess
+
+        ppf = rootfinding.newton_ppf(
+            u,
+            lambda x: self._exp_cdf(x, lam),
+            x0=x0,
+            lo=0.0,
+            hi=100.0,
+        )
+        expected = self._exp_ppf_true(u, lam)
+        assert jnp.allclose(ppf, expected, atol=1e-6, rtol=1e-6)
+
+    def test_jit_vmap_compatible(self):
+        """newton_ppf should compose with jit (vectorized over u)."""
+        lam = 2.3
+
+        @jax.jit
+        def solve(u):
+            return rootfinding.newton_ppf(
+                u,
+                lambda x: self._exp_cdf(x, lam),
+                x0=jnp.ones_like(u),
+                lo=0.0,
+                hi=100.0,
+            )
+
+        u = jnp.linspace(0.05, 0.95, 50)
+        ppf = solve(u)
+        assert jnp.allclose(ppf, self._exp_ppf_true(u, lam), atol=1e-6)
+
+    def test_differentiable_wrt_u(self):
+        """d(PPF)/du via jax.grad should match finite differences (~1e-6).
+
+        Analytic: d/du [-ln(1-u)/lam] = 1 / (lam * (1 - u)).
+        """
+        lam = 1.3
+        u0 = 0.4
+
+        def solve(u):
+            return rootfinding.newton_ppf(
+                u,
+                lambda x: self._exp_cdf(x, lam),
+                x0=1.0,
+                lo=0.0,
+                hi=100.0,
+            )
+
+        ad = jax.grad(solve)(u0)
+        eps = 1e-6
+        fd = (solve(u0 + eps) - solve(u0 - eps)) / (2 * eps)
+        analytic = 1.0 / (lam * (1.0 - u0))
+        assert jnp.allclose(ad, fd, atol=1e-5, rtol=1e-5)
+        assert jnp.allclose(ad, analytic, atol=1e-5, rtol=1e-5)
+
+    def test_differentiable_wrt_param(self):
+        """d(PPF)/d(lam) via jax.grad should match finite differences (~1e-6).
+
+        Analytic: d/dlam [-ln(1-u)/lam] = ln(1-u)/lam**2 = -PPF/lam.
+        """
+        u0 = 0.6
+        lam0 = 1.9
+
+        def solve(lam):
+            return rootfinding.newton_ppf(
+                jnp.asarray(u0),
+                lambda x: self._exp_cdf(x, lam),
+                x0=1.0,
+                lo=0.0,
+                hi=100.0,
+            )
+
+        ad = jax.grad(solve)(lam0)
+        eps = 1e-6
+        fd = (solve(lam0 + eps) - solve(lam0 - eps)) / (2 * eps)
+        analytic = jnp.log1p(-u0) / lam0**2
+        assert jnp.allclose(ad, fd, atol=1e-5, rtol=1e-5)
+        assert jnp.allclose(ad, analytic, atol=1e-5, rtol=1e-5)
+
+    def test_explicit_pdf_path(self):
+        """Passing an explicit pdf (CDF derivative) should also converge."""
+        lam = 0.8
+        u = jnp.linspace(0.05, 0.95, 40)
+        ppf = rootfinding.newton_ppf(
+            u,
+            lambda x: self._exp_cdf(x, lam),
+            x0=jnp.ones_like(u),
+            lo=0.0,
+            hi=200.0,
+            pdf=lambda x: lam * jnp.exp(-lam * x),
+        )
+        assert jnp.allclose(ppf, self._exp_ppf_true(u, lam), atol=1e-6)
+
+
 class TestTrapz:
     """Tests for trapezoidal integration."""
 
