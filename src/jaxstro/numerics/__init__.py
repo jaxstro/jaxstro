@@ -18,6 +18,8 @@ rootfinding
     Simple, JAX-friendly root-finding routines.
 integration
     Lightweight quadrature and cumulative integral helpers.
+quadrature
+    Gaussian quadrature factory (Gauss-Legendre, Gauss-Hermite, Hermite basis).
 sampling
     Differentiable inverse-CDF (PPF) sampling primitives.
 checks
@@ -34,10 +36,17 @@ from . import (
     integration,
     interpolation,
     linear_algebra,
+    quadrature,
     rng,
     rootfinding,
     sampling,
     stats,
+)
+from .quadrature import (
+    gauss_hermite_nodes,
+    gauss_legendre_nodes,
+    hermite_coefficients,
+    hermite_e_basis,
 )
 from .rootfinding import newton_ppf
 from .sampling import inverse_cdf_draw
@@ -52,6 +61,11 @@ __all__ = [
     "rootfinding",
     "newton_ppf",
     "integration",
+    "quadrature",
+    "gauss_legendre_nodes",
+    "gauss_hermite_nodes",
+    "hermite_e_basis",
+    "hermite_coefficients",
     "sampling",
     "inverse_cdf_draw",
     "checks",
