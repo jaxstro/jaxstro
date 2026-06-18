@@ -116,15 +116,22 @@ class TestConditionNumber:
         A = jnp.eye(3)
         assert jnp.allclose(la.condition_number(A), 1.0)
 
-    def test_exact_zero_singular_value_sentinel(self):
+    def test_exact_zero_singular_value_is_inf(self):
         # Structurally rank-deficient: singular values are exactly {1, 0}.
-        # The s_min == 0 guard replaces s_min by +inf in the denominator, so the
-        # condition number returns 0.0 as a "singular / undefined" sentinel
-        # (documented behavior; avoids NaN).
+        # A singular matrix has a mathematically infinite condition number, so the
+        # s_min == 0 case returns +inf (matching numpy.linalg.cond) rather than a
+        # surprising 0.0 — a caller guarding `cond > threshold` then correctly
+        # rejects it. The result is never NaN (guarded for the zero matrix too).
         A = jnp.array([[1.0, 0.0], [0.0, 0.0]])
         cond = la.condition_number(A)
-        assert jnp.isfinite(cond)
-        assert cond == 0.0
+        assert jnp.isinf(cond)
+        assert cond > 0.0
+
+    def test_zero_matrix_condition_is_inf_not_nan(self):
+        # Zero matrix: s_max == s_min == 0; must not produce 0/0 = NaN.
+        cond = la.condition_number(jnp.zeros((3, 3)))
+        assert jnp.isinf(cond)
+        assert not jnp.isnan(cond)
 
     def test_near_singular_matrix_is_huge(self):
         # Numerically rank-deficient: float SVD gives a tiny (not exactly 0)

@@ -104,7 +104,10 @@ def audit_entry_point(case: Case, theta: float | None = None,
     ad = float(jax.grad(lambda x: _scalar(case, x))(t))
 
     h = case.h_rel * max(abs(float(theta)), 1.0)
-    g = lambda x: float(_scalar(case, jnp.asarray(x, dtype=jnp.float64)))
+
+    def g(x):
+        return float(_scalar(case, jnp.asarray(x, dtype=jnp.float64)))
+
     fd = (g(float(theta) + h) - g(float(theta) - h)) / (2.0 * h)
 
     finite = bool(jnp.isfinite(jnp.asarray(ad)))

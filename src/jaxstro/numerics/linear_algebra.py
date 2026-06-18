@@ -66,11 +66,13 @@ def condition_number(A: Float[Array, "... n n"]) -> Float[Array, "..."]:
 
     Defined as ``sigma_max / sigma_min`` from the singular value decomposition.
     A rank-deficient matrix has ``sigma_min == 0`` (a mathematically infinite
-    condition number). To keep the output free of NaN, an exactly-zero smallest
-    singular value is replaced by ``+inf`` in the denominator, so the returned
-    value is ``0.0`` as a sentinel for "singular / undefined condition number".
-    Note this is only triggered by an *exact* float zero; a merely
-    near-singular matrix returns a finite, very large value (see tests).
+    condition number), so an exactly-zero smallest singular value returns
+    ``+inf`` (matching ``numpy.linalg.cond``) — a caller guarding
+    ``cond > threshold`` then correctly rejects a singular matrix. The result is
+    never NaN: the zero matrix (``sigma_max == sigma_min == 0``) also returns
+    ``+inf`` rather than ``0/0``. Note ``+inf`` is only triggered by an *exact*
+    float zero; a merely near-singular matrix returns a finite, very large
+    value (see tests).
 
     Not differentiable at coincident singular values: the SVD's singular values
     have non-smooth (and, at exact degeneracy, undefined) derivatives where two
@@ -80,8 +82,11 @@ def condition_number(A: Float[Array, "... n n"]) -> Float[Array, "..."]:
     s = jnp.linalg.svd(A, compute_uv=False)
     s_max = jnp.max(s, axis=-1)
     s_min = jnp.min(s, axis=-1)
-    s_min_safe = jnp.where(s_min == 0.0, jnp.inf, s_min)
-    return s_max / s_min_safe
+    # Double-where: avoid 0/0 -> NaN at s_min == 0 (incl. the zero matrix),
+    # then map the singular case to +inf (infinite condition number).
+    singular = s_min == 0.0
+    s_min_safe = jnp.where(singular, 1.0, s_min)
+    return jnp.where(singular, jnp.inf, s_max / s_min_safe)
 
 
 __all__ = ["norm2", "project_onto", "condition_number"]
