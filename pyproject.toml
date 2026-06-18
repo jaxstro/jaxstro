@@ -40,6 +40,10 @@ dev = [
   "ruff",
   "mypy",
 ]
+ml = [
+  "optax>=0.2.0",
+  "numpyro>=0.15.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/jaxstro/jaxstro"
