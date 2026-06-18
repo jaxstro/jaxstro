@@ -123,15 +123,16 @@ class Softplus(AbstractBijector):
         \log\left| \frac{dx}{du} \right| = \log \sigma(u),
 
     computed stably with :func:`jax.nn.log_sigmoid`. The inverse is
-    :math:`u = \log(e^{x} - 1)`, evaluated via :func:`jnp.expm1` for accuracy
-    near ``x = 0``.
+    :math:`u = \log(e^{x} - 1) = x + \log(1 - e^{-x})`, evaluated in the latter
+    form (``x + log(-expm1(-x))``) which is accurate near ``x = 0`` *and* free of
+    the overflow that ``log(expm1(x))`` suffers for ``x`` beyond ~709 (float64).
     """
 
     def forward(self, u: Scalar) -> Scalar:
         return jax.nn.softplus(u)
 
     def inverse(self, x: Scalar) -> Scalar:
-        return jnp.log(jnp.expm1(x))
+        return x + jnp.log(-jnp.expm1(-x))
 
     def forward_log_det_jacobian(self, u: Scalar) -> Scalar:
         return jax.nn.log_sigmoid(u)
