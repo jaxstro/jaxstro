@@ -1,11 +1,25 @@
 # jaxstro — status
 
-next: jaxstro.params + Phase B PUSHED to origin/main (2026-06-17, c409e9a — in sync). NEXT: Phase C
-(release hardening) in a FRESH session — 3-tier test reorg, CI (GitHub Actions), MyST/Diátaxis docs,
-CHANGELOG, progenax-grade CLAUDE.md. Brainstorm→writing-plans→subagent-driven, same as params.
-blocker: none (TAG/release still held — Phase D deferred pending release-staging decision: jaxstro
-namespace? rename jaxstro→jaxstro-core?).
+next: Phase C (release hardening) COMPLETE on branch feature/phase-c-release-hardening (HEAD 40f936e,
+7 commits atop main@90d10e5), NOT merged/pushed/tagged — held for Anna's separate Phase-D words.
+Phase D = merge-go → push → tag (three distinct approvals) + release-staging decision (jaxstro
+namespace? rename jaxstro→jaxstro-core?) + flip CI pull_request trigger on (when Actions usage resets).
+blocker: GitHub Actions minutes exhausted → CI shipped DORMANT (workflow_dispatch only); scripts/check.sh
+is the real gate. TAG/release held (Phase D, Anna's call).
 due:
+
+## Phase C — DONE (2026-06-17, branch feature/phase-c-release-hardening, HEAD 40f936e)
+Release hardening: 3-tier tests + CI + mystmd docs + CHANGELOG + hardened CLAUDE.md. All 5 tasks +
+whole-arc independently reviewed (APPROVE). Gate green end-to-end: `bash scripts/check.sh` →
+ALL LOCAL GATES PASSED (lock-check, ruff, mypy, pytest 447, ml-integration 24, wheel-smoke);
+`myst build` 25 pages 0 warnings; partition unit393/integration24/validation30=447. Zero Actions
+minutes spent. See `.claude-work/PHASE_C_COMPLETE.md`.
+- `344e510` T1 3-tier tests (git mv + conftest path-auto-marking + markers/strict + guard + README)
+- `5eadbd1` T2.0 resolve pre-existing ruff/format debt (root-cause; no config relaxed)
+- `7439d1a` T2 dormant 6-job CI (workflow_dispatch only) + scripts/check.sh local gate
+- `a69c588`+`ee50fbc` T3 mystmd Diátaxis site (v1 core + 12 ported ADRs + honest stubs)
+- `1ab1e01` T4 CHANGELOG (keep-a-changelog: Phase B + jaxstro.params)
+- `40f936e` T5 progenax-depth CLAUDE.md + README staleness fix (3.11+/jax0.10.1/equinox core)
 
 ## jaxstro.params — DONE (merged to local main 2026-06-17, b6d65b3, 14 commits, 444 tests green)
 Equinox-only selective-inference utility (ADR-0009): `Parameterization` (leaf-aligned free/fixed
