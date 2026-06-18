@@ -8,5 +8,13 @@ the mapping pure, static, and differentiable.
 """
 
 from .parameterization import Parameterization
+from .transforms import AbstractBijector, Exp, Identity, Sigmoid, Softplus
 
-__all__ = ["Parameterization"]
+__all__ = [
+    "Parameterization",
+    "AbstractBijector",
+    "Identity",
+    "Exp",
+    "Softplus",
+    "Sigmoid",
+]
