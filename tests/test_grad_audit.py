@@ -84,3 +84,14 @@ def test_known_blocked_requires_only_finite():
     r = audit_entry_point(_case(lambda x: jax.lax.stop_gradient(x) * jnp.ones(2),
                                 expect="known_blocked"))
     assert r.status == "known-limitation"  # finite AD (0) is acceptable for a blocked site
+
+
+def test_testing_subpackage_is_top_level_discoverable():
+    # jaxstro.testing is committed public surface (the shared grad-audit gate the
+    # siblings import). It must be bound on the top-level namespace + __all__ like
+    # every other public subpackage, so `import jaxstro; jaxstro.testing` works.
+    import jaxstro
+
+    assert hasattr(jaxstro, "testing")
+    assert "testing" in jaxstro.__all__
+    assert jaxstro.testing.audit_entry_point is audit_entry_point

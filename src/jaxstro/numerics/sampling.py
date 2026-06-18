@@ -19,8 +19,8 @@ __all__ = ["inverse_cdf_draw"]
 
 
 def inverse_cdf_draw(
-    weight: Float[Array, "n"],
-    grid: Float[Array, "n"],
+    weight: Float[Array, " n"],
+    grid: Float[Array, " n"],
     unif: Float[Array, ""],
     reg: float = 1e-30,
 ) -> Float[Array, ""]:
