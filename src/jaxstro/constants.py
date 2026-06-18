@@ -50,6 +50,35 @@ N_A: float = 6.02214076e23
 EV_ERG: float = 1.602176634e-12
 
 # ===========================================================================
+# Electromagnetic and atomic-physics constants (CODATA 2018)
+# Tiesinga et al. (2021), Rev. Mod. Phys., 93, 025010.
+# ===========================================================================
+
+# Fine-structure constant α [dimensionless].
+# CODATA 2018: 7.2973525693(11) × 10⁻³ (no unit conversion needed).
+ALPHA_FS: float = 7.2973525693e-3
+
+# Elementary charge in CGS-Gaussian units [statC = esu = g^½ cm^(3/2) s⁻¹].
+# CODATA 2018 e = 1.602176634e-19 C (exact). Gaussian-CGS conversion:
+# e_esu = e_SI × c_cgs / 10 = 1.602176634e-19 × 2.99792458e10 / 10
+#       = 4.803204712570…e-10 statC (the standard 4.80320471e-10 esu).
+E_ESU: float = 4.803204712570263e-10
+
+# Classical electron radius r_e = e²/(m_e c²) [cm].
+# CODATA 2018: 2.8179403262(13) × 10⁻¹⁵ m = 2.8179403262e-13 cm (×1e2 for m→cm).
+R_E: float = 2.8179403262e-13
+
+# Thomson cross-section σ_T = (8π/3) r_e² [cm²].
+# CODATA 2018: 6.6524587321(60) × 10⁻²⁹ m² = 6.6524587321e-25 cm²
+# (×1e4 for the m²→cm² conversion).
+SIGMA_T: float = 6.6524587321e-25
+
+# Molar gas constant R = k_B N_A [erg mol⁻¹ K⁻¹].
+# CODATA 2018: 8.314462618 J mol⁻¹ K⁻¹ = 8.314462618e7 erg mol⁻¹ K⁻¹
+# (×1e7 for the J→erg conversion). Exact in the revised SI (k_B, N_A exact).
+R_GAS: float = 8.314462618e7
+
+# ===========================================================================
 # Atomic and particle masses (CODATA 2018)
 # ===========================================================================
 
@@ -156,6 +185,12 @@ __all__ = [
     "A_RAD",
     "N_A",
     "EV_ERG",
+    # Electromagnetic and atomic-physics constants
+    "ALPHA_FS",
+    "E_ESU",
+    "R_E",
+    "SIGMA_T",
+    "R_GAS",
     # Particle masses
     "M_U",
     "M_E",

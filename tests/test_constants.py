@@ -57,6 +57,49 @@ class TestFundamentalConstants:
         assert C.A_RAD / a_computed == pytest.approx(1.0, rel=1e-7)
 
 
+class TestElectromagneticAndAtomicConstants:
+    """Tests for electromagnetic / atomic-physics constants (CODATA 2018)."""
+
+    def test_fine_structure_constant(self):
+        """alpha should match CODATA 2018 value (dimensionless)."""
+        # CODATA 2018: 7.2973525693(11) x 10^-3
+        assert C.ALPHA_FS == pytest.approx(7.2973525693e-3, rel=1e-10)
+
+    def test_thomson_cross_section(self):
+        """sigma_T should match CODATA 2018 value in cm^2."""
+        # CODATA 2018: 6.6524587321(60) x 10^-29 m^2 = 6.6524587321e-25 cm^2
+        assert C.SIGMA_T == pytest.approx(6.6524587321e-25, rel=1e-9)
+
+    def test_classical_electron_radius(self):
+        """r_e should match CODATA 2018 value in cm."""
+        # CODATA 2018: 2.8179403262(13) x 10^-15 m = 2.8179403262e-13 cm
+        assert C.R_E == pytest.approx(2.8179403262e-13, rel=1e-9)
+
+    def test_elementary_charge_esu(self):
+        """e in CGS-Gaussian statcoulomb should be ~4.80320e-10."""
+        # e_SI = 1.602176634e-19 C (exact); e_esu = e_SI * c_cgs / 10
+        assert C.E_ESU == pytest.approx(4.80320471e-10, rel=1e-8)
+
+    def test_elementary_charge_esu_derivation(self):
+        """e_esu should equal e_SI * c_cgs / 10 (SI -> Gaussian-CGS)."""
+        e_si = 1.602176634e-19
+        assert C.E_ESU == pytest.approx(e_si * C.C_CGS / 10.0, rel=1e-12)
+
+    def test_thomson_from_classical_radius(self):
+        """sigma_T = (8/3) pi r_e^2 should reproduce the tabulated value."""
+        sigma_computed = (8.0 / 3.0) * math.pi * C.R_E**2
+        assert C.SIGMA_T == pytest.approx(sigma_computed, rel=1e-8)
+
+    def test_molar_gas_constant(self):
+        """R should match CODATA 2018 value in erg mol^-1 K^-1."""
+        # CODATA 2018: 8.314462618 J mol^-1 K^-1 = 8.314462618e7 erg mol^-1 K^-1
+        assert C.R_GAS == pytest.approx(8.314462618e7, rel=1e-10)
+
+    def test_molar_gas_constant_from_k_b_n_a(self):
+        """R = k_B * N_A (with the CGS erg-based k_B)."""
+        assert C.R_GAS == pytest.approx(C.K_B * C.N_A, rel=1e-6)
+
+
 class TestParticleMasses:
     """Tests for particle mass constants."""
 
