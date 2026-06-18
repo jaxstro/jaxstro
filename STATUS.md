@@ -1,8 +1,19 @@
 # jaxstro — status
 
-next: Phase B MERGED to local main (FF, NOT pushed — push held per Anna). Now: jaxstro.params (design approved) on branch feature/jaxstro-params off main — brainstorm done, writing design doc + ADRs (params + config-architecture), then writing-plans → subagent-driven impl (test on progenax, not gravax). Phase C (release hardening) AFTER params.
+next: jaxstro.params MERGED to local main (FF → b6d65b3, NOT pushed — push held per Anna). Phase B + jaxstro.params both on local main, ahead of origin/main, unpushed. NEXT: Phase C (release hardening) in a FRESH session — 3-tier test reorg, CI (GitHub Actions), MyST/Diátaxis docs, CHANGELOG, progenax-grade CLAUDE.md. Brainstorm→writing-plans→subagent-driven, same as params.
 blocker: none (push/tag still held — Phase D deferred pending release-staging decision: jaxstro namespace? rename jaxstro→jaxstro-core?).
 due:
+
+## jaxstro.params — DONE (merged to local main 2026-06-17, b6d65b3, 14 commits, 444 tests green)
+Equinox-only selective-inference utility (ADR-0009): `Parameterization` (leaf-aligned free/fixed
+marking + PyTree↔vector bridge + log_det_jacobian) + Identity/Exp/Softplus/Sigmoid bijectors
+(analytic, extreme-u-stable log-dets). No new core dep; optax/numpyro under `[ml]` only.
+Validated: real progenax.PlummerProfile recovery via optax (exact) + numpyro (toy). Surfaced+documented
+the cached-derived-leaf caveat (from_vector replaces leaves, does not re-run __init__ → fit the leaf the
+observable reads). Also bumped core dep floors to current stable (jax 0.10.1/py311). Per-task + whole-arc
+reviews all cleared. Branch feature/jaxstro-params KEPT (merged, not pushed → not deleted per Anna's rule).
+distrax build-vs-reuse: ours for v1; revisit at Informax (ADR-0009 addendum + brain note).
+Cross-repo TODO in brain inbox: bump siblings' pyproject floors to current stable + requires-python>=3.11.
 
 ## Phase B working decisions (Anna-ratified 2026-06-17)
 - Sibling test cadence: run TARGETED progenax subset per migration; ONE full progenax suite gate at Phase-B end before merge-go (full suite ≈ 60 min).
