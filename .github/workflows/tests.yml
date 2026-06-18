@@ -1,0 +1,102 @@
+name: tests
+
+# Actions minutes are exhausted -> manual-only so this NEVER auto-runs (0 minutes).
+# Phase D: uncomment `pull_request:` to enable PR gating once usage resets.
+on:
+  workflow_dispatch:
+  # pull_request:
+
+concurrency:
+  group: tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAX_ENABLE_X64: "1"
+  XLA_PYTHON_CLIENT_PREALLOCATE: "false"
+  XLA_PYTHON_CLIENT_ALLOCATOR: platform
+  OMP_NUM_THREADS: "1"
+
+jobs:
+  lock-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - run: uv lock --check
+
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - run: uv sync --locked --extra dev
+      - run: uv run --no-sync ruff check src/ tests/
+      - run: uv run --no-sync ruff format --check src/ tests/
+      - run: uv run --no-sync mypy src/jaxstro
+
+  test-matrix:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: uv sync --extra dev --python ${{ matrix.python-version }}
+      - run: uv run --no-sync pytest -m "not slow" -q
+
+  ml-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - run: uv sync --locked --extra dev --extra ml
+      - run: uv run --no-sync pytest tests/integration -q
+
+  wheel-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+      - run: uv build --wheel -o dist/
+      - name: Install wheel in a clean venv and import
+        run: |
+          uv venv /tmp/clean
+          uv pip install --python /tmp/clean/bin/python dist/*.whl
+          /tmp/clean/bin/python -c "import jaxstro; print(jaxstro.__name__, 'imports clean')"
+
+  tests:
+    if: always()
+    needs: [lock-check, lint, test-matrix, ml-integration, wheel-smoke]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: All required jobs succeeded
+        run: |
+          echo "lock-check=${{ needs.lock-check.result }} lint=${{ needs.lint.result }} test-matrix=${{ needs.test-matrix.result }} ml-integration=${{ needs.ml-integration.result }} wheel-smoke=${{ needs.wheel-smoke.result }}"
+          if [ "${{ needs.lock-check.result }}" = "success" ] \
+             && [ "${{ needs.lint.result }}" = "success" ] \
+             && [ "${{ needs.test-matrix.result }}" = "success" ] \
+             && [ "${{ needs.ml-integration.result }}" = "success" ] \
+             && [ "${{ needs.wheel-smoke.result }}" = "success" ]; then
+            echo "all required jobs green"
+          else
+            echo "::error::a required job did not succeed"
+            exit 1
+          fi
