@@ -188,10 +188,11 @@ def test_exp_positive():
 ```
 Run RED.
 
-**Step 2 — implement** `transforms.py`: each bijector an `eqx.Module` with `forward`, `inverse`,
-`forward_log_det_jacobian`. Use `jax.nn.softplus`, `jax.nn.log_sigmoid` for stability. `Sigmoid(lo, hi)`
-stores `lo`,`hi` as static floats. Analytic log-dets per the design table. Docstrings cite the
-change-of-variables formula.
+**Step 2 — implement** `transforms.py`: define a shared abstract base `AbstractBijector(eqx.Module)`
+(so Task 3 can treat a bijector as a single PyTree leaf via `is_leaf=isinstance(x, AbstractBijector)`);
+each bijector subclasses it with `forward`, `inverse`, `forward_log_det_jacobian`. Use `jax.nn.softplus`,
+`jax.nn.log_sigmoid` for stability. `Sigmoid(lo, hi)` stores `lo`,`hi` as static floats. Analytic log-dets
+per the design table. Docstrings cite the change-of-variables formula. Export `AbstractBijector` too.
 
 Run green. **Commit** (`src/jaxstro/params/transforms.py src/jaxstro/params/__init__.py
 tests/unit/test_params_transforms.py`): `feat(params): bijector registry (Exp/Softplus/Sigmoid) + analytic log-Jacobians`.
@@ -239,18 +240,54 @@ def test_end_to_end_grad_through_transformed():
     v0 = p.to_vector(m)
     def loss(v): mm = p.from_vector(m, v); return mm.r_h**2 + mm.Q**2
     g = jax.grad(loss)(v0); assert jnp.all(jnp.isfinite(g))
+
+def test_transform_follows_leaf_not_tuple_order():
+    """REGRESSION (T1 review [Important]): a transform attached to a leaf via `where`
+    must apply to THAT leaf regardless of where-tuple order or field-declaration order.
+    Here r_h is declared first but selected SECOND, with Exp; Q selected first with Sigmoid.
+    Exp must still govern r_h (so a large unconstrained value -> large positive r_h) and
+    Sigmoid must still bound Q in (0,1)."""
+    m = _m()
+    # where-tuple order (Q, r_h) is the REVERSE of declaration order (r_h, Q)
+    p = Parameterization.from_where(m, where=lambda x: (x.Q, x.r_h), transforms=(Sigmoid(0.0, 1.0), Exp()))
+    m2 = p.from_vector(m, p.to_vector(m))
+    assert jnp.allclose(m2.r_h, m.r_h) and jnp.allclose(m2.Q, m.Q)        # round-trip exact
+    # Build the unconstrained vector in PyTree-leaf order and push both leaves up hard:
+    big = p.to_vector(m) + 8.0
+    m3 = p.from_vector(m, big)
+    assert m3.r_h > m.r_h            # Exp governs r_h -> grows
+    assert 0.0 < m3.Q < 1.0         # Sigmoid still bounds Q despite +8.0 push
 ```
 Run RED.
 
-**Step 2 — implement:** add `transforms: tuple = eqx.field(static=True, default=())` aligned with the
-`where` tuple (default all-`Identity` when `None`); `to_vector` applies each bijector's `inverse` to the
-corresponding free leaf before raveling; `from_vector` applies `forward` after unravel; `log_det_jacobian`
-sums per-leaf `forward_log_det_jacobian` over the raveled vector slices. Map vector slices↔leaves via the
-free partition's tree structure (static). Document the unconstrained-space contract.
+**Step 2 — implement (leaf-aligned transforms, per T1 review [Important]):**
 
-Run green + the Task-1 tests still pass (untransformed default). **Commit**: `feat(params): unconstrained-space transforms in Parameterization (to/from + log_det_jacobian)`.
+The flat vector is ordered by **PyTree-leaf order**, NOT by `where`-tuple order. So transforms MUST be
+stored **co-aligned with the leaves**, not as a positional tuple consulted by vector position — otherwise a
+`where` whose tuple order differs from field-declaration order silently misaligns transforms (the symmetric
+T1 test model masks this; `test_transform_follows_leaf_not_tuple_order` above locks it out).
+
+- **Public API stays ergonomic:** `from_where(model, where, transforms=(Exp(), Sigmoid(...)))` accepts a
+  tuple aligned with the **`where` selection**; `from_filter(model, free_spec, transforms=...)` likewise.
+- **Internal representation is a static leaf-aligned PyTree** `transform_spec: PyTree = eqx.field(static=True)`:
+  build it by riding the **same lowering as `free_spec`** — `eqx.tree_at(where, template, replace=transforms)`
+  where `template` mirrors the model with `Identity()` at every array leaf — so each free leaf carries its
+  own bijector and the tuple order is discarded exactly as it is for `free_spec`. (Default `transforms=None`
+  ⇒ all-`Identity`.) Treat bijectors as leaves via `is_leaf=lambda x: isinstance(x, AbstractBijector)` (give
+  the bijectors a common base class in `transforms.py`).
+- `to_vector`: `tree_map(lambda leaf, bij: bij.inverse(leaf), free_partition, transform_spec, is_leaf=…)`
+  → ravel (physical→ℝ per leaf, then flatten). `from_vector`: unravel → `tree_map(forward)` → `eqx.combine`.
+  `log_det_jacobian(vec)`: unravel `vec`, `tree_map(lambda u, bij: bij.forward_log_det_jacobian(u))`, sum.
+- Iterating leaves co-aligns the bijector with its leaf by construction (both trees share the model's leaf
+  structure) — no slice arithmetic, no positional assumptions. Document the unconstrained-space contract.
+
+Run green + ALL Task-1 tests still pass (untransformed default = all-`Identity`). **Commit**:
+`feat(params): unconstrained-space transforms in Parameterization (to/from + log_det_jacobian)`.
 
 **Gate:** gradient-validation, numerical-method-validation.
+
+> **Note for Task 2:** give the four bijectors a shared abstract base (e.g. `AbstractBijector(eqx.Module)`)
+> so Task 3 can use `is_leaf=lambda x: isinstance(x, AbstractBijector)` to treat a bijector as a single leaf.
 
 ---
 
