@@ -208,6 +208,48 @@ compensated_sum_array(terms)  # → 2.0 (correct)
 
 ---
 
+## 🎯 Parameter Inference (`jaxstro.params`)
+
+Gradient-based inference usually wants a flat vector in $\mathbb{R}^n$, while your physics code wants a structured Equinox model. `jaxstro.params` is the static, differentiable adapter between the two: mark a *subset* of a model's leaves **free**, bridge `PyTree ↔ flat vector`, and move bounded parameters to/from **unconstrained** space with analytic-log-Jacobian bijectors.
+
+```python
+import jax, jax.numpy as jnp, equinox as eqx
+from jaxstro.params import Parameterization
+from jaxstro.params.transforms import Exp, Sigmoid
+
+class Profile(eqx.Module):
+    r_h: jax.Array   # half-mass radius, must stay > 0
+    Q:   jax.Array   # virial ratio, bounded in (0, 1)
+    name: str = eqx.field(static=True, default="plummer")
+
+model = Profile(r_h=jnp.array(1.3), Q=jnp.array(0.4))
+
+# Mark r_h and Q free; fit them in unconstrained R (Exp keeps r_h > 0,
+# Sigmoid keeps Q in (0, 1)). The static `name` is carried through untouched.
+param = Parameterization.from_where(
+    model,
+    where=lambda m: (m.r_h, m.Q),
+    transforms=(Exp(), Sigmoid(0.0, 1.0)),
+)
+
+vec   = param.to_vector(model)          # physical → unconstrained ℝⁿ
+model2 = param.from_vector(model, vec)  # unconstrained ℝⁿ → physical (round-trips)
+
+# Drop straight into an optax loss — fully jit/grad/vmap-safe:
+def loss(vec):
+    m = param.from_vector(model, vec)
+    return jnp.sum(m.r_h ** 2) + m.Q ** 2
+
+grad = jax.grad(loss)(vec)              # ∂loss/∂(unconstrained vector)
+
+# For a numpyro model sampling `vec`, add the change-of-variables term:
+log_det = param.log_det_jacobian(vec)  # Σ log|d forward / d u| over free leaves
+```
+
+Bijectors: `Identity`, `Exp` (positive), `Softplus` (gentle positive), `Sigmoid(lo, hi)` (bounded). `from_filter` accepts an explicit boolean spec as a low-level escape hatch. Built on `eqx.partition`/`tree_at` + `jax.flatten_util.ravel_pytree` — **no new core dependency**; optax/numpyro live behind the `[ml]` extra and are only needed for inference, not for the bridge itself.
+
+---
+
 ## 📦 Spatial Algorithms
 
 Efficient spatial data structures for particle simulations:
@@ -290,6 +332,24 @@ from jaxstro.spatial import (
     # Neighbor queries
     approx_knn_candidates,     # high-level API
 )
+```
+
+</details>
+
+<details>
+<summary><b>jaxstro.params</b> — Selective parameter inference</summary>
+
+```python
+from jaxstro.params import (
+    Parameterization,        # free/fixed marking + PyTree ↔ flat-vector bridge
+    Identity, Exp,           # bijectors: identity, positive (exp)
+    Softplus, Sigmoid,       # gentle-positive, bounded (lo, hi)
+)
+
+# Construct:  Parameterization.from_where(model, where=..., transforms=...)
+#             Parameterization.from_filter(model, free_spec, transforms=...)
+# Bridge:     .to_vector(model) → ℝⁿ   .from_vector(model, vec) → model
+# CoV term:   .log_det_jacobian(vec)   # for unconstrained-space sampling
 ```
 
 </details>
