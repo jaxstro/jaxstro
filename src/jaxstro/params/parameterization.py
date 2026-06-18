@@ -60,6 +60,26 @@ def _is_bijector(x: object) -> bool:
     return isinstance(x, AbstractBijector)
 
 
+class _Meta:
+    """Opaque, hashable per-free-leaf ``(shape, bijector)`` carrier.
+
+    Deliberately *not* a registered PyTree: JAX treats it as a single opaque
+    leaf, so it survives ``tree_map``/``tree_leaves`` intact and stays static
+    (no array leaves). Holds a free leaf's ``shape`` and its bijector.
+    """
+
+    __slots__ = ("shape", "bijector")
+
+    def __init__(self, shape: tuple, bijector: AbstractBijector) -> None:
+        self.shape = shape
+        self.bijector = bijector
+
+
+def _is_meta(x: object) -> bool:
+    """Leaf predicate: treat a :class:`_Meta` as a single PyTree leaf."""
+    return isinstance(x, _Meta)
+
+
 class Parameterization(eqx.Module):
     r"""Mark free/fixed model leaves and bridge PyTree <-> flat vector.
 
@@ -104,7 +124,7 @@ class Parameterization(eqx.Module):
 
     free_spec: PyTree = eqx.field(static=True)
     transform_spec: PyTree = eqx.field(static=True)
-    free_shapes: tuple = eqx.field(static=True)
+    free_meta: tuple = eqx.field(static=True)
 
     @classmethod
     def from_filter(
@@ -139,15 +159,40 @@ class Parameterization(eqx.Module):
         return cls(
             free_spec=free_spec,
             transform_spec=transform_spec,
-            free_shapes=cls._free_shapes(model, free_spec),
+            free_meta=cls._build_free_meta(model, free_spec, transform_spec),
         )
 
     @staticmethod
-    def _free_shapes(model: PyTree, free_spec: PyTree) -> tuple:
-        """Per-free-leaf shapes in PyTree order (static; for vec unraveling)."""
+    def _build_free_meta(
+        model: PyTree, free_spec: PyTree, transform_spec: PyTree
+    ) -> tuple:
+        """Per-free-leaf ``(shape, bijector)`` metadata in PyTree order.
+
+        Built in a SINGLE structural pass: ``eqx.filter(model, free_spec)`` (the
+        free physical leaves) is paired leaf-for-leaf with the same-filtered
+        ``transform_spec`` (the free bijectors) under one
+        :func:`jax.tree_util.tree_map`. Because both subtrees are filtered by the
+        identical ``free_spec`` and walked together, the ``(shape, bijector)``
+        pairs are guaranteed aligned -- no second, independent ``tree_leaves``
+        enumeration that could desync. Stored statically (bijectors carry no
+        array leaves) and consumed by :meth:`log_det_jacobian`.
+        """
         free = eqx.filter(model, free_spec)
+        free_transforms = eqx.filter(
+            transform_spec, free_spec, is_leaf=_is_bijector
+        )
+        pairs = jax.tree_util.tree_map(
+            lambda leaf, bij: _Meta(jnp.shape(leaf), bij),
+            free,
+            free_transforms,
+            is_leaf=_is_bijector,
+        )
+        # Each _Meta(shape, bijector) is a single leaf (it has no array leaves),
+        # so tree_leaves returns them in PyTree order -- the same order
+        # to_vector's ravel uses (JAX's deterministic tree-flatten).
         return tuple(
-            jnp.shape(leaf) for leaf in jax.tree_util.tree_leaves(free)
+            (m.shape, m.bijector)
+            for m in jax.tree_util.tree_leaves(pairs, is_leaf=_is_meta)
         )
 
     @classmethod
@@ -232,7 +277,7 @@ class Parameterization(eqx.Module):
         return cls(
             free_spec=free_spec,
             transform_spec=transform_spec,
-            free_shapes=cls._free_shapes(model, free_spec),
+            free_meta=cls._build_free_meta(model, free_spec, transform_spec),
         )
 
     @staticmethod
@@ -252,6 +297,18 @@ class Parameterization(eqx.Module):
         if transforms is None:
             return identity_template
         transforms = list(transforms)
+        # Length precheck: count free (True) leaves and require a 1:1 match so
+        # too-FEW transforms raise a clean ValueError (matching the too-MANY
+        # case below) instead of a PEP 479 RuntimeError from the next() below.
+        n_free = sum(
+            bool(b) for b in jax.tree_util.tree_leaves(free_spec)
+        )
+        if len(transforms) != n_free:
+            raise ValueError(
+                "transforms must align 1:1 with the free leaves of free_spec "
+                f"in PyTree order: got {len(transforms)} transforms for "
+                f"{n_free} free leaves."
+            )
         it = iter(transforms)
         # Walk array leaves in PyTree order; assign the next bijector at each
         # free (True) leaf, Identity at fixed (False) leaves.
@@ -393,24 +450,19 @@ class Parameterization(eqx.Module):
             over all scalar entries of all free leaves. Zero (scalar) when no
             leaves are free or every bijector is :class:`Identity`.
         """
-        free_transforms = self._free_transforms()
-        # Split vec into per-free-leaf segments using the statically-stored
-        # leaf shapes, then apply each leaf's analytic log-det and sum. The
-        # bijectors act element-wise, so the diagonal Jacobian's log-abs-det is
-        # the sum over all scalar entries of every free leaf.
-        bijectors = [
-            b
-            for b in jax.tree_util.tree_leaves(
-                free_transforms, is_leaf=_is_bijector
-            )
-            if _is_bijector(b)
-        ]
-        if not bijectors:
+        # Consume the SINGLE pre-aligned ``(shape, bijector)`` structure built
+        # in one structural pass at construction (``_build_free_meta``). No
+        # runtime tree_leaves and no parallel-ordering assumption: ordering
+        # matches to_vector's ravel by JAX's deterministic tree-flatten (the
+        # same invariant to_vector/from_vector already rely on). Each bijector
+        # acts element-wise, so the diagonal Jacobian's log-abs-det is the sum
+        # over all scalar entries of every free leaf.
+        if not self.free_meta:
             return jnp.zeros(())
 
         total = jnp.zeros(())
         offset = 0
-        for shape, bij in zip(self.free_shapes, bijectors):
+        for shape, bij in self.free_meta:
             size = 1
             for d in shape:
                 size *= d
