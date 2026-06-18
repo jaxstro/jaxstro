@@ -241,17 +241,27 @@ class Parameterization(eqx.Module):
         bool_template = jax.tree_util.tree_map(
             lambda _: False, eqx.filter(model, eqx.is_array)
         )
-        selected = where(model)
-        # Normalize to a tuple of selected leaves so we can count them.
-        if not isinstance(selected, tuple):
-            selected = (selected,)
+        selected_raw = where(model)
+        # ``where`` may return a single leaf or a tuple of leaves. Track which,
+        # so the ``replace`` arity passed to ``eqx.tree_at`` matches: a single
+        # leaf takes a scalar replacement, a tuple takes a tuple. (Passing a
+        # 1-tuple for a single-leaf ``where`` would write the tuple *into* the
+        # leaf, corrupting the spec.)
+        if isinstance(selected_raw, tuple):
+            is_single = False
+            selected = selected_raw
+        else:
+            is_single = True
+            selected = (selected_raw,)
 
         if len(selected) == 0:
             # No free leaves: the all-False template is already correct.
             free_spec = bool_template
         else:
             free_spec = eqx.tree_at(
-                where, bool_template, replace=tuple(True for _ in selected)
+                where,
+                bool_template,
+                replace=True if is_single else tuple(True for _ in selected),
             )
 
         if transforms is None:
@@ -271,7 +281,7 @@ class Parameterization(eqx.Module):
         transform_spec = eqx.tree_at(
             where,
             identity_template,
-            replace=tuple(transforms),
+            replace=transforms[0] if is_single else tuple(transforms),
             is_leaf=_is_bijector,
         )
         return cls(

@@ -185,3 +185,14 @@ def test_from_filter_transforms_pytree_order_and_errors():
         Parameterization.from_filter(
             m, free_spec, transforms=(Exp(), Sigmoid(0.0, 1.0), Softplus())
         )
+
+
+def test_from_where_single_leaf_with_transform():
+    """Single-leaf where + a transform: replace-arity must match (transforms[0])."""
+    m = _m()
+    p = Parameterization.from_where(m, where=lambda x: x.r_h, transforms=(Exp(),))
+    m2 = p.from_vector(m, p.to_vector(m))
+    assert jnp.allclose(m2.r_h, m.r_h)                 # round-trip
+    m3 = p.from_vector(m, p.to_vector(m) + 5.0)
+    assert m3.r_h > 0.0                                # Exp keeps it positive
+    assert jnp.allclose(m3.Q, m.Q)                     # Q fixed

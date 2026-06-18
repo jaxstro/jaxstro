@@ -35,6 +35,13 @@ progenax/gravax inference today, fluxax Tier-1 PSF-coefficient fitting, and the 
 Holds only a **static boolean filter-spec** (free/fixed mask) + a static **transform spec**, so it is a
 tiny hashable jit-static object.
 
+> **Note (superseded during implementation):** the `transforms: tuple` field below was
+> replaced by a **leaf-aligned `transform_spec` PyTree** (plus a static `free_meta` cache of
+> `(shape, bijector)` per free leaf). A positional `transforms: tuple` consulted by vector
+> position misaligns whenever the `where`-tuple order differs from PyTree-leaf order; the
+> leaf-aligned spec — lowered via the *same* `eqx.tree_at(where, …)` as `free_spec` — binds
+> each bijector to its leaf instead. See ADR-0009 and `.claude-work/JAXSTRO_PARAMS_COMPLETE.md`.
+
 ```python
 class Parameterization(eqx.Module):
     free_spec: PyTree   = eqx.field(static=True)   # bool tree: True at free leaves

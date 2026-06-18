@@ -88,6 +88,22 @@ def test_nested_module_roundtrip_and_partial_free():
     assert jnp.allclose(m2.c, m.c + 10.0)
     assert jnp.array_equal(m2.inner.b, m.inner.b)                          # fixed nested leaf untouched
 
+def test_from_where_single_leaf_no_tuple():
+    """where may return a SINGLE leaf (not a 1-tuple) per its documented contract.
+
+    Regression: the replace-arity passed to eqx.tree_at must match — a single
+    leaf takes a scalar replacement, not a 1-tuple (which would be written into
+    the leaf and corrupt the spec)."""
+    m = _m()
+    p = Parameterization.from_where(m, where=lambda x: x.a)   # single leaf, no tuple
+    assert p.to_vector(m).shape == (2,)                       # only a (shape (2,))
+    m2 = p.from_vector(m, p.to_vector(m) + 4.0)
+    assert jnp.allclose(m2.a, m.a + 4.0)
+    assert jnp.array_equal(m2.b, m.b)                         # b fixed, untouched
+    # equivalent to the 1-tuple form
+    pt = Parameterization.from_where(m, where=lambda x: (x.a,))
+    assert jnp.array_equal(p.to_vector(m), pt.to_vector(m))
+
 def test_from_filter_with_hand_written_spec():
     """from_filter works on an externally-authored bool spec (not built via tree_at)."""
     m = _m()
