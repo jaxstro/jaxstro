@@ -11,7 +11,7 @@ The design intent is:
 - avoid any domain-specific simulation logic here.
 """
 
-from . import astrometry, constants, coords, numerics, testing, units
+from . import astrometry, constants, coords, numerics, params, testing, units
 from .units import DEFAULT as DEFAULT_UNITS
 
 __all__ = [
@@ -21,6 +21,7 @@ __all__ = [
     "astrometry",
     "numerics",
     "coords",
+    "params",
     "testing",
 ]
 __version__ = "0.1.0"
