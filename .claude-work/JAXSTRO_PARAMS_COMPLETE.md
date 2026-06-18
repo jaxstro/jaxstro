@@ -93,10 +93,13 @@ for an optimizer/sampler, unflatten back. The dLux ecosystem solves this with th
 `jaxstro.params` sits **downstream-facing**: progenax/gravax/fluxax import it (one-way
 arrow — `jaxstro.params` itself depends on nothing new).
 
-- **progenax** — Fit profile/IMF parameters. Mark `PlummerProfile.r_h` (or an IMF slope /
-  total mass) free with `Exp` (positive) or `Sigmoid` (bounded), build a loss on
-  `density` / `enclosed_mass_fraction`, and drive optax/numpyro through `to_vector`/
-  `from_vector` (+ `log_det_jacobian` for sampling). This is the validation target below.
+- **progenax** — Fit profile/IMF parameters. Mark a free leaf the observable depends on
+  (e.g. `PlummerProfile.a`, an IMF slope, total mass) with `Exp` (positive) or `Sigmoid`
+  (bounded), build a loss on `density` / `enclosed_mass_fraction`, and drive optax/numpyro
+  through `to_vector`/`from_vector` (+ `log_det_jacobian` for sampling). This is the
+  validation target below. **Caveat:** if the parameter you want is a *source* of a cached
+  derived leaf (e.g. `r_h` → cached `a`), free the derived leaf instead — `from_vector`
+  does not re-run `__init__` (see §8).
 - **gravax** — Inference over IC parameters (e.g. cluster `r_h`, virial ratio `Q`) feeding
   an integrator: `param.from_vector` inside the loss reconstructs the IC `eqx.Module`,
   then the differentiable integrator + likelihood close the loop. `Sigmoid(0,1)` for `Q`,
@@ -114,50 +117,69 @@ Pattern for all: keep the bridge in the loss (`m = param.from_vector(model, vec)
 
 ## 4. Validation results
 
-**Script:** `validation/validate_params.py`
-**Run:** `env -u VIRTUAL_ENV uv run --no-sync --extra ml python validation/validate_params.py`
+**Script:** `validation/validate_params.py` — runs whichever of optax / numpyro is
+installed (degrades gracefully; aborts only if *both* absent). It best-effort-injects
+`../progenax/src` onto `sys.path`, so it uses the **real** `progenax.PlummerProfile`
+in any env where progenax's own deps (diffrax, …) are present, and falls back to a
+self-contained toy `eqx.Module` otherwise (printing which path ran).
 
-**Validation target that ran:** **toy fallback** (faithful Plummer
-`enclosed_mass_fraction`), because **progenax is not importable from jaxstro's env**:
-its own dependency **`diffrax` is absent** from the jaxstro foundation env
-(`ModuleNotFoundError: No module named 'diffrax'`). This is architecturally expected —
-progenax is a *downstream* consumer (one-way dependency arrow), so it is not a jaxstro
-dependency; pulling `diffrax` into the foundation env purely for validation would violate
-the thin-foundation posture. The script best-effort-injects `../progenax/src` onto
-`sys.path`, so it transparently uses the **real** `progenax.PlummerProfile` in any env
-where progenax's deps (diffrax, …) are present. The toy fallback reproduces the same
-physical observable (`r_h` → `a` → enclosed-mass fraction), so the bridge is exercised
-identically.
+The validation was run **two ways** to cover both the real model and both backends:
 
-Recovered a known truth `r_h = 1.6` from near-noiseless synthetic data, two ways, both
-through `Parameterization` with an `Exp` (positive) transform:
+### (A) Real `progenax.PlummerProfile` — run from progenax's env (diffrax + optax present)
 
 ```
 ======================================================================
-VALIDATION TARGET: toy fallback (progenax unavailable: ModuleNotFoundError: No module named 'diffrax')
+VALIDATION TARGET: progenax.PlummerProfile (free: scale radius a > 0)
 ======================================================================
 
 param        true        optax      numpyro     abs_err     rel_err
 -------------------------------------------------------------------
-r_h       1.60000     1.600000     1.600040    0.00e+00    0.00e+00
+a         1.22627     1.226273          n/a    0.00e+00    0.00e+00
 
-FD-vs-AD gradient check (optax loss): max rel error = 2.619e-12
+FD-vs-AD gradient check (loss): max rel error = 1.246e-10
 
+numpyro recovery : SKIP (numpyro not installed)
+grad check       : PASS (max rel = 1.25e-10, tol 1e-5)
 optax recovery   : PASS (|abs err| = 0.00e+00, tol 1e-3)
-numpyro recovery : PASS (rel err = 2.50e-05, tol 5e-2)
-grad check       : PASS (max rel = 2.62e-12, tol 1e-5)
 
 OVERALL: PASS
 ```
 
-- **(a) optax** Adam descent over the unconstrained vector → `r_h = 1.600000`,
-  abs err `0.00e+00` (< 1e-3 tol).
-- **(b) numpyro** NUTS (400 warmup + 600 samples) sampling the unconstrained vector
-  under `Normal(0, 5)` + `log_det_jacobian` CoV term; posterior-mean `r_h = 1.600040`,
-  rel err `2.50e-05` (< 5e-2 tol).
-- **FD-vs-AD grad check** on the optax loss (central differences vs `jax.grad`),
-  evaluated at the **start point** (gradient well away from zero, where a relative error
-  is meaningful): **max rel error `2.62e-12`** (machine precision under x64; < 1e-5 tol).
+optax Adam over the unconstrained `Exp` vector recovers the true scale radius
+`a = 1.22627` (the value implied by a Plummer profile with `r_h = 1.6`) to abs err
+`0.00e+00`, with a machine-precision grad-check. numpyro is skipped because progenax's
+env does not ship it (graceful degradation).
+
+> **Why fit `a`, not `r_h`?** `PlummerProfile` stores **both** `r_h` and its derived
+> scale radius `a` as separate array leaves (`a` computed from `r_h` in `__init__`).
+> `enclosed_mass_fraction` reads `a`. The `params` bridge `from_vector` *replaces leaves*
+> — it does **not** re-run `__init__` — so freeing only `r_h` leaves the cached `a` stale
+> and the observable's gradient w.r.t. `r_h` is exactly zero (verified: optax stayed at
+> init, grad = 0). Freeing `a` (the leaf the observable depends on) recovers correctly.
+> See Lesson in §8 — this is the load-bearing adoption caveat.
+
+### (B) Toy fallback — run from jaxstro's `[ml]` env (optax **and** numpyro)
+
+```
+param        true        optax      numpyro     abs_err     rel_err
+-------------------------------------------------------------------
+r_h       1.60000     1.600000     1.600040    0.00e+00    0.00e+00
+
+FD-vs-AD gradient check (loss): max rel error = 4.450e-11
+
+grad check       : PASS (max rel = 4.45e-11, tol 1e-5)
+optax recovery   : PASS (|abs err| = 0.00e+00, tol 1e-3)
+numpyro recovery : PASS (rel err = 2.50e-05, tol 5e-2)
+
+OVERALL: PASS
+```
+
+The toy `_ToyPlummer` computes its scale radius **lazily** inside the observable, so
+`r_h` *is* the leaf the observable depends on and is fit directly. Both backends recover
+the truth: optax `r_h = 1.600000` (abs err `0.00e+00`); numpyro NUTS (400 warmup + 600
+samples, `Normal(0,5)` prior + `log_det_jacobian` CoV term) posterior-mean
+`r_h = 1.600040` (rel err `2.50e-05`). FD-vs-AD grad check at the non-converged start
+point: max rel error `4.45e-11` (machine precision under x64).
 
 ---
 
@@ -205,6 +227,14 @@ Quality gates: `ruff check src/` → **All checks passed**;
 - **`where` returning a single leaf + transforms.** When `transforms` are supplied,
   `where` must return a **tuple** (`lambda m: (m.r_h,)`), since the transform lowering
   rides `eqx.tree_at(where, …, replace=(bij,))` which expects a tuple to match.
-- **Deterministic `a` from `r_h`.** `PlummerProfile` recomputes its scale radius `a` in
-  `__init__`; the loss rebuilds the profile from the free `r_h` so `a` stays consistent
-  (rather than marking the derived `a` free).
+- **⚠ Cached derived leaves go stale through the bridge (load-bearing caveat).**
+  `from_vector` *replaces leaves*; it does **not** re-run the model's `__init__`. If a
+  model caches a derived quantity as a *separate* leaf — as `PlummerProfile` does with its
+  scale radius `a` (computed from `r_h` at construction) — then freeing only the **source**
+  leaf (`r_h`) leaves the derived leaf (`a`) stale, and any observable that reads the
+  derived leaf has **zero gradient** w.r.t. the source. This was caught by validating
+  against the real progenax model (the toy, which derives `a` lazily, masked it). **Rule:**
+  free the leaf the observable actually depends on (here `a`), or use models that derive
+  such quantities lazily from stored leaves. A future `jaxstro.config` `from_config` layer
+  (ADR-0010) — which rebuilds through the constructor — is the complementary path when you
+  want to fit the *source* parameter of a cached derivation.

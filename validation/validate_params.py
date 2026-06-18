@@ -13,18 +13,33 @@ unconstrained R while the physical parameter stays strictly positive):
       simple Normal prior and adds ``parameterization.log_det_jacobian(vec)`` as
       the change-of-variables term, recovering the posterior mean.
 
-It also reports a **finite-difference vs autodiff** gradient check on the optax
-loss (max relative error), confirming the bridge is differentiable end-to-end.
+It also reports a **finite-difference vs autodiff** gradient check on the loss
+(max relative error), confirming the bridge is differentiable end-to-end.
+
+The two backends are independent: the script runs whichever of optax / numpyro
+is installed and only aborts if *both* are missing (the ``[ml]`` extra ships
+both).
 
 VALIDATION TARGET
 -----------------
-Primary: ``progenax.PlummerProfile`` -- an ``eqx.Module`` with a scalar
-half-mass radius ``r_h > 0``. We fit ``r_h`` to a synthetic radial density
-profile generated from a known truth. (The scale radius ``a`` is a deterministic
-function of ``r_h``, so the loss rebuilds the profile from the free ``r_h``.)
+Primary: ``progenax.PlummerProfile`` -- an ``eqx.Module`` storing a scalar
+half-mass radius ``r_h`` AND its derived scale radius ``a`` as *separate* array
+leaves. We fit the **scale radius ``a > 0``** to a synthetic enclosed-mass
+profile, because that is the leaf the observable ``enclosed_mass_fraction``
+actually reads.
+
+  ADOPTION CAVEAT (the reason we fit ``a``, not ``r_h``): ``PlummerProfile``
+  caches ``a`` (computed from ``r_h`` in ``__init__``) as its own leaf. The
+  ``params`` bridge ``from_vector`` *replaces leaves*; it does NOT re-run
+  ``__init__``. So freeing only ``r_h`` would leave the cached ``a`` stale and
+  the observable's gradient w.r.t. ``r_h`` is exactly zero. The general rule:
+  free the leaf the observable depends on (or use a model that derives such
+  quantities lazily from stored leaves). Here ``a`` is that leaf.
 
 Fallback: if progenax (or a suitable model) cannot be imported, a self-contained
-toy ``eqx.Module`` is used instead, and the script prints which path ran.
+toy ``eqx.Module`` that computes its scale radius lazily from ``r_h`` is used
+(so ``r_h`` itself is the directly-fit leaf), and the script prints which path
+ran.
 
 Run::
 
@@ -52,32 +67,49 @@ from jaxstro.params.transforms import Exp  # noqa: E402
 # --------------------------------------------------------------------------- #
 # Optional ML deps (validation-only, behind the [ml] extra).
 # --------------------------------------------------------------------------- #
-def _require_ml():
-    """Import optax + numpyro or print an actionable message and exit."""
-    try:
-        import numpyro  # noqa: F401
-        import optax  # noqa: F401
+def _load_ml():
+    """Load optax and numpyro *independently*; either may be absent.
 
-        return optax, numpyro
-    except ImportError as exc:  # pragma: no cover - exercised only without [ml]
+    Returns ``(optax_or_None, numpyro_or_None)``. The two recovery paths are
+    independent, so the script degrades gracefully: it runs whichever backend is
+    present (e.g. optax-only in an env that lacks numpyro) and only aborts if
+    *both* are missing.
+    """
+    try:
+        import optax
+    except ImportError:
+        optax = None
+    try:
+        import numpyro
+    except ImportError:
+        numpyro = None
+
+    if optax is None and numpyro is None:  # pragma: no cover - only without [ml]
         print(
-            "ERROR: validation requires the [ml] extra (optax + numpyro).\n"
-            f"  missing: {exc}\n"
-            "  install/run with: env -u VIRTUAL_ENV uv run --no-sync --extra ml "
+            "ERROR: validation needs at least one of optax / numpyro "
+            "(the [ml] extra provides both).\n"
+            "  run with: env -u VIRTUAL_ENV uv run --no-sync --extra ml "
             "python validation/validate_params.py"
         )
         sys.exit(2)
+    return optax, numpyro
 
 
 # --------------------------------------------------------------------------- #
 # Model selection: real progenax model, else a toy fallback.
+#
+# A "target" is a small record describing how to inject a truth, build the loss,
+# and read back the fit parameter:
+#   label       : human-readable description of which path ran
+#   make_model  : value -> eqx.Module  (constructs the model from the free scalar)
+#   predict     : (model, grid) -> observable vector to fit
+#   where       : model -> tuple of free leaves (the params marking selector)
+#   read_free   : model -> scalar value of the free parameter (for reporting)
+#   truth_value : the injected true value of the free parameter
+#   free_name   : column label
+#   grid        : evaluation grid
 # --------------------------------------------------------------------------- #
 def _build_target():
-    """Return ``(label, make_model, predict, truth_value, free_name, grid)``.
-
-    ``make_model(value)`` constructs the model from the scalar free parameter.
-    ``predict(model, grid)`` returns the observable vector to fit.
-    """
     grid = jnp.linspace(0.2, 4.0, 48)
 
     try:
@@ -97,23 +129,40 @@ def _build_target():
 
         Profile = progenax.PlummerProfile
 
-        def make_model(r_h):
-            # PlummerProfile.__init__ recomputes the scale radius ``a`` from
-            # ``r_h``, so rebuilding from the free scalar keeps ``a`` consistent.
-            return Profile(r_h=r_h)
+        # We fit the scale radius ``a`` -- the leaf ``enclosed_mass_fraction``
+        # reads -- not ``r_h`` (whose effect is mediated by the cached ``a``
+        # leaf that ``from_vector`` does not recompute). See module docstring.
+        def make_model(a_value):
+            # Construct from r_h=1 (giving some a), then overwrite the ``a`` leaf
+            # with the requested value via eqx.tree_at, so ``a`` is set directly.
+            base = Profile(r_h=1.0)
+            return eqx.tree_at(lambda m: m.a, base, jnp.asarray(a_value))
 
         def predict(model, x):
             # Enclosed-mass fraction M(<r)/M is a smooth, monotone, well-scaled
-            # observable in [0, 1] -- a clean target for fitting r_h.
+            # observable in [0, 1] -- a clean target. It depends on ``a``.
             return model.enclosed_mass_fraction(x)
 
-        label = "progenax.PlummerProfile (free: r_h > 0)"
-        return label, make_model, predict, 1.6, "r_h", grid
+        # truth: the scale radius implied by a Plummer profile with r_h = 1.6.
+        a_truth = float(Profile(r_h=1.6).a)
+        label = "progenax.PlummerProfile (free: scale radius a > 0)"
+        return (
+            label,
+            make_model,
+            predict,
+            (lambda m: (m.a,)),
+            (lambda m: jnp.ravel(m.a)[0]),  # traceable scalar (vmap-safe)
+            a_truth,
+            "a",
+            grid,
+        )
 
     except Exception as exc:  # pragma: no cover - only without progenax
         reason = f"{type(exc).__name__}: {exc}"
 
         class _ToyPlummer(eqx.Module):
+            # Stores only r_h; the scale radius is derived lazily inside the
+            # observable, so r_h IS the leaf the observable depends on.
             r_h: jax.Array
 
             def enclosed(self, r):
@@ -127,13 +176,22 @@ def _build_target():
             return model.enclosed(x)
 
         label = f"toy fallback (progenax unavailable: {reason})"
-        return label, make_model, predict, 1.6, "r_h", grid
+        return (
+            label,
+            make_model,
+            predict,
+            (lambda m: (m.r_h,)),
+            (lambda m: jnp.ravel(m.r_h)[0]),  # traceable scalar (vmap-safe)
+            1.6,
+            "r_h",
+            grid,
+        )
 
 
 # --------------------------------------------------------------------------- #
 # Recovery (a): optax gradient descent.
 # --------------------------------------------------------------------------- #
-def _recover_optax(optax, param, init_model, make_model, predict, grid, data):
+def _recover_optax(optax, param, init_model, predict, grid, data, read_free):
     @jax.jit
     def loss(vec):
         model = param.from_vector(init_model, vec)
@@ -153,14 +211,14 @@ def _recover_optax(optax, param, init_model, make_model, predict, grid, data):
         vec, opt_state = step(vec, opt_state)
 
     recovered = param.from_vector(init_model, vec)
-    return float(jnp.ravel(recovered.r_h)[0]), loss, vec
+    return float(read_free(recovered)), loss, vec
 
 
 # --------------------------------------------------------------------------- #
 # Recovery (b): tiny numpyro NUTS chain over the unconstrained vector.
 # --------------------------------------------------------------------------- #
 def _recover_numpyro(
-    numpyro, param, init_model, make_model, predict, grid, data, noise_sigma
+    numpyro, param, init_model, predict, grid, data, noise_sigma, read_free
 ):
     import numpyro.distributions as dist
     from numpyro.infer import MCMC, NUTS
@@ -169,9 +227,7 @@ def _recover_numpyro(
         # Sample the unconstrained free vector with a broad standard-normal
         # prior on R, then add the change-of-variables Jacobian so the implied
         # prior on the *physical* parameter is consistent.
-        vec = numpyro.sample(
-            "vec", dist.Normal(jnp.zeros(1), 5.0).to_event(1)
-        )
+        vec = numpyro.sample("vec", dist.Normal(jnp.zeros(1), 5.0).to_event(1))
         numpyro.factor("ldj", param.log_det_jacobian(vec))
         model = param.from_vector(init_model, vec)
         mu = predict(model, grid)
@@ -181,13 +237,13 @@ def _recover_numpyro(
     mcmc = MCMC(kernel, num_warmup=400, num_samples=600, progress_bar=False)
     mcmc.run(jax.random.PRNGKey(0))
     samples = mcmc.get_samples()["vec"]  # (num_samples, 1), unconstrained
-    # Map each unconstrained draw forward to physical r_h, take posterior mean.
-    r_h_draws = jax.vmap(lambda v: param.from_vector(init_model, v).r_h)(samples)
-    return float(jnp.mean(jnp.ravel(r_h_draws)))
+    # Map each unconstrained draw forward to the physical free param, mean it.
+    draws = jax.vmap(lambda v: read_free(param.from_vector(init_model, v)))(samples)
+    return float(jnp.mean(jnp.ravel(draws)))
 
 
 # --------------------------------------------------------------------------- #
-# FD-vs-AD gradient check on the optax loss.
+# FD-vs-AD gradient check on the loss.
 # --------------------------------------------------------------------------- #
 def _grad_check(loss: Callable, vec: jnp.ndarray) -> float:
     ad = jax.grad(loss)(vec)
@@ -203,9 +259,11 @@ def _grad_check(loss: Callable, vec: jnp.ndarray) -> float:
 
 
 def main() -> int:
-    optax, numpyro = _require_ml()
+    optax, numpyro = _load_ml()
 
-    label, make_model, predict, truth_value, free_name, grid = _build_target()
+    label, make_model, predict, where, read_free, truth_value, free_name, grid = (
+        _build_target()
+    )
     print("=" * 70)
     print(f"VALIDATION TARGET: {label}")
     print("=" * 70)
@@ -215,27 +273,41 @@ def main() -> int:
     noise_sigma = 1e-3
     data = predict(truth_model, grid)
 
-    # Start away from the truth; Exp keeps r_h > 0 in unconstrained descent.
-    init_model = make_model(0.7)
-    param = Parameterization.from_where(
-        init_model, where=lambda m: (m.r_h,), transforms=(Exp(),)
-    )
+    # Start away from the truth; Exp keeps the param > 0 in unconstrained descent.
+    init_model = make_model(0.5 * truth_value)
+    param = Parameterization.from_where(init_model, where=where, transforms=(Exp(),))
 
-    rec_optax, loss, _vec_opt = _recover_optax(
-        optax, param, init_model, make_model, predict, grid, data
-    )
-    rec_numpyro = _recover_numpyro(
-        numpyro, param, init_model, make_model, predict, grid, data, noise_sigma
-    )
+    rec_optax = loss = None
+    if optax is not None:
+        rec_optax, loss, _vec_opt = _recover_optax(
+            optax, param, init_model, predict, grid, data, read_free
+        )
+
+    rec_numpyro = None
+    if numpyro is not None:
+        rec_numpyro = _recover_numpyro(
+            numpyro, param, init_model, predict, grid, data, noise_sigma, read_free
+        )
 
     # Grad-check at the (non-converged) START point, where the gradient is well
     # away from zero -- at the optimum AD and FD are both ~0 and a relative
     # error is meaningless (0/0). This validates the differentiable bridge.
+    # Build a standalone loss if optax (and hence its loss handle) is absent.
+    if loss is None:
+
+        @jax.jit
+        def loss(vec):  # noqa: F811 - validation-only standalone loss
+            model = param.from_vector(init_model, vec)
+            return jnp.mean((predict(model, grid) - data) ** 2)
+
     vec_check = param.to_vector(init_model)
     max_rel_grad_err = _grad_check(loss, vec_check)
 
     # ----- results table ------------------------------------------------- #
-    abs_err = abs(rec_optax - truth_value)
+    o_str = f"{rec_optax:>12.6f}" if rec_optax is not None else f"{'n/a':>12}"
+    n_str = f"{rec_numpyro:>12.6f}" if rec_numpyro is not None else f"{'n/a':>12}"
+    rec_primary = rec_optax if rec_optax is not None else rec_numpyro
+    abs_err = abs(rec_primary - truth_value)
     rel_err = abs_err / abs(truth_value)
     print()
     header = (
@@ -245,36 +317,44 @@ def main() -> int:
     print(header)
     print("-" * len(header))
     print(
-        f"{free_name:<6} {truth_value:>10.5f} {rec_optax:>12.6f} "
-        f"{rec_numpyro:>12.6f} {abs_err:>11.2e} {rel_err:>11.2e}"
+        f"{free_name:<6} {truth_value:>10.5f} {o_str} "
+        f"{n_str} {abs_err:>11.2e} {rel_err:>11.2e}"
     )
     print()
     print(
-        f"FD-vs-AD gradient check (optax loss): max rel error = "
-        f"{max_rel_grad_err:.3e}"
+        f"FD-vs-AD gradient check (loss): max rel error = {max_rel_grad_err:.3e}"
     )
     print()
 
-    # ----- pass/fail ----------------------------------------------------- #
-    optax_ok = abs_err < 1e-3
-    numpyro_err = abs(rec_numpyro - truth_value) / abs(truth_value)
-    numpyro_ok = numpyro_err < 5e-2  # MCMC posterior mean, looser tolerance
+    # ----- pass/fail (a skipped backend does not fail the run) ----------- #
     grad_ok = max_rel_grad_err < 1e-5
+    checks = [("grad check", grad_ok, f"max rel = {max_rel_grad_err:.2e}, tol 1e-5")]
 
-    print(
-        f"optax recovery   : {'PASS' if optax_ok else 'FAIL'} "
-        f"(|abs err| = {abs_err:.2e}, tol 1e-3)"
-    )
-    print(
-        f"numpyro recovery : {'PASS' if numpyro_ok else 'FAIL'} "
-        f"(rel err = {numpyro_err:.2e}, tol 5e-2)"
-    )
-    print(
-        f"grad check       : {'PASS' if grad_ok else 'FAIL'} "
-        f"(max rel = {max_rel_grad_err:.2e}, tol 1e-5)"
-    )
+    if rec_optax is not None:
+        optax_ok = abs(rec_optax - truth_value) < 1e-3
+        checks.append(
+            (
+                "optax recovery",
+                optax_ok,
+                f"|abs err| = {abs(rec_optax - truth_value):.2e}, tol 1e-3",
+            )
+        )
+    else:
+        print("optax recovery   : SKIP (optax not installed)")
 
-    ok = optax_ok and numpyro_ok and grad_ok
+    if rec_numpyro is not None:
+        numpyro_err = abs(rec_numpyro - truth_value) / abs(truth_value)
+        numpyro_ok = numpyro_err < 5e-2  # MCMC posterior mean, looser tolerance
+        checks.append(
+            ("numpyro recovery", numpyro_ok, f"rel err = {numpyro_err:.2e}, tol 5e-2")
+        )
+    else:
+        print("numpyro recovery : SKIP (numpyro not installed)")
+
+    for name, passed, detail in checks:
+        print(f"{name:<16} : {'PASS' if passed else 'FAIL'} ({detail})")
+
+    ok = all(passed for _, passed, _ in checks)
     print()
     print("OVERALL:", "PASS" if ok else "FAIL")
     return 0 if ok else 1
