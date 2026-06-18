@@ -1,9 +1,10 @@
 # jaxstro — status
 
-next: Phase C (release hardening) COMPLETE on branch feature/phase-c-release-hardening (HEAD 40f936e,
-7 commits atop main@90d10e5), NOT merged/pushed/tagged — held for Anna's separate Phase-D words.
-Phase D = merge-go → push → tag (three distinct approvals) + release-staging decision (jaxstro
-namespace? rename jaxstro→jaxstro-core?) + flip CI pull_request trigger on (when Actions usage resets).
+next: Phase C MERGED + PUSHED to origin/main (2026-06-17, 25508f7, fast-forward; 447 tests green on
+merged main; feature branch deleted). NOT tagged — tag still held. Phase D remaining: (1) tag/version
+decision; (2) release-staging decision (jaxstro namespace? rename jaxstro→jaxstro-core?); (3) flip CI
+pull_request trigger on (when Actions usage resets); (4) register jaxstro in ~/brain/roots.yml (Anna);
+(5) sibling pyproject floor bumps (Anna). Optional Phase-D docs: myst-build CI job + GitHub Pages deploy.
 blocker: GitHub Actions minutes exhausted → CI shipped DORMANT (workflow_dispatch only); scripts/check.sh
 is the real gate. TAG/release held (Phase D, Anna's call).
 due:
