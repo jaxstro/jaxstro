@@ -23,15 +23,14 @@ from typing import Optional
 
 import jax
 import jax.numpy as jnp
-
-from .types import Array
+from jaxtyping import Array, Bool, Num
 
 # ---------------------------------------------------------------------------
 # Eager / debug guard helper
 # ---------------------------------------------------------------------------
 
 
-def try_concrete_bool(predicate: Array) -> Optional[bool]:
+def try_concrete_bool(predicate: Bool[Array, "..."]) -> Optional[bool]:
     """
     Resolve a JAX boolean predicate to a Python ``bool`` when possible.
 
@@ -62,7 +61,7 @@ def try_concrete_bool(predicate: Array) -> Optional[bool]:
 
 
 @jax.jit
-def is_finite(x: Array) -> Array:
+def is_finite(x: Num[Array, "..."]) -> Bool[Array, "..."]:
     """
     Elementwise finiteness check (no NaNs, no +/-inf).
 
@@ -80,7 +79,7 @@ def is_finite(x: Array) -> Array:
 
 
 @jax.jit
-def all_finite(x: Array) -> Array:
+def all_finite(x: Num[Array, "..."]) -> Bool[Array, ""]:
     """
     Check that all elements of x are finite.
 
@@ -97,7 +96,7 @@ def all_finite(x: Array) -> Array:
     return jnp.all(jnp.isfinite(x))
 
 
-def assert_all_finite(x: Array, name: str = "x") -> None:
+def assert_all_finite(x: Num[Array, "..."], name: str = "x") -> None:
     """
     Raise a ValueError if any element of x is NaN or +/-inf.
 
@@ -133,7 +132,9 @@ def assert_all_finite(x: Array, name: str = "x") -> None:
 
 
 @partial(jax.jit, static_argnames=("strict",))
-def is_monotonic_increasing(x: Array, *, strict: bool = True) -> Array:
+def is_monotonic_increasing(
+    x: Num[Array, " n"], *, strict: bool = True
+) -> Bool[Array, ""]:
     """
     Check whether a 1D array is monotonic increasing.
 
@@ -163,7 +164,9 @@ def is_monotonic_increasing(x: Array, *, strict: bool = True) -> Array:
 
 
 @partial(jax.jit, static_argnames=("strict",))
-def is_monotonic_decreasing(x: Array, *, strict: bool = True) -> Array:
+def is_monotonic_decreasing(
+    x: Num[Array, " n"], *, strict: bool = True
+) -> Bool[Array, ""]:
     """
     Check whether a 1D array is monotonic decreasing.
 
@@ -192,7 +195,7 @@ is_monotonic = is_monotonic_increasing
 
 
 def assert_monotonic(
-    x: Array,
+    x: Num[Array, " n"],
     *,
     strict: bool = True,
     decreasing: bool = False,
@@ -252,12 +255,12 @@ def assert_monotonic(
 
 @partial(jax.jit, static_argnames=("inclusive",))
 def in_range(
-    x: Array,
+    x: Num[Array, "..."],
     lo: Optional[float] = None,
     hi: Optional[float] = None,
     *,
     inclusive: bool = True,
-) -> Array:
+) -> Bool[Array, "..."]:
     """
     Elementwise range check.
 
@@ -298,10 +301,10 @@ def in_range(
 
 @jax.jit
 def all_in_range(
-    x: Array,
+    x: Num[Array, "..."],
     lo: float,
     hi: float,
-) -> Array:
+) -> Bool[Array, ""]:
     """
     Check that all elements of x are within [lo, hi] inclusive.
 
@@ -323,7 +326,7 @@ def all_in_range(
 
 
 @jax.jit
-def all_positive(x: Array) -> Array:
+def all_positive(x: Num[Array, "..."]) -> Bool[Array, ""]:
     """
     Check that all elements of x are strictly positive.
 
@@ -341,7 +344,7 @@ def all_positive(x: Array) -> Array:
 
 
 @jax.jit
-def all_non_negative(x: Array) -> Array:
+def all_non_negative(x: Num[Array, "..."]) -> Bool[Array, ""]:
     """
     Check that all elements of x are non-negative.
 
@@ -359,7 +362,7 @@ def all_non_negative(x: Array) -> Array:
 
 
 def assert_in_range(
-    x: Array,
+    x: Num[Array, "..."],
     lo: Optional[float] = None,
     hi: Optional[float] = None,
     *,
@@ -407,7 +410,7 @@ def assert_in_range(
     )
 
 
-def assert_positive(x: Array, name: str = "x") -> None:
+def assert_positive(x: Num[Array, "..."], name: str = "x") -> None:
     """
     Raise if any element of x is not strictly positive.
 
@@ -421,7 +424,7 @@ def assert_positive(x: Array, name: str = "x") -> None:
     assert_in_range(x, lo=0.0, inclusive=False, name=name)
 
 
-def assert_non_negative(x: Array, name: str = "x") -> None:
+def assert_non_negative(x: Num[Array, "..."], name: str = "x") -> None:
     """
     Raise if any element of x is negative.
 

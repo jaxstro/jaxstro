@@ -22,21 +22,22 @@ Usage:
     jax.grad(lambda a: solve(a, 2.0))(1.0)
 """
 
-from typing import Optional
+from typing import Optional, Union
 
 import jax
 import jax.lax as lax
 import jax.numpy as jnp
+from jaxtyping import Array, Float
 
-from .types import Array, ScalarFn
+from .types import ScalarFn
 
 
 def bisect(
     f: ScalarFn,
-    a: Array,
-    b: Array,
+    a: Union[float, Float[Array, "..."]],
+    b: Union[float, Float[Array, "..."]],
     max_steps: int = 50,
-) -> Array:
+) -> Float[Array, "..."]:
     """
     Bisection method for a scalar root of f in [a, b].
 
@@ -96,9 +97,9 @@ def bisect(
 
 def newton(
     f: ScalarFn,
-    x0: Array,
+    x0: Union[float, Float[Array, "..."]],
     max_steps: int = 30,
-) -> Array:
+) -> Float[Array, "..."]:
     """
     Newton's method with automatic derivative computation.
 
@@ -150,9 +151,9 @@ def newton(
 def newton_with_grad(
     f: ScalarFn,
     df: ScalarFn,
-    x0: Array,
+    x0: Union[float, Float[Array, "..."]],
     max_steps: int = 30,
-) -> Array:
+) -> Float[Array, "..."]:
     """
     Newton's method with user-provided derivative.
 
@@ -207,15 +208,15 @@ def newton_with_grad(
 
 
 def newton_ppf(
-    u: Array,
+    u: Union[float, Float[Array, "..."]],
     cdf: ScalarFn,
-    x0: Array,
-    lo: Array,
-    hi: Array,
+    x0: Union[float, Float[Array, "..."]],
+    lo: Union[float, Float[Array, "..."]],
+    hi: Union[float, Float[Array, "..."]],
     pdf: Optional[ScalarFn] = None,
     n_iter: int = 20,
     pdf_floor: float = 1e-30,
-) -> Array:
+) -> Float[Array, "..."]:
     r"""
     Generic percent-point-function (PPF / inverse-CDF) solver via Newton.
 

@@ -512,8 +512,7 @@ class TestCompensatedAccuracy:
 
     def test_catastrophic_cancellation_array(self):
         terms = jnp.array([1e16, 1.0, -1e16, 1.0])
-        # Sanity: naive summation loses precision and does NOT recover 2.0
-        # (float64 left-to-right gives 1.0; float32 gives 0.0).
+        # Sanity: naive summation does not recover 2.0 (loses the small terms).
         naive = jnp.sum(terms)
         assert not jnp.allclose(naive, 2.0)
         # Neumaier recovers the exact answer.

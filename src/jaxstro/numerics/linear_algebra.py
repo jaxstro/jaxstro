@@ -11,16 +11,15 @@ from functools import partial
 
 import jax
 import jax.numpy as jnp
-
-from .types import Array
+from jaxtyping import Array, Float
 
 
 @partial(jax.jit, static_argnames=("axis", "keepdims"))
 def norm2(
-    x: Array,
+    x: Float[Array, "..."],
     axis: int | None = None,
     keepdims: bool = False,
-) -> Array:
+) -> Float[Array, "..."]:
     """
     Euclidean (ℓ2) norm of an array.
 
@@ -32,12 +31,12 @@ def norm2(
 
 @partial(jax.jit, static_argnames=("axis",))
 def project_onto(
-    a: Array,
-    b: Array,
+    a: Float[Array, "..."],
+    b: Float[Array, "..."],
     *,
     axis: int = -1,
     eps: float = 0.0,
-) -> Array:
+) -> Float[Array, "..."]:
     """
     Project vector a onto vector b along a given axis.
 
@@ -61,7 +60,7 @@ def project_onto(
 
 
 @jax.jit
-def condition_number(A: Array) -> Array:
+def condition_number(A: Float[Array, "... n n"]) -> Float[Array, "..."]:
     """
     2-norm condition number of a matrix (or batch of matrices).
 

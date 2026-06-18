@@ -13,10 +13,10 @@ from typing import Tuple
 import jax
 import jax.numpy as jnp
 import jax.random as jrandom
+from jaxtyping import Array, Int, UInt32
 
-from .types import Array
-
-KeyArray = Array  # For annotations; shape (..., 2) for PRNG keys.
+# PRNG keys are uint32 arrays with a trailing axis of size 2 (raw key layout).
+KeyArray = UInt32[Array, "... 2"]
 
 
 @partial(jax.jit, static_argnames=("num",))
@@ -62,7 +62,7 @@ def split_tree(key: KeyArray, shape: Tuple[int, ...]) -> KeyArray:
     return jnp.reshape(keys_flat, shape + keys_flat.shape[1:])
 
 
-def fold_in_indices(key: KeyArray, indices: Array) -> KeyArray:
+def fold_in_indices(key: KeyArray, indices: Int[Array, "..."]) -> KeyArray:
     """
     Fold an array of integer indices into a base key to obtain
     an array of independent keys.

@@ -28,14 +28,15 @@ from typing import Tuple
 import jax
 import jax.numpy as jnp
 from jax import lax
+from jaxtyping import Array, Float
 
 
 @jax.jit
 def neumaier_add(
-    s: jnp.ndarray,
-    c: jnp.ndarray,
-    y: jnp.ndarray,
-) -> Tuple[jnp.ndarray, jnp.ndarray]:
+    s: Float[Array, "..."],
+    c: Float[Array, "..."],
+    y: Float[Array, "..."],
+) -> Tuple[Float[Array, "..."], Float[Array, "..."]]:
     """
     Single step of Neumaier's compensated summation.
 
@@ -60,7 +61,7 @@ def neumaier_add(
 
 
 @jax.jit
-def compensated_sum_array(terms: jnp.ndarray) -> jnp.ndarray:
+def compensated_sum_array(terms: Float[Array, "k ..."]) -> Float[Array, "..."]:
     """
     Sum array elements along axis 0 with Neumaier compensated summation.
 
@@ -104,7 +105,7 @@ def compensated_sum_array(terms: jnp.ndarray) -> jnp.ndarray:
     return s_final + c_final
 
 
-def compensated_sum(*terms: jnp.ndarray) -> jnp.ndarray:
+def compensated_sum(*terms: Float[Array, "..."]) -> Float[Array, "..."]:
     """
     Sum multiple arrays with Neumaier compensated summation.
 
@@ -145,7 +146,7 @@ def compensated_sum(*terms: jnp.ndarray) -> jnp.ndarray:
 
 
 @jax.jit
-def compensated_vector_sum(vectors: jnp.ndarray) -> jnp.ndarray:
+def compensated_vector_sum(vectors: Float[Array, "n d"]) -> Float[Array, " d"]:
     """
     Sum vectors along axis 0 using compensated summation.
 
@@ -182,7 +183,7 @@ def compensated_vector_sum(vectors: jnp.ndarray) -> jnp.ndarray:
 
 
 @jax.jit
-def compensated_dot(a: jnp.ndarray, b: jnp.ndarray) -> jnp.ndarray:
+def compensated_dot(a: Float[Array, " n"], b: Float[Array, " n"]) -> Float[Array, ""]:
     """
     Compute dot product with compensated summation.
 

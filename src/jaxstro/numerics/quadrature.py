@@ -49,6 +49,8 @@ References
   22.7; ``He_{n+1}(x) = x He_n(x) - n He_{n-1}(x)``.
 """
 
+from typing import Callable
+
 import jax.numpy as jnp
 import numpy as np  # constants only: quadrature node/weight generation at call time
 from jaxtyping import Array, Float
@@ -131,7 +133,11 @@ def hermite_e_basis(g: Float[Array, " q"], n_max: int) -> Float[Array, " n q"]:
     return jnp.stack(rows, axis=0)
 
 
-def hermite_coefficients(map_fn, n_max: int, n_quad: int = 256) -> Float[Array, " n"]:
+def hermite_coefficients(
+    map_fn: Callable[[Float[Array, " q"]], Float[Array, " q"]],
+    n_max: int,
+    n_quad: int = 256,
+) -> Float[Array, " n"]:
     r"""Probabilists' Hermite-e expansion coefficients of ``map_fn``.
 
     Computes ``c_n = <map_fn(g) He_n(g)>`` for ``n = 0..n_max``, where the

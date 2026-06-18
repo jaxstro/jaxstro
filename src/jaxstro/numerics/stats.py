@@ -14,10 +14,11 @@ from typing import Optional
 import jax
 import jax.nn as jnn
 import jax.numpy as jnp
+from jaxtyping import Array, Bool, Float
 
 
 @jax.jit
-def safe_log(x: jnp.ndarray, eps: float = 1e-30) -> jnp.ndarray:
+def safe_log(x: Float[Array, "..."], eps: float = 1e-30) -> Float[Array, "..."]:
     """
     Compute log(x) with clipping away from zero.
 
@@ -38,10 +39,10 @@ def safe_log(x: jnp.ndarray, eps: float = 1e-30) -> jnp.ndarray:
 
 @jax.jit
 def logsumexp(
-    x: jnp.ndarray,
+    x: Float[Array, "..."],
     axis: Optional[int] = None,
     keepdims: bool = False,
-) -> jnp.ndarray:
+) -> Float[Array, "..."]:
     """
     Stable log(sum(exp(x))) along a given axis.
 
@@ -67,10 +68,10 @@ def logsumexp(
 
 @jax.jit
 def gaussian_logpdf(
-    x: jnp.ndarray,
-    mu: jnp.ndarray,
-    sigma: jnp.ndarray,
-) -> jnp.ndarray:
+    x: Float[Array, "..."],
+    mu: Float[Array, "..."],
+    sigma: Float[Array, "..."],
+) -> Float[Array, "..."]:
     """
     Log PDF of a univariate normal N(mu, sigma^2).
 
@@ -95,11 +96,11 @@ def gaussian_logpdf(
 
 @jax.jit
 def gaussian_loglikelihood(
-    data: jnp.ndarray,
-    mu: jnp.ndarray,
-    sigma: jnp.ndarray,
+    data: Float[Array, "..."],
+    mu: Float[Array, "..."],
+    sigma: Float[Array, "..."],
     axis: Optional[int] = None,
-) -> jnp.ndarray:
+) -> Float[Array, "..."]:
     """
     Gaussian log-likelihood for independent observations.
 
@@ -127,7 +128,7 @@ def gaussian_loglikelihood(
 
 
 @jax.jit
-def stable_log1p(x: jnp.ndarray) -> jnp.ndarray:
+def stable_log1p(x: Float[Array, "..."]) -> Float[Array, "..."]:
     """
     Stable log(1 + x) for small |x|.
 
@@ -137,7 +138,7 @@ def stable_log1p(x: jnp.ndarray) -> jnp.ndarray:
 
 
 @jax.jit
-def stable_expm1(x: jnp.ndarray) -> jnp.ndarray:
+def stable_expm1(x: Float[Array, "..."]) -> Float[Array, "..."]:
     """
     Stable exp(x) - 1 for small |x|.
 
@@ -147,7 +148,7 @@ def stable_expm1(x: jnp.ndarray) -> jnp.ndarray:
 
 
 @jax.jit
-def safe_exp(ln_x: jnp.ndarray, max_exp: float = 100.0) -> jnp.ndarray:
+def safe_exp(ln_x: Float[Array, "..."], max_exp: float = 100.0) -> Float[Array, "..."]:
     """
     Numerically safe exponential with clipping to prevent overflow.
 
@@ -168,10 +169,10 @@ def safe_exp(ln_x: jnp.ndarray, max_exp: float = 100.0) -> jnp.ndarray:
 
 @jax.jit
 def safe_div(
-    numerator: jnp.ndarray,
-    denominator: jnp.ndarray,
+    numerator: Float[Array, "..."],
+    denominator: Float[Array, "..."],
     epsilon: float = 1e-100,
-) -> jnp.ndarray:
+) -> Float[Array, "..."]:
     """
     Numerically safe division with small epsilon to prevent division by zero.
 
@@ -200,10 +201,10 @@ def safe_div(
 
 @jax.jit
 def relative_error(
-    x_new: jnp.ndarray,
-    x_old: jnp.ndarray,
+    x_new: Float[Array, "..."],
+    x_old: Float[Array, "..."],
     floor: float = 1e-100,
-) -> jnp.ndarray:
+) -> Float[Array, "..."]:
     """
     Compute relative error between two values.
 
@@ -232,10 +233,10 @@ def relative_error(
 
 @jax.jit
 def check_convergence(
-    x_new: jnp.ndarray,
-    x_old: jnp.ndarray,
+    x_new: Float[Array, "..."],
+    x_old: Float[Array, "..."],
     tol: float = 1e-6,
-) -> jnp.ndarray:
+) -> Bool[Array, ""]:
     """
     Check if iteration has converged.
 

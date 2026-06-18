@@ -11,18 +11,18 @@ from typing import Optional
 
 import jax
 import jax.numpy as jnp
+from jaxtyping import Array, Float
 
 from .checks import try_concrete_bool
-from .types import Array
 
 
 @jax.jit
 def trapz(
-    y: Array,
-    x: Optional[Array] = None,
+    y: Float[Array, "..."],
+    x: Optional[Float[Array, " n"]] = None,
     *,
     axis: int = -1,
-) -> Array:
+) -> Float[Array, "..."]:
     """
     Trapezoidal rule integration along a given axis.
     """
@@ -55,12 +55,12 @@ def trapz(
 
 @partial(jax.jit, static_argnames="axis")
 def cumulative_trapz(
-    y: Array,
-    x: Optional[Array] = None,
+    y: Float[Array, "..."],
+    x: Optional[Float[Array, " n"]] = None,
     *,
     dx: float = 1.0,
     axis: int = -1,
-) -> Array:
+) -> Float[Array, "..."]:
     """
     Cumulative trapezoidal integration along a given axis.
 
@@ -122,11 +122,11 @@ def cumulative_trapz(
 
 
 def simpson(
-    y: Array,
-    x: Optional[Array] = None,
+    y: Float[Array, "..."],
+    x: Optional[Float[Array, " n"]] = None,
     *,
     axis: int = -1,
-) -> Array:
+) -> Float[Array, "..."]:
     """
     Simpson's rule integration along a given axis.
 
@@ -160,11 +160,11 @@ def simpson(
 
 @partial(jax.jit, static_argnames=("axis",))
 def _simpson_core(
-    y: Array,
-    x: Optional[Array] = None,
+    y: Float[Array, "..."],
+    x: Optional[Float[Array, " n"]] = None,
     *,
     axis: int = -1,
-) -> Array:
+) -> Float[Array, "..."]:
     """Jitted core for :func:`simpson` (no uniform-spacing validation)."""
     y = jnp.asarray(y)
     n = y.shape[axis]
@@ -172,7 +172,7 @@ def _simpson_core(
         raise ValueError("simpson requires an odd number of points >= 3")
 
     if x is None:
-        dx: Array = jnp.asarray(1.0)
+        dx: Float[Array, ""] = jnp.asarray(1.0)
     else:
         x = jnp.asarray(x)
         if x.ndim != 1:

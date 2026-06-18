@@ -13,27 +13,27 @@ from typing import Optional, Tuple
 
 import jax
 import jax.numpy as jnp
+from jaxtyping import Array, Float
 
 from .checks import try_concrete_bool
-from .types import Array
 
 
-def _move_axis_to_last(x: Array, axis: int) -> Array:
+def _move_axis_to_last(x: Float[Array, "..."], axis: int) -> Float[Array, "..."]:
     if axis < 0:
         axis = x.ndim + axis
     return jnp.moveaxis(x, axis, -1)
 
 
 def interp1d(
-    x: Array,
-    y: Array,
-    x_new: Array,
+    x: Float[Array, " m"],
+    y: Float[Array, "..."],
+    x_new: Float[Array, "..."],
     *,
     axis: int = -1,
     left: Optional[float] = None,
     right: Optional[float] = None,
     extrapolate: bool = False,
-) -> Array:
+) -> Float[Array, "..."]:
     """
     Linear interpolation along one axis.
 
@@ -61,15 +61,15 @@ def interp1d(
 
 @partial(jax.jit, static_argnames=("axis", "left", "right", "extrapolate"))
 def _interp1d_core(
-    x: Array,
-    y: Array,
-    x_new: Array,
+    x: Float[Array, " m"],
+    y: Float[Array, "..."],
+    x_new: Float[Array, "..."],
     *,
     axis: int = -1,
     left: Optional[float] = None,
     right: Optional[float] = None,
     extrapolate: bool = False,
-) -> Array:
+) -> Float[Array, "..."]:
     """Jitted core for :func:`interp1d` (no input validation)."""
     y_moved = _move_axis_to_last(y, axis)
     x = jnp.asarray(x)
@@ -125,13 +125,15 @@ class TabulatedFunction1D:
     jitted functions or vmapped over if needed.
     """
 
-    x: Array
-    y: Array
+    x: Float[Array, " m"]
+    y: Float[Array, "..."]
 
-    def __call__(self, x_new: Array) -> Array:
+    def __call__(self, x_new: Float[Array, "..."]) -> Float[Array, "..."]:
         return interp1d(self.x, self.y, x_new)
 
-    def tree_flatten(self) -> Tuple[Tuple[Array, Array], None]:
+    def tree_flatten(
+        self,
+    ) -> Tuple[Tuple[Float[Array, " m"], Float[Array, "..."]], None]:
         return (self.x, self.y), None
 
     @classmethod
