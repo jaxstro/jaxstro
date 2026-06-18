@@ -5,7 +5,6 @@ Tests for jaxstro.numerics modules.
 Verifies numerical utilities work correctly with JAX transforms.
 """
 
-
 import jax
 import jax.numpy as jnp
 import pytest
@@ -91,8 +90,10 @@ class TestSafeDiv:
 
     def test_differentiable(self):
         """safe_div should be differentiable."""
+
         def f(x):
             return stats.safe_div(x, x + 1.0)
+
         grad_f = jax.grad(f)
         result = grad_f(jnp.array(1.0))
         assert jnp.isfinite(result)
@@ -219,6 +220,7 @@ class TestBisect:
 
     def test_sqrt2(self):
         """Find sqrt(2) via bisection."""
+
         @jax.jit
         def find_root(a, b):
             return rootfinding.bisect(lambda x: x**2 - 2.0, a, b)
@@ -228,6 +230,7 @@ class TestBisect:
 
     def test_linear(self):
         """Find root of linear function."""
+
         @jax.jit
         def find_root(a, b):
             return rootfinding.bisect(lambda x: 2.0 * x - 1.0, a, b)
@@ -237,10 +240,12 @@ class TestBisect:
 
     def test_vmap_compatible(self):
         """bisect should work with vmap over brackets."""
+
         @jax.jit
         def find_roots(a_arr, b_arr):
             def solve_one(a, b):
                 return rootfinding.bisect(lambda x: x**2 - 2.0, a, b)
+
             return jax.vmap(solve_one)(a_arr, b_arr)
 
         a_arr = jnp.array([1.0, 1.0])
@@ -250,6 +255,7 @@ class TestBisect:
 
     def test_grad_compatible(self):
         """bisect should be differentiable w.r.t. brackets."""
+
         @jax.jit
         def find_root(a, b):
             return rootfinding.bisect(lambda x: x**2 - 2.0, a, b)
@@ -265,6 +271,7 @@ class TestNewton:
 
     def test_sqrt2(self):
         """Find sqrt(2) via Newton's method with auto derivative."""
+
         @jax.jit
         def find_root(x0):
             return rootfinding.newton(lambda x: x**2 - 2.0, x0)
@@ -274,10 +281,12 @@ class TestNewton:
 
     def test_vmap_compatible(self):
         """newton should work with vmap over initial guesses."""
+
         @jax.jit
         def find_roots(x0_arr):
             def solve_one(x0):
                 return rootfinding.newton(lambda x: x**2 - 2.0, x0)
+
             return jax.vmap(solve_one)(x0_arr)
 
         x0_arr = jnp.array([1.5, 2.0, 1.0])
@@ -286,6 +295,7 @@ class TestNewton:
 
     def test_grad_compatible(self):
         """newton should be differentiable w.r.t. initial guess."""
+
         @jax.jit
         def find_root(x0):
             return rootfinding.newton(lambda x: x**2 - 2.0, x0)
@@ -301,12 +311,11 @@ class TestNewtonWithGrad:
 
     def test_sqrt2(self):
         """Find sqrt(2) via Newton's method with explicit derivative."""
+
         @jax.jit
         def find_root(x0):
             return rootfinding.newton_with_grad(
-                lambda x: x**2 - 2.0,
-                lambda x: 2.0 * x,
-                x0
+                lambda x: x**2 - 2.0, lambda x: 2.0 * x, x0
             )
 
         root = find_root(jnp.array(1.5))
@@ -314,12 +323,11 @@ class TestNewtonWithGrad:
 
     def test_grad_compatible(self):
         """newton_with_grad should be differentiable w.r.t. initial guess."""
+
         @jax.jit
         def find_root(x0):
             return rootfinding.newton_with_grad(
-                lambda x: x**2 - 2.0,
-                lambda x: 2.0 * x,
-                x0
+                lambda x: x**2 - 2.0, lambda x: 2.0 * x, x0
             )
 
         # Gradient should exist and be finite
@@ -483,6 +491,7 @@ class TestJAXTransforms:
 
     def test_grad_through_safe_functions(self):
         """Gradients should work through safe_* functions."""
+
         def f(x):
             return stats.safe_log(stats.safe_exp(x))
 
@@ -534,9 +543,7 @@ class TestCompensatedAccuracy:
         assert jnp.allclose(result, 2.0)
 
     def test_vector_sum_cancellation(self):
-        vecs = jnp.array(
-            [[1e16, 1.0], [1.0, -1e16], [-1e16, 1e16], [1.0, 1.0]]
-        )
+        vecs = jnp.array([[1e16, 1.0], [1.0, -1e16], [-1e16, 1e16], [1.0, 1.0]])
         result = compensated.compensated_vector_sum(vecs)
         assert jnp.allclose(result, jnp.array([2.0, 2.0]))
 
@@ -629,7 +636,5 @@ class TestInterp1dValidation:
         # Under jit the eager check is skipped; a valid monotonic grid works.
         x = jnp.array([0.0, 1.0, 2.0])
         y = jnp.array([0.0, 1.0, 4.0])
-        result = jax.jit(lambda xn: interpolation.interp1d(x, y, xn))(
-            jnp.array(0.5)
-        )
+        result = jax.jit(lambda xn: interpolation.interp1d(x, y, xn))(jnp.array(0.5))
         assert jnp.allclose(result, 0.5)

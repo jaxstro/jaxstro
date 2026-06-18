@@ -1,35 +1,60 @@
-import jax, jax.numpy as jnp, equinox as eqx
+import equinox as eqx
+import jax
+import jax.numpy as jnp
 import pytest
+from jax.flatten_util import ravel_pytree
+
 from jaxstro.params import Parameterization
 from jaxstro.params.transforms import Exp, Sigmoid, Softplus
+
 
 class M(eqx.Module):
     r_h: jax.Array
     Q: jax.Array
-def _m(): return M(r_h=jnp.array(1.3), Q=jnp.array(0.4))
+
+
+def _m():
+    return M(r_h=jnp.array(1.3), Q=jnp.array(0.4))
+
 
 def test_transformed_roundtrip_and_bounds():
     m = _m()
-    p = Parameterization.from_where(m, where=lambda x: (x.r_h, x.Q), transforms=(Exp(), Sigmoid(0.0, 1.0)))
+    p = Parameterization.from_where(
+        m, where=lambda x: (x.r_h, x.Q), transforms=(Exp(), Sigmoid(0.0, 1.0))
+    )
     m2 = p.from_vector(m, p.to_vector(m))
     assert jnp.allclose(m2.r_h, m.r_h) and jnp.allclose(m2.Q, m.Q)
     # vector lives in unconstrained R; perturb and confirm bounds hold after forward
     m3 = p.from_vector(m, p.to_vector(m) + jnp.array([5.0, -8.0]))
     assert m3.r_h > 0.0 and 0.0 < m3.Q < 1.0
 
+
 def test_log_det_jacobian_sums_per_leaf():
     m = _m()
-    p = Parameterization.from_where(m, where=lambda x: (x.r_h, x.Q), transforms=(Exp(), Sigmoid(0.0, 1.0)))
+    p = Parameterization.from_where(
+        m, where=lambda x: (x.r_h, x.Q), transforms=(Exp(), Sigmoid(0.0, 1.0))
+    )
     v = p.to_vector(m)
-    expected = Exp().forward_log_det_jacobian(v[0]) + Sigmoid(0.0,1.0).forward_log_det_jacobian(v[1])
+    expected = Exp().forward_log_det_jacobian(v[0]) + Sigmoid(
+        0.0, 1.0
+    ).forward_log_det_jacobian(v[1])
     assert jnp.allclose(p.log_det_jacobian(v), expected, rtol=1e-8)
+
 
 def test_end_to_end_grad_through_transformed():
     m = _m()
-    p = Parameterization.from_where(m, where=lambda x: (x.r_h, x.Q), transforms=(Exp(), Sigmoid(0.0, 1.0)))
+    p = Parameterization.from_where(
+        m, where=lambda x: (x.r_h, x.Q), transforms=(Exp(), Sigmoid(0.0, 1.0))
+    )
     v0 = p.to_vector(m)
-    def loss(v): mm = p.from_vector(m, v); return mm.r_h**2 + mm.Q**2
-    g = jax.grad(loss)(v0); assert jnp.all(jnp.isfinite(g))
+
+    def loss(v):
+        mm = p.from_vector(m, v)
+        return mm.r_h**2 + mm.Q**2
+
+    g = jax.grad(loss)(v0)
+    assert jnp.all(jnp.isfinite(g))
+
 
 def test_transform_follows_leaf_not_tuple_order():
     """REGRESSION (T1 review [Important]): a transform attached to a leaf via `where`
@@ -39,25 +64,25 @@ def test_transform_follows_leaf_not_tuple_order():
     Sigmoid must still bound Q in (0,1)."""
     m = _m()
     # where-tuple order (Q, r_h) is the REVERSE of declaration order (r_h, Q)
-    p = Parameterization.from_where(m, where=lambda x: (x.Q, x.r_h), transforms=(Sigmoid(0.0, 1.0), Exp()))
+    p = Parameterization.from_where(
+        m, where=lambda x: (x.Q, x.r_h), transforms=(Sigmoid(0.0, 1.0), Exp())
+    )
     m2 = p.from_vector(m, p.to_vector(m))
-    assert jnp.allclose(m2.r_h, m.r_h) and jnp.allclose(m2.Q, m.Q)        # round-trip exact
+    assert jnp.allclose(m2.r_h, m.r_h) and jnp.allclose(m2.Q, m.Q)  # round-trip exact
     # Build the unconstrained vector in PyTree-leaf order and push both leaves up hard:
     big = p.to_vector(m) + 8.0
     m3 = p.from_vector(m, big)
-    assert m3.r_h > m.r_h            # Exp governs r_h -> grows
-    assert 0.0 < m3.Q < 1.0         # Sigmoid still bounds Q despite +8.0 push
+    assert m3.r_h > m.r_h  # Exp governs r_h -> grows
+    assert 0.0 < m3.Q < 1.0  # Sigmoid still bounds Q despite +8.0 push
 
 
 # --- Task-3 review regression tests -----------------------------------------
 
-from jax.flatten_util import ravel_pytree
-
 
 class Multi(eqx.Module):
-    a: jax.Array   # (2,) free   -> Exp
-    s: jax.Array   # scalar free -> Sigmoid
-    v: jax.Array   # (3,) free   -> Softplus
+    a: jax.Array  # (2,) free   -> Exp
+    s: jax.Array  # scalar free -> Sigmoid
+    v: jax.Array  # (3,) free   -> Softplus
 
 
 def _multi():
@@ -143,21 +168,23 @@ def test_grad_through_log_det():
     assert jnp.all(jnp.isfinite(g))
 
     eps = 1e-5
-    fd = jnp.array([
-        (
-            p.log_det_jacobian(v.at[i].add(eps))
-            - p.log_det_jacobian(v.at[i].add(-eps))
-        )
-        / (2 * eps)
-        for i in range(v.shape[0])
-    ])
+    fd = jnp.array(
+        [
+            (
+                p.log_det_jacobian(v.at[i].add(eps))
+                - p.log_det_jacobian(v.at[i].add(-eps))
+            )
+            / (2 * eps)
+            for i in range(v.shape[0])
+        ]
+    )
     assert jnp.allclose(g, fd, rtol=1e-5, atol=1e-6)
 
 
 class FFF(eqx.Module):
-    x: jax.Array   # free
-    y: jax.Array   # fixed
-    z: jax.Array   # free
+    x: jax.Array  # free
+    y: jax.Array  # fixed
+    z: jax.Array  # free
 
 
 def test_from_filter_transforms_pytree_order_and_errors():
@@ -175,7 +202,7 @@ def test_from_filter_transforms_pytree_order_and_errors():
     # x <- Exp().forward(0) = 1.0 ; z <- Sigmoid(0,1).forward(0) = 0.5
     assert jnp.allclose(m2.x, jnp.array(1.0))
     assert jnp.allclose(m2.z, jnp.array(0.5))
-    assert jnp.allclose(m2.y, m.y)   # fixed untouched
+    assert jnp.allclose(m2.y, m.y)  # fixed untouched
 
     # Too-few transforms (1 for 2 free leaves) -> clean ValueError.
     with pytest.raises(ValueError):
@@ -192,7 +219,7 @@ def test_from_where_single_leaf_with_transform():
     m = _m()
     p = Parameterization.from_where(m, where=lambda x: x.r_h, transforms=(Exp(),))
     m2 = p.from_vector(m, p.to_vector(m))
-    assert jnp.allclose(m2.r_h, m.r_h)                 # round-trip
+    assert jnp.allclose(m2.r_h, m.r_h)  # round-trip
     m3 = p.from_vector(m, p.to_vector(m) + 5.0)
-    assert m3.r_h > 0.0                                # Exp keeps it positive
-    assert jnp.allclose(m3.Q, m.Q)                     # Q fixed
+    assert m3.r_h > 0.0  # Exp keeps it positive
+    assert jnp.allclose(m3.Q, m.Q)  # Q fixed

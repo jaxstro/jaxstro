@@ -147,7 +147,7 @@ class TestGravitationalConstant:
     def test_stellar_g_value(self):
         """STELLAR.G should be ~0.00450 (pc³ Msun⁻¹ Myr⁻²)."""
         # G_code = G_CGS * mass_cgs * time_cgs² / length_cgs³
-        expected = C.G_CGS * C.MSUN_G * (C.MYR_S ** 2) / (C.PC_CM ** 3)
+        expected = C.G_CGS * C.MSUN_G * (C.MYR_S**2) / (C.PC_CM**3)
         assert abs(U.STELLAR.G - expected) < 1e-10
         # Also verify approximate value
         assert abs(U.STELLAR.G - 0.00450) < 1e-4
@@ -155,7 +155,7 @@ class TestGravitationalConstant:
     def test_binary_g_value(self):
         """BINARY.G should be ~39.48 (AU³ Msun⁻¹ yr⁻²)."""
         # G_code = G_CGS * mass_cgs * time_cgs² / length_cgs³
-        expected = C.G_CGS * C.MSUN_G * (C.YR_S ** 2) / (C.AU_CM ** 3)
+        expected = C.G_CGS * C.MSUN_G * (C.YR_S**2) / (C.AU_CM**3)
         assert abs(U.BINARY.G - expected) < 1e-10
         # Should match 4π² (Kepler's 3rd law)
         assert abs(U.BINARY.G - 39.4784) < 0.01
@@ -164,7 +164,7 @@ class TestGravitationalConstant:
         """SOLAR.G should be computed correctly (Rsun³ Msun⁻¹ Myr⁻²)."""
         # SOLAR = ASTRO_STELLAR (Rsun, Msun, Myr)
         # G_code = G_CGS * mass_cgs * time_cgs² / length_cgs³
-        expected = C.G_CGS * C.MSUN_G * (C.MYR_S ** 2) / (C.RSUN_CM ** 3)
+        expected = C.G_CGS * C.MSUN_G * (C.MYR_S**2) / (C.RSUN_CM**3)
         assert abs(U.SOLAR.G - expected) < 1e-10
         # Sanity check - G is ~3.9e20 for (Rsun, Msun, Myr)
         assert U.SOLAR.G > 0

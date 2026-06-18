@@ -52,13 +52,15 @@ class TestMortonEncoding:
     def test_roundtrip_corners(self):
         """Morton roundtrip for corner cases (0, 0, 0) and (max, max, max)."""
         max_val = 2**MAX_BITS_3D - 1  # 1023 for 10 bits
-        xyz = jnp.array([
-            [0, 0, 0],
-            [max_val, max_val, max_val],
-            [max_val, 0, 0],
-            [0, max_val, 0],
-            [0, 0, max_val],
-        ])
+        xyz = jnp.array(
+            [
+                [0, 0, 0],
+                [max_val, max_val, max_val],
+                [max_val, 0, 0],
+                [0, max_val, 0],
+                [0, 0, max_val],
+            ]
+        )
 
         codes = morton_encode_3d(xyz)
         x2, y2, z2 = morton_decode_3d(codes)
@@ -156,12 +158,14 @@ class TestBinAssignment:
     def test_boundary_clamping(self):
         """Particles outside box are clamped to boundary bins."""
         # Positions way outside the [-2, 2] box (L_box=4)
-        pos = jnp.array([
-            [-100.0, 0.0, 0.0],  # Far left
-            [100.0, 0.0, 0.0],   # Far right
-            [0.0, -100.0, 0.0],  # Far bottom
-            [0.0, 100.0, 0.0],   # Far top
-        ])
+        pos = jnp.array(
+            [
+                [-100.0, 0.0, 0.0],  # Far left
+                [100.0, 0.0, 0.0],  # Far right
+                [0.0, -100.0, 0.0],  # Far bottom
+                [0.0, 100.0, 0.0],  # Far top
+            ]
+        )
         bin_of = assign_particles_to_bins(pos, L_box=4.0, Nbins_per_dim=8)
 
         x, y, z = morton_decode_3d(bin_of)
@@ -179,10 +183,12 @@ class TestBinAssignment:
         """Particles at box corners map to corner bins."""
         L = 4.0
         half = L / 2 - 0.001  # Slightly inside corners
-        pos = jnp.array([
-            [-half, -half, -half],  # (0, 0, 0)
-            [half, half, half],     # (7, 7, 7) for Nbins=8
-        ])
+        pos = jnp.array(
+            [
+                [-half, -half, -half],  # (0, 0, 0)
+                [half, half, half],  # (7, 7, 7) for Nbins=8
+            ]
+        )
         bin_of = assign_particles_to_bins(pos, L_box=L, Nbins_per_dim=8)
 
         x, y, z = morton_decode_3d(bin_of)
@@ -238,9 +244,7 @@ class TestBinFilling:
         # Each particle in a different bin
         bin_of = jnp.arange(N, dtype=jnp.int32)
 
-        bin_members, bin_mask = fill_bins(
-            particle_ids, bin_of, Nbins=16, Bcap=5
-        )
+        bin_members, bin_mask = fill_bins(particle_ids, bin_of, Nbins=16, Bcap=5)
 
         # First 10 bins should have 1 particle each
         for i in range(10):
@@ -254,12 +258,12 @@ class TestBinFilling:
         particle_ids = jnp.arange(N, dtype=jnp.int32)
         bin_of = jnp.zeros(N, dtype=jnp.int32)  # All in bin 0
 
-        bin_members, bin_mask = fill_bins(
-            particle_ids, bin_of, Nbins=8, Bcap=Bcap
-        )
+        bin_members, bin_mask = fill_bins(particle_ids, bin_of, Nbins=8, Bcap=Bcap)
 
         # Bin 0 should have exactly Bcap particles
-        assert jnp.sum(bin_mask[0]) == Bcap, f"Expected {Bcap} particles, got {jnp.sum(bin_mask[0])}"
+        assert jnp.sum(bin_mask[0]) == Bcap, (
+            f"Expected {Bcap} particles, got {jnp.sum(bin_mask[0])}"
+        )
 
         # All selected IDs should be unique
         valid_ids = bin_members[0][bin_mask[0]]
@@ -286,9 +290,7 @@ class TestBinFilling:
         particle_ids = jnp.arange(N, dtype=jnp.int32)
         bin_of = jnp.zeros(N, dtype=jnp.int32)  # All in bin 0
 
-        bin_members, bin_mask = fill_bins(
-            particle_ids, bin_of, Nbins=8, Bcap=10
-        )
+        bin_members, bin_mask = fill_bins(particle_ids, bin_of, Nbins=8, Bcap=10)
 
         # Bin 0 has 5 particles, slots 5-9 should be sentinel
         assert jnp.all(bin_members[0, 5:] == N), "Empty slots not sentinel"
@@ -327,7 +329,7 @@ class TestNeighborGathering:
         """Create a uniform grid of particles for testing."""
         # Create 4x4x4 = 64 particles on a regular grid
         coords = jnp.linspace(-1.5, 1.5, 4)
-        xx, yy, zz = jnp.meshgrid(coords, coords, coords, indexing='ij')
+        xx, yy, zz = jnp.meshgrid(coords, coords, coords, indexing="ij")
         pos = jnp.stack([xx.ravel(), yy.ravel(), zz.ravel()], axis=-1)  # [64, 3]
 
         N = pos.shape[0]
@@ -341,34 +343,34 @@ class TestNeighborGathering:
 
         # Fill bins
         particle_ids = jnp.arange(N, dtype=jnp.int32)
-        Nbins = Nbins_per_dim ** 3
+        Nbins = Nbins_per_dim**3
         Bcap = 20
         bin_members, bin_mask = fill_bins(particle_ids, bin_of, Nbins=Nbins, Bcap=Bcap)
 
         return {
-            'pos': pos_sentinel,
-            'bin_members': bin_members,
-            'bin_mask': bin_mask,
-            'bin_of': bin_of,
-            'Nbins_per_dim': Nbins_per_dim,
-            'N': N,
+            "pos": pos_sentinel,
+            "bin_members": bin_members,
+            "bin_mask": bin_mask,
+            "bin_of": bin_of,
+            "Nbins_per_dim": Nbins_per_dim,
+            "N": N,
         }
 
     def test_stencil_monotonicity(self, uniform_grid_setup):
         """Larger stencil returns at least as many candidates."""
         setup = uniform_grid_setup
-        N = setup['N']
+        N = setup["N"]
         r_search = jnp.zeros(N)
         dx = 0.5
 
         # 27-cell (3x3x3)
         cand_27, mask_27 = gather_candidates_with_stencil(
-            pos=setup['pos'],
-            bin_members=setup['bin_members'],
-            bin_mask=setup['bin_mask'],
-            bin_of=setup['bin_of'],
+            pos=setup["pos"],
+            bin_members=setup["bin_members"],
+            bin_mask=setup["bin_mask"],
+            bin_of=setup["bin_of"],
             r_search=r_search,
-            Nbins_per_dim=setup['Nbins_per_dim'],
+            Nbins_per_dim=setup["Nbins_per_dim"],
             dx=dx,
             Cand_max=50,
             K_bin=10,
@@ -377,12 +379,12 @@ class TestNeighborGathering:
 
         # 125-cell (5x5x5)
         cand_125, mask_125 = gather_candidates_with_stencil(
-            pos=setup['pos'],
-            bin_members=setup['bin_members'],
-            bin_mask=setup['bin_mask'],
-            bin_of=setup['bin_of'],
+            pos=setup["pos"],
+            bin_members=setup["bin_members"],
+            bin_mask=setup["bin_mask"],
+            bin_of=setup["bin_of"],
             r_search=r_search,
-            Nbins_per_dim=setup['Nbins_per_dim'],
+            Nbins_per_dim=setup["Nbins_per_dim"],
             dx=dx,
             Cand_max=100,
             K_bin=5,
@@ -394,23 +396,24 @@ class TestNeighborGathering:
 
         # 125-cell should generally have at least as many (often more)
         # We use mean as aggregate measure (not strict per-particle)
-        assert jnp.mean(n_cand_125) >= jnp.mean(n_cand_27) * 0.9, \
+        assert jnp.mean(n_cand_125) >= jnp.mean(n_cand_27) * 0.9, (
             "125-cell should have comparable or more candidates than 27-cell"
+        )
 
     def test_self_excluded(self, uniform_grid_setup):
         """Particles are not their own neighbors."""
         setup = uniform_grid_setup
-        N = setup['N']
+        N = setup["N"]
         r_search = jnp.zeros(N)
         dx = 0.5
 
         cand_idx, cand_mask = gather_candidates_from_bins(
-            pos=setup['pos'],
-            bin_members=setup['bin_members'],
-            bin_mask=setup['bin_mask'],
-            bin_of=setup['bin_of'],
+            pos=setup["pos"],
+            bin_members=setup["bin_members"],
+            bin_mask=setup["bin_mask"],
+            bin_of=setup["bin_of"],
             r_search=r_search,
-            Nbins_per_dim=setup['Nbins_per_dim'],
+            Nbins_per_dim=setup["Nbins_per_dim"],
             dx=dx,
             Cand_max=50,
             K_bin=10,
@@ -424,7 +427,7 @@ class TestNeighborGathering:
     def test_two_stencil_dense_fallback(self, uniform_grid_setup):
         """Two-stencil uses dense fallback for thin coarse pools."""
         setup = uniform_grid_setup
-        N = setup['N']
+        N = setup["N"]
         r_search = jnp.zeros(N)
         dx = 0.5
 
@@ -432,12 +435,12 @@ class TestNeighborGathering:
         K_target = 30  # Higher than typical coarse count
 
         cand_idx, cand_mask = gather_candidates_two_stencil(
-            pos=setup['pos'],
-            bin_members=setup['bin_members'],
-            bin_mask=setup['bin_mask'],
-            bin_of=setup['bin_of'],
+            pos=setup["pos"],
+            bin_members=setup["bin_members"],
+            bin_mask=setup["bin_mask"],
+            bin_of=setup["bin_of"],
             r_search=r_search,
-            Nbins_per_dim=setup['Nbins_per_dim'],
+            Nbins_per_dim=setup["Nbins_per_dim"],
             dx=dx,
             K_target=K_target,
             K_bin_coarse=10,
@@ -456,11 +459,11 @@ class TestNeighborGathering:
         setup = uniform_grid_setup
 
         cand_idx, cand_mask = approx_knn_candidates(
-            pos=setup['pos'],
-            bin_members=setup['bin_members'],
-            bin_mask=setup['bin_mask'],
-            bin_of=setup['bin_of'],
-            Nbins_per_dim=setup['Nbins_per_dim'],
+            pos=setup["pos"],
+            bin_members=setup["bin_members"],
+            bin_mask=setup["bin_mask"],
+            bin_of=setup["bin_of"],
+            Nbins_per_dim=setup["Nbins_per_dim"],
             K_target=20,
         )
 
@@ -471,9 +474,10 @@ class TestNeighborGathering:
 
         # Candidate indices should be valid
         valid_cands = cand_idx[cand_mask]
-        N = setup['N']
-        assert jnp.all((valid_cands >= 0) & (valid_cands < N)), \
+        N = setup["N"]
+        assert jnp.all((valid_cands >= 0) & (valid_cands < N)), (
             "Invalid candidate indices"
+        )
 
 
 # =============================================================================
@@ -486,6 +490,7 @@ class TestJAXCompatibility:
 
     def test_morton_jit(self):
         """Morton encode/decode can be JIT compiled."""
+
         @jax.jit
         def roundtrip(xyz):
             codes = morton_encode_3d(xyz)
@@ -499,6 +504,7 @@ class TestJAXCompatibility:
 
     def test_assign_bins_jit(self):
         """Bin assignment can be JIT compiled."""
+
         @jax.jit
         def assign(pos):
             return assign_particles_to_bins(pos, L_box=4.0, Nbins_per_dim=8)
@@ -512,6 +518,7 @@ class TestJAXCompatibility:
 
     def test_fill_bins_jit(self):
         """Bin filling can be JIT compiled."""
+
         @jax.jit
         def fill(particle_ids, bin_of):
             return fill_bins(particle_ids, bin_of, Nbins=64, Bcap=20)
@@ -539,7 +546,7 @@ class TestJAXCompatibility:
         Nbins_per_dim = 8
         bin_of = assign_particles_to_bins(pos, L_box=L_box, Nbins_per_dim=Nbins_per_dim)
         particle_ids = jnp.arange(N, dtype=jnp.int32)
-        Nbins = Nbins_per_dim ** 3
+        Nbins = Nbins_per_dim**3
         Bcap = 32
         bin_members, bin_mask = fill_bins(particle_ids, bin_of, Nbins=Nbins, Bcap=Bcap)
 
@@ -566,7 +573,7 @@ class TestJAXCompatibility:
         N = 64
         L_box = 4.0
         Nbins_per_dim = 8
-        Nbins = Nbins_per_dim ** 3
+        Nbins = Nbins_per_dim**3
         Bcap = 20
         K_target = 16
 
@@ -576,11 +583,15 @@ class TestJAXCompatibility:
             pos_sentinel = jnp.concatenate([pos, jnp.zeros((1, 3))], axis=0)
 
             # Assign to bins
-            bin_of = assign_particles_to_bins(pos, L_box=L_box, Nbins_per_dim=Nbins_per_dim)
+            bin_of = assign_particles_to_bins(
+                pos, L_box=L_box, Nbins_per_dim=Nbins_per_dim
+            )
 
             # Fill bins
             particle_ids = jnp.arange(pos.shape[0], dtype=jnp.int32)
-            bin_members, bin_mask = fill_bins(particle_ids, bin_of, Nbins=Nbins, Bcap=Bcap)
+            bin_members, bin_mask = fill_bins(
+                particle_ids, bin_of, Nbins=Nbins, Bcap=Bcap
+            )
 
             # Get candidates
             return approx_knn_candidates(
@@ -679,7 +690,7 @@ class TestEdgeCases:
             Nbins_per_dim=16,
             K_target=30,
             K_bin_coarse=50,  # Higher since all in one bin
-            K_bin_dense=20,   # Higher fallback
+            K_bin_dense=20,  # Higher fallback
         )
 
         n_cand = jnp.sum(cand_mask, axis=1)
@@ -700,7 +711,9 @@ class TestEdgeCases:
         Nbins_per_dim = 8
         bin_of = assign_particles_to_bins(pos, L_box=L_box, Nbins_per_dim=Nbins_per_dim)
         particle_ids = jnp.arange(N, dtype=jnp.int32)
-        bin_members, bin_mask = fill_bins(particle_ids, bin_of, Nbins=Nbins_per_dim**3, Bcap=20)
+        bin_members, bin_mask = fill_bins(
+            particle_ids, bin_of, Nbins=Nbins_per_dim**3, Bcap=20
+        )
 
         cand_idx, cand_mask = approx_knn_candidates(
             pos=pos_sentinel,

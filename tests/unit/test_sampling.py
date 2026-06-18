@@ -105,8 +105,7 @@ class TestGradients:
         ad = jax.grad(lambda u: inverse_cdf_draw(w, GRID, u))(u0)
         eps = 1e-6
         fd = (
-            inverse_cdf_draw(w, GRID, u0 + eps)
-            - inverse_cdf_draw(w, GRID, u0 - eps)
+            inverse_cdf_draw(w, GRID, u0 + eps) - inverse_cdf_draw(w, GRID, u0 - eps)
         ) / (2 * eps)
         assert jnp.isfinite(ad)
         assert jnp.abs(ad - fd) <= 1e-6 * (jnp.abs(fd) + 1.0)
@@ -114,7 +113,10 @@ class TestGradients:
     def test_grad_wrt_weight(self):
         w0 = WEIGHTS["gaussian_bump"]
         u0 = jnp.asarray(0.42)
-        f = lambda w: inverse_cdf_draw(w, GRID, u0)
+
+        def f(w):
+            return inverse_cdf_draw(w, GRID, u0)
+
         ad = jax.grad(f)(w0)
         assert jnp.all(jnp.isfinite(ad)), "weight gradient not finite"
 

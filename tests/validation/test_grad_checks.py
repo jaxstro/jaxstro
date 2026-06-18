@@ -106,9 +106,7 @@ class TestStatsGradChecks:
         mu = jnp.array([0.0, 0.3, -0.1])
         sigma = jnp.array([1.0, 0.8, 1.2])
         assert_grad_matches(lambda v: jnp.sum(stats.gaussian_logpdf(v, mu, sigma)), x)
-        assert_grad_matches(
-            lambda m: jnp.sum(stats.gaussian_logpdf(x, m, sigma)), mu
-        )
+        assert_grad_matches(lambda m: jnp.sum(stats.gaussian_logpdf(x, m, sigma)), mu)
 
 
 # =============================================================================
@@ -119,17 +117,13 @@ class TestInterpolationGradChecks:
         x = jnp.linspace(0.0, 1.0, 6)
         x_new = jnp.array([0.13, 0.47, 0.82])
         y0 = jnp.sin(3.0 * x)
-        assert_grad_matches(
-            lambda y: jnp.sum(interpolation.interp1d(x, y, x_new)), y0
-        )
+        assert_grad_matches(lambda y: jnp.sum(interpolation.interp1d(x, y, x_new)), y0)
 
     def test_interp1d_wrt_x_new(self):
         x = jnp.linspace(0.0, 1.0, 6)
         y = jnp.sin(3.0 * x)
         xn0 = jnp.array([0.13, 0.47, 0.82])
-        assert_grad_matches(
-            lambda xn: jnp.sum(interpolation.interp1d(x, y, xn)), xn0
-        )
+        assert_grad_matches(lambda xn: jnp.sum(interpolation.interp1d(x, y, xn)), xn0)
 
     def test_tabulated_function_call(self):
         x = jnp.linspace(0.0, 2.0, 8)
@@ -166,9 +160,7 @@ class TestIntegrationGradChecks:
     def test_cumulative_trapz_x_path(self):
         x = jnp.array([0.0, 0.3, 0.7, 1.0, 1.6])
         y0 = jnp.array([1.0, 0.5, 2.0, 1.5, 0.2])
-        assert_grad_matches(
-            lambda y: jnp.sum(integration.cumulative_trapz(y, x)), y0
-        )
+        assert_grad_matches(lambda y: jnp.sum(integration.cumulative_trapz(y, x)), y0)
 
     def test_simpson_no_x(self):
         y0 = jnp.array([0.0, 1.0, 0.5, 2.0, 1.5])  # odd count
@@ -196,6 +188,7 @@ class TestRootfindingGradChecks:
         the limitation is documented and a future change that silently alters it
         fails loud.
         """
+
         def root(c):
             return rootfinding.bisect(lambda x: x**2 - c, 0.0, 2.0, max_steps=60)
 
@@ -213,6 +206,7 @@ class TestRootfindingGradChecks:
         artifact of differentiating a (truncated) bracketing iteration. At low
         step count both agree exactly, which is what this asserts.
         """
+
         def root_a(a):
             return rootfinding.bisect(lambda x: x**2 - 2.0, a, 2.0, max_steps=8)
 
@@ -242,17 +236,13 @@ class TestRootfindingGradChecks:
 class TestCompensatedGradChecks:
     def test_compensated_sum_array(self):
         x0 = jnp.array([1.0, 2.0, 3.0, 4.0])
-        assert_grad_matches(
-            lambda x: compensated.compensated_sum_array(x), x0
-        )
+        assert_grad_matches(lambda x: compensated.compensated_sum_array(x), x0)
 
     def test_compensated_sum_variadic(self):
         # Differentiate wrt the first stacked term.
         b = jnp.array([0.5, -1.0])
         a0 = jnp.array([1.0, 2.0])
-        assert_grad_matches(
-            lambda a: jnp.sum(compensated.compensated_sum(a, b)), a0
-        )
+        assert_grad_matches(lambda a: jnp.sum(compensated.compensated_sum(a, b)), a0)
 
     def test_compensated_dot(self):
         b = jnp.array([1.0, 1.0, 1.0])
@@ -271,16 +261,12 @@ class TestLinearAlgebraGradChecks:
     def test_project_onto_wrt_a(self):
         b = jnp.array([1.0, 2.0, 2.0])
         a0 = jnp.array([0.5, -1.0, 3.0])
-        assert_grad_matches(
-            lambda a: jnp.sum(linear_algebra.project_onto(a, b)), a0
-        )
+        assert_grad_matches(lambda a: jnp.sum(linear_algebra.project_onto(a, b)), a0)
 
     def test_project_onto_wrt_b(self):
         a = jnp.array([0.5, -1.0, 3.0])
         b0 = jnp.array([1.0, 2.0, 2.0])
-        assert_grad_matches(
-            lambda b: jnp.sum(linear_algebra.project_onto(a, b)), b0
-        )
+        assert_grad_matches(lambda b: jnp.sum(linear_algebra.project_onto(a, b)), b0)
 
 
 # =============================================================================

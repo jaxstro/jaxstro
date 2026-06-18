@@ -118,6 +118,7 @@ class TestIsMonotonic:
 
     def test_jit_compatible(self):
         """is_monotonic should work under jit."""
+
         @jax.jit
         def check(x):
             return checks.is_monotonic_increasing(x, strict=True)
@@ -188,6 +189,7 @@ class TestInRange:
 
     def test_jit_compatible(self):
         """in_range should work under jit."""
+
         @jax.jit
         def check(x):
             return checks.in_range(x, lo=0.0, hi=1.0, inclusive=True)
@@ -292,6 +294,7 @@ class TestJAXTransforms:
 
     def test_jit_combined_checks(self):
         """Multiple checks should compose under jit."""
+
         @jax.jit
         def validate(x):
             return checks.all_finite(x) & checks.all_positive(x)

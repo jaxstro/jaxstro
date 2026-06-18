@@ -25,7 +25,9 @@ class TestSkyTangent:
     def test_center_returns_center(self):
         """Star at cluster center should return pointing center."""
         positions = jnp.array([[0.0, 0.0, 0.0]])
-        result = sky_tangent(positions, distance_pc=1000.0, ra_center_deg=180.0, dec_center_deg=0.0)
+        result = sky_tangent(
+            positions, distance_pc=1000.0, ra_center_deg=180.0, dec_center_deg=0.0
+        )
         assert result.shape == (1, 2)
         assert jnp.abs(result[0, 0] - 180.0) < 1e-6  # RA
         assert jnp.abs(result[0, 1] - 0.0) < 1e-6  # Dec
@@ -33,7 +35,9 @@ class TestSkyTangent:
     def test_east_offset(self):
         """Star 1 pc East at 1 kpc should have ~0.057 deg RA offset."""
         positions = jnp.array([[1.0, 0.0, 0.0]])  # 1 pc East
-        result = sky_tangent(positions, distance_pc=1000.0, ra_center_deg=180.0, dec_center_deg=0.0)
+        result = sky_tangent(
+            positions, distance_pc=1000.0, ra_center_deg=180.0, dec_center_deg=0.0
+        )
         # 1/1000 rad ≈ 0.057 deg
         expected_ra_offset = jnp.rad2deg(1.0 / 1000.0)
         assert jnp.abs(result[0, 0] - (180.0 + expected_ra_offset)) < 0.01
@@ -41,25 +45,31 @@ class TestSkyTangent:
     def test_north_offset(self):
         """Star 1 pc North at 1 kpc should have ~0.057 deg Dec offset."""
         positions = jnp.array([[0.0, 1.0, 0.0]])  # 1 pc North
-        result = sky_tangent(positions, distance_pc=1000.0, ra_center_deg=180.0, dec_center_deg=0.0)
+        result = sky_tangent(
+            positions, distance_pc=1000.0, ra_center_deg=180.0, dec_center_deg=0.0
+        )
         expected_dec_offset = jnp.rad2deg(1.0 / 1000.0)
         assert jnp.abs(result[0, 1] - expected_dec_offset) < 0.01
 
     def test_los_offset_no_change(self):
         """Star offset along LOS should have minimal RA/Dec change."""
         positions = jnp.array([[0.0, 0.0, 10.0]])  # 10 pc along LOS
-        result = sky_tangent(positions, distance_pc=1000.0, ra_center_deg=180.0, dec_center_deg=0.0)
+        result = sky_tangent(
+            positions, distance_pc=1000.0, ra_center_deg=180.0, dec_center_deg=0.0
+        )
         assert jnp.abs(result[0, 0] - 180.0) < 0.01
         assert jnp.abs(result[0, 1] - 0.0) < 0.01
 
     def test_batch_processing(self):
         """Should handle batch of positions."""
-        positions = jnp.array([
-            [0.0, 0.0, 0.0],
-            [1.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0],
-            [1.0, 1.0, 0.0],
-        ])
+        positions = jnp.array(
+            [
+                [0.0, 0.0, 0.0],
+                [1.0, 0.0, 0.0],
+                [0.0, 1.0, 0.0],
+                [1.0, 1.0, 0.0],
+            ]
+        )
         result = sky_tangent(positions, distance_pc=1000.0)
         assert result.shape == (4, 2)
 
@@ -160,11 +170,13 @@ class TestSphericalCartesian:
 
     def test_roundtrip_cartesian_spherical(self):
         """Converting cartesian -> spherical -> cartesian should be identity."""
-        positions_orig = jnp.array([
-            [1.0, 2.0, 3.0],
-            [-1.0, 0.5, 2.0],
-            [0.0, 0.0, 5.0],
-        ])
+        positions_orig = jnp.array(
+            [
+                [1.0, 2.0, 3.0],
+                [-1.0, 0.5, 2.0],
+                [0.0, 0.0, 5.0],
+            ]
+        )
         r, theta, phi = cartesian_to_spherical(positions_orig)
         positions_back = spherical_to_cartesian(r, theta, phi)
         assert jnp.allclose(positions_back, positions_orig, atol=1e-10)
@@ -193,11 +205,13 @@ class TestParallax:
 
     def test_batch_processing(self):
         """Should handle arrays."""
-        positions = jnp.array([
-            [0.0, 0.0, 0.0],
-            [10.0, 0.0, 0.0],  # Slight offset
-            [0.0, 0.0, 100.0],  # LOS offset
-        ])
+        positions = jnp.array(
+            [
+                [0.0, 0.0, 0.0],
+                [10.0, 0.0, 0.0],  # Slight offset
+                [0.0, 0.0, 100.0],  # LOS offset
+            ]
+        )
         parallax = compute_parallax(positions, distance_pc=1000.0)
         assert parallax.shape == (3,)
         # All should be approximately 1 mas (small internal offsets)
@@ -211,7 +225,9 @@ class TestProperMotions:
         """100 km/s tangential at 1 kpc should give ~21 mas/yr."""
         positions = jnp.array([[0.0, 0.0, 0.0]])
         velocities = jnp.array([[100.0, 0.0, 0.0]])  # 100 km/s in x (tangential)
-        mu_ra, mu_dec = compute_proper_motions(positions, velocities, distance_pc=1000.0)
+        mu_ra, mu_dec = compute_proper_motions(
+            positions, velocities, distance_pc=1000.0
+        )
         # mu = v / (4.74 * d) = 100 / (4.74 * 1) ≈ 21.1 mas/yr
         expected = 100.0 / 4.74047
         assert jnp.abs(mu_ra[0] - expected) < 1.0
@@ -219,8 +235,12 @@ class TestProperMotions:
     def test_radial_velocity_gives_zero_pm(self):
         """Purely radial velocity should give zero proper motion."""
         positions = jnp.array([[0.0, 0.0, 0.0]])
-        velocities = jnp.array([[0.0, 0.0, -100.0]])  # 100 km/s toward observer (radial)
-        mu_ra, mu_dec = compute_proper_motions(positions, velocities, distance_pc=1000.0)
+        velocities = jnp.array(
+            [[0.0, 0.0, -100.0]]
+        )  # 100 km/s toward observer (radial)
+        mu_ra, mu_dec = compute_proper_motions(
+            positions, velocities, distance_pc=1000.0
+        )
         # Radial motion -> zero proper motion
         assert jnp.abs(mu_ra[0]) < 1.0
         assert jnp.abs(mu_dec[0]) < 1.0
@@ -229,7 +249,9 @@ class TestProperMotions:
         """Velocity in y should give proper motion in Dec."""
         positions = jnp.array([[0.0, 0.0, 0.0]])
         velocities = jnp.array([[0.0, 100.0, 0.0]])  # 100 km/s in y
-        mu_ra, mu_dec = compute_proper_motions(positions, velocities, distance_pc=1000.0)
+        mu_ra, mu_dec = compute_proper_motions(
+            positions, velocities, distance_pc=1000.0
+        )
         expected = 100.0 / 4.74047
         assert jnp.abs(mu_dec[0] - expected) < 1.0
 
@@ -237,7 +259,9 @@ class TestProperMotions:
         """Should handle arrays."""
         positions = jnp.zeros((10, 3))
         velocities = jnp.ones((10, 3)) * 50.0
-        mu_ra, mu_dec = compute_proper_motions(positions, velocities, distance_pc=1000.0)
+        mu_ra, mu_dec = compute_proper_motions(
+            positions, velocities, distance_pc=1000.0
+        )
         assert mu_ra.shape == (10,)
         assert mu_dec.shape == (10,)
 
@@ -272,7 +296,9 @@ class TestDifferentiability:
         velocities = jnp.array([[100.0, 50.0, 0.0]])
 
         def loss(distance_pc):
-            mu_ra, mu_dec = compute_proper_motions(positions, velocities, distance_pc=distance_pc)
+            mu_ra, mu_dec = compute_proper_motions(
+                positions, velocities, distance_pc=distance_pc
+            )
             return jnp.sum(mu_ra) + jnp.sum(mu_dec)
 
         grad = jax.grad(loss)(1000.0)

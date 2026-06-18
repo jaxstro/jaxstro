@@ -178,9 +178,7 @@ class Parameterization(eqx.Module):
         array leaves) and consumed by :meth:`log_det_jacobian`.
         """
         free = eqx.filter(model, free_spec)
-        free_transforms = eqx.filter(
-            transform_spec, free_spec, is_leaf=_is_bijector
-        )
+        free_transforms = eqx.filter(transform_spec, free_spec, is_leaf=_is_bijector)
         pairs = jax.tree_util.tree_map(
             lambda leaf, bij: _Meta(jnp.shape(leaf), bij),
             free,
@@ -310,9 +308,7 @@ class Parameterization(eqx.Module):
         # Length precheck: count free (True) leaves and require a 1:1 match so
         # too-FEW transforms raise a clean ValueError (matching the too-MANY
         # case below) instead of a PEP 479 RuntimeError from the next() below.
-        n_free = sum(
-            bool(b) for b in jax.tree_util.tree_leaves(free_spec)
-        )
+        n_free = sum(bool(b) for b in jax.tree_util.tree_leaves(free_spec))
         if len(transforms) != n_free:
             raise ValueError(
                 "transforms must align 1:1 with the free leaves of free_spec "
@@ -323,7 +319,7 @@ class Parameterization(eqx.Module):
         # Walk array leaves in PyTree order; assign the next bijector at each
         # free (True) leaf, Identity at fixed (False) leaves.
         spec = jax.tree_util.tree_map(
-            lambda is_free, ident: (next(it) if is_free else ident),
+            lambda is_free, ident: next(it) if is_free else ident,
             free_spec,
             identity_template,
             is_leaf=_is_bijector,
@@ -362,9 +358,7 @@ class Parameterization(eqx.Module):
         PyTree structure of ``eqx.filter(model, free_spec)`` and can be paired
         with it under :func:`jax.tree_util.tree_map`.
         """
-        return eqx.filter(
-            self.transform_spec, self.free_spec, is_leaf=_is_bijector
-        )
+        return eqx.filter(self.transform_spec, self.free_spec, is_leaf=_is_bijector)
 
     def to_vector(self, model: PyTree) -> Float[Array, " n"]:
         r"""Flatten the free leaves of ``model`` into an unconstrained vector.
@@ -396,9 +390,7 @@ class Parameterization(eqx.Module):
         )
         return ravel_pytree(unconstrained)[0]
 
-    def from_vector(
-        self, model: PyTree, vec: Float[Array, " n"]
-    ) -> PyTree:
+    def from_vector(self, model: PyTree, vec: Float[Array, " n"]) -> PyTree:
         r"""Reconstruct a model from an unconstrained ``vec``.
 
         The vector is unflattened into the free-partition structure, each free

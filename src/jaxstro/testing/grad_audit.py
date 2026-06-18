@@ -17,6 +17,7 @@ its own label strings in its local case registry.
 Dependency-light by design: jax + stdlib only (no pytest at import time), so it ships with the
 installed package and siblings import it at test time.
 """
+
 from dataclasses import dataclass
 from typing import Callable, Literal, Tuple
 
@@ -32,27 +33,28 @@ Expect = Literal["consistent", "known_zero", "known_blocked"]
 @dataclass(frozen=True)
 class EdgeConfig:
     """A curated boundary probe for a Case (e.g. a low-mass end or grid-node crossing)."""
-    label: str                       # appears in the case id, e.g. "M=0.1"
-    theta0: float                    # the edge parameter value
-    hazard_id: str | None = None     # links to the hazard map; set if it probes a suspect
-    tol: float | None = None         # per-edge tolerance override
-    expect: Expect | None = None     # per-edge expect override
+
+    label: str  # appears in the case id, e.g. "M=0.1"
+    theta0: float  # the edge parameter value
+    hazard_id: str | None = None  # links to the hazard map; set if it probes a suspect
+    tol: float | None = None  # per-edge tolerance override
+    expect: Expect | None = None  # per-edge expect override
 
 
 @dataclass(frozen=True)
 class Case:
     id: str
     direction: Direction
-    fn: Callable[[jax.Array], jax.Array]   # theta (scalar) -> output array
+    fn: Callable[[jax.Array], jax.Array]  # theta (scalar) -> output array
     param: str
     theta0: float
-    reduce: Callable[[jax.Array], jax.Array] = jnp.sum   # output -> scalar
+    reduce: Callable[[jax.Array], jax.Array] = jnp.sum  # output -> scalar
     expect: Expect = "consistent"
     tol: float = 1e-3
     h_rel: float = 1e-4
-    eps: float = 1e-9                        # |AD| silent-zero threshold
+    eps: float = 1e-9  # |AD| silent-zero threshold
     edges: Tuple[EdgeConfig, ...] = ()
-    hazard_id: str | None = None             # set when confirmed-but-unfixed -> strict-xfail
+    hazard_id: str | None = None  # set when confirmed-but-unfixed -> strict-xfail
 
 
 @dataclass(frozen=True)
@@ -68,7 +70,7 @@ class AuditResult:
     abs_ad: float
     expect: str
     tol: float
-    status: str          # clean | known-limitation | hazard
+    status: str  # clean | known-limitation | hazard
 
 
 def _scalar(case: Case, theta: jax.Array) -> jax.Array:
@@ -90,15 +92,21 @@ def _classify(expect, finite, ad, fd, ratio, tol, eps) -> str:
     return "hazard"
 
 
-def audit_entry_point(case: Case, theta: float | None = None,
-                      tol: float | None = None, expect: str | None = None) -> AuditResult:
+def audit_entry_point(
+    case: Case,
+    theta: float | None = None,
+    tol: float | None = None,
+    expect: str | None = None,
+) -> AuditResult:
     theta = case.theta0 if theta is None else theta
     tol = case.tol if tol is None else tol
     expect = case.expect if expect is None else expect
 
     from typing import get_args
-    assert (expect if expect is not None else case.expect) in get_args(Expect), \
+
+    assert (expect if expect is not None else case.expect) in get_args(Expect), (
         f"unknown expect class: {expect!r}"
+    )
 
     t = jnp.asarray(theta, dtype=jnp.float64)
     ad = float(jax.grad(lambda x: _scalar(case, x))(t))
@@ -116,5 +124,17 @@ def audit_entry_point(case: Case, theta: float | None = None,
     else:
         ratio = 1.0 if ad == 0.0 else float("inf")
     status = _classify(expect, finite, ad, fd, ratio, tol, case.eps)
-    return AuditResult(case.id, case.direction, case.param, float(theta), finite,
-                       ad, fd, ratio, abs(ad), expect, tol, status)
+    return AuditResult(
+        case.id,
+        case.direction,
+        case.param,
+        float(theta),
+        finite,
+        ad,
+        fd,
+        ratio,
+        abs(ad),
+        expect,
+        tol,
+        status,
+    )

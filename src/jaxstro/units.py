@@ -411,9 +411,7 @@ class PhotometricUnits:
         object.__setattr__(
             self, "luminosity_scale_cgs", _LUMINOSITY_SCALES_CGS[self.luminosity]
         )
-        object.__setattr__(
-            self, "radius_scale_cgs", _RADIUS_SCALES_CGS[self.radius]
-        )
+        object.__setattr__(self, "radius_scale_cgs", _RADIUS_SCALES_CGS[self.radius])
         # "AB" is magnitude-based and carries NO linear flux scale. Poison it
         # with NaN so any accidental linear use (to_cgs_flux/from_cgs_flux)
         # fails loud (NaN propagates) instead of silently returning a

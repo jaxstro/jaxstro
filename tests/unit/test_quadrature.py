@@ -120,6 +120,7 @@ class TestHermiteCoefficients:
 
     def test_known_expansion(self):
         """For map(g) = He_2(g) + 3 He_3(g), coefficients are c_2=1, c_3=3."""
+
         def map_fn(g):
             He2 = g**2 - 1.0
             He3 = g**3 - 3.0 * g

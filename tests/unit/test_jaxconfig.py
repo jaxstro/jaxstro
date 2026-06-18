@@ -7,7 +7,6 @@ is callable. Full functional testing of JAX config changes is tricky
 because config is global and our conftest.py already enables x64.
 """
 
-
 from jaxstro import jaxconfig
 
 

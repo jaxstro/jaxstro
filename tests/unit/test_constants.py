@@ -36,9 +36,7 @@ class TestFundamentalConstants:
     def test_stefan_boltzmann_constant(self):
         """sigma_SB should be consistent with k_B, h, c."""
         # sigma = 2 * pi^5 * k^4 / (15 * h^3 * c^2)
-        sigma_computed = (
-            2 * math.pi**5 * C.K_B**4 / (15 * C.H_CGS**3 * C.C_CGS**2)
-        )
+        sigma_computed = 2 * math.pi**5 * C.K_B**4 / (15 * C.H_CGS**3 * C.C_CGS**2)
         assert C.SIGMA_SB == pytest.approx(sigma_computed, rel=1e-6)
 
     def test_stefan_boltzmann_codata_value(self):

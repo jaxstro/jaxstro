@@ -5,6 +5,7 @@ expect-classes. These toy functions are the engine's proof — they touch no dom
 Ported verbatim (engine semantics) from the byte-identical fluxax/progenax
 ``grad_audit/core.py`` engine that this module deduplicates.
 """
+
 import jax
 import jax.numpy as jnp
 
@@ -21,8 +22,16 @@ from jaxstro.testing import (  # noqa: E402  (after float64 enable)
 
 
 def _case(fn, expect="consistent", tol=1e-5, reduce=jnp.sum):
-    return Case(id="toy", direction="params->summary", fn=fn, param="x",
-                theta0=2.0, reduce=reduce, expect=expect, tol=tol)
+    return Case(
+        id="toy",
+        direction="params->summary",
+        fn=fn,
+        param="x",
+        theta0=2.0,
+        reduce=reduce,
+        expect=expect,
+        tol=tol,
+    )
 
 
 def test_exports_present():
@@ -54,6 +63,7 @@ def test_wrong_by_two_is_hazard():
     @jax.custom_jvp
     def f(x):
         return x * jnp.ones(1)
+
     f.defjvp(lambda p, t: (f(p[0]), 2.0 * t[0] * jnp.ones(1)))  # claims 2x
     r = audit_entry_point(_case(f))
     assert r.status == "hazard" and abs(r.ratio - 2.0) < 1e-5
@@ -75,15 +85,21 @@ def test_known_zero_with_live_fd_is_hazard():
     # AD blocked at 0 but FD non-zero => the value genuinely depends on x while the
     # gradient is silently zero. Requires |ad|<eps AND |fd|<eps for a known-limitation;
     # a live FD must be a HAZARD (unannounced change).
-    r = audit_entry_point(_case(lambda x: jax.lax.stop_gradient(3.0 * x) * jnp.ones(2),
-                                expect="known_zero"))
+    r = audit_entry_point(
+        _case(
+            lambda x: jax.lax.stop_gradient(3.0 * x) * jnp.ones(2), expect="known_zero"
+        )
+    )
     assert r.status == "hazard" and r.abs_ad < 1e-12
 
 
 def test_known_blocked_requires_only_finite():
-    r = audit_entry_point(_case(lambda x: jax.lax.stop_gradient(x) * jnp.ones(2),
-                                expect="known_blocked"))
-    assert r.status == "known-limitation"  # finite AD (0) is acceptable for a blocked site
+    r = audit_entry_point(
+        _case(lambda x: jax.lax.stop_gradient(x) * jnp.ones(2), expect="known_blocked")
+    )
+    assert (
+        r.status == "known-limitation"
+    )  # finite AD (0) is acceptable for a blocked site
 
 
 def test_testing_subpackage_is_top_level_discoverable():
