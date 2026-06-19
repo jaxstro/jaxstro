@@ -13,6 +13,15 @@ from jaxstro.testing.grad_audit import (
     Expect,
     audit_entry_point,
 )
+from jaxstro.testing.ratchet import (
+    ASSERT_HELPERS,
+    assert_no_stale,
+    assert_partition,
+    has_nearby_citation,
+    resolve_node_ids,
+    scan_module_numeric_literals,
+    test_body_has_assert,
+)
 
 __all__ = [
     "audit_entry_point",
@@ -21,4 +30,11 @@ __all__ = [
     "EdgeConfig",
     "Direction",
     "Expect",
+    "ASSERT_HELPERS",
+    "assert_no_stale",
+    "assert_partition",
+    "has_nearby_citation",
+    "resolve_node_ids",
+    "scan_module_numeric_literals",
+    "test_body_has_assert",
 ]
