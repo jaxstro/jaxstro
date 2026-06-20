@@ -9,6 +9,7 @@ real-suite scan — so they live in the fast inner loop (tests/unit).
 
 from __future__ import annotations
 
+import re
 import textwrap
 from pathlib import Path
 
@@ -377,3 +378,73 @@ def test_resolve_node_ids_rejects_import_broken_file(tmp_path):
     node_id = f"{broken}::test_x"
     resolved = resolve_node_ids([node_id], rootdir=str(tmp_path))
     assert node_id not in resolved
+
+
+# ======================================================================================
+# SyntaxError fallback branches (a malformed source must not explode the scanners)
+# ======================================================================================
+
+
+def test_scan_yields_nothing_for_malformed_syntax(tmp_path):
+    """A file that fails to ``ast.parse`` -> the scanner yields nothing (no exception)."""
+    p = _write_module(
+        tmp_path,
+        """
+        def broken(:  # malformed: not parseable
+            return 1
+        """,
+    )
+    found = list(scan_module_numeric_literals(str(p), trivial=set(), small_int_max=2))
+    assert found == []
+
+
+def test_has_nearby_citation_false_for_malformed_syntax(tmp_path):
+    """A file that fails to ``ast.parse`` (and has no citation comment) -> False."""
+    p = _write_module(
+        tmp_path,
+        """
+        def broken(:  # malformed: not parseable
+            coeff = 7.23
+        """,
+    )
+    assert has_nearby_citation(str(p), 1) is False
+
+
+# ======================================================================================
+# Parametrization: custom cite_re / custom assert_helpers override the baked-in defaults
+# ======================================================================================
+
+
+def test_has_nearby_citation_honors_custom_cite_re(tmp_path):
+    """A comment matching a CUSTOM pattern but NOT the default is recognized only when the
+    custom ``cite_re`` is passed (proves the parameter is wired through)."""
+    p = _write_module(
+        tmp_path,
+        """
+        # see CUSTOMREF-marker
+        ALPHA = 2.35
+        """,
+    )
+    lineno = _literal_line(p, "2.35")
+    custom = re.compile(r"CUSTOMREF-marker")
+    assert has_nearby_citation(str(p), lineno, cite_re=custom) is True
+    assert has_nearby_citation(str(p), lineno) is False  # default does not match
+
+
+def test_body_has_assert_honors_custom_assert_helpers(tmp_path):
+    """A test body calling ``mylib.check_(...)`` counts as asserting only when that prefix is
+    supplied via ``assert_helpers`` (proves the parameter is wired through)."""
+    p = _write_test_file(
+        tmp_path,
+        """
+        import mylib
+
+        def test_custom():
+            mylib.check_(1.0, 1.0)
+        """,
+    )
+    node_id = f"{p}::test_custom"
+    assert (
+        ratchet.test_body_has_assert(node_id, assert_helpers=("mylib.check_",)) is True
+    )
+    assert ratchet.test_body_has_assert(node_id) is False  # default does not recognize

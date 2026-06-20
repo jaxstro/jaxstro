@@ -17,10 +17,17 @@ Public surface:
 - ``assert_partition(all_symbols, *buckets, label)`` — buckets exactly partition a universe.
 - ``assert_no_stale(mapping, universe, label)`` — every key still exists in the universe.
 - ``resolve_node_ids(node_ids, *, rootdir)`` — subset pytest ``--collect-only`` resolves.
-- ``test_body_has_assert(node_id)`` — the cited test body contains an assert (or helper).
-- ``ASSERT_HELPERS`` — the recognized assert-helper call-prefix allowlist.
+- ``test_body_has_assert(node_id, *, assert_helpers=ASSERT_HELPERS)`` — the cited test body
+  contains an assert (or a recognized assert-helper call).
+- ``ASSERT_HELPERS`` — the default recognized assert-helper call-prefix allowlist.
+- ``DEFAULT_CITE_RE`` — the default content-free citation regex.
 - ``scan_module_numeric_literals(path, *, trivial, small_int_max)`` — citable literals.
-- ``has_nearby_citation(path, lineno, *, window=4)`` — a citation sits near a literal.
+- ``has_nearby_citation(path, lineno, *, window=4, cite_re=DEFAULT_CITE_RE)`` — a citation
+  sits near a literal.
+
+Both baked-in conventions (``ASSERT_HELPERS``, ``DEFAULT_CITE_RE``) are exposed as defaults a
+downstream ecosystem package may override (pass its own ``assert_helpers`` / ``cite_re``)
+without editing this shared module.
 """
 
 from __future__ import annotations
@@ -31,7 +38,7 @@ import re
 import subprocess
 import sys
 import tokenize
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Mapping
 from pathlib import Path
 
 # Recognized assert-helper call prefixes. A cited test whose body contains a call whose
@@ -51,8 +58,9 @@ ASSERT_HELPERS: tuple[str, ...] = (
 # A comment / docstring counts as a citation if it names a paper year, a table/equation
 # reference, a recognized standards authority, or an explicit ``provenance:`` marker. This
 # is intentionally content-free (no specific author names) — registries that want a tighter
-# author-name regex layer it on top in their own test module.
-_CITE_RE = re.compile(
+# author-name regex layer it on top in their own test module. Public as the default; callers
+# may override it by passing their own ``cite_re`` to ``has_nearby_citation``.
+DEFAULT_CITE_RE = re.compile(
     r"(provenance:|\b(18|19|20)\d{2}\b|\bTable\b|\bEq\.?\b|\bSection\b|§|"
     r"\bCODATA\b|\bIAU\b|\bp(?:p|g|age)?\.?\s*\d)",
     re.IGNORECASE,
@@ -103,7 +111,9 @@ def assert_partition(
     )
 
 
-def assert_no_stale(mapping: dict[str, str], universe: set[str], label: str) -> None:
+def assert_no_stale(
+    mapping: Mapping[str, object], universe: set[str], label: str
+) -> None:
     """Assert every key in ``mapping`` still exists in ``universe`` (catches renames)."""
     stale = sorted(set(mapping) - universe)
     assert not stale, (
@@ -239,13 +249,17 @@ def _call_dotted_name(call: ast.Call) -> str:
     return ".".join(reversed(parts))
 
 
-def test_body_has_assert(node_id: str) -> bool:
+def test_body_has_assert(
+    node_id: str, *, assert_helpers: tuple[str, ...] = ASSERT_HELPERS
+) -> bool:
     """True iff the test fn named by ``node_id`` contains an assert (statement or helper).
 
     Handles both ``file.py::test_fn`` and ``file.py::Class::test_method``. "Has assert"
     means the function body contains an ``ast.Assert`` statement OR a call whose dotted
-    name starts with one of ``ASSERT_HELPERS``. Returns False if the file or function can't
-    be resolved (the caller's resolve_node_ids check guards real existence separately).
+    name starts with one of ``assert_helpers`` (default ``ASSERT_HELPERS``; pass a different
+    tuple to recognize another ecosystem's assert helpers). Returns False if the file or
+    function can't be resolved (the caller's resolve_node_ids check guards real existence
+    separately).
     """
     file_part, qualpath = _split_node_id(node_id)
     if not qualpath:
@@ -263,7 +277,7 @@ def test_body_has_assert(node_id: str) -> bool:
             return True
         if isinstance(sub, ast.Call):
             dotted = _call_dotted_name(sub)
-            if any(dotted.startswith(h) for h in ASSERT_HELPERS):
+            if any(dotted.startswith(h) for h in assert_helpers):
                 return True
     return False
 
@@ -353,16 +367,18 @@ def _safe_tokenize(src: str) -> Iterator[tokenize.TokenInfo]:
 # ======================================================================================
 
 
-def _cited_comment_lines(src: str) -> set[int]:
+def _cited_comment_lines(src: str, cite_re: re.Pattern[str]) -> set[int]:
     """Line numbers carrying a ``#`` comment whose text matches a citation token."""
     out: set[int] = set()
     for tok in _safe_tokenize(src):
-        if tok.type == tokenize.COMMENT and _CITE_RE.search(tok.string):
+        if tok.type == tokenize.COMMENT and cite_re.search(tok.string):
             out.add(tok.start[0])
     return out
 
 
-def _cited_docstring_spans(tree: ast.AST) -> list[tuple[int, int]]:
+def _cited_docstring_spans(
+    tree: ast.AST, cite_re: re.Pattern[str]
+) -> list[tuple[int, int]]:
     """(start, end) line spans of every class/function whose docstring carries a citation
     token — a literal inside such a block is provenanced by the docstring.
 
@@ -375,7 +391,7 @@ def _cited_docstring_spans(tree: ast.AST) -> list[tuple[int, int]]:
     for node in ast.walk(tree):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
             doc = ast.get_docstring(node, clean=False)
-            if doc and _CITE_RE.search(doc):
+            if doc and cite_re.search(doc):
                 start = getattr(node, "lineno", 1)
                 ends = [getattr(c, "end_lineno", None) for c in ast.walk(node)]
                 end = max([e for e in ends if e is not None], default=start)
@@ -383,11 +399,20 @@ def _cited_docstring_spans(tree: ast.AST) -> list[tuple[int, int]]:
     return spans
 
 
-def has_nearby_citation(path: str | Path, lineno: int, *, window: int = 4) -> bool:
+def has_nearby_citation(
+    path: str | Path,
+    lineno: int,
+    *,
+    window: int = 4,
+    cite_re: re.Pattern[str] = DEFAULT_CITE_RE,
+) -> bool:
     """True iff a citation-shaped comment sits within ``window`` lines ABOVE ``lineno`` (or
-    on the literal's own line), OR the literal sits inside a citation-bearing docstring."""
+    on the literal's own line), OR the literal sits inside a citation-bearing docstring.
+
+    ``cite_re`` (default ``DEFAULT_CITE_RE``) is the citation pattern; pass a custom compiled
+    pattern to recognize a different ecosystem's citation convention."""
     src = Path(path).read_text()
-    cited_lines = _cited_comment_lines(src)
+    cited_lines = _cited_comment_lines(src, cite_re)
     if any(
         line in cited_lines for line in range(lineno, max(0, lineno - window - 1), -1)
     ):
@@ -396,4 +421,6 @@ def has_nearby_citation(path: str | Path, lineno: int, *, window: int = 4) -> bo
         tree = ast.parse(src)
     except SyntaxError:
         return False
-    return any(start <= lineno <= end for start, end in _cited_docstring_spans(tree))
+    return any(
+        start <= lineno <= end for start, end in _cited_docstring_spans(tree, cite_re)
+    )

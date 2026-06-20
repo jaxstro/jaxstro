@@ -15,6 +15,7 @@ from jaxstro.testing.grad_audit import (
 )
 from jaxstro.testing.ratchet import (
     ASSERT_HELPERS,
+    DEFAULT_CITE_RE,
     assert_no_stale,
     assert_partition,
     has_nearby_citation,
@@ -31,6 +32,7 @@ __all__ = [
     "Direction",
     "Expect",
     "ASSERT_HELPERS",
+    "DEFAULT_CITE_RE",
     "assert_no_stale",
     "assert_partition",
     "has_nearby_citation",
