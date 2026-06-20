@@ -11,13 +11,23 @@ The design intent is:
 - avoid any domain-specific simulation logic here.
 """
 
-from . import astrometry, constants, coords, numerics, params, testing, units
+from . import (
+    astrometry,
+    atmospheres,
+    constants,
+    coords,
+    numerics,
+    params,
+    testing,
+    units,
+)
 from .units import DEFAULT as DEFAULT_UNITS
 
 __all__ = [
     "DEFAULT_UNITS",
     "constants",
     "units",
+    "atmospheres",
     "astrometry",
     "numerics",
     "coords",

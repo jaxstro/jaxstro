@@ -211,4 +211,10 @@ __marimo__/
 .claude-work/
 # CLAUDE.md is tracked (project guidance + brain-spoke handshake), matching the sibling repos
 
+# Large external atmosphere datasets and local cache mirrors.
+/data/atmospheres/
+/external_data/
+/downloads/atmospheres/
+/PHOENIX-NewEra*/
+
 .adr/

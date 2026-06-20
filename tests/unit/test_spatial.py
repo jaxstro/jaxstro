@@ -28,6 +28,47 @@ from jaxstro.spatial import (
 )
 from jaxstro.spatial.morton import MAX_BITS_3D
 
+
+def _exact_knn_indices(pos: jnp.ndarray, k: int) -> jnp.ndarray:
+    """Return exact k nearest non-self neighbors for a small test cloud."""
+    r2 = jnp.sum((pos[:, None, :] - pos[None, :, :]) ** 2, axis=-1)
+    r2 = jnp.where(jnp.eye(pos.shape[0], dtype=bool), jnp.inf, r2)
+    _, idx = jax.lax.top_k(-r2, k)
+    return idx
+
+
+def _candidate_sets_for_positions(
+    pos: jnp.ndarray,
+    *,
+    k_target: int,
+    L_box: float = 4.0,
+    Nbins_per_dim: int = 4,
+    Bcap: int = 64,
+) -> list[set[int]]:
+    """Build generous approximate candidate sets for recall-oriented tests."""
+    n = pos.shape[0]
+    pos_sentinel = jnp.concatenate([pos, jnp.zeros((1, 3))], axis=0)
+    bin_of = assign_particles_to_bins(pos, L_box=L_box, Nbins_per_dim=Nbins_per_dim)
+    particle_ids = jnp.arange(n, dtype=jnp.int32)
+    bin_members, bin_mask = fill_bins(
+        particle_ids,
+        bin_of,
+        Nbins=Nbins_per_dim**3,
+        Bcap=Bcap,
+    )
+    cand_idx, cand_mask = approx_knn_candidates(
+        pos=pos_sentinel,
+        bin_members=bin_members,
+        bin_mask=bin_mask,
+        bin_of=bin_of,
+        Nbins_per_dim=Nbins_per_dim,
+        K_target=k_target,
+        K_bin_coarse=min(Bcap, 32),
+        K_bin_dense=min(Bcap, 32),
+    )
+    return [set(map(int, cand_idx[i][cand_mask[i]].tolist())) for i in range(n)]
+
+
 # =============================================================================
 # Morton Encoding/Decoding Tests
 # =============================================================================
@@ -478,6 +519,70 @@ class TestNeighborGathering:
         assert jnp.all((valid_cands >= 0) & (valid_cands < N)), (
             "Invalid candidate indices"
         )
+
+    def test_candidates_contain_exact_knn_for_regular_cloud(self):
+        """Generous candidate settings contain the exact kNN on a regular cloud."""
+        coords = jnp.linspace(-0.45, 0.45, 3)
+        xx, yy, zz = jnp.meshgrid(coords, coords, coords, indexing="ij")
+        pos = jnp.stack([xx.ravel(), yy.ravel(), zz.ravel()], axis=-1)
+        jitter = jnp.arange(pos.shape[0], dtype=pos.dtype)[:, None] * jnp.array(
+            [1.0e-3, -7.0e-4, 4.0e-4]
+        )
+        pos = pos + jitter
+        k = 6
+
+        exact = _exact_knn_indices(pos, k)
+        candidates = _candidate_sets_for_positions(pos, k_target=20, Nbins_per_dim=4)
+
+        for i, candidate_set in enumerate(candidates):
+            assert set(map(int, exact[i].tolist())) <= candidate_set
+
+    def test_candidates_contain_exact_knn_near_box_boundaries(self):
+        """Boundary clamping does not drop exact neighbors when caps are generous."""
+        pos = jnp.array(
+            [
+                [-1.95, -1.95, -1.95],
+                [-1.85, -1.90, -1.80],
+                [-1.70, -1.82, -1.92],
+                [1.95, 1.95, 1.95],
+                [1.84, 1.88, 1.90],
+                [1.70, 1.75, 1.82],
+                [0.00, 0.00, 0.00],
+                [0.12, -0.08, 0.10],
+            ]
+        )
+        k = 2
+
+        exact = _exact_knn_indices(pos, k)
+        candidates = _candidate_sets_for_positions(pos, k_target=k)
+
+        for i, candidate_set in enumerate(candidates):
+            assert set(map(int, exact[i].tolist())) <= candidate_set
+
+    def test_candidates_contain_exact_knn_for_cluster_without_overflow(self):
+        """Clustered bins preserve exact recall when Bcap avoids reservoir loss."""
+        offsets = jnp.array(
+            [
+                [0.00, 0.00, 0.00],
+                [0.03, 0.01, -0.02],
+                [-0.02, 0.04, 0.01],
+                [0.05, -0.03, 0.02],
+                [-0.04, -0.01, 0.03],
+                [0.02, -0.05, -0.01],
+                [-0.06, 0.02, -0.03],
+                [0.04, 0.04, 0.04],
+                [-0.05, -0.04, 0.02],
+                [0.01, 0.06, -0.04],
+            ]
+        )
+        pos = offsets + jnp.array([0.2, -0.1, 0.3])
+        k = 4
+
+        exact = _exact_knn_indices(pos, k)
+        candidates = _candidate_sets_for_positions(pos, k_target=k, Bcap=16)
+
+        for i, candidate_set in enumerate(candidates):
+            assert set(map(int, exact[i].tolist())) <= candidate_set
 
 
 # =============================================================================

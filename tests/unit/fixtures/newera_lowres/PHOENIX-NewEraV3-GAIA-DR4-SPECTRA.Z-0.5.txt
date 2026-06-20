@@ -1,0 +1,1 @@
+# synthetic non-lowres fixture; discovery must ignore this product

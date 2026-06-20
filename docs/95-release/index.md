@@ -20,7 +20,33 @@ shift downstream numbers:
   derived as $4\sigma_\mathrm{SB}/c$ from the CODATA 2018 values rather than rounded
   independently (principle [9](../10-theory/index.md#p9-correctness)).
 
-:::{warning} Planned — not yet written
-This section is a stub. The full keep-a-changelog record is in the repository's
-`CHANGELOG.md`.
-:::
+## Release evidence
+
+Before a release or downstream migration, record the exact commands and results
+used to qualify the branch. The normal local gate is:
+
+```bash
+uv run pytest
+uv run ruff check src tests
+uv run ruff format --check src tests
+uv run mypy src
+```
+
+For the full Phase-C style gate, use the repository script:
+
+```bash
+bash scripts/check.sh
+```
+
+The release note should name any intentionally skipped gate, the reason it was
+skipped, and the narrower command that still covers the changed subsystem.
+
+## Data packaging policy
+
+Do not commit large external scientific data products to the repo or wheel. Local
+mirrors such as PHOENIX/NewEra atmosphere products belong under gitignored data
+or cache directories. Tests should use tiny synthetic fixtures or compact
+metadata manifests unless a small redistributable upstream product is explicitly
+approved and documented.
+
+The full keep-a-changelog record remains in the repository's `CHANGELOG.md`.

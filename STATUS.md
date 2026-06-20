@@ -1,9 +1,12 @@
 # jaxstro — status
 
-next: Jaxstro gradient-contract Stage 1 implemented locally (2026-06-20): shared
-`jaxstro.testing.contracts` plus grad_audit metadata are green on focused tests, full pytest,
-ruff, format-check, and mypy. Progenax Stage 2 is ready to start only after Anna explicitly
-asks for that migration.
+next: P2/P3 QA + atmospheres index MVP implemented locally (2026-06-20):
+spatial exact-kNN recall coverage, architecture/validation/release docs, explicit
+PHOENIX/NewEra gitignore guards, and `jaxstro.atmospheres` host-side low-res
+discovery/index parsing are green on focused tests, full pytest, docs build,
+ruff, format-check, and mypy. Next atmospheres step is a design discussion for
+spectral artifacts/interpolation; keep `jaxstro.photometric` deferred until
+Fluxax demonstrates a non-duplicative shared need.
 
 previous: Phase C MERGED + PUSHED to origin/main (2026-06-17, 25508f7, fast-forward; 447 tests green on
 merged main; feature branch deleted). NOT tagged — tag still held. Phase D remaining: (1) tag/version
