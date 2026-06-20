@@ -1,10 +1,20 @@
 """Shared testing utilities for the jaxstro ecosystem.
 
 Currently hosts the deduplicated AD-vs-FD gradient-audit engine consumed by sibling
-packages' differentiability gates (fluxax, progenax). Dependency-light (jax + stdlib);
-no pytest at import time so it ships with the installed package.
+packages' differentiability gates (fluxax, progenax), plus contract labels for safe
+downstream interpretation. Dependency-light (jax + stdlib); no pytest at import time so
+it ships with the installed package.
 """
 
+from jaxstro.testing.contracts import (
+    LIVE_GRAD_CONTRACTS,
+    RESERVED_GRAD_CONTRACTS,
+    GradContract,
+    contract_requires_fd,
+    default_contract_for_expect,
+    is_grad_contract,
+    is_inference_ready,
+)
 from jaxstro.testing.grad_audit import (
     AuditResult,
     Case,
@@ -31,6 +41,13 @@ __all__ = [
     "EdgeConfig",
     "Direction",
     "Expect",
+    "GradContract",
+    "LIVE_GRAD_CONTRACTS",
+    "RESERVED_GRAD_CONTRACTS",
+    "contract_requires_fd",
+    "default_contract_for_expect",
+    "is_grad_contract",
+    "is_inference_ready",
     "ASSERT_HELPERS",
     "DEFAULT_CITE_RE",
     "assert_no_stale",

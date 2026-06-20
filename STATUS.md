@@ -1,6 +1,11 @@
 # jaxstro — status
 
-next: Phase C MERGED + PUSHED to origin/main (2026-06-17, 25508f7, fast-forward; 447 tests green on
+next: Jaxstro gradient-contract Stage 1 implemented locally (2026-06-20): shared
+`jaxstro.testing.contracts` plus grad_audit metadata are green on focused tests, full pytest,
+ruff, format-check, and mypy. Progenax Stage 2 is ready to start only after Anna explicitly
+asks for that migration.
+
+previous: Phase C MERGED + PUSHED to origin/main (2026-06-17, 25508f7, fast-forward; 447 tests green on
 merged main; feature branch deleted). NOT tagged — tag still held. Phase D remaining: (1) tag/version
 decision; (2) release-staging decision (jaxstro namespace? rename jaxstro→jaxstro-core?); (3) flip CI
 pull_request trigger on (when Actions usage resets); (4) register jaxstro in ~/brain/roots.yml (Anna);

@@ -19,10 +19,16 @@ installed package and siblings import it at test time.
 """
 
 from dataclasses import dataclass
-from typing import Callable, Literal, Tuple
+from typing import Callable, Literal, Tuple, cast
 
 import jax
 import jax.numpy as jnp
+
+from jaxstro.testing.contracts import (
+    GradContract,
+    default_contract_for_expect,
+    is_grad_contract,
+)
 
 # direction is a free-form, package-specific label (e.g. fluxax "params->photometry",
 # progenax "params->IC"); the engine never validates it, so it is a generic string here.
@@ -55,6 +61,18 @@ class Case:
     eps: float = 1e-9  # |AD| silent-zero threshold
     edges: Tuple[EdgeConfig, ...] = ()
     hazard_id: str | None = None  # set when confirmed-but-unfixed -> strict-xfail
+    grad_contract: GradContract | None = None
+    allowed_claim: str = ""
+    forbidden_claims: Tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        contract = self.grad_contract
+        if contract is None:
+            contract = default_contract_for_expect(self.expect)
+        elif not is_grad_contract(contract):
+            raise ValueError(f"unknown gradient contract: {contract!r}")
+        object.__setattr__(self, "grad_contract", contract)
+        object.__setattr__(self, "forbidden_claims", tuple(self.forbidden_claims))
 
 
 @dataclass(frozen=True)
@@ -71,13 +89,22 @@ class AuditResult:
     expect: str
     tol: float
     status: str  # clean | known-limitation | hazard
+    grad_contract: str = ""
+    allowed_claim: str = ""
+    forbidden_claims: Tuple[str, ...] = ()
 
 
 def _scalar(case: Case, theta: jax.Array) -> jax.Array:
     return case.reduce(case.fn(theta))
 
 
-def _classify(expect, finite, ad, fd, ratio, tol, eps) -> str:
+def _classify(expect, finite, ad, fd, ratio, tol, eps, grad_contract) -> str:
+    if grad_contract == "surrogate":
+        if expect == "known_zero":
+            return "known-limitation" if (abs(ad) < eps and abs(fd) < eps) else "hazard"
+        if expect == "known_blocked":
+            return "known-limitation" if finite else "hazard"
+        return "clean" if (finite and abs(ad) > eps) else "hazard"
     if expect == "known_zero":
         # BOTH |AD|~0 AND |FD|~0 for a genuine known-limitation. AD~0 with a LIVE FD means
         # the value genuinely moves with the param while the gradient is silently zero -> a
@@ -90,6 +117,15 @@ def _classify(expect, finite, ad, fd, ratio, tol, eps) -> str:
     if finite and abs(ad) > eps and abs(ratio - 1.0) < tol:
         return "clean"
     return "hazard"
+
+
+def _effective_grad_contract(case: Case, expect: str) -> GradContract:
+    case_contract = cast(GradContract, case.grad_contract)
+    if expect != case.expect and case_contract == default_contract_for_expect(
+        case.expect
+    ):
+        return default_contract_for_expect(expect)
+    return case_contract
 
 
 def audit_entry_point(
@@ -107,6 +143,7 @@ def audit_entry_point(
     assert (expect if expect is not None else case.expect) in get_args(Expect), (
         f"unknown expect class: {expect!r}"
     )
+    grad_contract = _effective_grad_contract(case, expect)
 
     t = jnp.asarray(theta, dtype=jnp.float64)
     ad = float(jax.grad(lambda x: _scalar(case, x))(t))
@@ -123,18 +160,21 @@ def audit_entry_point(
         ratio = ad / fd
     else:
         ratio = 1.0 if ad == 0.0 else float("inf")
-    status = _classify(expect, finite, ad, fd, ratio, tol, case.eps)
+    status = _classify(expect, finite, ad, fd, ratio, tol, case.eps, grad_contract)
     return AuditResult(
-        case.id,
-        case.direction,
-        case.param,
-        float(theta),
-        finite,
-        ad,
-        fd,
-        ratio,
-        abs(ad),
-        expect,
-        tol,
-        status,
+        id=case.id,
+        direction=case.direction,
+        param=case.param,
+        theta=float(theta),
+        finite=finite,
+        ad=ad,
+        fd=fd,
+        ratio=ratio,
+        abs_ad=abs(ad),
+        expect=expect,
+        tol=tol,
+        status=status,
+        grad_contract=grad_contract,
+        allowed_claim=case.allowed_claim,
+        forbidden_claims=case.forbidden_claims,
     )
