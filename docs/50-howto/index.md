@@ -14,5 +14,9 @@ Current recipes:
 
 - [](./newera-data-processing.md)
 
+Use [](../20-architecture/spectra-data-architecture.md) for the runtime spectra
+boundary and backend design. The how-to page here stays focused on safe local
+data conversion.
+
 For broader package setup, start with [](../00-getting-started/index.md). For
 the numerical principles behind the recipes, see [](../10-theory/index.md).

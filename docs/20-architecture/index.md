@@ -64,3 +64,12 @@ The suite is organized by risk:
 
 Every release-facing claim should point either to the test that enforces it or to
 a decision record that explains why the boundary exists.
+
+## Spectra data architecture
+
+The first large-data runtime boundary is documented in
+[](./spectra-data-architecture.md). It defines the shared
+`AtmosphereParams -> SpectrumResult` interface, the split between host-side
+processed-artifact loading and JAX-side prepared interpolation, and the dataset
+ownership rule that keeps filters, photometry, bolometric corrections, and survey
+semantics downstream until a genuinely shared lower-level abstraction exists.

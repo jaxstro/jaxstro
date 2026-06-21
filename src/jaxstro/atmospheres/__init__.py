@@ -1,9 +1,9 @@
 """Host-side atmosphere grid discovery and indexing helpers.
 
-This module intentionally stops at file discovery and metadata parsing. It does
-not load the PHOENIX/NewEra spectra into tensors, interpolate atmospheres, or
-project spectra through filters; those are later backend and downstream-package
-steps.
+This package keeps host-side data ingestion separate from JAX-side spectral
+interpolation. It can discover raw PHOENIX/NewEra files, open processed local
+artifacts, and return raw spectra. Downstream packages own filter projection,
+photometry, bolometric corrections, and survey-specific observables.
 """
 
 from __future__ import annotations
@@ -13,6 +13,19 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TypeAlias
+
+from .newera import DEFAULT_NEWERA_CATALOG, DEFAULT_NEWERA_ZARR, NewEraBackend
+from .spectra import (
+    STATUS_MISSING_ABUNDANCE,
+    STATUS_OK,
+    STATUS_OUT_OF_GRID,
+    AtmosphereBackend,
+    AtmosphereParams,
+    PreparedSpectralGrid,
+    Spectrum,
+    SpectrumResult,
+    SpectrumStatus,
+)
 
 PathLike: TypeAlias = str | os.PathLike[str]
 
@@ -160,10 +173,22 @@ def build_newera_lowres_index(
 __all__ = [
     "NEWERA_DATA_ENV",
     "NEWERA_LOWRES_PRODUCT",
+    "DEFAULT_NEWERA_CATALOG",
+    "DEFAULT_NEWERA_ZARR",
+    "STATUS_MISSING_ABUNDANCE",
+    "STATUS_OK",
+    "STATUS_OUT_OF_GRID",
+    "AtmosphereBackend",
+    "AtmosphereParams",
+    "NewEraBackend",
     "NewEraLowResFile",
     "NewEraLowResHeader",
     "NewEraLowResIndex",
     "NewEraLowResMetadata",
+    "PreparedSpectralGrid",
+    "Spectrum",
+    "SpectrumResult",
+    "SpectrumStatus",
     "build_newera_lowres_index",
     "discover_newera_lowres_files",
     "parse_newera_lowres_filename",

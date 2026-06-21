@@ -23,6 +23,9 @@ to a row here.
 | FD-vs-AD audits classify gradient contracts conservatively | Existing audit tolerances | Smooth, known-zero, blocked, surrogate, and validation-only cases | `tests/integration/test_grad_audit.py` |
 | Spatial candidate gathering excludes self and preserves exact-kNN recall when stencil/capacity settings make recall possible | Exact set containment for small clouds | Regular, boundary, and clustered cases | `tests/unit/test_spatial.py` |
 | Atmosphere data indexing does not vendor raw PHOENIX data | Fixture size guard and parser-only tests | Synthetic tiny NewEra-like files only | `tests/unit/test_atmospheres.py` |
+| Prepared atmosphere spectra interpolate inside the loaded cell and fail closed outside it | Exact synthetic bilinear values and status codes | Midpoint spectra, clamped out-of-grid status, wrong abundance-plane status | `tests/unit/test_atmospheres_spectra.py` |
+| Processed NewEra artifacts can be opened without raw text files | Exact synthetic Zarr/Parquet fixture values | `NewEraBackend.open(...).spectrum(...)` returns the expected wavelength and flux | `tests/unit/test_atmospheres_newera_backend.py` |
+| Prepared spectra run through JAX transform paths at moderate wavelength size | Shape and finite-output checks | `jit(vmap(...))` over 4096-wavelength spectra | `tests/validation/test_atmospheres_spectra.py` |
 
 ## Local evidence commands
 
@@ -30,7 +33,9 @@ Use the focused commands below when changing one subsystem:
 
 ```bash
 uv run pytest tests/integration/test_grad_audit.py tests/unit/test_spatial.py
-uv run pytest tests/unit/test_atmospheres.py
+uv run pytest tests/unit/test_atmospheres.py tests/unit/test_atmospheres_spectra.py
+uv run --extra data pytest tests/unit/test_atmospheres_newera_backend.py
+uv run pytest tests/validation/test_atmospheres_spectra.py
 ```
 
 Use the broader gate before publishing or handing a branch to downstream

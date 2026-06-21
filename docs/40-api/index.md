@@ -2,7 +2,8 @@
 title: API reference
 description: >-
   The public module surface of jaxstro 0.1.0 — units, constants, astrometry,
-  coords, numerics, spatial, params, testing, jaxconfig — and what each provides.
+  coords, numerics, spatial, params, atmospheres, testing, jaxconfig — and what
+  each provides.
 ---
 
 This is the lookup door. It enumerates the public modules of jaxstro 0.1.0 and the
@@ -11,14 +12,14 @@ the top-level package and reach modules as attributes:
 
 ```python
 import jaxstro
-from jaxstro import constants, units, numerics, coords, spatial, params, testing
+from jaxstro import atmospheres, constants, units, numerics, coords, spatial, params, testing
 from jaxstro.jaxconfig import enable_high_precision
 ```
 
 The committed surface for 0.1.0 is below. `units`, `constants`, `astrometry`,
-`coords`, and `jaxconfig` are **stable**; `numerics`, `spatial`, and `params` are
-**stable-but-evolving**; `testing` is a **public, semi-stable** utility. There is
-no private or experimental tier at release.
+`coords`, and `jaxconfig` are **stable**; `numerics`, `spatial`, `params`, and
+`atmospheres` are **stable-but-evolving**; `testing` is a **public, semi-stable**
+utility. There is no private or experimental tier at release.
 
 ```{list-table} Public modules
 :header-rows: 1
@@ -47,6 +48,10 @@ no private or experimental tier at release.
 * - `jaxstro.params`
   - Equinox-only PyTree↔flat-vector bridge (`Parameterization`) plus a bijector
     registry (Identity/Exp/Softplus/Sigmoid) for unconstrained-space inference.
+* - `jaxstro.atmospheres`
+  - Host-side PHOENIX/NewEra discovery and processed-artifact loading; JAX-ready
+    raw spectra types (`AtmosphereParams`, `Spectrum`, `SpectrumResult`,
+    `SpectrumStatus`, `PreparedSpectralGrid`) and `NewEraBackend`.
 * - `jaxstro.testing`
   - The grad-audit engine (`audit_entry_point`, `Case`, `AuditResult`, `EdgeConfig`)
     for FD-vs-AD gradient checks.
@@ -117,3 +122,13 @@ source links) is planned. Until then, the docstrings are authoritative — read 
 with `help(jaxstro.numerics.rootfinding.newton_ppf)` — and this landing page is the
 module map.
 :::
+
+### `jaxstro.atmospheres`
+
+`jaxstro.atmospheres` exposes the shared foundation boundary
+`AtmosphereParams -> SpectrumResult`. The host-side `NewEraBackend` opens local
+processed artifacts created by `scripts/convert_newera_lowres.py`; the
+`PreparedSpectralGrid` object carries the already-loaded wavelength grid and
+corner spectra for JAX-side bilinear interpolation over `teff` and `logg` at one
+exact abundance plane. The architecture and downstream ownership boundary are in
+[](../20-architecture/spectra-data-architecture.md).

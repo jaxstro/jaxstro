@@ -1,12 +1,14 @@
 # jaxstro — status
 
-next: NewEra low-res local conversion completed (2026-06-20): 49 raw PHOENIX/NewEra
-text files converted to ignored `processed/newera_lowres_v3.zarr` float32 spectra
-+ Parquet catalogs with per-file validation ledgers; all raw extracted `.txt`
-files deleted only after readback validation. Converter/tooling docs green on
-497 pytest tests, ruff, format-check, mypy, and MyST docs build. Next atmospheres
-step: design runtime reader/interpolator and Fluxax integration; keep
-`jaxstro.photometric` deferred until Fluxax demonstrates a non-duplicative shared need.
+next: Atmospheres spectra runtime MVP completed (2026-06-20): hybrid
+`AtmosphereParams -> SpectrumResult` interface documented and implemented with
+host-side `NewEraBackend` + JAX-side `PreparedSpectralGrid`. Raw PHOENIX/NewEra
+data remains gitignored; processed Zarr/Parquet artifacts stay local. Validation
+evidence: 505 pytest tests passed, focused atmospheres tests passed with
+`--extra data`, ruff check, ruff format-check, mypy, and MyST docs build all
+green. Next atmospheres step: downstream package integration design; keep
+photometry/filters/BC semantics downstream unless Fluxax proves a shared lower
+abstraction is needed.
 
 previous: Phase C MERGED + PUSHED to origin/main (2026-06-17, 25508f7, fast-forward; 447 tests green on
 merged main; feature branch deleted). NOT tagged — tag still held. Phase D remaining: (1) tag/version
