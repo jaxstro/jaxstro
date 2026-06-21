@@ -10,8 +10,9 @@ constant with provenance, write an AD-safe reduction, grad-check a function, cho
 a quadrature rule, and consume jaxstro from a sibling package. Recipes assume the
 concepts and link to the theory rather than re-teaching it.
 
-:::{warning} Planned — not yet written
-This section is a stub. For now, [](../00-getting-started/index.md) is the worked
-end-to-end example, and the [theory section](../10-theory/index.md) explains the
-principles each recipe will apply.
-:::
+Current recipes:
+
+- [](./newera-data-processing.md)
+
+For broader package setup, start with [](../00-getting-started/index.md). For
+the numerical principles behind the recipes, see [](../10-theory/index.md).

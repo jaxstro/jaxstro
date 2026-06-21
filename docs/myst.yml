@@ -72,6 +72,7 @@ project:
     - title: How-to
       children:
         - file: 50-howto/index.md
+        - file: 50-howto/newera-data-processing.md
     - title: Validation
       children:
         - file: 60-validation/index.md

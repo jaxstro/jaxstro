@@ -1,12 +1,12 @@
 # jaxstro — status
 
-next: P2/P3 QA + atmospheres index MVP implemented locally (2026-06-20):
-spatial exact-kNN recall coverage, architecture/validation/release docs, explicit
-PHOENIX/NewEra gitignore guards, and `jaxstro.atmospheres` host-side low-res
-discovery/index parsing are green on focused tests, full pytest, docs build,
-ruff, format-check, and mypy. Next atmospheres step is a design discussion for
-spectral artifacts/interpolation; keep `jaxstro.photometric` deferred until
-Fluxax demonstrates a non-duplicative shared need.
+next: NewEra low-res local conversion completed (2026-06-20): 49 raw PHOENIX/NewEra
+text files converted to ignored `processed/newera_lowres_v3.zarr` float32 spectra
++ Parquet catalogs with per-file validation ledgers; all raw extracted `.txt`
+files deleted only after readback validation. Converter/tooling docs green on
+497 pytest tests, ruff, format-check, mypy, and MyST docs build. Next atmospheres
+step: design runtime reader/interpolator and Fluxax integration; keep
+`jaxstro.photometric` deferred until Fluxax demonstrates a non-duplicative shared need.
 
 previous: Phase C MERGED + PUSHED to origin/main (2026-06-17, 25508f7, fast-forward; 447 tests green on
 merged main; feature branch deleted). NOT tagged — tag still held. Phase D remaining: (1) tag/version
