@@ -126,9 +126,11 @@ module map.
 ### `jaxstro.atmospheres`
 
 `jaxstro.atmospheres` exposes the shared foundation boundary
-`AtmosphereParams -> SpectrumResult`. The host-side `NewEraBackend` opens local
-processed artifacts created by `scripts/convert_newera_lowres.py`; the
-`PreparedSpectralGrid` object carries the already-loaded wavelength grid and
-corner spectra for JAX-side bilinear interpolation over `teff` and `logg` at one
-exact abundance plane. The architecture and downstream ownership boundary are in
-[](../20-architecture/spectra-data-architecture.md).
+`AtmosphereParams -> SpectrumResult`. Host-side backends open processed NewEra
+and BOSZ artifacts; `AtmosphereLibrary` ranks local catalog coverage without
+hiding provenance or pretending raw-only staged data have runtime backends.
+`PreparedSpectralGrid` carries the already-loaded wavelength grid and corner
+spectra for JAX-side bilinear interpolation over `teff` and `logg` at one exact
+abundance plane. Coverage reporting, source-preserving Sonora/TLUSTY converters,
+and overlap diagnostics stay host-side. The architecture and downstream
+ownership boundary are in [](../20-architecture/spectra-data-architecture.md).

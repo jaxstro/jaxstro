@@ -13,6 +13,9 @@ concepts and link to the theory rather than re-teaching it.
 Current recipes:
 
 - [](./newera-data-processing.md)
+- [](./bosz-data-processing.md)
+- [](./sonora-data-processing.md)
+- [](./tlusty-data-processing.md)
 
 Use [](../20-architecture/spectra-data-architecture.md) for the runtime spectra
 boundary and backend design. The how-to page here stays focused on safe local

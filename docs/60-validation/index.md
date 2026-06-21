@@ -25,6 +25,10 @@ to a row here.
 | Atmosphere data indexing does not vendor raw PHOENIX data | Fixture size guard and parser-only tests | Synthetic tiny NewEra-like files only | `tests/unit/test_atmospheres.py` |
 | Prepared atmosphere spectra interpolate inside the loaded cell and fail closed outside it | Exact synthetic bilinear values and status codes | Midpoint spectra, clamped out-of-grid status, wrong abundance-plane status | `tests/unit/test_atmospheres_spectra.py` |
 | Processed NewEra artifacts can be opened without raw text files | Exact synthetic Zarr/Parquet fixture values | `NewEraBackend.open(...).spectrum(...)` returns the expected wavelength and flux | `tests/unit/test_atmospheres_newera_backend.py` |
+| Catalog-first atmosphere selection preserves provenance and reports raw-only staged data without selecting unavailable backends | Exact synthetic coverage rows and status strings | Processed backend match, raw-only backend-unavailable match, and no-match reason | `tests/unit/test_atmospheres_library.py` |
+| Atmosphere coverage reports are deterministic | Exact Markdown/JSON ordering | Synthetic catalog rows summarized into stable coverage tables | `tests/unit/test_atmospheres_coverage.py`, `tests/unit/test_report_atmosphere_coverage_script.py` |
+| Sonora and TLUSTY converters preserve raw semantic columns and archive provenance | Synthetic zip/tar readback with float32 storage checks | Sonora wavelength/`W/m2/m`; TLUSTY frequency/`F_nu`; source archives are not deleted | `tests/unit/test_sonora_conversion_script.py`, `tests/unit/test_tlusty_conversion_script.py` |
+| Cross-library overlap validation is diagnostic, not a strict model-equality claim | Shape/domain/finite checks and normalized SED difference only | Synthetic overlapping and non-overlapping spectra | `tests/unit/test_atmospheres_overlap.py` |
 | Prepared spectra run through JAX transform paths at moderate wavelength size | Shape and finite-output checks | `jit(vmap(...))` over 4096-wavelength spectra | `tests/validation/test_atmospheres_spectra.py` |
 
 ## Local evidence commands
@@ -34,7 +38,7 @@ Use the focused commands below when changing one subsystem:
 ```bash
 uv run pytest tests/integration/test_grad_audit.py tests/unit/test_spatial.py
 uv run pytest tests/unit/test_atmospheres.py tests/unit/test_atmospheres_spectra.py
-uv run --extra data pytest tests/unit/test_atmospheres_newera_backend.py
+uv run --extra data pytest tests/unit/test_atmospheres*.py tests/unit/test_*conversion_script.py
 uv run pytest tests/validation/test_atmospheres_spectra.py
 ```
 

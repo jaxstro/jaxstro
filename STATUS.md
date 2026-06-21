@@ -1,13 +1,11 @@
 # jaxstro — status
 
-next: BOSZ practical tier staged + processed (2026-06-20): 3,303 unique
-R=10000, vturb=2, [alpha/M]=0, [C/M]=0 spectra across m/H =
-{-2.5,-2.0,-1.5,-1.0,-0.5,0.0,+0.5} and atmosphere families {ap,mp,ms};
-coverage 2800-16000 K, logg -0.5..5.5, wavelength 500-319986.22 A. Each
-metallicity batch was downloaded from official STScI BOSZ scripts, converted to
-local Zarr/Parquet, readback-validated, and raw gzip files deleted only after
-validation. Next atmospheres step: integrate BOSZ tier into downstream selection
-policy and decide whether alpha/carbon/vturb expansion is scientifically needed.
+next: Atmospheres library phase in progress (2026-06-21): catalog-first
+AtmosphereLibrary selector + deterministic coverage reporting + source-preserving
+Sonora/TLUSTY converter scripts + diagnostic overlap/acquisition tables are being
+implemented in jaxstro only. Focused synthetic atmosphere regression is green
+(`45 passed`). Next action: run lint/type/full tests and decide whether to execute
+full local Sonora/TLUSTY conversions from staged archives.
 
 previous: Phase C MERGED + PUSHED to origin/main (2026-06-17, 25508f7, fast-forward; 447 tests green on
 merged main; feature branch deleted). NOT tagged — tag still held. Phase D remaining: (1) tag/version

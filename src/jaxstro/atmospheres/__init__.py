@@ -14,6 +14,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TypeAlias
 
+from .acquisition import (
+    AcquisitionDecision,
+    acquisition_rows_to_markdown,
+    plan_targeted_acquisition,
+)
 from .bosz import (
     BOSZ_2025_RECOMPUTED_NOTE,
     DEFAULT_BOSZ_CATALOG,
@@ -26,7 +31,15 @@ from .bosz import (
     discover_bosz_files,
     parse_bosz_filename,
 )
+from .library import (
+    AtmosphereCatalogCoverage,
+    AtmosphereLibrary,
+    AtmosphereLibraryCandidate,
+    AtmosphereSelection,
+)
 from .newera import DEFAULT_NEWERA_CATALOG, DEFAULT_NEWERA_ZARR, NewEraBackend
+from .overlap import OverlapDiagnostic, validate_spectrum_overlap
+from .sonora import Sonora2024Metadata, parse_sonora_2024_filename
 from .spectra import (
     STATUS_MISSING_ABUNDANCE,
     STATUS_OK,
@@ -38,6 +51,7 @@ from .spectra import (
     SpectrumResult,
     SpectrumStatus,
 )
+from .tlusty import TlustyFluxMetadata, parse_tlusty_float, parse_tlusty_flux_filename
 
 PathLike: TypeAlias = str | os.PathLike[str]
 
@@ -194,7 +208,12 @@ __all__ = [
     "STATUS_OK",
     "STATUS_OUT_OF_GRID",
     "AtmosphereBackend",
+    "AtmosphereCatalogCoverage",
+    "AtmosphereLibrary",
+    "AtmosphereLibraryCandidate",
     "AtmosphereParams",
+    "AtmosphereSelection",
+    "AcquisitionDecision",
     "BoszBackend",
     "BoszFile",
     "BoszIndex",
@@ -204,16 +223,25 @@ __all__ = [
     "NewEraLowResHeader",
     "NewEraLowResIndex",
     "NewEraLowResMetadata",
+    "OverlapDiagnostic",
     "PreparedSpectralGrid",
     "Spectrum",
     "SpectrumResult",
     "SpectrumStatus",
+    "Sonora2024Metadata",
+    "TlustyFluxMetadata",
+    "acquisition_rows_to_markdown",
     "build_bosz_index",
     "build_newera_lowres_index",
     "discover_bosz_files",
     "discover_newera_lowres_files",
     "parse_bosz_filename",
     "parse_newera_lowres_filename",
+    "parse_sonora_2024_filename",
+    "parse_tlusty_float",
+    "parse_tlusty_flux_filename",
+    "plan_targeted_acquisition",
     "read_newera_lowres_header",
     "resolve_data_dir",
+    "validate_spectrum_overlap",
 ]
