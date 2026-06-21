@@ -14,6 +14,18 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TypeAlias
 
+from .bosz import (
+    BOSZ_2025_RECOMPUTED_NOTE,
+    DEFAULT_BOSZ_CATALOG,
+    DEFAULT_BOSZ_ZARR,
+    BoszBackend,
+    BoszFile,
+    BoszIndex,
+    BoszMetadata,
+    build_bosz_index,
+    discover_bosz_files,
+    parse_bosz_filename,
+)
 from .newera import DEFAULT_NEWERA_CATALOG, DEFAULT_NEWERA_ZARR, NewEraBackend
 from .spectra import (
     STATUS_MISSING_ABUNDANCE,
@@ -175,11 +187,18 @@ __all__ = [
     "NEWERA_LOWRES_PRODUCT",
     "DEFAULT_NEWERA_CATALOG",
     "DEFAULT_NEWERA_ZARR",
+    "BOSZ_2025_RECOMPUTED_NOTE",
+    "DEFAULT_BOSZ_CATALOG",
+    "DEFAULT_BOSZ_ZARR",
     "STATUS_MISSING_ABUNDANCE",
     "STATUS_OK",
     "STATUS_OUT_OF_GRID",
     "AtmosphereBackend",
     "AtmosphereParams",
+    "BoszBackend",
+    "BoszFile",
+    "BoszIndex",
+    "BoszMetadata",
     "NewEraBackend",
     "NewEraLowResFile",
     "NewEraLowResHeader",
@@ -189,8 +208,11 @@ __all__ = [
     "Spectrum",
     "SpectrumResult",
     "SpectrumStatus",
+    "build_bosz_index",
     "build_newera_lowres_index",
+    "discover_bosz_files",
     "discover_newera_lowres_files",
+    "parse_bosz_filename",
     "parse_newera_lowres_filename",
     "read_newera_lowres_header",
     "resolve_data_dir",

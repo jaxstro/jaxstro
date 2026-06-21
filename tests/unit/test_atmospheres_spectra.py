@@ -66,6 +66,20 @@ def test_prepared_grid_marks_wrong_abundance_plane_unmodeled():
     assert bool(result.status.unmodeled)
 
 
+def test_prepared_grid_marks_wrong_carbon_or_vturb_plane_unmodeled():
+    grid = _prepared_grid()
+
+    carbon_result = grid.spectrum(AtmosphereParams(teff=5500.0, logg=4.5, c_m=0.25))
+    vturb_result = grid.spectrum(
+        AtmosphereParams(teff=5500.0, logg=4.5, vturb_km_s=4.0)
+    )
+
+    assert int(carbon_result.status.code) == STATUS_MISSING_ABUNDANCE
+    assert bool(carbon_result.status.unmodeled)
+    assert int(vturb_result.status.code) == STATUS_MISSING_ABUNDANCE
+    assert bool(vturb_result.status.unmodeled)
+
+
 def test_prepared_grid_is_jittable_and_differentiable():
     grid = _prepared_grid()
 

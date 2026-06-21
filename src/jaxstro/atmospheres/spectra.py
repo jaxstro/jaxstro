@@ -22,15 +22,31 @@ class AtmosphereParams:
     logg: Any
     m_h: Any = 0.0
     alpha_m: Any = 0.0
+    c_m: Any = 0.0
+    vturb_km_s: Any = 2.0
 
     def tree_flatten(self):
-        return (self.teff, self.logg, self.m_h, self.alpha_m), None
+        return (
+            self.teff,
+            self.logg,
+            self.m_h,
+            self.alpha_m,
+            self.c_m,
+            self.vturb_km_s,
+        ), None
 
     @classmethod
     def tree_unflatten(cls, aux_data, children):
         del aux_data
-        teff, logg, m_h, alpha_m = children
-        return cls(teff=teff, logg=logg, m_h=m_h, alpha_m=alpha_m)
+        teff, logg, m_h, alpha_m, c_m, vturb_km_s = children
+        return cls(
+            teff=teff,
+            logg=logg,
+            m_h=m_h,
+            alpha_m=alpha_m,
+            c_m=c_m,
+            vturb_km_s=vturb_km_s,
+        )
 
 
 @jax.tree_util.register_pytree_node_class
@@ -125,6 +141,8 @@ class PreparedSpectralGrid:
     flux: Any
     m_h: float = 0.0
     alpha_m: float = 0.0
+    c_m: float = 0.0
+    vturb_km_s: float = 2.0
     wavelength_unit: str = "nm"
     flux_unit: str = "source_flux_lambda"
 
@@ -149,6 +167,14 @@ class PreparedSpectralGrid:
         abundance_in = jnp.logical_and(
             jnp.isclose(params.m_h, self.m_h),
             jnp.isclose(params.alpha_m, self.alpha_m),
+        )
+        abundance_in = jnp.logical_and(
+            abundance_in,
+            jnp.isclose(params.c_m, self.c_m),
+        )
+        abundance_in = jnp.logical_and(
+            abundance_in,
+            jnp.isclose(params.vturb_km_s, self.vturb_km_s),
         )
         axis_in = jnp.logical_and(teff_in, logg_in)
         in_grid = jnp.logical_and(axis_in, abundance_in)
@@ -177,12 +203,19 @@ class PreparedSpectralGrid:
 
     def tree_flatten(self):
         children = (self.teff, self.logg, self.wavelength, self.flux)
-        aux_data = (self.m_h, self.alpha_m, self.wavelength_unit, self.flux_unit)
+        aux_data = (
+            self.m_h,
+            self.alpha_m,
+            self.c_m,
+            self.vturb_km_s,
+            self.wavelength_unit,
+            self.flux_unit,
+        )
         return children, aux_data
 
     @classmethod
     def tree_unflatten(cls, aux_data, children):
-        m_h, alpha_m, wavelength_unit, flux_unit = aux_data
+        m_h, alpha_m, c_m, vturb_km_s, wavelength_unit, flux_unit = aux_data
         teff, logg, wavelength, flux = children
         return cls(
             teff=teff,
@@ -191,6 +224,8 @@ class PreparedSpectralGrid:
             flux=flux,
             m_h=m_h,
             alpha_m=alpha_m,
+            c_m=c_m,
+            vturb_km_s=vturb_km_s,
             wavelength_unit=wavelength_unit,
             flux_unit=flux_unit,
         )

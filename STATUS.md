@@ -1,14 +1,13 @@
 # jaxstro — status
 
-next: Atmospheres spectra runtime MVP completed (2026-06-20): hybrid
-`AtmosphereParams -> SpectrumResult` interface documented and implemented with
-host-side `NewEraBackend` + JAX-side `PreparedSpectralGrid`. Raw PHOENIX/NewEra
-data remains gitignored; processed Zarr/Parquet artifacts stay local. Validation
-evidence: 505 pytest tests passed, focused atmospheres tests passed with
-`--extra data`, ruff check, ruff format-check, mypy, and MyST docs build all
-green. Next atmospheres step: downstream package integration design; keep
-photometry/filters/BC semantics downstream unless Fluxax proves a shared lower
-abstraction is needed.
+next: BOSZ practical tier staged + processed (2026-06-20): 3,303 unique
+R=10000, vturb=2, [alpha/M]=0, [C/M]=0 spectra across m/H =
+{-2.5,-2.0,-1.5,-1.0,-0.5,0.0,+0.5} and atmosphere families {ap,mp,ms};
+coverage 2800-16000 K, logg -0.5..5.5, wavelength 500-319986.22 A. Each
+metallicity batch was downloaded from official STScI BOSZ scripts, converted to
+local Zarr/Parquet, readback-validated, and raw gzip files deleted only after
+validation. Next atmospheres step: integrate BOSZ tier into downstream selection
+policy and decide whether alpha/carbon/vturb expansion is scientifically needed.
 
 previous: Phase C MERGED + PUSHED to origin/main (2026-06-17, 25508f7, fast-forward; 447 tests green on
 merged main; feature branch deleted). NOT tagged — tag still held. Phase D remaining: (1) tag/version
