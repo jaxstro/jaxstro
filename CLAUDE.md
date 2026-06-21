@@ -388,17 +388,25 @@ A change to jaxstro is **not** complete until:
 **This is research infrastructure: correctness, provenance, and gradient-safety over
 speed.** Every numerical claim must be backed by a test or a cited source.
 
+## Brain hub - this repo is a spoke of ~/brain (read-only from here)
 
-## Brain hub — this repo is a spoke of ~/brain (read-only from here)
-
-- **Never edit `~/brain` from this session** — not hat homes, ADRs, configs, knowledge, or `_generated/`.
-- **One write path home — the inbox, via capture** (works from any directory):
-  `brain "what happened — short, factual"`
-- **Cross-cutting insight** (something here also relevant to another project/paper)?
-  `brain "xref: <insight> — touches <other project / paper>"` → becomes a brain concept that resurfaces here via `/brain-pack` (ADR-0019).
-- **Full protocol + conventions:** read `~/brain/AGENTS.md` and `~/brain/guide/` before cross-session work
-  (pull-only hub; spec → session → log handoffs, ADR-0018; modern mystmd if this is a MyST site).
-- **Starting focused work here?** Pull a context pack from the hub: `/brain-pack jaxstro`.
+- **Never edit `~/brain` from this session** - not hat homes, ADRs, configs,
+  knowledge, or `_generated/`.
+- **One write path home - the inbox, via capture:** use
+  `brain "what happened - short, factual"`.
+- **Cross-cutting insight:** use
+  `brain "xref: <insight> - touches <other project / paper>"`.
+  It becomes a brain concept and resurfaces there via `/brain-pack` (ADR-0019).
+- **Full protocol + conventions:** read `~/brain/AGENTS.md` and `~/brain/guide/`
+  before cross-session work (pull-only hub; spec -> session -> log handoffs,
+  ADR-0018; modern mystmd if this is a MyST site).
+- **Starting focused work here?** Pull context with `/brain-pack jaxstro`.
+- **Need papers/equations?** Start with the pack's Relevant literature and
+  Equation-critical sources. Read source notes in `~/brain/knowledge/sources/`;
+  verify exact equations/tables against `~/brain/knowledge/library/<bibkey>.pdf`;
+  use `~/brain/knowledge/derived/equation-digests/` only when rows are verified;
+  treat `~/brain/knowledge/raw/` as search-only. Capture needed source-note
+  expansions with `brain "source-note update: <bibkey> - <what this package needs>"`.
 
 <!-- brain-handshake: keep in sync with ~/brain/guide/how-to/set-up-a-project.md#spoke-stanza -->
 

@@ -23,13 +23,15 @@ Guidance for Codex when working in `jaxstro`.
 - `ruff check src/ && ruff format src/`
 - `mypy`
 
-## Brain hub
+## Brain hub - this repo is a spoke of ~/brain (read-only from here)
 
-This repo is a spoke of `~/brain`. Full handshake in `CLAUDE.md` (Brain hub section) and
-`~/brain/AGENTS.md`: pull-only hub, never edit `~/brain` from here, send notes home via
-`brain "…"` (and `brain "xref: …"` for cross-cutting insights).
+- Never edit `~/brain` from this session; it is a pull-only hub.
+- Capture durable notes with `brain "what happened - short, factual"`.
+- Capture cross-project insight with `brain "xref: <insight> - touches <other project / paper>"`.
+- For focused work, pull context with `/brain-pack jaxstro`.
+- For full protocol, read `~/brain/AGENTS.md` and `~/brain/guide/`; keep this file as the short spoke reminder.
 
-<!-- brain-handshake -->
+<!-- brain-handshake: keep in sync with ~/brain/guide/how-to/set-up-a-project.md#spoke-stanza -->
 
 <!-- brain-status-convention -->
 ## Brain status updates
