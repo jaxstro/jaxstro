@@ -13,6 +13,7 @@ from jaxstro.numerics import (
     bspline_derivative,
     bspline_design_matrix,
     bspline_eval,
+    bspline_eval_deboor,
     fit_bspline_lstsq,
     interpolation,
     open_uniform_knots,
@@ -154,6 +155,72 @@ def test_fit_bspline_lstsq_supports_vector_values_and_sample_axis():
     np.testing.assert_allclose(recovered, true_coeffs, atol=1e-12)
 
 
+def test_deboor_evaluator_matches_basis_contraction_for_scalar_and_grid():
+    knots = open_uniform_knots(0.0, 1.0, n_basis=6, degree=3)
+    coeffs = jnp.sin(jnp.linspace(0.0, 1.0, 6))
+    x = jnp.array([0.1, 0.33, 0.67, 0.9])
+
+    result = bspline_eval_deboor(knots, coeffs, x, degree=3)
+    expected = bspline_eval(knots, coeffs, x, degree=3)
+
+    np.testing.assert_allclose(result, expected, atol=1e-12)
+    np.testing.assert_allclose(
+        bspline_eval_deboor(knots, coeffs, jnp.asarray(0.4), degree=3),
+        bspline_eval(knots, coeffs, jnp.asarray(0.4), degree=3),
+        atol=1e-12,
+    )
+
+
+def test_antiderivative_derivative_recovers_original_spline_and_integral():
+    knots = jnp.array([0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0])
+    coeffs = jnp.array([0.0, 0.0, 0.0, 1.0])
+    anti_knots, anti_coeffs = splines.bspline_antiderivative(knots, coeffs, degree=3)
+    x = jnp.linspace(0.1, 0.9, 7)
+
+    recovered = bspline_derivative(anti_knots, anti_coeffs, x, degree=4)
+    expected = bspline_eval(knots, coeffs, x, degree=3)
+
+    np.testing.assert_allclose(recovered, expected, atol=1e-12)
+    np.testing.assert_allclose(
+        splines.bspline_integral(knots, coeffs, 0.0, 1.0, degree=3),
+        0.25,
+        atol=1e-12,
+    )
+
+
+def test_roughness_penalty_is_zero_for_linear_spline_second_derivative():
+    knots = open_uniform_knots(0.0, 1.0, n_basis=4, degree=1)
+    coeffs = jnp.linspace(0.0, 1.0, 4)
+    penalty = splines.bspline_roughness_penalty(
+        knots, coeffs, degree=1, derivative_order=2
+    )
+    assert penalty == pytest.approx(0.0)
+
+
+def test_adaptive_open_uniform_knots_uses_quantile_interior_knots():
+    x = jnp.array([0.0, 0.0, 1.0, 2.0, 10.0, 10.0])
+    knots = splines.adaptive_open_uniform_knots(x, n_basis=5, degree=2)
+    assert knots.shape == (8,)
+    np.testing.assert_allclose(knots[:3], jnp.zeros(3), atol=1e-12)
+    np.testing.assert_allclose(knots[-3:], jnp.full(3, 10.0), atol=1e-12)
+    assert knots[3] > 0.0
+    assert knots[4] < 10.0
+
+
+def test_tensor_product_design_matrix_rowwise_kronecker_product():
+    bx = jnp.array([[1.0, 0.0], [0.25, 0.75]])
+    by = jnp.array([[0.2, 0.8, 0.0], [0.0, 0.5, 0.5]])
+    design = splines.tensor_product_design_matrix(bx, by)
+    expected = jnp.array(
+        [
+            [0.2, 0.8, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.125, 0.125, 0.0, 0.375, 0.375],
+        ]
+    )
+    assert design.shape == (2, 6)
+    np.testing.assert_allclose(design, expected, atol=1e-12)
+
+
 def test_bspline1d_is_pytree_and_works_under_jit():
     knots = open_uniform_knots(0.0, 1.0, n_basis=5, degree=3)
     coeffs = jnp.linspace(0.0, 1.0, 5)
@@ -210,6 +277,7 @@ def test_splines_module_reexports_public_api():
     assert splines.bspline_basis is bspline_basis
     assert splines.bspline_design_matrix is bspline_design_matrix
     assert splines.bspline_eval is bspline_eval
+    assert splines.bspline_eval_deboor is bspline_eval_deboor
     assert splines.bspline_derivative is bspline_derivative
     assert splines.fit_bspline_lstsq is fit_bspline_lstsq
     assert splines.open_uniform_knots is open_uniform_knots

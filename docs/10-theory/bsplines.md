@@ -29,10 +29,15 @@ jaxstro's spline surface is deliberately fixed-knot first:
 ```python
 from jaxstro.numerics import (
     BSpline1D,
+    bspline_antiderivative,
     bspline_derivative,
     bspline_eval,
+    bspline_eval_deboor,
+    bspline_integral,
+    bspline_roughness_penalty,
     fit_bspline_lstsq,
     open_uniform_knots,
+    tensor_product_design_matrix,
 )
 
 knots = open_uniform_knots(0.0, 1.0, n_basis=6, degree=3)
@@ -44,13 +49,13 @@ coeffs_fit = fit_bspline_lstsq(knots, x_samples, y_samples, degree=3)
 spline = BSpline1D(knots, coeffs, degree=3)
 ```
 
-It evaluates supplied coefficients, computes derivative values, exposes the
-sample design matrix, and solves ordinary least-squares fits for fixed knots. It
-does not smooth noisy observations, adapt knot locations, construct
-tensor-product splines, or choose a regularization policy. Those are important
-follow-up capabilities, but each adds a modeling choice: penalty type, knot
-selection, boundary behavior, and validation targets. The foundation primitive
-stays small and trusted.
+It evaluates supplied coefficients by basis contraction or de Boor recursion,
+computes derivative and antiderivative values, exposes sample design matrices,
+solves ordinary least-squares fits for fixed knots, builds quantile-based clamped
+knots, assembles row-wise tensor-product design matrices, and provides a
+roughness penalty primitive. It still does not own smoothing-spline model
+selection, adaptive-knot optimization loops, extrapolation, or domain-specific
+regularization policy.
 
 ## Knots and clamping
 
@@ -124,27 +129,38 @@ denominators use the same safe-zero convention as the basis recurrence. Outside
 the active knot domain, `bspline_derivative(...)` returns zero, matching the
 gradient of the public clamped evaluator with respect to `x`.
 
+Definite integrals use the antiderivative coefficient transform. If $S$ has
+degree $p$, the antiderivative has degree $p+1$ on the knot vector with one extra
+boundary knot at each end. Coefficient increments are:
+
+```{math}
+d_{i+1} - d_i = c_i\,\frac{t_{i+p+1} - t_i}{p+1}.
+```
+
 Fixed-knot least-squares fitting solves the linear design problem:
 
 ```{math}
 \mathbf{B}\mathbf{c} \approx \mathbf{y}.
 ```
 
-It is a convenience around the basis matrix, not a smoothing spline. If noisy
-data require penalties or priors, the caller should build that objective
-explicitly until jaxstro has a separately validated regularized fitter.
+It is a convenience around the basis matrix, not a smoothing spline. For noisy
+data, `bspline_roughness_penalty(...)` supplies the common integrated squared
+derivative term so callers can build an explicit objective without jaxstro
+choosing the smoothing weight.
 
-## Why not de Boor first?
+## de Boor and tensor products
 
 The de Boor algorithm is the standard stable evaluator for a single spline value
-when you already know the active knot span. jaxstro's first implementation
-instead exposes the full basis vector because it is the more useful foundation
-primitive:
+when you already know the active knot span. `bspline_eval_deboor(...)` now exposes
+that evaluator and is validated against the basis-contraction path. The public
+mathematical contract is identical; the two spellings exist so callers can choose
+the representation that best matches their workflow.
 
-- it makes `dS/dc` obvious and testable;
-- it supports vector-valued coefficients with a single contraction;
-- it lets downstream packages build sparse or tensor-product designs later;
-- it keeps the v1 API close to the mathematical object being validated.
+`tensor_product_design_matrix(...)` performs a row-wise Kronecker product of 1D
+basis matrices. That is the construction primitive for tensor-product splines
+without making jaxstro own multidimensional smoothing, sparse storage, or
+domain-specific grid policy.
 
-A future de Boor evaluator can be added as an optimized kernel once profiling
-shows a real bottleneck. The public mathematical contract should remain the same.
+`adaptive_open_uniform_knots(...)` is intentionally modest: it places interior
+knots at sample quantiles and clamps the endpoints. It is deterministic knot
+construction, not a knot-optimization algorithm.

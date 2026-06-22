@@ -117,12 +117,12 @@ def default_numerics_trust_report() -> NumericalTrustReport:
         methods=(
             MethodEvidence(
                 method="splines",
-                summary="B-spline basis, evaluation, derivatives, and fixed-knot fits.",
+                summary="B-spline basis, de Boor evaluation, calculus helpers, fixed-knot fits, penalties, adaptive knots, and tensor designs.",
                 status="validated",
                 anchors=(
                     EvidenceAnchor(
                         property="Local basis invariants and FD-vs-AD checks",
-                        measured="partition, support, derivatives, least-squares recovery",
+                        measured="partition, support, de Boor parity, derivatives, integrals, roughness penalties, quantile knots, tensor designs, least-squares recovery",
                         tolerance="exact identities plus test-specific tolerances",
                         anchors=(
                             "tests/unit/test_splines.py",
@@ -131,7 +131,7 @@ def default_numerics_trust_report() -> NumericalTrustReport:
                     ),
                 ),
                 known_limits=(
-                    "Later batches still own de Boor evaluation, antiderivatives, smoothing, adaptive knots, and tensor products.",
+                    "Custom VJPs, smoothing-parameter selection, sparse tensor-product storage, and iterative knot optimization remain deferred.",
                 ),
             ),
             MethodEvidence(

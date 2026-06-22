@@ -164,6 +164,75 @@ def _bspline_eval_core(
     return jnp.tensordot(coeffs_moved, basis, axes=([-1], [-1]))
 
 
+def bspline_eval_deboor(
+    knots: Float[Array, " n_knots"],
+    coeffs: Float[Array, "..."],
+    x: Float[Array, "..."],
+    *,
+    degree: int = 3,
+    axis: int = -1,
+) -> Float[Array, "..."]:
+    """Evaluate a 1D B-spline using the de Boor recursion."""
+    knots = jnp.asarray(knots)
+    coeffs = jnp.asarray(coeffs)
+    _validate_knots(knots, degree)
+    axis = _normalize_axis(axis, coeffs.ndim)
+    n_basis = knots.shape[0] - degree - 1
+    if coeffs.shape[axis] != n_basis:
+        raise ValueError(
+            "bspline_eval_deboor coefficient axis length must equal "
+            f"n_basis={n_basis}; got coefficient axis length {coeffs.shape[axis]}"
+        )
+    return _bspline_eval_deboor_core(
+        knots,
+        coeffs,
+        jnp.asarray(x),
+        degree=degree,
+        axis=axis,
+    )
+
+
+@partial(jax.jit, static_argnames=("degree", "axis"))
+def _bspline_eval_deboor_core(
+    knots: Float[Array, " n_knots"],
+    coeffs: Float[Array, "..."],
+    x: Float[Array, "..."],
+    *,
+    degree: int,
+    axis: int,
+) -> Float[Array, "..."]:
+    coeffs_moved = jnp.moveaxis(coeffs, axis, -1)
+    payload_shape = coeffs_moved.shape[:-1]
+    n_basis = coeffs_moved.shape[-1]
+    domain_left = knots[degree]
+    domain_right = knots[-degree - 1]
+    x_clamped = jnp.clip(x, domain_left, domain_right)
+    x_flat = jnp.ravel(x_clamped)
+
+    def eval_one(xi):
+        raw_span = jnp.searchsorted(knots, xi, side="right") - 1
+        span = jnp.clip(raw_span, degree, n_basis - 1)
+        local_idx = span - degree + jnp.arange(degree + 1)
+        d = jnp.take(coeffs_moved, local_idx, axis=-1)
+
+        for r in range(1, degree + 1):
+            for j in range(degree, r - 1, -1):
+                i = span - degree + j
+                den = knots[i + degree - r + 1] - knots[i]
+                alpha = _safe_ratio_or_zero(xi - knots[i], den)
+                updated = (1.0 - alpha) * d[..., j - 1] + alpha * d[..., j]
+                d = d.at[..., j].set(updated)
+        return d[..., degree]
+
+    flat_values = jax.vmap(eval_one)(x_flat)
+    values = jnp.reshape(flat_values, x.shape + payload_shape)
+    if x.ndim == 0:
+        return values
+    source_axes = tuple(range(x.ndim))
+    target_axes = tuple(range(len(payload_shape), len(payload_shape) + x.ndim))
+    return jnp.moveaxis(values, source_axes, target_axes)
+
+
 def bspline_derivative(
     knots: Float[Array, " n_knots"],
     coeffs: Float[Array, "..."],
@@ -228,6 +297,145 @@ def _bspline_derivative_core(
     return jnp.where(outside, 0.0, derivative_values)
 
 
+def bspline_antiderivative(
+    knots: Float[Array, " n_knots"],
+    coeffs: Float[Array, "..."],
+    *,
+    degree: int = 3,
+    axis: int = -1,
+    constant: float = 0.0,
+) -> tuple[Float[Array, " n_knots_plus_2"], Float[Array, "..."]]:
+    """Return knots and coefficients for the first antiderivative spline."""
+    knots = jnp.asarray(knots)
+    coeffs = jnp.asarray(coeffs)
+    _validate_knots(knots, degree)
+    axis = _normalize_axis(axis, coeffs.ndim)
+    n_basis = knots.shape[0] - degree - 1
+    if coeffs.shape[axis] != n_basis:
+        raise ValueError(
+            "bspline_antiderivative coefficient axis length must equal "
+            f"n_basis={n_basis}; got coefficient axis length {coeffs.shape[axis]}"
+        )
+    new_knots = jnp.concatenate([knots[:1], knots, knots[-1:]])
+    new_coeffs = _bspline_antiderivative_coeffs_core(
+        knots,
+        coeffs,
+        degree=degree,
+        axis=axis,
+        constant=constant,
+    )
+    return new_knots, new_coeffs
+
+
+@partial(jax.jit, static_argnames=("degree", "axis", "constant"))
+def _bspline_antiderivative_coeffs_core(
+    knots: Float[Array, " n_knots"],
+    coeffs: Float[Array, "..."],
+    *,
+    degree: int,
+    axis: int,
+    constant: float,
+) -> Float[Array, "..."]:
+    coeffs_moved = jnp.moveaxis(coeffs, axis, -1)
+    widths = knots[degree + 1 :] - knots[: coeffs_moved.shape[-1]]
+    increments = coeffs_moved * widths / float(degree + 1)
+    initial = jnp.full((*coeffs_moved.shape[:-1], 1), constant, dtype=coeffs.dtype)
+    cumulative = jnp.cumsum(increments, axis=-1) + initial
+    anti = jnp.concatenate([initial, cumulative], axis=-1)
+    return jnp.moveaxis(anti, -1, axis)
+
+
+def bspline_integral(
+    knots: Float[Array, " n_knots"],
+    coeffs: Float[Array, "..."],
+    a: float | Float[Array, ""],
+    b: float | Float[Array, ""],
+    *,
+    degree: int = 3,
+    axis: int = -1,
+) -> Float[Array, "..."]:
+    """Evaluate the definite integral of a 1D B-spline from ``a`` to ``b``."""
+    anti_knots, anti_coeffs = bspline_antiderivative(
+        knots, coeffs, degree=degree, axis=axis
+    )
+    return bspline_eval(
+        anti_knots,
+        anti_coeffs,
+        jnp.asarray(b),
+        degree=degree + 1,
+        axis=axis,
+    ) - bspline_eval(
+        anti_knots,
+        anti_coeffs,
+        jnp.asarray(a),
+        degree=degree + 1,
+        axis=axis,
+    )
+
+
+def _derivative_coeffs_once(
+    knots: Float[Array, " n_knots"],
+    coeffs: Float[Array, "..."],
+    *,
+    degree: int,
+    axis: int,
+) -> tuple[Float[Array, " n_knots_minus_2"], Float[Array, "..."]]:
+    coeffs_moved = jnp.moveaxis(coeffs, axis, -1)
+    denom = (
+        knots[degree + 1 : degree + coeffs_moved.shape[-1]]
+        - knots[1 : coeffs_moved.shape[-1]]
+    )
+    diff = jnp.diff(coeffs_moved, axis=-1)
+    derivative_coeffs = float(degree) * _safe_ratio_or_zero(diff, denom)
+    return knots[1:-1], jnp.moveaxis(derivative_coeffs, -1, axis)
+
+
+def bspline_roughness_penalty(
+    knots: Float[Array, " n_knots"],
+    coeffs: Float[Array, "..."],
+    *,
+    degree: int = 3,
+    axis: int = -1,
+    derivative_order: int = 2,
+    n_samples: int = 129,
+) -> Float[Array, "..."]:
+    """Approximate the integrated squared derivative penalty on the active domain."""
+    if derivative_order < 0:
+        raise ValueError("derivative_order must be nonnegative")
+    if n_samples < 2:
+        raise ValueError("n_samples must be at least 2")
+    knots = jnp.asarray(knots)
+    coeffs = jnp.asarray(coeffs)
+    _validate_knots(knots, degree)
+    axis = _normalize_axis(axis, coeffs.ndim)
+    current_knots = knots
+    current_coeffs = coeffs
+    current_degree = degree
+    for _ in range(derivative_order):
+        if current_degree == 0:
+            return jnp.zeros(coeffs.shape[:axis] + coeffs.shape[axis + 1 :])
+        current_knots, current_coeffs = _derivative_coeffs_once(
+            current_knots,
+            current_coeffs,
+            degree=current_degree,
+            axis=axis,
+        )
+        current_degree -= 1
+    x = jnp.linspace(
+        current_knots[current_degree],
+        current_knots[-current_degree - 1],
+        n_samples,
+    )
+    values = bspline_eval(
+        current_knots,
+        current_coeffs,
+        x,
+        degree=current_degree,
+        axis=axis,
+    )
+    return jnp.trapezoid(values**2, x=x, axis=-1)
+
+
 def fit_bspline_lstsq(
     knots: Float[Array, " n_knots"],
     x: Float[Array, " n_samples"],
@@ -281,6 +489,57 @@ def _fit_bspline_lstsq_core(
     coeffs_flat = jnp.linalg.lstsq(design, y_flat, rcond=rcond)[0]
     coeffs = jnp.reshape(coeffs_flat, (design.shape[-1], *y_moved.shape[1:]))
     return jnp.moveaxis(coeffs, 0, sample_axis)
+
+
+def adaptive_open_uniform_knots(
+    x: Float[Array, " n_samples"],
+    n_basis: int,
+    *,
+    degree: int = 3,
+) -> Float[Array, " n_knots"]:
+    """Return clamped knots whose interior locations follow sample quantiles."""
+    _validate_degree(degree)
+    if n_basis < degree + 1:
+        raise ValueError("adaptive_open_uniform_knots requires n_basis >= degree + 1")
+    x = jnp.asarray(x)
+    if x.ndim != 1:
+        raise ValueError("adaptive_open_uniform_knots requires 1D sample coordinates")
+    x_min = jnp.min(x)
+    x_max = jnp.max(x)
+    has_width = try_concrete_bool(x_min < x_max)
+    if has_width is False:
+        raise ValueError("adaptive_open_uniform_knots requires positive sample width")
+    boundary = degree + 1
+    n_interior = n_basis - degree - 1
+    left = jnp.full((boundary,), x_min, dtype=x.dtype)
+    right = jnp.full((boundary,), x_max, dtype=x.dtype)
+    if n_interior == 0:
+        return jnp.concatenate([left, right])
+    quantiles = jnp.linspace(0.0, 1.0, n_interior + 2)[1:-1]
+    interior = jnp.quantile(x, quantiles)
+    return jnp.concatenate([left, interior, right])
+
+
+def tensor_product_design_matrix(
+    *basis_matrices: Float[Array, " n_samples n_basis"],
+) -> Float[Array, " n_samples n_tensor_basis"]:
+    """Return a row-wise tensor-product design matrix from 1D basis matrices."""
+    if len(basis_matrices) < 1:
+        raise ValueError("tensor_product_design_matrix requires at least one basis")
+    result = jnp.asarray(basis_matrices[0])
+    if result.ndim != 2:
+        raise ValueError("tensor_product_design_matrix inputs must be 2D")
+    n_samples = result.shape[0]
+    for basis in basis_matrices[1:]:
+        basis = jnp.asarray(basis)
+        if basis.ndim != 2:
+            raise ValueError("tensor_product_design_matrix inputs must be 2D")
+        if basis.shape[0] != n_samples:
+            raise ValueError("tensor_product_design_matrix sample counts must match")
+        result = (result[:, :, None] * basis[:, None, :]).reshape(
+            n_samples, result.shape[1] * basis.shape[1]
+        )
+    return result
 
 
 @jax.tree_util.register_pytree_node_class
@@ -370,10 +629,16 @@ def _normalize_axis(axis: int, ndim: int) -> int:
 
 __all__ = [
     "BSpline1D",
+    "adaptive_open_uniform_knots",
+    "bspline_antiderivative",
     "bspline_basis",
     "bspline_derivative",
     "bspline_design_matrix",
     "bspline_eval",
+    "bspline_eval_deboor",
+    "bspline_integral",
+    "bspline_roughness_penalty",
     "fit_bspline_lstsq",
     "open_uniform_knots",
+    "tensor_product_design_matrix",
 ]

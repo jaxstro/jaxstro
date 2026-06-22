@@ -18,7 +18,7 @@ stellar-model policy, and data packages own their archive-specific schemas.
   coefficients.
 - [x] **B-spline follow-ups, batch 1.** Design matrices, derivatives, and
   fixed-knot least-squares fitting.
-- [ ] **B-spline follow-ups, later batches.** de Boor evaluation,
+- [x] **B-spline follow-ups, later batches.** de Boor evaluation,
   antiderivatives, smoothing penalties, adaptive knots, and tensor-product
   construction.
 - [x] **Shape-preserving interpolation.** Cubic Hermite and monotone PCHIP-style

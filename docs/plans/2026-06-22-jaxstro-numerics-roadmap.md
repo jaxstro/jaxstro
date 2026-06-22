@@ -22,10 +22,10 @@
 
 **Goal:** Finish the evaluation-first spline foundation before adding broader interpolation families.
 
-**Status:** Batch 1 implemented: design matrices, derivatives, fixed-knot
-least-squares fitting, and `BSpline1D.derivative(...)`. Later spline batches
-still cover antiderivatives, smoothing, adaptive knots, tensor products, and
-optimized de Boor evaluation.
+**Status:** Implemented: design matrices, derivatives, fixed-knot least-squares
+fitting, `BSpline1D.derivative(...)`, de Boor evaluation, antiderivatives,
+definite integrals, roughness penalties, quantile-based adaptive knots, and
+tensor-product design matrices.
 
 **Files:**
 - Modify: `src/jaxstro/numerics/splines.py`
@@ -46,7 +46,8 @@ optimized de Boor evaluation.
 6. Add FD-vs-AD checks for derivative wrt coefficients and least-squares fit wrt sample values.
 
 **Deferrals:**
-- Smoothing penalties, adaptive knots, tensor-product splines, custom VJPs, and optimized de Boor kernels.
+- Custom VJPs, smoothing-parameter selection, sparse tensor-product storage, and
+  iterative knot optimization.
 
 ## Chunk 2: Shape-Preserving Interpolation
 

@@ -289,6 +289,27 @@ class TestSplineGradChecks:
             rtol=1e-5,
         )
 
+    def test_bspline_integral_wrt_coefficients(self):
+        knots = splines.open_uniform_knots(0.0, 1.0, n_basis=6, degree=3)
+        coeffs0 = jnp.sin(jnp.linspace(0.0, 1.0, 6))
+        assert_grad_matches(
+            lambda c: splines.bspline_integral(knots, c, 0.1, 0.9, degree=3),
+            coeffs0,
+        )
+
+    def test_bspline_roughness_penalty_wrt_coefficients(self):
+        knots = splines.open_uniform_knots(0.0, 1.0, n_basis=6, degree=3)
+        coeffs0 = jnp.sin(jnp.linspace(0.0, 1.0, 6))
+        assert_grad_matches(
+            lambda c: splines.bspline_roughness_penalty(
+                knots, c, degree=3, derivative_order=2
+            ),
+            coeffs0,
+            eps=1e-5,
+            atol=1e-5,
+            rtol=1e-5,
+        )
+
 
 # =============================================================================
 # integration

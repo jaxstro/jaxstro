@@ -101,12 +101,18 @@ from .special import (
 )
 from .splines import (
     BSpline1D,
+    adaptive_open_uniform_knots,
+    bspline_antiderivative,
     bspline_basis,
     bspline_derivative,
     bspline_design_matrix,
     bspline_eval,
+    bspline_eval_deboor,
+    bspline_integral,
+    bspline_roughness_penalty,
     fit_bspline_lstsq,
     open_uniform_knots,
+    tensor_product_design_matrix,
 )
 from .types import Array, ScalarFn
 
@@ -154,12 +160,18 @@ __all__ = [
     "laguerre_basis",
     "splines",
     "BSpline1D",
+    "adaptive_open_uniform_knots",
+    "bspline_antiderivative",
     "bspline_basis",
     "bspline_derivative",
     "bspline_design_matrix",
     "bspline_eval",
+    "bspline_eval_deboor",
+    "bspline_integral",
+    "bspline_roughness_penalty",
     "fit_bspline_lstsq",
     "open_uniform_knots",
+    "tensor_product_design_matrix",
     "checks",
     "linear_algebra",
     "weighted_lstsq",

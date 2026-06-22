@@ -1,9 +1,9 @@
 # jaxstro — status
 
-next: Provenance and trust reports batch implemented (2026-06-22):
-`jaxstro.testing` adds evidence dataclasses plus deterministic JSON/Markdown
-trust-report renderers and a default numerics trust report. Next action:
-continue remaining B-spline later-batch work after local gates.
+next: Numerical-method roadmap batches implemented (2026-06-22): remaining
+B-spline follow-ups now add de Boor evaluation, antiderivatives/integrals,
+roughness penalties, quantile knots, and tensor-product designs. Next action:
+run final local gates and complete the active numerics goal.
 
 previous: Phase C MERGED + PUSHED to origin/main (2026-06-17, 25508f7, fast-forward; 447 tests green on
 merged main; feature branch deleted). NOT tagged — tag still held. Phase D remaining: (1) tag/version

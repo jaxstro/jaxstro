@@ -156,11 +156,15 @@ The method page is [](../10-theory/quadrature.md).
 `bspline_basis(knots, x, degree=3)` evaluates all basis functions;
 `bspline_design_matrix(knots, x, degree=3)` gives the explicit sample-matrix
 spelling; `bspline_eval(knots, coeffs, x, degree=3, axis=-1)` contracts basis
-values with supplied coefficients; `bspline_derivative(...)` evaluates
-`dS/dx`; `fit_bspline_lstsq(...)` fits coefficients for fixed knots; and
-`BSpline1D` wraps knots and coefficients as a PyTree. Smoothing,
-tensor-product splines, adaptive knots, and extrapolation are deliberate
-follow-up work. The method page is [](../10-theory/bsplines.md).
+values with supplied coefficients; `bspline_eval_deboor(...)` evaluates the same
+spline through de Boor recursion; `bspline_derivative(...)`,
+`bspline_antiderivative(...)`, and `bspline_integral(...)` cover calculus
+helpers; `bspline_roughness_penalty(...)` supplies an integrated squared
+derivative penalty; `fit_bspline_lstsq(...)` fits coefficients for fixed knots;
+`adaptive_open_uniform_knots(...)` places interior knots at sample quantiles;
+`tensor_product_design_matrix(...)` builds row-wise tensor-product designs; and
+`BSpline1D` wraps knots and coefficients as a PyTree. The method page is
+[](../10-theory/bsplines.md).
 
 ### `jaxstro.numerics.linear_algebra`
 
