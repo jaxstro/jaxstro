@@ -36,6 +36,7 @@ to a row here.
 | Linear operators preserve matrix algebra while remaining PyTrees | Dense parity for matvec/rmatvec/to_dense and FD-vs-AD checks through operator leaves | Dense, diagonal, scaled, sum, product, transpose, and block-diagonal operators | `tests/unit/test_operators.py`, `tests/validation/test_grad_checks.py` |
 | Special-function kernels keep unit and normalization contracts explicit | Direct formula parity, limiting-case checks, recurrence identities, and FD-vs-AD checks | CGS Planck functions and log kernels, normalized log weights, Legendre/Chebyshev/Laguerre bases | `tests/unit/test_special.py`, `tests/validation/test_grad_checks.py` |
 | Numerical-method trust reports render deterministic evidence summaries | Exact JSON ordering and Markdown table checks | Evidence dataclasses, JSON/Markdown renderers, default numerics trust report coverage | `tests/unit/test_provenance.py` |
+| Runtime provenance manifests render deterministic evidence records | Exact schema, sorted JSON/Markdown checks, and missing-file behavior | Artifact hashes, environment snapshots, method manifests, JSON and Markdown renderers | `tests/unit/test_runtime_provenance.py` |
 | FD-vs-AD audits classify gradient contracts conservatively | Existing audit tolerances | Smooth, known-zero, blocked, surrogate, and validation-only cases | `tests/integration/test_grad_audit.py` |
 | Spatial candidate gathering excludes self and preserves exact-kNN recall when stencil/capacity settings make recall possible | Exact set containment for small clouds | Regular, boundary, and clustered cases | `tests/unit/test_spatial.py` |
 | Atmosphere data indexing does not vendor raw PHOENIX data | Fixture size guard and parser-only tests | Synthetic tiny NewEra-like files only | `tests/unit/test_atmospheres.py` |
@@ -71,6 +72,7 @@ uv run pytest tests/unit/test_ode.py tests/validation/test_grad_checks.py
 uv run pytest tests/unit/test_operators.py tests/validation/test_grad_checks.py
 uv run pytest tests/unit/test_special.py tests/validation/test_grad_checks.py
 uv run pytest tests/unit/test_provenance.py
+uv run pytest tests/unit/test_runtime_provenance.py
 uv run --extra data pytest tests/unit/test_atmospheres*.py tests/unit/test_*conversion_script.py
 uv run --extra data pytest tests/validation/test_atmospheres_local_artifacts.py
 uv run pytest tests/validation/test_atmospheres_spectra.py

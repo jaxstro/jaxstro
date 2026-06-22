@@ -2,8 +2,8 @@
 title: API reference
 description: >-
   The public module surface of jaxstro 0.1.0 — units, constants, astrometry,
-  coords, numerics, spatial, params, atmospheres, testing, jaxconfig — and what
-  each provides.
+  coords, numerics, spatial, params, atmospheres, provenance, testing,
+  jaxconfig — and what each provides.
 ---
 
 This is the lookup door. It enumerates the public modules of jaxstro 0.1.0 and the
@@ -17,7 +17,7 @@ claims.
 
 ```python
 import jaxstro
-from jaxstro import atmospheres, constants, units, numerics, coords, geometry, spatial, params, testing
+from jaxstro import atmospheres, constants, units, numerics, coords, geometry, spatial, params, provenance, testing
 from jaxstro.jaxconfig import enable_high_precision
 ```
 
@@ -69,6 +69,9 @@ utility. There is no private or experimental tier at release.
     plus public finite-difference diagnostics (`finite_difference_grad`,
     `finite_difference_jacobian`, `compare_gradients`, `compare_jacobians`,
     `check_directional_derivative`).
+* - `jaxstro.provenance`
+  - Runtime provenance records: artifact hashes, environment snapshots, method
+    manifests, and deterministic JSON/Markdown rendering.
 * - `jaxstro.jaxconfig`
   - `enable_high_precision()` — turns on float64 and highest matmul precision.
 ```
@@ -289,3 +292,12 @@ method-level evidence, and `trust_report_to_json(...)`,
 `trust_report_to_markdown(...)`, and `default_numerics_trust_report(...)` render
 deterministic trust summaries. These helpers are intended for test suites and
 validation scripts.
+
+### `jaxstro.provenance`
+
+`hash_artifact(...)` records SHA-256 file digests and sizes.
+`environment_snapshot(...)` captures a small explicit Python/platform/package
+snapshot. `MethodManifest`, `manifest_to_json(...)`, and
+`manifest_to_markdown(...)` provide deterministic method-run records for
+validation reports and downstream workflow logs. The architecture page is
+[](../20-architecture/provenance.md).

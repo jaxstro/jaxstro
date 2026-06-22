@@ -55,7 +55,7 @@ stellar-model policy, and data packages own their archive-specific schemas.
   distance, rotations, quaternions, rigid transforms, and composition helpers.
 - [x] **Autodiff helpers, first slice.** JVP/VJP/HVP, Jacobian-vector,
   vector-Jacobian, Gauss-Newton, and generic Fisher-style products.
-- [ ] **Runtime provenance, first slice.** Artifact hashing, environment
+- [x] **Runtime provenance, first slice.** Artifact hashing, environment
   snapshots, method manifests, and deterministic JSON/Markdown rendering.
 - [ ] **Random helpers, first slice.** Explicit key streams, resampling
   methods, seed manifests, and shape-stable APIs.

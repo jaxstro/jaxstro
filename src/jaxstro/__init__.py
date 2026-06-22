@@ -19,6 +19,7 @@ from . import (
     geometry,
     numerics,
     params,
+    provenance,
     testing,
     units,
 )
@@ -34,6 +35,7 @@ __all__ = [
     "coords",
     "geometry",
     "params",
+    "provenance",
     "testing",
 ]
 __version__ = "0.1.0"
