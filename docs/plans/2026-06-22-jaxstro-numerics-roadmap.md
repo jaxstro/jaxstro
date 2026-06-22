@@ -169,6 +169,10 @@ from differentiable Newton-style solves.
 
 **Goal:** Add small stable wrappers for weighted fits and matrix diagnostics.
 
+**Status:** Implemented: `weighted_lstsq(...)`, `qr_solve(...)`,
+`svd_solve(...)`, covariance/correlation helpers, and positive-definite jitter
+utilities for small dense matrices.
+
 **Files:**
 - Modify: `src/jaxstro/numerics/linear_algebra.py`
 - Test: `tests/unit/test_linear_algebra.py`
@@ -181,6 +185,10 @@ from differentiable Newton-style solves.
 2. Add QR/SVD solve wrappers for ill-conditioned systems.
 3. Add covariance/correlation helpers.
 4. Add positive-definite checks and jitter utilities.
+
+**Deferrals:**
+- Sparse, iterative, matrix-free, and custom-implicit-differentiation solvers;
+  those remain solver-library territory.
 
 ## Chunk 8: Astro-Relevant Special Functions
 

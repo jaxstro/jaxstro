@@ -48,6 +48,17 @@ from . import (
     splines,
     stats,
 )
+from .linear_algebra import (
+    add_diagonal_jitter,
+    correlation_from_covariance,
+    correlation_matrix,
+    covariance_matrix,
+    is_positive_definite,
+    positive_definite_jitter,
+    qr_solve,
+    svd_solve,
+    weighted_lstsq,
+)
 from .quadrature import (
     clenshaw_curtis_nodes,
     gauss_hermite_nodes,
@@ -110,6 +121,15 @@ __all__ = [
     "open_uniform_knots",
     "checks",
     "linear_algebra",
+    "weighted_lstsq",
+    "qr_solve",
+    "svd_solve",
+    "covariance_matrix",
+    "correlation_from_covariance",
+    "correlation_matrix",
+    "is_positive_definite",
+    "add_diagonal_jitter",
+    "positive_definite_jitter",
     "rng",
 ]
 __version__ = "0.1.0"

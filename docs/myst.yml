@@ -52,6 +52,7 @@ project:
         - file: 10-theory/interpolation.md
         - file: 10-theory/regular-grid.md
         - file: 10-theory/bsplines.md
+        - file: 10-theory/linear-algebra.md
     - title: Architecture
       children:
         - file: 20-architecture/index.md

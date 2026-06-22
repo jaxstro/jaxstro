@@ -8,6 +8,7 @@ degenerate b·b == 0 case for project_onto (must be finite, not NaN).
 
 import jax
 import jax.numpy as jnp
+import pytest
 
 from jaxstro.numerics import linear_algebra as la
 
@@ -149,3 +150,140 @@ class TestConditionNumber:
     def test_jit_compatible(self):
         A = jnp.diag(jnp.array([3.0, 1.0]))
         assert jnp.allclose(jax.jit(la.condition_number)(A), 3.0)
+
+
+class TestWeightedLeastSquares:
+    """Tests for weighted least-squares coefficient fitting."""
+
+    def test_unweighted_matches_known_line(self):
+        x = jnp.array([0.0, 1.0, 2.0, 3.0])
+        design = jnp.stack([jnp.ones_like(x), x], axis=1)
+        y = 2.0 + 3.0 * x
+        coeffs = la.weighted_lstsq(design, y)
+        assert jnp.allclose(coeffs, jnp.array([2.0, 3.0]), atol=1e-12)
+
+    def test_weights_downweight_outlier(self):
+        x = jnp.array([0.0, 1.0, 2.0, 3.0])
+        design = jnp.stack([jnp.ones_like(x), x], axis=1)
+        y = jnp.array([1.0, 3.0, 5.0, 100.0])
+        weights = jnp.array([1.0, 1.0, 1.0, 0.0])
+        coeffs = la.weighted_lstsq(design, y, weights=weights)
+        assert jnp.allclose(coeffs, jnp.array([1.0, 2.0]), atol=1e-12)
+
+    def test_vector_valued_response(self):
+        x = jnp.array([0.0, 1.0, 2.0, 3.0])
+        design = jnp.stack([jnp.ones_like(x), x], axis=1)
+        y = jnp.stack([1.0 + x, 2.0 - 0.5 * x], axis=1)
+        coeffs = la.weighted_lstsq(design, y)
+        expected = jnp.array([[1.0, 2.0], [1.0, -0.5]])
+        assert jnp.allclose(coeffs, expected, atol=1e-12)
+
+    def test_jit_and_grad_compatible(self):
+        design = jnp.array([[1.0, 0.0], [1.0, 1.0], [1.0, 2.0]])
+
+        @jax.jit
+        def loss(y):
+            coeffs = la.weighted_lstsq(design, y)
+            return jnp.sum(coeffs)
+
+        y = jnp.array([1.0, 3.0, 5.0])
+        assert jnp.isfinite(loss(y))
+        assert jnp.all(jnp.isfinite(jax.grad(loss)(y)))
+
+    def test_rejects_invalid_shapes_eagerly(self):
+        with pytest.raises(ValueError, match="2D"):
+            la.weighted_lstsq(jnp.ones(3), jnp.ones(3))
+        with pytest.raises(ValueError, match="same number of samples"):
+            la.weighted_lstsq(jnp.ones((3, 2)), jnp.ones(4))
+        with pytest.raises(ValueError, match="weights"):
+            la.weighted_lstsq(jnp.ones((3, 2)), jnp.ones(3), weights=jnp.ones(4))
+
+
+class TestSolveWrappers:
+    """Tests for QR and SVD linear solve wrappers."""
+
+    def test_qr_solve_matches_square_solution(self):
+        A = jnp.array([[3.0, 1.0], [1.0, 2.0]])
+        b = jnp.array([9.0, 8.0])
+        result = la.qr_solve(A, b)
+        assert jnp.allclose(result, jnp.linalg.solve(A, b), atol=1e-12)
+
+    def test_qr_solve_handles_tall_least_squares(self):
+        A = jnp.array([[1.0, 0.0], [1.0, 1.0], [1.0, 2.0], [1.0, 3.0]])
+        b = jnp.array([1.0, 3.0, 5.0, 7.0])
+        result = la.qr_solve(A, b)
+        assert jnp.allclose(result, jnp.array([1.0, 2.0]), atol=1e-12)
+
+    def test_svd_solve_drops_truncated_direction(self):
+        A = jnp.diag(jnp.array([2.0, 1e-12]))
+        b = jnp.array([4.0, 1.0])
+        result = la.svd_solve(A, b, rcond=1e-8)
+        assert jnp.allclose(result, jnp.array([2.0, 0.0]))
+
+    def test_svd_solve_matches_pseudoinverse_for_rank_deficient_matrix(self):
+        A = jnp.array([[1.0, 1.0], [2.0, 2.0], [3.0, 3.0]])
+        b = jnp.array([2.0, 4.0, 6.0])
+        result = la.svd_solve(A, b)
+        assert jnp.allclose(A @ result, b, atol=1e-10)
+        assert jnp.allclose(result[0], result[1], atol=1e-10)
+
+
+class TestCovarianceCorrelation:
+    """Tests for covariance and correlation helpers."""
+
+    def test_covariance_matrix_matches_centered_formula(self):
+        samples = jnp.array([[1.0, 2.0], [3.0, 4.0], [5.0, 8.0]])
+        result = la.covariance_matrix(samples, ddof=1)
+        centered = samples - jnp.mean(samples, axis=0)
+        expected = centered.T @ centered / 2.0
+        assert jnp.allclose(result, expected)
+
+    def test_weighted_covariance_uses_supplied_weights(self):
+        samples = jnp.array([[0.0, 0.0], [2.0, 0.0], [4.0, 2.0]])
+        weights = jnp.array([1.0, 2.0, 1.0])
+        result = la.covariance_matrix(samples, weights=weights, ddof=0)
+        mean = jnp.sum(samples * weights[:, None], axis=0) / jnp.sum(weights)
+        centered = samples - mean
+        expected = (centered * weights[:, None]).T @ centered / jnp.sum(weights)
+        assert jnp.allclose(result, expected)
+
+    def test_correlation_matrix_has_unit_diagonal(self):
+        samples = jnp.array([[1.0, 1.0], [2.0, 3.0], [4.0, 5.0], [8.0, 7.0]])
+        corr = la.correlation_matrix(samples)
+        assert jnp.allclose(jnp.diag(corr), jnp.ones(2))
+        assert jnp.all(jnp.abs(corr) <= 1.0 + 1e-12)
+
+    def test_correlation_from_covariance_handles_zero_variance(self):
+        cov = jnp.array([[4.0, 0.0], [0.0, 0.0]])
+        corr = la.correlation_from_covariance(cov)
+        assert jnp.all(jnp.isfinite(corr))
+        assert jnp.allclose(corr, jnp.array([[1.0, 0.0], [0.0, 0.0]]))
+
+
+class TestPositiveDefiniteJitter:
+    """Tests for positive-definite checks and jitter utilities."""
+
+    def test_is_positive_definite(self):
+        assert bool(la.is_positive_definite(jnp.array([[2.0, 0.2], [0.2, 1.0]])))
+        assert not bool(la.is_positive_definite(jnp.array([[1.0, 0.0], [0.0, -1.0]])))
+
+    def test_add_diagonal_jitter_only_touches_diagonal(self):
+        A = jnp.array([[1.0, 0.2], [0.2, 3.0]])
+        result = la.add_diagonal_jitter(A, 0.5)
+        assert jnp.allclose(result, jnp.array([[1.5, 0.2], [0.2, 3.5]]))
+
+    def test_positive_definite_jitter_finds_small_enough_diagonal_shift(self):
+        A = jnp.array([[0.0, 0.0], [0.0, 2.0]])
+        shifted, jitter, success = la.positive_definite_jitter(
+            A, initial_jitter=1e-6, growth=10.0, max_steps=4
+        )
+        assert bool(success)
+        assert jitter == pytest.approx(1e-6)
+        assert bool(la.is_positive_definite(shifted))
+
+    def test_positive_definite_jitter_preserves_already_pd_matrix(self):
+        A = jnp.array([[2.0, 0.1], [0.1, 1.0]])
+        shifted, jitter, success = la.positive_definite_jitter(A)
+        assert bool(success)
+        assert jitter == pytest.approx(0.0)
+        assert jnp.allclose(shifted, A)

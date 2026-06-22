@@ -154,6 +154,16 @@ values with supplied coefficients; `bspline_derivative(...)` evaluates
 tensor-product splines, adaptive knots, and extrapolation are deliberate
 follow-up work. The method page is [](../10-theory/bsplines.md).
 
+### `jaxstro.numerics.linear_algebra`
+
+`weighted_lstsq(...)` solves ordinary or weighted dense least-squares problems;
+`qr_solve(...)` and `svd_solve(...)` expose explicit full-rank and truncated-SVD
+solve policies; `covariance_matrix(...)`, `correlation_from_covariance(...)`, and
+`correlation_matrix(...)` provide finite covariance/correlation helpers; and
+`is_positive_definite(...)`, `add_diagonal_jitter(...)`, and
+`positive_definite_jitter(...)` cover small dense positive-definite diagnostics.
+The method page is [](../10-theory/linear-algebra.md).
+
 :::{note} Per-symbol reference pages are planned
 A complete, auto-generated per-module symbol reference (signatures, parameters,
 source links) is planned. Until then, the docstrings are authoritative — read them

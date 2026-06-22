@@ -391,6 +391,34 @@ class TestLinearAlgebraGradChecks:
         b0 = jnp.array([1.0, 2.0, 2.0])
         assert_grad_matches(lambda b: jnp.sum(linear_algebra.project_onto(a, b)), b0)
 
+    def test_weighted_lstsq_wrt_observations(self):
+        design = jnp.array([[1.0, 0.0], [1.0, 1.0], [1.0, 2.0], [1.0, 3.0]])
+        weights = jnp.array([1.0, 0.5, 2.0, 1.5])
+        y0 = jnp.array([1.0, 2.8, 5.2, 7.1])
+        assert_grad_matches(
+            lambda y: jnp.sum(linear_algebra.weighted_lstsq(design, y, weights)),
+            y0,
+        )
+
+    def test_svd_solve_wrt_rhs(self):
+        A = jnp.array([[3.0, 0.2], [0.2, 1.5]])
+        b0 = jnp.array([1.0, 2.0])
+        assert_grad_matches(lambda b: jnp.sum(linear_algebra.svd_solve(A, b)), b0)
+
+    def test_covariance_matrix_wrt_samples(self):
+        samples0 = jnp.array([[0.0, 1.0], [1.0, 2.0], [3.0, 5.0], [4.0, 8.0]])
+        assert_grad_matches(
+            lambda x: jnp.sum(linear_algebra.covariance_matrix(x, ddof=1)),
+            samples0,
+        )
+
+    def test_correlation_from_covariance_wrt_covariance(self):
+        cov0 = jnp.array([[2.0, 0.3], [0.3, 1.5]])
+        assert_grad_matches(
+            lambda cov: jnp.sum(linear_algebra.correlation_from_covariance(cov)),
+            cov0,
+        )
+
 
 # =============================================================================
 # jacrev smoke: array-valued outputs (NOT jacfwd / hessian)

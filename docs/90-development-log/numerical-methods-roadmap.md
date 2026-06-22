@@ -32,7 +32,7 @@ stellar-model policy, and data packages own their archive-specific schemas.
   explicit shape contracts.
 - [x] **Root-finding and monotone inversion.** Bracket discovery, vectorized
   independent solves, and monotone inverse interpolation for CDF-like tables.
-- [ ] **Linear algebra primitives.** Weighted least squares, QR/SVD solve
+- [x] **Linear algebra primitives.** Weighted least squares, QR/SVD solve
   wrappers, covariance/correlation helpers, and positive-definite jitter tools.
 - [ ] **Astro-relevant special functions.** Stable Planck kernels, normalized
   log-weight helpers, and orthogonal polynomial bases without owning downstream

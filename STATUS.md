@@ -1,9 +1,10 @@
 # jaxstro — status
 
-next: Root-finding and monotone inversion batch implemented (2026-06-22):
-`jaxstro.numerics` adds fixed-count bracket expansion, explicit vectorized
-bisection, and clamped monotone inverse interpolation with validation coverage.
-Next action: continue to Chunk 7 linear algebra primitives after local gates.
+next: Linear algebra primitives batch implemented (2026-06-22):
+`jaxstro.numerics` adds weighted least squares, QR/SVD solve wrappers,
+covariance/correlation helpers, and positive-definite jitter utilities with
+validation coverage. Next action: continue to Chunk 8 special functions after
+local gates.
 
 previous: Phase C MERGED + PUSHED to origin/main (2026-06-17, 25508f7, fast-forward; 447 tests green on
 merged main; feature branch deleted). NOT tagged — tag still held. Phase D remaining: (1) tag/version
