@@ -127,6 +127,14 @@ dimensions of `values`; trailing dimensions are treated as vector-valued payload
 Boundary policy is explicit: clamp, fill, or reject. The method page is
 [](../10-theory/regular-grid.md).
 
+### `jaxstro.numerics.grids`
+
+`log_grid(...)` and `geometric_bin_edges(...)` construct positive logarithmic
+grids; `bin_centers(...)` and `geometric_bin_centers(...)` compute arithmetic or
+geometric centers; `conservative_rebin(...)` redistributes integrated bin totals
+onto new edges while preserving total overlap. The method page is
+[](../10-theory/grids.md).
+
 ### `jaxstro.numerics.integration`
 
 `trapz`, `cumulative_trapz` (dx-outside uniform path), `simpson`, and
@@ -172,6 +180,13 @@ The method page is [](../10-theory/linear-algebra.md).
 normalization. `legendre_basis(...)`, `chebyshev_t_basis(...)`, and
 `laguerre_basis(...)` evaluate orthogonal polynomial bases with the degree axis
 last. The method page is [](../10-theory/special-functions.md).
+
+### `jaxstro.numerics.sampling`
+
+`inverse_cdf_draw(...)` maps a uniform deviate through a tabulated inverse CDF.
+`stratified_uniform(...)` draws one uniform sample from each equal-width stratum
+with deterministic shape. The method pages are [](../10-theory/rootfinding.md) and
+[](../10-theory/grids.md).
 
 :::{note} Per-symbol reference pages are planned
 A complete, auto-generated per-module symbol reference (signatures, parameters,

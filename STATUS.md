@@ -1,9 +1,9 @@
 # jaxstro — status
 
-next: Special-functions batch implemented (2026-06-22): `jaxstro.numerics`
-adds explicit-CGS Planck radiance kernels, stable normalized log-weight helpers,
-and Legendre/Chebyshev/Laguerre polynomial bases with validation coverage. Next
-action: continue to Chunk 9 sampling and grid utilities after local gates.
+next: Sampling and grid utilities batch implemented (2026-06-22):
+`jaxstro.numerics` adds log/geometric grid helpers, conservative rebinning for
+integrated totals, and stratified uniform sampling with validation coverage.
+Next action: continue to Chunk 10 provenance and trust reports after local gates.
 
 previous: Phase C MERGED + PUSHED to origin/main (2026-06-17, 25508f7, fast-forward; 447 tests green on
 merged main; feature branch deleted). NOT tagged — tag still held. Phase D remaining: (1) tag/version

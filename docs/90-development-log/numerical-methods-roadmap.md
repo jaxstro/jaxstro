@@ -37,7 +37,7 @@ stellar-model policy, and data packages own their archive-specific schemas.
 - [x] **Astro-relevant special functions.** Stable Planck kernels, normalized
   log-weight helpers, and orthogonal polynomial bases without owning downstream
   domain semantics.
-- [ ] **Sampling and grid utilities.** Log grids, geometric bin centers/edges,
+- [x] **Sampling and grid utilities.** Log grids, geometric bin centers/edges,
   conservative binning, stratified sampling, and carefully validated
   quasi-random sequences if they can be added without a dependency.
 - [ ] **Provenance and trust reports.** Deterministic JSON/Markdown summaries

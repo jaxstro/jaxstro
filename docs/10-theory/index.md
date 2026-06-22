@@ -27,7 +27,8 @@ gradient killer) — or go straight to the method pages:
 [](./interpolation.md), [](./regular-grid.md), and [](./bsplines.md).
 The dense helper layer for small fits and covariance diagnostics is
 [](./linear-algebra.md), and generic special-function kernels live in
-[](./special-functions.md).
+[](./special-functions.md). Grid construction, conservative rebinning, and
+stratified uniforms are in [](./grids.md).
 :::
 
 (p1-differentiability)=
@@ -174,6 +175,8 @@ shows them in specific methods. Read on:
 - [](./special-functions.md) — stable Planck kernels, normalized log weights,
   and orthogonal polynomial bases (principles [3](#p3-guard-singularities),
   [5](#p5-floating-point), [9](#p9-correctness)).
+- [](./grids.md) — log grids, conservative binning, and stratified uniforms
+  (principles [7](#p7-quadrature), [9](#p9-correctness), [10](#p10-vectorize)).
 
 Then map principles to call signatures in [](../40-api/index.md), and the design
 *choices* behind them in [](../30-decisions/index.md).

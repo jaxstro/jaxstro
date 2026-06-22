@@ -34,6 +34,7 @@ import pytest
 
 from jaxstro.numerics import (
     compensated,
+    grids,
     integration,
     interpolation,
     linear_algebra,
@@ -223,6 +224,22 @@ class TestRegularGridGradChecks:
             eps=1e-5,
             atol=1e-5,
             rtol=1e-5,
+        )
+
+
+# =============================================================================
+# grid utilities
+# =============================================================================
+class TestGridUtilityGradChecks:
+    def test_conservative_rebin_wrt_values(self):
+        old_edges = jnp.array([0.0, 1.0, 2.0, 4.0])
+        new_edges = jnp.array([0.0, 0.5, 1.5, 3.0, 4.0])
+        values0 = jnp.array([1.0, 3.0, 8.0])
+        assert_grad_matches(
+            lambda values: jnp.sum(
+                grids.conservative_rebin(old_edges, values, new_edges) ** 2
+            ),
+            values0,
         )
 
 

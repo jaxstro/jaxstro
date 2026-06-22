@@ -20,6 +20,8 @@ integration
     Lightweight quadrature and cumulative integral helpers.
 quadrature
     Gaussian quadrature factory (Gauss-Legendre, Gauss-Hermite, Hermite basis).
+grids
+    Grid construction and conservative binning helpers.
 regular_grid
     Static-rank regular-grid interpolation helpers.
 special
@@ -39,6 +41,7 @@ rng
 from . import (
     checks,
     compensated,
+    grids,
     integration,
     interpolation,
     linear_algebra,
@@ -50,6 +53,13 @@ from . import (
     special,
     splines,
     stats,
+)
+from .grids import (
+    bin_centers,
+    conservative_rebin,
+    geometric_bin_centers,
+    geometric_bin_edges,
+    log_grid,
 )
 from .linear_algebra import (
     add_diagonal_jitter,
@@ -77,7 +87,7 @@ from .rootfinding import (
     monotone_inverse_interp,
     newton_ppf,
 )
-from .sampling import inverse_cdf_draw
+from .sampling import inverse_cdf_draw, stratified_uniform
 from .special import (
     chebyshev_t_basis,
     laguerre_basis,
@@ -113,6 +123,12 @@ __all__ = [
     "monotone_inverse_interp",
     "integration",
     "quadrature",
+    "grids",
+    "log_grid",
+    "geometric_bin_edges",
+    "bin_centers",
+    "geometric_bin_centers",
+    "conservative_rebin",
     "gauss_legendre_nodes",
     "gauss_hermite_nodes",
     "gauss_laguerre_nodes",
@@ -125,6 +141,7 @@ __all__ = [
     "trilinear_interp",
     "sampling",
     "inverse_cdf_draw",
+    "stratified_uniform",
     "special",
     "planck_lambda_cgs",
     "log_planck_lambda_cgs",

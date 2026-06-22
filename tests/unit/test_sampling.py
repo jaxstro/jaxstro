@@ -12,7 +12,7 @@ Covers:
 import jax
 import jax.numpy as jnp
 
-from jaxstro.numerics import inverse_cdf_draw
+from jaxstro.numerics import inverse_cdf_draw, sampling
 from jaxstro.numerics.integration import cumulative_trapz
 
 
@@ -135,3 +135,40 @@ class TestGradients:
         ad = jax.grad(lambda w: inverse_cdf_draw(w, GRID, u0))(w0)
         assert jnp.all(jnp.isfinite(ad))
         assert jnp.any(jnp.abs(ad) > 0)
+
+
+class TestStratifiedUniform:
+    """Tests for deterministic-shape stratified uniform samples."""
+
+    def test_one_sample_per_stratum(self):
+        key = jax.random.key(0)
+        samples = sampling.stratified_uniform(key, 8)
+        assert samples.shape == (8,)
+        assert jnp.all(samples >= 0.0)
+        assert jnp.all(samples < 1.0)
+        strata = jnp.floor(samples * 8).astype(int)
+        assert jnp.array_equal(jnp.sort(strata), jnp.arange(8))
+
+    def test_custom_bounds(self):
+        key = jax.random.key(1)
+        samples = sampling.stratified_uniform(key, 4, minval=-2.0, maxval=2.0)
+        assert samples.shape == (4,)
+        assert jnp.all(samples >= -2.0)
+        assert jnp.all(samples < 2.0)
+
+    def test_jit_compatible_with_static_count(self):
+        @jax.jit
+        def draw(key):
+            return sampling.stratified_uniform(key, 5)
+
+        samples = draw(jax.random.key(2))
+        assert samples.shape == (5,)
+
+    def test_rejects_invalid_count(self):
+        key = jax.random.key(3)
+        try:
+            sampling.stratified_uniform(key, 0)
+        except ValueError as exc:
+            assert "n" in str(exc)
+        else:
+            raise AssertionError("expected ValueError")

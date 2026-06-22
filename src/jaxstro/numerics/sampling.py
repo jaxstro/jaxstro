@@ -10,12 +10,15 @@ kernels are fully differentiable (no data-dependent shapes, no ``argmax``/
 uniform deviate.
 """
 
+from functools import partial
+
+import jax
 import jax.numpy as jnp
 from jaxtyping import Array, Float
 
 from .integration import cumulative_trapz
 
-__all__ = ["inverse_cdf_draw"]
+__all__ = ["inverse_cdf_draw", "stratified_uniform"]
 
 
 def inverse_cdf_draw(
@@ -70,3 +73,24 @@ def inverse_cdf_draw(
     cdf = cumulative_trapz(weight, dx=dx)
     cdf = cdf / (cdf[-1] + reg)
     return jnp.interp(unif, cdf, grid)
+
+
+@partial(jax.jit, static_argnames=("n",))
+def stratified_uniform(
+    key: Array,
+    n: int,
+    *,
+    minval: float = 0.0,
+    maxval: float = 1.0,
+) -> Float[Array, " n"]:
+    """
+    Draw one uniform sample from each of ``n`` equal-width strata.
+
+    The output has deterministic shape ``(n,)`` and is ordered by stratum. Use
+    ``jax.random.permutation`` at the call site if randomized order is needed.
+    """
+    if n < 1:
+        raise ValueError("n must be at least 1")
+    u = jax.random.uniform(key, shape=(n,), minval=0.0, maxval=1.0)
+    unit = (jnp.arange(n, dtype=u.dtype) + u) / n
+    return minval + (maxval - minval) * unit

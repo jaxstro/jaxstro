@@ -218,6 +218,10 @@ normalized log-weight helpers, and Legendre/Chebyshev/Laguerre basis evaluators.
 
 **Goal:** Add reusable grid and deterministic sampling helpers with explicit differentiability boundaries.
 
+**Status:** Implemented: log/geometric grid helpers, arithmetic/geometric bin
+centers, conservative rebinning for integrated totals, and stratified uniform
+sampling.
+
 **Files:**
 - Modify: `src/jaxstro/numerics/sampling.py`
 - Create: `src/jaxstro/numerics/grids.py`
@@ -230,6 +234,10 @@ normalized log-weight helpers, and Legendre/Chebyshev/Laguerre basis evaluators.
 2. Add stratified sampling helpers.
 3. Add Sobol/Halton only if implementable without a dependency and with clear validation.
 4. Document nondifferentiable histogram/binning boundaries.
+
+**Deferrals:**
+- Sobol/Halton quasi-random sequences until a dependency-free implementation has
+  reference-sequence validation and a clear scrambling/dimensionality policy.
 
 ## Chunk 10: Provenance And Trust Reports
 
