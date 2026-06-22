@@ -15,9 +15,11 @@ correct*. Elegant nonsense is still nonsense.
 jaxstro exists so that the bottom of the dependency graph never produces that kind
 of failure. Every primitive here is built to a single constraint: **it must
 survive `jax.grad`, and its gradient must be checked against finite differences.**
-This page is the thesis — ten principles for writing numerics that differentiate
-cleanly. Each principle ends with a bridge to the method page that shows it at
-work, so you can read the idea and then read the code that obeys it.
+This is why the numerics layer is useful beyond astronomy: the discipline is not
+about a single domain, but about making differentiable scientific methods
+auditable. This page is the thesis — ten principles for writing numerics that
+differentiate cleanly. Each principle ends with a bridge to the method page that
+shows it at work, so you can read the idea and then read the code that obeys it.
 
 :::{tip} Already fluent in differentiable programming?
 Skip to the principle that bites you most often — most people's is
@@ -26,9 +28,10 @@ gradient killer) — or go straight to the method pages:
 [](./rootfinding.md), [](./cumulative-trapz.md), [](./quadrature.md),
 [](./interpolation.md), [](./regular-grid.md), and [](./bsplines.md).
 The dense helper layer for small fits and covariance diagnostics is
-[](./linear-algebra.md), and generic special-function kernels live in
-[](./special-functions.md). Grid construction, conservative rebinning, and
-stratified uniforms are in [](./grids.md).
+[](./linear-algebra.md), objective helpers live in [](./optimization.md), and
+generic special-function kernels live in [](./special-functions.md). Grid
+construction, conservative rebinning, and stratified uniforms are in
+[](./grids.md).
 :::
 
 (p1-differentiability)=
@@ -172,6 +175,9 @@ shows them in specific methods. Read on:
 - [](./linear-algebra.md) — weighted fits, solve wrappers, covariance helpers,
   and positive-definite jitter for small dense problems (principles
   [3](#p3-guard-singularities), [8](#p8-precision), [9](#p9-correctness)).
+- [](./optimization.md) — robust residual losses, objective summaries,
+  fixed-iteration line search, and convergence diagnostics (principles
+  [1](#p1-differentiability), [2](#p2-fixed-iteration), [10](#p10-vectorize)).
 - [](./special-functions.md) — stable Planck kernels, normalized log weights,
   and orthogonal polynomial bases (principles [3](#p3-guard-singularities),
   [5](#p5-floating-point), [9](#p9-correctness)).

@@ -1,8 +1,9 @@
 ---
 title: Architecture
 description: >-
-  The shape of the software — JAX-native functional design, the units policy, and
-  the one-way dependency rule that keeps the foundation thin.
+  The shape of the software — JAX-native functional design, the astro-first but
+  science-general boundary, the units policy, and the one-way dependency rule
+  that keeps the foundation thin.
 ---
 
 This section will tell the narrative "why" of the software's *shape* — the
@@ -26,6 +27,30 @@ The dependency and packaging decisions are recorded in
 [](../30-decisions/0002-adopt-equinox-foundation.md),
 [](../30-decisions/0003-standalone-uv-hatchling-project.md), and
 [](../30-decisions/0010-ecosystem-config-architecture.md).
+
+## Astro-first, science-general
+
+The package should be marketable as **evidence-first JAX infrastructure for
+differentiable science**. Astronomy supplies the pressure tests: physical units,
+awkward coordinate transforms, tabulated spectra, stiff numerical ranges, and
+gradients that must be trusted by downstream inference. The abstractions that
+survive those tests are useful well beyond astronomy.
+
+New foundation modules should pass four checks before they belong here:
+
+1. **Generic across domains.** The primitive is useful without knowing about
+   stars, galaxies, filters, surveys, or a specific simulator.
+2. **JAX-native by construction.** The public runtime path composes with `jit`,
+   `vmap`, and `grad` where differentiation is part of the contract.
+3. **Explicit about boundaries.** Units, valid domains, clamping, saturation,
+   static arguments, and non-differentiable preprocessing are named rather than
+   hidden.
+4. **Backed by evidence.** The module has focused unit tests, transform tests,
+   finite-difference or analytic validation where relevant, and documentation
+   that explains failure modes.
+
+The broader product vision and future-module map are in
+[](./science-general-vision.md).
 
 ## Numerical shape
 

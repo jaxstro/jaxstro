@@ -10,6 +10,11 @@ This is the lookup door. It enumerates the public modules of jaxstro 0.1.0 and t
 symbols each exports, with a pointer back to the theory that justifies them. Import
 the top-level package and reach modules as attributes:
 
+The API is astro-first but intentionally science-general. A public symbol belongs
+here when it is reusable below domain packages, has explicit unit or boundary
+semantics, and can point to tests or validation evidence for the behavior it
+claims.
+
 ```python
 import jaxstro
 from jaxstro import atmospheres, constants, units, numerics, coords, spatial, params, testing
@@ -43,7 +48,7 @@ utility. There is no private or experimental tier at release.
   - Differentiable numerical utilities: stats, interpolation, root-finding,
     integration (incl. `cumulative_trapz` + quadrature factory + `newton_ppf`),
     B-spline basis/evaluation, checks, compensated summation, linear algebra,
-    RNG, sampling.
+    optimization helpers, RNG, sampling.
 * - `jaxstro.spatial`
   - Morton (Z-order) encoding/decoding, grid binning, neighbor-candidate gathering.
 * - `jaxstro.params`
@@ -175,6 +180,17 @@ solve policies; `covariance_matrix(...)`, `correlation_from_covariance(...)`, an
 `is_positive_definite(...)`, `add_diagonal_jitter(...)`, and
 `positive_definite_jitter(...)` cover small dense positive-definite diagnostics.
 The method page is [](../10-theory/linear-algebra.md).
+
+### `jaxstro.numerics.optimization`
+
+`squared_loss(...)`, `huber_loss(...)`, and `pseudo_huber_loss(...)` provide
+elementwise residual losses. `objective_summary(...)` reports scalar squared-loss
+diagnostics for residual vectors, optionally with weights.
+`armijo_backtracking(...)` is a fixed-iteration Armijo line-search helper whose
+objective and scan length are static under JIT. `relative_step_norm(...)`,
+`gradient_inf_norm(...)`, and `convergence_summary(...)` provide
+optimizer-agnostic stopping diagnostics. The method page is
+[](../10-theory/optimization.md).
 
 ### `jaxstro.numerics.special`
 

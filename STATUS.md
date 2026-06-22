@@ -1,9 +1,9 @@
 # jaxstro — status
 
-next: Numerical-method roadmap batches implemented (2026-06-22): remaining
-B-spline follow-ups now add de Boor evaluation, antiderivatives/integrals,
-roughness penalties, quantile knots, and tensor-product designs. Next action:
-run final local gates and complete the active numerics goal.
+next: Core-capability expansion in progress (2026-06-22): optimization helper
+batch added with robust residual losses, objective summaries, fixed-step Armijo
+backtracking, and convergence diagnostics. Next action: implement fixed-step
+ODE helpers under strict TDD.
 
 previous: Phase C MERGED + PUSHED to origin/main (2026-06-17, 25508f7, fast-forward; 447 tests green on
 merged main; feature branch deleted). NOT tagged — tag still held. Phase D remaining: (1) tag/version

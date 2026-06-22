@@ -3,8 +3,9 @@ project:
   id: jaxstro-docs
   title: jaxstro
   description: >-
-    The differentiable, dependency-light foundation of the jaxstro
-    astrophysics ecosystem — units, constants, coordinates, and AD-safe numerics.
+    Evidence-first JAX infrastructure for differentiable science: an astro-first,
+    science-general foundation for units, constants, coordinates, AD-safe
+    numerics, and validation.
   github: https://github.com/drannarosen/jaxstro
   keywords:
     - JAX
@@ -53,11 +54,13 @@ project:
         - file: 10-theory/regular-grid.md
         - file: 10-theory/bsplines.md
         - file: 10-theory/linear-algebra.md
+        - file: 10-theory/optimization.md
         - file: 10-theory/special-functions.md
         - file: 10-theory/grids.md
     - title: Architecture
       children:
         - file: 20-architecture/index.md
+        - file: 20-architecture/science-general-vision.md
         - file: 20-architecture/atmosphere-capabilities.md
         - file: 20-architecture/spectra-data-architecture.md
     - title: Decisions (ADRs)

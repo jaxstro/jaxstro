@@ -34,6 +34,8 @@ checks
     Numerical validation helpers (finiteness, monotonicity, ranges).
 linear_algebra
     Small linear algebra convenience utilities.
+optimization
+    Loss, line-search, and convergence helpers.
 rng
     PRNG key management helpers for JAX.
 """
@@ -45,6 +47,7 @@ from . import (
     integration,
     interpolation,
     linear_algebra,
+    optimization,
     quadrature,
     regular_grid,
     rng,
@@ -71,6 +74,17 @@ from .linear_algebra import (
     qr_solve,
     svd_solve,
     weighted_lstsq,
+)
+from .optimization import (
+    LineSearchResult,
+    armijo_backtracking,
+    convergence_summary,
+    gradient_inf_norm,
+    huber_loss,
+    objective_summary,
+    pseudo_huber_loss,
+    relative_step_norm,
+    squared_loss,
 )
 from .quadrature import (
     clenshaw_curtis_nodes,
@@ -174,6 +188,7 @@ __all__ = [
     "tensor_product_design_matrix",
     "checks",
     "linear_algebra",
+    "optimization",
     "weighted_lstsq",
     "qr_solve",
     "svd_solve",
@@ -183,6 +198,15 @@ __all__ = [
     "is_positive_definite",
     "add_diagonal_jitter",
     "positive_definite_jitter",
+    "LineSearchResult",
+    "squared_loss",
+    "huber_loss",
+    "pseudo_huber_loss",
+    "objective_summary",
+    "armijo_backtracking",
+    "gradient_inf_norm",
+    "relative_step_norm",
+    "convergence_summary",
     "rng",
 ]
 __version__ = "0.1.0"

@@ -42,6 +42,25 @@ stellar-model policy, and data packages own their archive-specific schemas.
   quasi-random sequences if they can be added without a dependency.
 - [x] **Provenance and trust reports.** Deterministic JSON/Markdown summaries
   that connect numerical methods to their validation anchors.
+- [x] **Optimization helpers, first slice.** Robust residual losses,
+  objective summaries, fixed-iteration Armijo backtracking, and convergence
+  diagnostics without becoming an optimizer stack.
+- [ ] **ODE helpers, first slice.** Fixed-step Euler, midpoint/RK2, RK4, and
+  leapfrog or velocity-Verlet with scan-friendly APIs and analytic validation.
+- [ ] **Linear-operator helpers, first slice.** Dense, diagonal, scaled,
+  sum/product, transpose/rmatvec, and block composition as small PyTrees.
+- [ ] **Distribution kernels, first slice.** Stable logpdf/CDF/inverse-CDF
+  helpers for generic families and truncated variants.
+- [ ] **Geometry helpers, first slice.** Vector normalization, angular
+  distance, rotations, quaternions, rigid transforms, and composition helpers.
+- [ ] **Autodiff helpers, first slice.** JVP/VJP/HVP, Jacobian-vector,
+  vector-Jacobian, Gauss-Newton, and generic Fisher-style products.
+- [ ] **Runtime provenance, first slice.** Artifact hashing, environment
+  snapshots, method manifests, and deterministic JSON/Markdown rendering.
+- [ ] **Random helpers, first slice.** Explicit key streams, resampling
+  methods, seed manifests, and shape-stable APIs.
+- [ ] **Structured 1D mesh helpers, first slice.** Cell centers/volumes,
+  face geometry, finite-volume stencils, and conservative remap.
 
 ## Acceptance Standard
 

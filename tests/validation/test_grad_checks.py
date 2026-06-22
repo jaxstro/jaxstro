@@ -38,6 +38,7 @@ from jaxstro.numerics import (
     integration,
     interpolation,
     linear_algebra,
+    optimization,
     regular_grid,
     rootfinding,
     special,
@@ -240,6 +241,33 @@ class TestGridUtilityGradChecks:
                 grids.conservative_rebin(old_edges, values, new_edges) ** 2
             ),
             values0,
+        )
+
+
+# =============================================================================
+# optimization helpers
+# =============================================================================
+class TestOptimizationGradChecks:
+    def test_pseudo_huber_loss_wrt_residuals(self):
+        residuals0 = jnp.array([-1.5, -0.2, 0.3, 2.0])
+        assert_grad_matches(
+            lambda r: jnp.sum(optimization.pseudo_huber_loss(r, delta=0.8)),
+            residuals0,
+        )
+
+    def test_huber_loss_wrt_residuals_away_from_kink(self):
+        residuals0 = jnp.array([-1.5, -0.2, 0.3, 2.0])
+        assert_grad_matches(
+            lambda r: jnp.sum(optimization.huber_loss(r, delta=1.0)),
+            residuals0,
+        )
+
+    def test_objective_summary_loss_wrt_residuals(self):
+        residuals0 = jnp.array([0.5, -1.0, 2.0])
+        weights = jnp.array([1.0, 0.5, 2.0])
+        assert_grad_matches(
+            lambda r: optimization.objective_summary(r, weights=weights)["loss"],
+            residuals0,
         )
 
 
