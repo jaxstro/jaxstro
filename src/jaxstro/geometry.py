@@ -4,6 +4,17 @@ import jax.numpy as jnp
 from jaxtyping import Array, Float
 
 
+def _unit_vector(
+    vector: Float[Array, "..."],
+    *,
+    axis: int = -1,
+    eps: float = 0.0,
+) -> Float[Array, "..."]:
+    vector = jnp.asarray(vector)
+    norm = jnp.linalg.norm(vector, axis=axis, keepdims=True)
+    return vector / jnp.maximum(norm, eps)
+
+
 def normalize(
     vectors: Float[Array, "..."],
     *,
@@ -14,8 +25,7 @@ def normalize(
     """Normalize vectors along ``axis`` and optionally return their norms."""
     vectors = jnp.asarray(vectors)
     norm = jnp.linalg.norm(vectors, axis=axis, keepdims=True)
-    denom = jnp.maximum(norm, eps)
-    unit = vectors / denom
+    unit = vectors / jnp.maximum(norm, eps)
     if return_norm:
         return unit, norm
     return unit
@@ -28,8 +38,8 @@ def angular_distance(
     axis: int = -1,
 ) -> Float[Array, "..."]:
     """Return the angle between vectors in radians."""
-    a_unit = normalize(a, axis=axis)
-    b_unit = normalize(b, axis=axis)
+    a_unit = _unit_vector(a, axis=axis)
+    b_unit = _unit_vector(b, axis=axis)
     dot = jnp.sum(a_unit * b_unit, axis=axis)
     return jnp.arccos(jnp.clip(dot, -1.0, 1.0))
 
@@ -39,7 +49,7 @@ def rotation_matrix(
     angle: Float[Array, ""],
 ) -> Float[Array, "3 3"]:
     """Return the right-handed axis-angle rotation matrix."""
-    unit = normalize(axis)
+    unit = _unit_vector(axis)
     x, y, z = unit
     c = jnp.cos(angle)
     s = jnp.sin(angle)
@@ -58,7 +68,7 @@ def quaternion_from_axis_angle(
     angle: Float[Array, ""],
 ) -> Float[Array, "4"]:
     """Return a unit quaternion ``[w, x, y, z]`` from axis-angle inputs."""
-    unit = normalize(axis)
+    unit = _unit_vector(axis)
     half = 0.5 * angle
     return jnp.concatenate([jnp.cos(half)[None], jnp.sin(half) * unit])
 
@@ -91,7 +101,7 @@ def quaternion_rotate(
     vector: Float[Array, "3"],
 ) -> Float[Array, "3"]:
     """Rotate a 3-vector by quaternion ``q``."""
-    q_unit = normalize(q)
+    q_unit = _unit_vector(q)
     pure = jnp.concatenate([jnp.zeros(1, dtype=jnp.asarray(vector).dtype), vector])
     rotated = quaternion_multiply(
         quaternion_multiply(q_unit, pure),

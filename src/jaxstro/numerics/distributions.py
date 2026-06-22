@@ -8,7 +8,7 @@ _LOG_SQRT_2PI = 0.5 * jnp.log(2.0 * jnp.pi)
 
 
 def normal_logpdf(
-    x: Float[Array, "..."],
+    x: float | Float[Array, "..."],
     *,
     loc: float | Float[Array, "..."] = 0.0,
     scale: float | Float[Array, "..."] = 1.0,
@@ -19,7 +19,7 @@ def normal_logpdf(
 
 
 def normal_cdf(
-    x: Float[Array, "..."],
+    x: float | Float[Array, "..."],
     *,
     loc: float | Float[Array, "..."] = 0.0,
     scale: float | Float[Array, "..."] = 1.0,
@@ -30,7 +30,7 @@ def normal_cdf(
 
 
 def normal_ppf(
-    u: Float[Array, "..."],
+    u: float | Float[Array, "..."],
     *,
     loc: float | Float[Array, "..."] = 0.0,
     scale: float | Float[Array, "..."] = 1.0,

@@ -84,13 +84,6 @@ from .autodiff import (
     vector_jacobian_product,
     vjp,
 )
-from .grids import (
-    bin_centers,
-    conservative_rebin,
-    geometric_bin_centers,
-    geometric_bin_edges,
-    log_grid,
-)
 from .distributions import (
     lognormal_cdf,
     lognormal_logpdf,
@@ -104,6 +97,13 @@ from .distributions import (
     truncated_normal_cdf,
     truncated_normal_logpdf,
     truncated_normal_ppf,
+)
+from .grids import (
+    bin_centers,
+    conservative_rebin,
+    geometric_bin_centers,
+    geometric_bin_edges,
+    log_grid,
 )
 from .linear_algebra import (
     add_diagonal_jitter,
@@ -126,17 +126,6 @@ from .meshes import (
     divergence_1d,
     face_geometry_1d,
     structured_edges_1d,
-)
-from .optimization import (
-    LineSearchResult,
-    armijo_backtracking,
-    convergence_summary,
-    gradient_inf_norm,
-    huber_loss,
-    objective_summary,
-    pseudo_huber_loss,
-    relative_step_norm,
-    squared_loss,
 )
 from .ode import (
     ODEResult,
@@ -164,6 +153,17 @@ from .operators import (
     compose,
     scale,
     transpose,
+)
+from .optimization import (
+    LineSearchResult,
+    armijo_backtracking,
+    convergence_summary,
+    gradient_inf_norm,
+    huber_loss,
+    objective_summary,
+    pseudo_huber_loss,
+    relative_step_norm,
+    squared_loss,
 )
 from .quadrature import (
     clenshaw_curtis_nodes,

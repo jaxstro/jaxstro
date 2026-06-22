@@ -29,7 +29,7 @@ class DenseOperator(eqx.Module):
 
     @property
     def shape(self) -> tuple[int, int]:
-        return self.matrix.shape
+        return (self.matrix.shape[0], self.matrix.shape[1])
 
     def matvec(self, x: Float[Array, " n"]) -> Float[Array, " m"]:
         return self.matrix @ x
