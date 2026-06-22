@@ -22,8 +22,13 @@ from jaxstro.testing import (  # noqa: E402  (after float64 enable)
     EdgeConfig,
     GradContract,
     audit_entry_point,
+    check_directional_derivative,
+    compare_gradients,
     contract_requires_fd,
     default_contract_for_expect,
+    directional_derivative,
+    finite_difference_grad,
+    finite_difference_jacobian,
     is_inference_ready,
 )
 
@@ -58,6 +63,93 @@ def test_exports_present():
     assert Case is not None and AuditResult is not None and EdgeConfig is not None
     assert callable(is_inference_ready)
     assert "smooth_pathwise" in get_args(GradContract)
+    assert callable(finite_difference_grad)
+    assert callable(finite_difference_jacobian)
+    assert callable(directional_derivative)
+    assert callable(compare_gradients)
+    assert callable(check_directional_derivative)
+
+
+def test_finite_difference_grad_matches_analytic_gradient():
+    x = jnp.array([0.4, -0.7, 1.2])
+
+    grad = finite_difference_grad(lambda v: jnp.sum(v**3), x, eps=1e-6)
+
+    assert grad.shape == x.shape
+    assert jnp.allclose(grad, 3.0 * x**2, atol=1e-6, rtol=1e-6)
+
+
+def test_finite_difference_jacobian_matches_analytic_jacobian():
+    x = jnp.array([0.5, -0.25])
+
+    jac = finite_difference_jacobian(lambda v: jnp.array([v[0] + v[1], v[0] * v[1]]), x)
+
+    expected = jnp.array([[1.0, 1.0], [x[1], x[0]]])
+    assert jac.shape == (2, 2)
+    assert jnp.allclose(jac, expected, atol=1e-6, rtol=1e-6)
+
+
+def test_directional_derivative_uses_supplied_direction_without_normalizing():
+    x = jnp.array([0.5, -1.0])
+    direction = jnp.array([2.0, -0.5])
+
+    result = directional_derivative(lambda v: jnp.sum(v**2), x, direction)
+
+    expected = jnp.vdot(2.0 * x, direction)
+    assert jnp.allclose(result, expected, atol=1e-6, rtol=1e-6)
+
+
+def test_compare_gradients_returns_structured_success_report():
+    x = jnp.array([0.4, -0.7, 1.2])
+
+    report = compare_gradients(
+        lambda v: jnp.sum(v**3), x, eps=1e-6, atol=1e-5, rtol=1e-5
+    )
+
+    assert report.passed
+    assert report.kind == "gradient"
+    assert report.atol == 1e-5
+    assert report.rtol == 1e-5
+    assert report.ad.shape == x.shape
+    assert report.fd.shape == x.shape
+    assert report.max_abs_error < 1e-5
+    assert report.max_rel_error < 1e-5
+
+
+def test_compare_gradients_flags_custom_jvp_mismatch():
+    @jax.custom_jvp
+    def f(x):
+        return jnp.sum(x**2)
+
+    f.defjvp(
+        lambda primals, tangents: (
+            f(primals[0]),
+            3.0 * jnp.vdot(primals[0], tangents[0]),
+        )
+    )
+    report = compare_gradients(f, jnp.array([0.5, -1.0]), atol=1e-6, rtol=1e-6)
+
+    assert not report.passed
+    assert report.max_abs_error > 0.1
+
+
+def test_check_directional_derivative_returns_structured_report():
+    x = jnp.array([0.5, -1.0])
+    direction = jnp.array([2.0, -0.5])
+
+    report = check_directional_derivative(
+        lambda v: jnp.sum(v**2),
+        x,
+        direction,
+        eps=1e-6,
+        atol=1e-6,
+        rtol=1e-6,
+    )
+
+    assert report.passed
+    assert report.kind == "directional_derivative"
+    assert report.ad.shape == ()
+    assert report.fd.shape == ()
 
 
 def test_clean_linear_is_clean():

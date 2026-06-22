@@ -15,6 +15,15 @@ from jaxstro.testing.contracts import (
     is_grad_contract,
     is_inference_ready,
 )
+from jaxstro.testing.diagnostics import (
+    DifferenceReport,
+    check_directional_derivative,
+    compare_gradients,
+    compare_jacobians,
+    directional_derivative,
+    finite_difference_grad,
+    finite_difference_jacobian,
+)
 from jaxstro.testing.grad_audit import (
     AuditResult,
     Case,
@@ -48,6 +57,13 @@ __all__ = [
     "default_contract_for_expect",
     "is_grad_contract",
     "is_inference_ready",
+    "DifferenceReport",
+    "finite_difference_grad",
+    "finite_difference_jacobian",
+    "directional_derivative",
+    "compare_gradients",
+    "compare_jacobians",
+    "check_directional_derivative",
     "ASSERT_HELPERS",
     "DEFAULT_CITE_RE",
     "assert_no_stale",

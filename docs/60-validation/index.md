@@ -20,6 +20,7 @@ to a row here.
 | Unit-system conversions round-trip through CGS | Floating tolerance in the unit tests | Mass, length, time, velocity, and `G` conversions | `tests/unit/test_units.py` |
 | `enable_high_precision()` configures JAX x64 before array creation | Exact config state | `jax_enable_x64=True` and highest matmul precision | `tests/unit/test_jaxconfig.py` |
 | AD-safe numerical primitives avoid NaN gradients on guarded paths | Test-specific finite/close checks | Root-finding, interpolation, sampling, quadrature, and safe math | `tests/unit/test_numerics.py`, `tests/validation/test_grad_checks.py` |
+| Public finite-difference diagnostics report AD-vs-FD agreement with tolerance metadata | Exact analytic comparisons and custom-JVP mismatch detection | Central gradients, Jacobians, directional derivatives, structured pass/fail reports | `tests/integration/test_grad_audit.py` |
 | Shape-preserving interpolation avoids monotone-table overshoot and differentiates inside stable limiter branches | Exact synthetic identities and FD-vs-AD checks | Cubic Hermite recovery, clamped boundaries, PCHIP turning-point slopes, monotone bounds, PyTree/JAX transforms | `tests/unit/test_interpolation_shape_preserving.py`, `tests/validation/test_grad_checks.py` |
 | Regular-grid interpolation recovers affine tables and differentiates inside grid cells | Exact synthetic identities and FD-vs-AD checks | Bilinear/trilinear affine recovery, vector payloads, clamp/fill/reject policies, JAX transforms | `tests/unit/test_regular_grid.py`, `tests/validation/test_grad_checks.py` |
 | B-spline basis, evaluation, derivatives, and fixed-knot fitting preserve local-basis invariants | Exact synthetic identities and FD-vs-AD checks | Partition of unity, nonnegativity, local support, Bernstein cubic, degree-1 parity with `interp1d`, analytic derivatives, least-squares recovery, PyTree/JAX transforms | `tests/unit/test_splines.py`, `tests/validation/test_grad_checks.py` |
@@ -40,6 +41,7 @@ to a row here.
 Use the focused commands below when changing one subsystem:
 
 ```bash
+uv run pytest tests/integration/test_grad_audit.py
 uv run pytest tests/integration/test_grad_audit.py tests/unit/test_spatial.py
 uv run pytest tests/unit/test_atmospheres.py tests/unit/test_atmospheres_spectra.py
 uv run pytest tests/unit/test_interpolation_shape_preserving.py tests/validation/test_grad_checks.py

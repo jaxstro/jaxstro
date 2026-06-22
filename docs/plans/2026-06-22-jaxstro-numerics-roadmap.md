@@ -100,6 +100,10 @@ vector-valued payload support.
 
 **Goal:** Promote finite-difference diagnostics from test-local helpers into reusable public testing utilities.
 
+**Status:** Implemented: central finite-difference gradients/Jacobians,
+directional derivatives, AD-vs-FD comparison reports, and tolerance metadata in
+`jaxstro.testing`.
+
 **Files:**
 - Modify: `src/jaxstro/testing/`
 - Test: `tests/integration/test_grad_audit.py`

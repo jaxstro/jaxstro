@@ -25,7 +25,7 @@ stellar-model policy, and data packages own their archive-specific schemas.
   interpolation for table-like functions where overshoot is unacceptable.
 - [x] **Regular-grid interpolation.** Bilinear, trilinear, and static-rank ND
   interpolation for gridded models with explicit clamp/fill/reject policies.
-- [ ] **Numerical differentiation diagnostics.** Public finite-difference,
+- [x] **Numerical differentiation diagnostics.** Public finite-difference,
   directional-derivative, and Jacobian-check utilities in `jaxstro.testing`.
 - [ ] **Quadrature expansion.** Additional fixed-node rules such as
   Gauss-Laguerre and Clenshaw-Curtis, plus cumulative Simpson variants with

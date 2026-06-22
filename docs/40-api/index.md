@@ -57,7 +57,9 @@ utility. There is no private or experimental tier at release.
     and conversion support.
 * - `jaxstro.testing`
   - The grad-audit engine (`audit_entry_point`, `Case`, `AuditResult`, `EdgeConfig`)
-    for FD-vs-AD gradient checks.
+    plus public finite-difference diagnostics (`finite_difference_grad`,
+    `finite_difference_jacobian`, `compare_gradients`, `compare_jacobians`,
+    `check_directional_derivative`).
 * - `jaxstro.jaxconfig`
   - `enable_high_precision()` — turns on float64 and highest matmul precision.
 ```
@@ -171,3 +173,11 @@ abundance plane. Coverage reporting, source-preserving Sonora/TLUSTY converters,
 and overlap diagnostics stay host-side. The dataset matrix is in
 [](../20-architecture/atmosphere-capabilities.md); the runtime and downstream
 ownership boundary is in [](../20-architecture/spectra-data-architecture.md).
+
+### `jaxstro.testing`
+
+`jaxstro.testing` contains validation utilities rather than model primitives.
+The grad-audit engine classifies curated differentiability cases, while the
+finite-difference diagnostics expose reusable central-difference gradients,
+Jacobians, directional derivatives, and structured AD-vs-FD comparison reports.
+These helpers are intended for test suites and validation scripts.
