@@ -28,10 +28,10 @@ gradient killer) — or go straight to the method pages:
 [](./rootfinding.md), [](./cumulative-trapz.md), [](./quadrature.md),
 [](./interpolation.md), [](./regular-grid.md), and [](./bsplines.md).
 The dense helper layer for small fits and covariance diagnostics is
-[](./linear-algebra.md), objective helpers live in [](./optimization.md), and
-generic special-function kernels live in [](./special-functions.md). Grid
-construction, conservative rebinning, and stratified uniforms are in
-[](./grids.md).
+[](./linear-algebra.md), objective helpers live in [](./optimization.md),
+fixed-step ODE helpers live in [](./ode.md), and generic special-function kernels
+live in [](./special-functions.md). Grid construction, conservative rebinning,
+and stratified uniforms are in [](./grids.md).
 :::
 
 (p1-differentiability)=
@@ -177,6 +177,9 @@ shows them in specific methods. Read on:
   [3](#p3-guard-singularities), [8](#p8-precision), [9](#p9-correctness)).
 - [](./optimization.md) — robust residual losses, objective summaries,
   fixed-iteration line search, and convergence diagnostics (principles
+  [1](#p1-differentiability), [2](#p2-fixed-iteration), [10](#p10-vectorize)).
+- [](./ode.md) — fixed-step Euler, midpoint/RK2, RK4, and velocity-Verlet
+  integration with scan-friendly gradient flow (principles
   [1](#p1-differentiability), [2](#p2-fixed-iteration), [10](#p10-vectorize)).
 - [](./special-functions.md) — stable Planck kernels, normalized log weights,
   and orthogonal polynomial bases (principles [3](#p3-guard-singularities),

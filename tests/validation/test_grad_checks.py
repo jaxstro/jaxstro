@@ -38,6 +38,7 @@ from jaxstro.numerics import (
     integration,
     interpolation,
     linear_algebra,
+    ode,
     optimization,
     regular_grid,
     rootfinding,
@@ -253,6 +254,44 @@ class TestOptimizationGradChecks:
         assert_grad_matches(
             lambda r: jnp.sum(optimization.pseudo_huber_loss(r, delta=0.8)),
             residuals0,
+        )
+
+
+# =============================================================================
+# fixed-step ODE helpers
+# =============================================================================
+class TestODEGradChecks:
+    def test_rk4_final_state_wrt_initial_state(self):
+        def rhs(y, t):
+            return -0.5 * y
+
+        y0 = jnp.array([1.0, 2.0])
+        assert_grad_matches(
+            lambda initial: jnp.sum(
+                ode.rk4(rhs, y0=initial, t0=0.0, dt=0.05, num_steps=20).y[-1]
+            ),
+            y0,
+        )
+
+    def test_velocity_verlet_final_position_wrt_initial_position(self):
+        def acceleration(q, t):
+            return -q
+
+        q0 = jnp.array([0.7])
+        v0 = jnp.array([0.2])
+        assert_grad_matches(
+            lambda initial: ode.velocity_verlet(
+                acceleration,
+                q0=initial,
+                v0=v0,
+                t0=0.0,
+                dt=0.02,
+                num_steps=50,
+            ).q[-1, 0],
+            q0,
+            eps=1e-5,
+            atol=1e-5,
+            rtol=1e-5,
         )
 
     def test_huber_loss_wrt_residuals_away_from_kink(self):

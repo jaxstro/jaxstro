@@ -48,7 +48,7 @@ utility. There is no private or experimental tier at release.
   - Differentiable numerical utilities: stats, interpolation, root-finding,
     integration (incl. `cumulative_trapz` + quadrature factory + `newton_ppf`),
     B-spline basis/evaluation, checks, compensated summation, linear algebra,
-    optimization helpers, RNG, sampling.
+    optimization helpers, fixed-step ODE helpers, RNG, sampling.
 * - `jaxstro.spatial`
   - Morton (Z-order) encoding/decoding, grid binning, neighbor-candidate gathering.
 * - `jaxstro.params`
@@ -191,6 +191,15 @@ objective and scan length are static under JIT. `relative_step_norm(...)`,
 `gradient_inf_norm(...)`, and `convergence_summary(...)` provide
 optimizer-agnostic stopping diagnostics. The method page is
 [](../10-theory/optimization.md).
+
+### `jaxstro.numerics.ode`
+
+`euler_step(...)`, `midpoint_step(...)`, and `rk4_step(...)` expose one-step
+updates for first-order systems with call signature `rhs(y, t)`. `euler(...)`,
+`midpoint(...)`, `rk4(...)`, and `solve_fixed_step(...)` return `ODEResult(t, y)`
+histories including the initial state. `velocity_verlet(...)` returns
+`VerletResult(t, q, v)` for separable second-order systems with acceleration
+callback `a(q, t)`. The method page is [](../10-theory/ode.md).
 
 ### `jaxstro.numerics.special`
 

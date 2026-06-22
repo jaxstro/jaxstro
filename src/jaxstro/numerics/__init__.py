@@ -36,6 +36,8 @@ linear_algebra
     Small linear algebra convenience utilities.
 optimization
     Loss, line-search, and convergence helpers.
+ode
+    Fixed-step ODE integration helpers.
 rng
     PRNG key management helpers for JAX.
 """
@@ -47,6 +49,7 @@ from . import (
     integration,
     interpolation,
     linear_algebra,
+    ode,
     optimization,
     quadrature,
     regular_grid,
@@ -85,6 +88,18 @@ from .optimization import (
     pseudo_huber_loss,
     relative_step_norm,
     squared_loss,
+)
+from .ode import (
+    ODEResult,
+    VerletResult,
+    euler,
+    euler_step,
+    midpoint,
+    midpoint_step,
+    rk4,
+    rk4_step,
+    solve_fixed_step,
+    velocity_verlet,
 )
 from .quadrature import (
     clenshaw_curtis_nodes,
@@ -189,6 +204,7 @@ __all__ = [
     "checks",
     "linear_algebra",
     "optimization",
+    "ode",
     "weighted_lstsq",
     "qr_solve",
     "svd_solve",
@@ -207,6 +223,16 @@ __all__ = [
     "gradient_inf_norm",
     "relative_step_norm",
     "convergence_summary",
+    "ODEResult",
+    "VerletResult",
+    "euler_step",
+    "midpoint_step",
+    "rk4_step",
+    "euler",
+    "midpoint",
+    "rk4",
+    "solve_fixed_step",
+    "velocity_verlet",
     "rng",
 ]
 __version__ = "0.1.0"

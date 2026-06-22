@@ -1,9 +1,8 @@
 # jaxstro — status
 
-next: Core-capability expansion in progress (2026-06-22): optimization helper
-batch added with robust residual losses, objective summaries, fixed-step Armijo
-backtracking, and convergence diagnostics. Next action: implement fixed-step
-ODE helpers under strict TDD.
+next: Core-capability expansion in progress (2026-06-22): optimization and
+fixed-step ODE batches added with focused unit and FD-vs-AD validation. Next
+action: implement LinearOperator helpers under strict TDD.
 
 previous: Phase C MERGED + PUSHED to origin/main (2026-06-17, 25508f7, fast-forward; 447 tests green on
 merged main; feature branch deleted). NOT tagged — tag still held. Phase D remaining: (1) tag/version

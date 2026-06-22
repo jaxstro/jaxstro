@@ -45,7 +45,7 @@ stellar-model policy, and data packages own their archive-specific schemas.
 - [x] **Optimization helpers, first slice.** Robust residual losses,
   objective summaries, fixed-iteration Armijo backtracking, and convergence
   diagnostics without becoming an optimizer stack.
-- [ ] **ODE helpers, first slice.** Fixed-step Euler, midpoint/RK2, RK4, and
+- [x] **ODE helpers, first slice.** Fixed-step Euler, midpoint/RK2, RK4, and
   leapfrog or velocity-Verlet with scan-friendly APIs and analytic validation.
 - [ ] **Linear-operator helpers, first slice.** Dense, diagonal, scaled,
   sum/product, transpose/rmatvec, and block composition as small PyTrees.
