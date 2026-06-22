@@ -63,6 +63,7 @@ project:
         - file: 10-theory/special-functions.md
         - file: 10-theory/random.md
         - file: 10-theory/grids.md
+        - file: 10-theory/meshes.md
     - title: Architecture
       children:
         - file: 20-architecture/index.md

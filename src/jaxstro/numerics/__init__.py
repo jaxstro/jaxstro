@@ -40,6 +40,8 @@ checks
     Numerical validation helpers (finiteness, monotonicity, ranges).
 linear_algebra
     Small linear algebra convenience utilities.
+meshes
+    Structured 1D mesh and finite-volume helpers.
 optimization
     Loss, line-search, and convergence helpers.
 ode
@@ -59,6 +61,7 @@ from . import (
     integration,
     interpolation,
     linear_algebra,
+    meshes,
     ode,
     operators,
     optimization,
@@ -112,6 +115,17 @@ from .linear_algebra import (
     qr_solve,
     svd_solve,
     weighted_lstsq,
+)
+from .meshes import (
+    CellNeighbors1D,
+    FaceGeometry1D,
+    Mesh1D,
+    cell_neighbors_1d,
+    cell_to_face_average,
+    conservative_remap_1d,
+    divergence_1d,
+    face_geometry_1d,
+    structured_edges_1d,
 )
 from .optimization import (
     LineSearchResult,
@@ -289,6 +303,7 @@ __all__ = [
     "tensor_product_design_matrix",
     "checks",
     "linear_algebra",
+    "meshes",
     "optimization",
     "ode",
     "operators",
@@ -301,6 +316,15 @@ __all__ = [
     "is_positive_definite",
     "add_diagonal_jitter",
     "positive_definite_jitter",
+    "Mesh1D",
+    "FaceGeometry1D",
+    "CellNeighbors1D",
+    "structured_edges_1d",
+    "face_geometry_1d",
+    "cell_neighbors_1d",
+    "divergence_1d",
+    "cell_to_face_average",
+    "conservative_remap_1d",
     "LineSearchResult",
     "squared_loss",
     "huber_loss",

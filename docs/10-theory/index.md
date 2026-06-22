@@ -35,8 +35,8 @@ live in [](./special-functions.md). Generic distribution kernels live in
 matrix-free algebra helpers live in
 [](./operators.md). Autodiff product helpers live in [](./autodiff.md). Grid
 construction, conservative rebinning, and stratified uniforms are in
-[](./grids.md), while explicit PRNG streams and resampling helpers are in
-[](./random.md).
+[](./grids.md), structured 1D mesh helpers are in [](./meshes.md), and explicit
+PRNG streams and resampling helpers are in [](./random.md).
 :::
 
 (p1-differentiability)=
@@ -206,6 +206,9 @@ shows them in specific methods. Read on:
   [9](#p9-correctness), [10](#p10-vectorize)).
 - [](./grids.md) — log grids, conservative binning, and stratified uniforms
   (principles [7](#p7-quadrature), [9](#p9-correctness), [10](#p10-vectorize)).
+- [](./meshes.md) — structured 1D cell/face geometry, finite-volume stencils,
+  and conservative cell-average remapping (principles [7](#p7-quadrature),
+  [9](#p9-correctness), [10](#p10-vectorize)).
 
 Then map principles to call signatures in [](../40-api/index.md), and the design
 *choices* behind them in [](../30-decisions/index.md).

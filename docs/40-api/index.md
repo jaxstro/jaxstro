@@ -52,7 +52,8 @@ utility. There is no private or experimental tier at release.
     integration (incl. `cumulative_trapz` + quadrature factory + `newton_ppf`),
     B-spline basis/evaluation, checks, compensated summation, linear algebra,
     autodiff products, distribution kernels, optimization helpers, fixed-step
-    ODE helpers, linear operators, RNG/key-stream helpers, sampling.
+    ODE helpers, linear operators, structured meshes, RNG/key-stream helpers,
+    sampling.
 * - `jaxstro.spatial`
   - Morton (Z-order) encoding/decoding, grid binning, neighbor-candidate gathering.
 * - `jaxstro.params`
@@ -146,6 +147,15 @@ grids; `bin_centers(...)` and `geometric_bin_centers(...)` compute arithmetic or
 geometric centers; `conservative_rebin(...)` redistributes integrated bin totals
 onto new edges while preserving total overlap. The method page is
 [](../10-theory/grids.md).
+
+### `jaxstro.numerics.meshes`
+
+`structured_edges_1d(...)`, `Mesh1D(...)`, `face_geometry_1d(...)`, and
+`cell_neighbors_1d(...)` cover structured 1D mesh geometry.
+`divergence_1d(...)` and `cell_to_face_average(...)` provide small finite-volume
+stencil helpers. `conservative_remap_1d(...)` remaps cell averages while
+preserving integrated totals over the overlapping domain. The method page is
+[](../10-theory/meshes.md).
 
 ### `jaxstro.numerics.integration`
 

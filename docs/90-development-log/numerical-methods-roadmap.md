@@ -59,7 +59,7 @@ stellar-model policy, and data packages own their archive-specific schemas.
   snapshots, method manifests, and deterministic JSON/Markdown rendering.
 - [x] **Random helpers, first slice.** Explicit key streams, resampling
   methods, seed manifests, and shape-stable APIs.
-- [ ] **Structured 1D mesh helpers, first slice.** Cell centers/volumes,
+- [x] **Structured 1D mesh helpers, first slice.** Cell centers/volumes,
   face geometry, finite-volume stencils, and conservative remap.
 
 ## Acceptance Standard

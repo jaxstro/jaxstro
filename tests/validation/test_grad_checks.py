@@ -41,6 +41,7 @@ from jaxstro.numerics import (
     integration,
     interpolation,
     linear_algebra,
+    meshes,
     ode,
     operators,
     optimization,
@@ -244,6 +245,17 @@ class TestGridUtilityGradChecks:
         assert_grad_matches(
             lambda values: jnp.sum(
                 grids.conservative_rebin(old_edges, values, new_edges) ** 2
+            ),
+            values0,
+        )
+
+    def test_mesh_conservative_remap_wrt_cell_averages(self):
+        old_edges = jnp.array([0.0, 1.0, 2.0])
+        new_edges = jnp.array([0.0, 0.5, 1.5, 2.0])
+        values0 = jnp.array([1.0, 3.0])
+        assert_grad_matches(
+            lambda values: jnp.sum(
+                meshes.conservative_remap_1d(old_edges, values, new_edges) ** 2
             ),
             values0,
         )
