@@ -39,6 +39,7 @@ from jaxstro.numerics import (
     linear_algebra,
     regular_grid,
     rootfinding,
+    special,
     splines,
     stats,
 )
@@ -109,6 +110,36 @@ class TestStatsGradChecks:
         sigma = jnp.array([1.0, 0.8, 1.2])
         assert_grad_matches(lambda v: jnp.sum(stats.gaussian_logpdf(v, mu, sigma)), x)
         assert_grad_matches(lambda m: jnp.sum(stats.gaussian_logpdf(x, m, sigma)), mu)
+
+
+# =============================================================================
+# special functions
+# =============================================================================
+class TestSpecialGradChecks:
+    def test_planck_lambda_wrt_temperature(self):
+        wavelength_cm = jnp.array([1e-4, 2e-4, 5e-4])
+        temperature0 = jnp.asarray(5772.0)
+        assert_grad_matches(
+            lambda temp: jnp.sum(special.planck_lambda_cgs(wavelength_cm, temp)),
+            temperature0,
+            eps=1e-3,
+            atol=1e-1,
+            rtol=1e-5,
+        )
+
+    def test_log_normalize_wrt_log_weights(self):
+        log_weights0 = jnp.array([-2.0, 0.0, 1.0])
+        assert_grad_matches(
+            lambda logw: jnp.sum(special.log_normalize(logw) ** 2),
+            log_weights0,
+        )
+
+    def test_legendre_basis_wrt_x(self):
+        x0 = jnp.array([-0.4, 0.2, 0.7])
+        assert_grad_matches(
+            lambda x: jnp.sum(special.legendre_basis(x, degree=4)),
+            x0,
+        )
 
 
 # =============================================================================

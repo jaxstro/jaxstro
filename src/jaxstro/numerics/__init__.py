@@ -22,6 +22,8 @@ quadrature
     Gaussian quadrature factory (Gauss-Legendre, Gauss-Hermite, Hermite basis).
 regular_grid
     Static-rank regular-grid interpolation helpers.
+special
+    Stable special-function kernels and polynomial bases.
 sampling
     Differentiable inverse-CDF (PPF) sampling primitives.
 splines
@@ -45,6 +47,7 @@ from . import (
     rng,
     rootfinding,
     sampling,
+    special,
     splines,
     stats,
 )
@@ -75,6 +78,17 @@ from .rootfinding import (
     newton_ppf,
 )
 from .sampling import inverse_cdf_draw
+from .special import (
+    chebyshev_t_basis,
+    laguerre_basis,
+    legendre_basis,
+    log_normalize,
+    log_planck_lambda_cgs,
+    log_planck_nu_cgs,
+    normalize_log_weights,
+    planck_lambda_cgs,
+    planck_nu_cgs,
+)
 from .splines import (
     BSpline1D,
     bspline_basis,
@@ -111,6 +125,16 @@ __all__ = [
     "trilinear_interp",
     "sampling",
     "inverse_cdf_draw",
+    "special",
+    "planck_lambda_cgs",
+    "log_planck_lambda_cgs",
+    "planck_nu_cgs",
+    "log_planck_nu_cgs",
+    "log_normalize",
+    "normalize_log_weights",
+    "legendre_basis",
+    "chebyshev_t_basis",
+    "laguerre_basis",
     "splines",
     "BSpline1D",
     "bspline_basis",

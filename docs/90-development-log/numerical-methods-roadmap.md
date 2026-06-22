@@ -34,7 +34,7 @@ stellar-model policy, and data packages own their archive-specific schemas.
   independent solves, and monotone inverse interpolation for CDF-like tables.
 - [x] **Linear algebra primitives.** Weighted least squares, QR/SVD solve
   wrappers, covariance/correlation helpers, and positive-definite jitter tools.
-- [ ] **Astro-relevant special functions.** Stable Planck kernels, normalized
+- [x] **Astro-relevant special functions.** Stable Planck kernels, normalized
   log-weight helpers, and orthogonal polynomial bases without owning downstream
   domain semantics.
 - [ ] **Sampling and grid utilities.** Log grids, geometric bin centers/edges,

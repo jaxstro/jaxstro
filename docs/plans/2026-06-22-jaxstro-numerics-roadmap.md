@@ -194,6 +194,9 @@ utilities for small dense matrices.
 
 **Goal:** Provide generic mathematical kernels often needed in astronomy without owning domain interpretation.
 
+**Status:** Implemented: explicit-CGS Planck radiance kernels and log kernels,
+normalized log-weight helpers, and Legendre/Chebyshev/Laguerre basis evaluators.
+
 **Files:**
 - Create: `src/jaxstro/numerics/special.py`
 - Test: `tests/unit/test_special.py`
@@ -206,6 +209,10 @@ utilities for small dense matrices.
 2. Add normalized log-weight helpers.
 3. Add orthogonal polynomial bases: Legendre, Chebyshev, Laguerre.
 4. Consider spherical Bessel functions only if downstream requirements appear.
+
+**Deferrals:**
+- Spherical Bessel functions until a downstream package supplies a concrete
+  normalization and stability contract.
 
 ## Chunk 9: Sampling And Grid Utilities
 

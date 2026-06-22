@@ -27,6 +27,7 @@ to a row here.
 | B-spline basis, evaluation, derivatives, and fixed-knot fitting preserve local-basis invariants | Exact synthetic identities and FD-vs-AD checks | Partition of unity, nonnegativity, local support, Bernstein cubic, degree-1 parity with `interp1d`, analytic derivatives, least-squares recovery, PyTree/JAX transforms | `tests/unit/test_splines.py`, `tests/validation/test_grad_checks.py` |
 | Fixed-node quadrature and cumulative Simpson preserve their exactness contracts | Exact polynomial/moment identities and FD-vs-AD checks | Gauss-Legendre, Gauss-Laguerre, Gauss-Hermite, Clenshaw-Curtis, Hermite coefficients, cumulative Simpson panel sums | `tests/unit/test_quadrature.py`, `tests/unit/test_numerics.py`, `tests/validation/test_grad_checks.py` |
 | Dense linear algebra helpers expose stable contracts for small fits and diagnostics | Exact synthetic identities and FD-vs-AD checks away from rank/cutoff boundaries | Weighted least squares, QR/SVD solves, covariance/correlation guards, positive-definite jitter search | `tests/unit/test_linear_algebra.py`, `tests/validation/test_grad_checks.py` |
+| Special-function kernels keep unit and normalization contracts explicit | Direct formula parity, limiting-case checks, recurrence identities, and FD-vs-AD checks | CGS Planck functions and log kernels, normalized log weights, Legendre/Chebyshev/Laguerre bases | `tests/unit/test_special.py`, `tests/validation/test_grad_checks.py` |
 | FD-vs-AD audits classify gradient contracts conservatively | Existing audit tolerances | Smooth, known-zero, blocked, surrogate, and validation-only cases | `tests/integration/test_grad_audit.py` |
 | Spatial candidate gathering excludes self and preserves exact-kNN recall when stencil/capacity settings make recall possible | Exact set containment for small clouds | Regular, boundary, and clustered cases | `tests/unit/test_spatial.py` |
 | Atmosphere data indexing does not vendor raw PHOENIX data | Fixture size guard and parser-only tests | Synthetic tiny NewEra-like files only | `tests/unit/test_atmospheres.py` |
@@ -53,6 +54,7 @@ uv run pytest tests/unit/test_splines.py tests/validation/test_grad_checks.py
 uv run pytest tests/unit/test_quadrature.py tests/unit/test_numerics.py tests/validation/test_grad_checks.py
 uv run pytest tests/unit/test_numerics.py tests/validation/test_grad_checks.py
 uv run pytest tests/unit/test_linear_algebra.py tests/validation/test_grad_checks.py
+uv run pytest tests/unit/test_special.py tests/validation/test_grad_checks.py
 uv run --extra data pytest tests/unit/test_atmospheres*.py tests/unit/test_*conversion_script.py
 uv run --extra data pytest tests/validation/test_atmospheres_local_artifacts.py
 uv run pytest tests/validation/test_atmospheres_spectra.py

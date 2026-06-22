@@ -1,10 +1,9 @@
 # jaxstro — status
 
-next: Linear algebra primitives batch implemented (2026-06-22):
-`jaxstro.numerics` adds weighted least squares, QR/SVD solve wrappers,
-covariance/correlation helpers, and positive-definite jitter utilities with
-validation coverage. Next action: continue to Chunk 8 special functions after
-local gates.
+next: Special-functions batch implemented (2026-06-22): `jaxstro.numerics`
+adds explicit-CGS Planck radiance kernels, stable normalized log-weight helpers,
+and Legendre/Chebyshev/Laguerre polynomial bases with validation coverage. Next
+action: continue to Chunk 9 sampling and grid utilities after local gates.
 
 previous: Phase C MERGED + PUSHED to origin/main (2026-06-17, 25508f7, fast-forward; 447 tests green on
 merged main; feature branch deleted). NOT tagged — tag still held. Phase D remaining: (1) tag/version

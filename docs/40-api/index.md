@@ -164,6 +164,15 @@ solve policies; `covariance_matrix(...)`, `correlation_from_covariance(...)`, an
 `positive_definite_jitter(...)` cover small dense positive-definite diagnostics.
 The method page is [](../10-theory/linear-algebra.md).
 
+### `jaxstro.numerics.special`
+
+`planck_lambda_cgs(...)`, `log_planck_lambda_cgs(...)`, `planck_nu_cgs(...)`, and
+`log_planck_nu_cgs(...)` provide explicit-CGS Planck radiance kernels.
+`log_normalize(...)` and `normalize_log_weights(...)` handle stable log-weight
+normalization. `legendre_basis(...)`, `chebyshev_t_basis(...)`, and
+`laguerre_basis(...)` evaluate orthogonal polynomial bases with the degree axis
+last. The method page is [](../10-theory/special-functions.md).
+
 :::{note} Per-symbol reference pages are planned
 A complete, auto-generated per-module symbol reference (signatures, parameters,
 source links) is planned. Until then, the docstrings are authoritative — read them

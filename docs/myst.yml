@@ -53,6 +53,7 @@ project:
         - file: 10-theory/regular-grid.md
         - file: 10-theory/bsplines.md
         - file: 10-theory/linear-algebra.md
+        - file: 10-theory/special-functions.md
     - title: Architecture
       children:
         - file: 20-architecture/index.md

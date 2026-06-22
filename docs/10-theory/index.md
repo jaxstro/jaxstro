@@ -26,7 +26,8 @@ gradient killer) — or go straight to the method pages:
 [](./rootfinding.md), [](./cumulative-trapz.md), [](./quadrature.md),
 [](./interpolation.md), [](./regular-grid.md), and [](./bsplines.md).
 The dense helper layer for small fits and covariance diagnostics is
-[](./linear-algebra.md).
+[](./linear-algebra.md), and generic special-function kernels live in
+[](./special-functions.md).
 :::
 
 (p1-differentiability)=
@@ -170,6 +171,9 @@ shows them in specific methods. Read on:
 - [](./linear-algebra.md) — weighted fits, solve wrappers, covariance helpers,
   and positive-definite jitter for small dense problems (principles
   [3](#p3-guard-singularities), [8](#p8-precision), [9](#p9-correctness)).
+- [](./special-functions.md) — stable Planck kernels, normalized log weights,
+  and orthogonal polynomial bases (principles [3](#p3-guard-singularities),
+  [5](#p5-floating-point), [9](#p9-correctness)).
 
 Then map principles to call signatures in [](../40-api/index.md), and the design
 *choices* behind them in [](../30-decisions/index.md).
