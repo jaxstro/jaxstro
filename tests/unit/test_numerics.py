@@ -301,6 +301,134 @@ class TestBisect:
         assert jnp.isfinite(g)
 
 
+class TestBracketExpand:
+    """Tests for bracket expansion around an initial point."""
+
+    def test_finds_sign_change_with_static_expansion_count(self):
+        lo, hi, found = rootfinding.bracket_expand(
+            lambda x: x**2 - 4.0,
+            x0=0.0,
+            step=0.25,
+            growth=2.0,
+            max_steps=6,
+        )
+        assert bool(found)
+        assert lo <= -2.0
+        assert hi >= 2.0
+        assert rootfinding.bisect(lambda x: x**2 - 4.0, lo, hi) == pytest.approx(-2.0)
+
+    def test_reports_missing_bracket_without_throwing(self):
+        lo, hi, found = rootfinding.bracket_expand(
+            lambda x: x**2 + 1.0,
+            x0=0.0,
+            step=0.5,
+            growth=2.0,
+            max_steps=4,
+        )
+        assert not bool(found)
+        assert jnp.isfinite(lo)
+        assert jnp.isfinite(hi)
+
+    def test_jit_and_vmap_compatible(self):
+        @jax.jit
+        def solve_many(x0):
+            return jax.vmap(
+                lambda guess: rootfinding.bracket_expand(
+                    lambda x: x - 3.0,
+                    guess,
+                    step=0.5,
+                    growth=2.0,
+                    max_steps=5,
+                )
+            )(x0)
+
+        lo, hi, found = solve_many(jnp.array([0.0, 2.5, 5.0]))
+        assert jnp.all(found)
+        assert jnp.all(lo <= 3.0)
+        assert jnp.all(hi >= 3.0)
+
+    def test_rejects_invalid_static_controls(self):
+        with pytest.raises(ValueError, match="max_steps"):
+            rootfinding.bracket_expand(lambda x: x, 0.0, max_steps=0)
+        with pytest.raises(ValueError, match="step"):
+            rootfinding.bracket_expand(lambda x: x, 0.0, step=0.0)
+        with pytest.raises(ValueError, match="growth"):
+            rootfinding.bracket_expand(lambda x: x, 0.0, growth=1.0)
+
+
+class TestBisectMany:
+    """Tests for explicit vectorized independent bisection solves."""
+
+    def test_solves_independent_brackets(self):
+        targets = jnp.array([2.0, 3.0, 5.0])
+        roots = rootfinding.bisect_many(
+            lambda x: x**2 - targets,
+            jnp.zeros_like(targets),
+            jnp.full_like(targets, 3.0),
+            max_steps=60,
+        )
+        assert jnp.allclose(roots, jnp.sqrt(targets), atol=1e-10)
+
+    def test_jit_compatible(self):
+        @jax.jit
+        def solve(targets):
+            return rootfinding.bisect_many(
+                lambda x: x**2 - targets,
+                jnp.zeros_like(targets),
+                jnp.full_like(targets, 4.0),
+            )
+
+        targets = jnp.array([1.0, 4.0, 9.0])
+        assert jnp.allclose(solve(targets), jnp.sqrt(targets), atol=1e-7)
+
+
+class TestMonotoneInverseInterp:
+    """Tests for inverse interpolation of monotone tables."""
+
+    def test_inverts_piecewise_linear_monotone_table(self):
+        x = jnp.array([0.0, 1.0, 2.0, 4.0])
+        y = jnp.array([0.0, 0.2, 0.8, 1.0])
+        y_new = jnp.array([0.1, 0.5, 0.9])
+        result = rootfinding.monotone_inverse_interp(x, y, y_new)
+        expected = jnp.array([0.5, 1.5, 3.0])
+        assert jnp.allclose(result, expected)
+
+    def test_clamps_queries_outside_monotone_range(self):
+        x = jnp.array([2.0, 4.0, 8.0])
+        y = jnp.array([0.0, 0.5, 1.0])
+        result = rootfinding.monotone_inverse_interp(x, y, jnp.array([-0.1, 0.25, 1.2]))
+        assert jnp.allclose(result, jnp.array([2.0, 3.0, 8.0]))
+
+    def test_jit_vmap_and_grad_compatible(self):
+        x = jnp.array([0.0, 1.0, 3.0])
+        y = jnp.array([0.0, 0.25, 1.0])
+
+        @jax.jit
+        def evaluate(q):
+            return rootfinding.monotone_inverse_interp(x, y, q)
+
+        queries = jnp.array([0.1, 0.5, 0.9])
+        vmapped = jax.vmap(lambda q: rootfinding.monotone_inverse_interp(x, y, q))(
+            queries
+        )
+        assert jnp.allclose(evaluate(queries), vmapped)
+
+        grad = jax.grad(lambda q: rootfinding.monotone_inverse_interp(x, y, q))(
+            jnp.array(0.5)
+        )
+        assert jnp.isfinite(grad)
+
+    def test_rejects_invalid_tables_eagerly(self):
+        with pytest.raises(ValueError, match="same length"):
+            rootfinding.monotone_inverse_interp(jnp.arange(3.0), jnp.arange(4.0), 0.5)
+        with pytest.raises(ValueError, match="strictly increasing"):
+            rootfinding.monotone_inverse_interp(
+                jnp.array([0.0, 1.0, 2.0]),
+                jnp.array([0.0, 0.5, 0.5]),
+                0.2,
+            )
+
+
 class TestNewton:
     """Tests for newton rootfinding (auto-grad version)."""
 

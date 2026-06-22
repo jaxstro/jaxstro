@@ -343,6 +343,15 @@ class TestRootfindingGradChecks:
         c0 = jnp.asarray(2.0)
         assert_grad_matches(root, c0, atol=1e-6, rtol=1e-5)
 
+    def test_monotone_inverse_interp_wrt_query(self):
+        x = jnp.array([0.0, 1.0, 2.5, 4.0])
+        y = jnp.array([0.0, 0.25, 0.75, 1.0])
+        query0 = jnp.array([0.1, 0.4, 0.9])
+        assert_grad_matches(
+            lambda q: jnp.sum(rootfinding.monotone_inverse_interp(x, y, q)),
+            query0,
+        )
+
 
 # =============================================================================
 # compensated

@@ -144,6 +144,10 @@ contract.
 
 **Goal:** Fill gaps around bracket discovery and monotone inverse interpolation.
 
+**Status:** Implemented: `bracket_expand(...)`, `bisect_many(...)`, and
+`monotone_inverse_interp(...)`, with explicit docs separating forward bracketing
+from differentiable Newton-style solves.
+
 **Files:**
 - Modify: `src/jaxstro/numerics/rootfinding.py`
 - Test: `tests/unit/test_rootfinding.py`
@@ -156,6 +160,10 @@ contract.
 2. Add vectorized root solving over independent brackets.
 3. Add monotone inverse interpolation for table-defined CDF-like functions.
 4. Document AD policy for Brent-like methods before implementing any hybrid branchy solver.
+
+**Deferrals:**
+- Brent-like hybrid solvers until they have an explicit value-only or custom-AD
+  policy.
 
 ## Chunk 7: Linear Algebra Primitives
 

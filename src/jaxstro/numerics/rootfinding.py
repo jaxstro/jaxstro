@@ -22,14 +22,71 @@ Usage:
     jax.grad(lambda a: solve(a, 2.0))(1.0)
 """
 
-from typing import Optional, Union
+from typing import Callable, Optional, Union
 
 import jax
 import jax.lax as lax
 import jax.numpy as jnp
 from jaxtyping import Array, Float
 
+from .checks import try_concrete_bool
 from .types import ScalarFn
+
+
+def _raise_if_concrete_false(predicate, message: str) -> None:
+    """Raise eagerly when a validation predicate is concrete and false."""
+    result = try_concrete_bool(jnp.asarray(predicate))
+    if result is False:
+        raise ValueError(message)
+
+
+def bracket_expand(
+    f: ScalarFn,
+    x0: Union[float, Float[Array, "..."]],
+    *,
+    step: Union[float, Float[Array, "..."]] = 1.0,
+    growth: Union[float, Float[Array, "..."]] = 2.0,
+    max_steps: int = 32,
+) -> tuple[Float[Array, "..."], Float[Array, "..."], Array]:
+    """
+    Expand a symmetric bracket around ``x0`` until ``f`` changes sign.
+
+    The expansion uses a fixed ``max_steps`` ``lax.scan`` so it is compatible
+    with ``jit`` and ``vmap``. The returned ``found`` mask is ``True`` where
+    a sign-changing bracket was found. If no bracket is found, ``lo`` and
+    ``hi`` are the final expanded endpoints.
+    """
+    if max_steps < 1:
+        raise ValueError("max_steps must be at least 1")
+
+    x0 = jnp.asarray(x0)
+    step = jnp.asarray(step)
+    growth = jnp.asarray(growth)
+    _raise_if_concrete_false(jnp.all(step > 0.0), "step must be positive")
+    _raise_if_concrete_false(jnp.all(growth > 1.0), "growth must be greater than 1")
+
+    scan_dtype = jnp.result_type(x0, step, growth, jnp.float32)
+    step_ids = jnp.arange(max_steps, dtype=scan_dtype)
+    f0 = f(x0)
+    init_found = jnp.asarray(f0 == 0.0, dtype=bool)
+    init = (x0, x0, init_found)
+
+    def scan_step(carry, k):
+        lo, hi, found = carry
+        radius = step * jnp.power(growth, k)
+        cand_lo = x0 - radius
+        cand_hi = x0 + radius
+        f_lo = f(cand_lo)
+        f_hi = f(cand_hi)
+        has_bracket = jnp.sign(f_lo) * jnp.sign(f_hi) <= 0.0
+
+        lo_new = jnp.where(found, lo, cand_lo)
+        hi_new = jnp.where(found, hi, cand_hi)
+        found_new = found | has_bracket
+        return (lo_new, hi_new, found_new), None
+
+    (lo, hi, found), _ = lax.scan(scan_step, init, step_ids)
+    return lo, hi, found
 
 
 def bisect(
@@ -93,6 +150,22 @@ def bisect(
     init_carry = (a, b, fa, fb)
     (a_f, b_f, _, _), _ = lax.scan(step, init_carry, None, length=max_steps)
     return 0.5 * (a_f + b_f)
+
+
+def bisect_many(
+    f: Callable[[Float[Array, "..."]], Float[Array, "..."]],
+    a: Union[float, Float[Array, "..."]],
+    b: Union[float, Float[Array, "..."]],
+    max_steps: int = 50,
+) -> Float[Array, "..."]:
+    """
+    Solve independent bisection brackets with array-shaped endpoints.
+
+    This is an explicit vectorized wrapper around :func:`bisect`. The callable
+    ``f`` should accept an array of candidate roots and return an array of
+    residuals with the same broadcast shape.
+    """
+    return bisect(f, a, b, max_steps=max_steps)
 
 
 def newton(
@@ -322,7 +395,59 @@ def newton_ppf(
     return x_f
 
 
+def monotone_inverse_interp(
+    x: Float[Array, " n"],
+    y: Float[Array, " n"],
+    y_new: Union[float, Float[Array, "..."]],
+) -> Float[Array, "..."]:
+    """
+    Invert a strictly monotone tabulated function by linear interpolation.
+
+    ``x`` and ``y`` define a one-dimensional table with strictly increasing
+    coordinates and values. Queries outside ``[y[0], y[-1]]`` clamp to the
+    corresponding endpoint of ``x``.
+    """
+    x = jnp.asarray(x)
+    y = jnp.asarray(y)
+    y_new = jnp.asarray(y_new)
+
+    if x.ndim != 1 or y.ndim != 1:
+        raise ValueError("x and y must be 1D arrays")
+    if x.shape[0] != y.shape[0]:
+        raise ValueError("x and y must have the same length")
+    if x.shape[0] < 2:
+        raise ValueError("x and y must contain at least two samples")
+
+    _raise_if_concrete_false(
+        jnp.all(jnp.diff(x) > 0.0), "x must be strictly increasing"
+    )
+    _raise_if_concrete_false(
+        jnp.all(jnp.diff(y) > 0.0), "y must be strictly increasing"
+    )
+
+    idx = jnp.searchsorted(y, y_new, side="right") - 1
+    idx = jnp.clip(idx, 0, y.shape[0] - 2)
+
+    x0 = x[idx]
+    x1 = x[idx + 1]
+    y0 = y[idx]
+    y1 = y[idx + 1]
+    denom = jnp.where(y1 == y0, 1.0, y1 - y0)
+    t = (y_new - y0) / denom
+    out = x0 + t * (x1 - x0)
+    return jnp.where(y_new <= y[0], x[0], jnp.where(y_new >= y[-1], x[-1], out))
+
+
 # Keep newton_1d as alias for backwards compatibility
 newton_1d = newton_with_grad
 
-__all__ = ["bisect", "newton", "newton_with_grad", "newton_1d", "newton_ppf"]
+__all__ = [
+    "bracket_expand",
+    "bisect",
+    "bisect_many",
+    "newton",
+    "newton_with_grad",
+    "newton_1d",
+    "newton_ppf",
+    "monotone_inverse_interp",
+]

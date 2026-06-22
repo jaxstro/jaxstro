@@ -30,7 +30,7 @@ stellar-model policy, and data packages own their archive-specific schemas.
 - [x] **Quadrature expansion.** Additional fixed-node rules such as
   Gauss-Laguerre and Clenshaw-Curtis, plus cumulative Simpson variants with
   explicit shape contracts.
-- [ ] **Root-finding and monotone inversion.** Bracket discovery, vectorized
+- [x] **Root-finding and monotone inversion.** Bracket discovery, vectorized
   independent solves, and monotone inverse interpolation for CDF-like tables.
 - [ ] **Linear algebra primitives.** Weighted least squares, QR/SVD solve
   wrappers, covariance/correlation helpers, and positive-definite jitter tools.

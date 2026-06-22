@@ -105,7 +105,8 @@ Provenance discipline — every constant cites its authority — is principle
 
 ### `jaxstro.numerics.rootfinding`
 
-`bisect`, `newton`, `newton_with_grad`, `newton_ppf`. Behavior, the differentiability
+`bracket_expand`, `bisect`, `bisect_many`, `newton`, `newton_with_grad`,
+`newton_ppf`, and `monotone_inverse_interp`. Behavior, the differentiability
 caveats, and when to use each are in [](../10-theory/rootfinding.md).
 
 ### `jaxstro.numerics.interpolation`

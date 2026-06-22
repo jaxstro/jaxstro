@@ -57,7 +57,12 @@ from .quadrature import (
     hermite_e_basis,
 )
 from .regular_grid import bilinear_interp, regular_grid_interp, trilinear_interp
-from .rootfinding import newton_ppf
+from .rootfinding import (
+    bisect_many,
+    bracket_expand,
+    monotone_inverse_interp,
+    newton_ppf,
+)
 from .sampling import inverse_cdf_draw
 from .splines import (
     BSpline1D,
@@ -77,7 +82,10 @@ __all__ = [
     "stats",
     "interpolation",
     "rootfinding",
+    "bracket_expand",
+    "bisect_many",
     "newton_ppf",
+    "monotone_inverse_interp",
     "integration",
     "quadrature",
     "gauss_legendre_nodes",
