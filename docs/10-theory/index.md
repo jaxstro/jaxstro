@@ -33,8 +33,9 @@ fixed-step ODE helpers live in [](./ode.md), and generic special-function kernel
 live in [](./special-functions.md). Generic distribution kernels live in
 [](./distributions.md), vector geometry lives in [](./geometry.md), and
 matrix-free algebra helpers live in
-[](./operators.md). Grid construction, conservative rebinning, and stratified
-uniforms are in [](./grids.md).
+[](./operators.md). Autodiff product helpers live in [](./autodiff.md). Grid
+construction, conservative rebinning, and stratified uniforms are in
+[](./grids.md).
 :::
 
 (p1-differentiability)=
@@ -178,6 +179,9 @@ shows them in specific methods. Read on:
 - [](./linear-algebra.md) — weighted fits, solve wrappers, covariance helpers,
   and positive-definite jitter for small dense problems (principles
   [3](#p3-guard-singularities), [8](#p8-precision), [9](#p9-correctness)).
+- [](./autodiff.md) — JVP, VJP, HVP, Gauss-Newton, and empirical Fisher-style
+  products as named JAX-native helpers (principles [1](#p1-differentiability),
+  [9](#p9-correctness), [10](#p10-vectorize)).
 - [](./geometry.md) — vector normalization, angular distances, rotations,
   quaternions, rigid transforms, and explicit composition helpers (principles
   [1](#p1-differentiability), [9](#p9-correctness), [10](#p10-vectorize)).

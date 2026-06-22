@@ -8,6 +8,8 @@ domain (N-body, stellar evolution, hydro, etc.).
 
 Submodules
 ----------
+autodiff
+    JVP, VJP, HVP, and curvature-product helpers.
 compensated
     Compensated summation (Neumaier) and related helpers.
 distributions
@@ -47,6 +49,7 @@ rng
 """
 
 from . import (
+    autodiff,
     checks,
     compensated,
     distributions,
@@ -65,6 +68,15 @@ from . import (
     special,
     splines,
     stats,
+)
+from .autodiff import (
+    empirical_fisher_product,
+    gauss_newton_product,
+    hvp,
+    jacobian_vector_product,
+    jvp,
+    vector_jacobian_product,
+    vjp,
 )
 from .grids import (
     bin_centers,
@@ -183,6 +195,7 @@ from .types import Array, ScalarFn
 __all__ = [
     "Array",
     "ScalarFn",
+    "autodiff",
     "compensated",
     "distributions",
     "stats",
@@ -193,6 +206,13 @@ __all__ = [
     "newton_ppf",
     "monotone_inverse_interp",
     "integration",
+    "jvp",
+    "vjp",
+    "jacobian_vector_product",
+    "vector_jacobian_product",
+    "hvp",
+    "gauss_newton_product",
+    "empirical_fisher_product",
     "quadrature",
     "grids",
     "log_grid",

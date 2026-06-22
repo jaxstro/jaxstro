@@ -34,6 +34,7 @@ import pytest
 
 from jaxstro import geometry
 from jaxstro.numerics import (
+    autodiff,
     compensated,
     distributions,
     grids,
@@ -333,6 +334,21 @@ class TestGeometryGradChecks:
             lambda angle: jnp.sum(geometry.rotation_matrix(axis, angle) @ vector),
             jnp.array(0.3),
         )
+
+
+# =============================================================================
+# autodiff products
+# =============================================================================
+class TestAutodiffValidation:
+    def test_hvp_matches_finite_difference_of_gradient(self):
+        def f(x):
+            return jnp.sum(jnp.sin(x) + 0.25 * x**4)
+
+        x = jnp.array([0.2, -0.5, 0.9])
+        v = jnp.array([1.0, -0.25, 0.5])
+        eps = 1e-5
+        fd = (jax.grad(f)(x + eps * v) - jax.grad(f)(x - eps * v)) / (2.0 * eps)
+        assert jnp.allclose(autodiff.hvp(f, x, v), fd, atol=1e-6, rtol=1e-5)
 
     def test_angular_distance_wrt_vector_away_from_degenerate_cases(self):
         fixed = jnp.array([0.0, 1.0, 0.0])

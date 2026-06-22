@@ -54,6 +54,7 @@ project:
         - file: 10-theory/regular-grid.md
         - file: 10-theory/bsplines.md
         - file: 10-theory/linear-algebra.md
+        - file: 10-theory/autodiff.md
         - file: 10-theory/geometry.md
         - file: 10-theory/distributions.md
         - file: 10-theory/optimization.md

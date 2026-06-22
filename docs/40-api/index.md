@@ -51,8 +51,8 @@ utility. There is no private or experimental tier at release.
   - Differentiable numerical utilities: stats, interpolation, root-finding,
     integration (incl. `cumulative_trapz` + quadrature factory + `newton_ppf`),
     B-spline basis/evaluation, checks, compensated summation, linear algebra,
-    distribution kernels, optimization helpers, fixed-step ODE helpers, linear
-    operators, RNG, sampling.
+    autodiff products, distribution kernels, optimization helpers, fixed-step
+    ODE helpers, linear operators, RNG, sampling.
 * - `jaxstro.spatial`
   - Morton (Z-order) encoding/decoding, grid binning, neighbor-candidate gathering.
 * - `jaxstro.params`
@@ -192,6 +192,13 @@ kernels. `lognormal_*`, `powerlaw_*`, and `truncated_normal_*` provide logpdf,
 CDF, and inverse-CDF helpers for positive lognormal, finite-support power-law,
 and truncated-normal families. The method page is
 [](../10-theory/distributions.md).
+
+### `jaxstro.numerics.autodiff`
+
+`jvp(...)`, `vjp(...)`, `jacobian_vector_product(...)`,
+`vector_jacobian_product(...)`, `hvp(...)`, `gauss_newton_product(...)`, and
+`empirical_fisher_product(...)` expose common derivative products as named
+helpers over JAX primitives. The method page is [](../10-theory/autodiff.md).
 
 ### `jaxstro.geometry`
 

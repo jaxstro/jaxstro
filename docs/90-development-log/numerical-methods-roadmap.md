@@ -53,7 +53,7 @@ stellar-model policy, and data packages own their archive-specific schemas.
   helpers for generic families and truncated variants.
 - [x] **Geometry helpers, first slice.** Vector normalization, angular
   distance, rotations, quaternions, rigid transforms, and composition helpers.
-- [ ] **Autodiff helpers, first slice.** JVP/VJP/HVP, Jacobian-vector,
+- [x] **Autodiff helpers, first slice.** JVP/VJP/HVP, Jacobian-vector,
   vector-Jacobian, Gauss-Newton, and generic Fisher-style products.
 - [ ] **Runtime provenance, first slice.** Artifact hashing, environment
   snapshots, method manifests, and deterministic JSON/Markdown rendering.
