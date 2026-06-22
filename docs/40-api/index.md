@@ -48,8 +48,8 @@ utility. There is no private or experimental tier at release.
   - Differentiable numerical utilities: stats, interpolation, root-finding,
     integration (incl. `cumulative_trapz` + quadrature factory + `newton_ppf`),
     B-spline basis/evaluation, checks, compensated summation, linear algebra,
-    optimization helpers, fixed-step ODE helpers, linear operators, RNG,
-    sampling.
+    distribution kernels, optimization helpers, fixed-step ODE helpers, linear
+    operators, RNG, sampling.
 * - `jaxstro.spatial`
   - Morton (Z-order) encoding/decoding, grid binning, neighbor-candidate gathering.
 * - `jaxstro.params`
@@ -181,6 +181,14 @@ solve policies; `covariance_matrix(...)`, `correlation_from_covariance(...)`, an
 `is_positive_definite(...)`, `add_diagonal_jitter(...)`, and
 `positive_definite_jitter(...)` cover small dense positive-definite diagnostics.
 The method page is [](../10-theory/linear-algebra.md).
+
+### `jaxstro.numerics.distributions`
+
+`normal_logpdf(...)`, `normal_cdf(...)`, and `normal_ppf(...)` cover normal
+kernels. `lognormal_*`, `powerlaw_*`, and `truncated_normal_*` provide logpdf,
+CDF, and inverse-CDF helpers for positive lognormal, finite-support power-law,
+and truncated-normal families. The method page is
+[](../10-theory/distributions.md).
 
 ### `jaxstro.numerics.optimization`
 

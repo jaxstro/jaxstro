@@ -49,7 +49,7 @@ stellar-model policy, and data packages own their archive-specific schemas.
   leapfrog or velocity-Verlet with scan-friendly APIs and analytic validation.
 - [x] **Linear-operator helpers, first slice.** Dense, diagonal, scaled,
   sum/product, transpose/rmatvec, and block composition as small PyTrees.
-- [ ] **Distribution kernels, first slice.** Stable logpdf/CDF/inverse-CDF
+- [x] **Distribution kernels, first slice.** Stable logpdf/CDF/inverse-CDF
   helpers for generic families and truncated variants.
 - [ ] **Geometry helpers, first slice.** Vector normalization, angular
   distance, rotations, quaternions, rigid transforms, and composition helpers.

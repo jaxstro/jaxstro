@@ -10,6 +10,8 @@ Submodules
 ----------
 compensated
     Compensated summation (Neumaier) and related helpers.
+distributions
+    Generic logpdf, CDF, and inverse-CDF kernels.
 stats
     Log/exp-stable scalar ops and simple log-likelihood pieces.
 interpolation
@@ -47,6 +49,7 @@ rng
 from . import (
     checks,
     compensated,
+    distributions,
     grids,
     integration,
     interpolation,
@@ -69,6 +72,20 @@ from .grids import (
     geometric_bin_centers,
     geometric_bin_edges,
     log_grid,
+)
+from .distributions import (
+    lognormal_cdf,
+    lognormal_logpdf,
+    lognormal_ppf,
+    normal_cdf,
+    normal_logpdf,
+    normal_ppf,
+    powerlaw_cdf,
+    powerlaw_logpdf,
+    powerlaw_ppf,
+    truncated_normal_cdf,
+    truncated_normal_logpdf,
+    truncated_normal_ppf,
 )
 from .linear_algebra import (
     add_diagonal_jitter,
@@ -167,6 +184,7 @@ __all__ = [
     "Array",
     "ScalarFn",
     "compensated",
+    "distributions",
     "stats",
     "interpolation",
     "rootfinding",
@@ -182,6 +200,18 @@ __all__ = [
     "bin_centers",
     "geometric_bin_centers",
     "conservative_rebin",
+    "normal_logpdf",
+    "normal_cdf",
+    "normal_ppf",
+    "lognormal_logpdf",
+    "lognormal_cdf",
+    "lognormal_ppf",
+    "powerlaw_logpdf",
+    "powerlaw_cdf",
+    "powerlaw_ppf",
+    "truncated_normal_logpdf",
+    "truncated_normal_cdf",
+    "truncated_normal_ppf",
     "gauss_legendre_nodes",
     "gauss_hermite_nodes",
     "gauss_laguerre_nodes",

@@ -34,6 +34,7 @@ import pytest
 
 from jaxstro.numerics import (
     compensated,
+    distributions,
     grids,
     integration,
     interpolation,
@@ -295,6 +296,43 @@ class TestOperatorGradChecks:
                 operators.DiagonalOperator(diagonal).matvec(x) ** 2
             ),
             diagonal0,
+        )
+
+
+# =============================================================================
+# distribution kernels
+# =============================================================================
+class TestDistributionGradChecks:
+    def test_normal_logpdf_wrt_x(self):
+        x0 = jnp.array([-0.5, 0.2, 1.1])
+        assert_grad_matches(lambda x: jnp.sum(distributions.normal_logpdf(x)), x0)
+
+    def test_lognormal_logpdf_wrt_positive_x(self):
+        x0 = jnp.array([0.4, 1.0, 2.5])
+        assert_grad_matches(lambda x: jnp.sum(distributions.lognormal_logpdf(x)), x0)
+
+    def test_powerlaw_logpdf_wrt_interior_x(self):
+        x0 = jnp.array([1.2, 1.8, 2.5])
+        assert_grad_matches(
+            lambda x: jnp.sum(
+                distributions.powerlaw_logpdf(x, alpha=1.2, xmin=1.0, xmax=3.0)
+            ),
+            x0,
+        )
+
+    def test_truncated_normal_logpdf_wrt_interior_x(self):
+        x0 = jnp.array([-0.5, 0.2, 1.5])
+        assert_grad_matches(
+            lambda x: jnp.sum(
+                distributions.truncated_normal_logpdf(
+                    x,
+                    loc=0.0,
+                    scale=1.0,
+                    low=-1.0,
+                    high=2.0,
+                )
+            ),
+            x0,
         )
 
     def test_velocity_verlet_final_position_wrt_initial_position(self):
