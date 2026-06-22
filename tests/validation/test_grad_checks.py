@@ -39,6 +39,7 @@ from jaxstro.numerics import (
     interpolation,
     linear_algebra,
     ode,
+    operators,
     optimization,
     regular_grid,
     rootfinding,
@@ -271,6 +272,29 @@ class TestODEGradChecks:
                 ode.rk4(rhs, y0=initial, t0=0.0, dt=0.05, num_steps=20).y[-1]
             ),
             y0,
+        )
+
+
+# =============================================================================
+# linear operators
+# =============================================================================
+class TestOperatorGradChecks:
+    def test_dense_operator_matvec_wrt_matrix(self):
+        matrix0 = jnp.array([[1.0, 2.0], [3.0, 4.0]])
+        x = jnp.array([0.5, -1.0])
+        assert_grad_matches(
+            lambda matrix: jnp.sum(operators.DenseOperator(matrix).matvec(x) ** 2),
+            matrix0,
+        )
+
+    def test_diagonal_operator_matvec_wrt_diagonal(self):
+        diagonal0 = jnp.array([1.0, -2.0, 3.0])
+        x = jnp.array([0.5, -1.0, 2.0])
+        assert_grad_matches(
+            lambda diagonal: jnp.sum(
+                operators.DiagonalOperator(diagonal).matvec(x) ** 2
+            ),
+            diagonal0,
         )
 
     def test_velocity_verlet_final_position_wrt_initial_position(self):

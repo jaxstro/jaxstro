@@ -48,7 +48,8 @@ utility. There is no private or experimental tier at release.
   - Differentiable numerical utilities: stats, interpolation, root-finding,
     integration (incl. `cumulative_trapz` + quadrature factory + `newton_ppf`),
     B-spline basis/evaluation, checks, compensated summation, linear algebra,
-    optimization helpers, fixed-step ODE helpers, RNG, sampling.
+    optimization helpers, fixed-step ODE helpers, linear operators, RNG,
+    sampling.
 * - `jaxstro.spatial`
   - Morton (Z-order) encoding/decoding, grid binning, neighbor-candidate gathering.
 * - `jaxstro.params`
@@ -200,6 +201,14 @@ updates for first-order systems with call signature `rhs(y, t)`. `euler(...)`,
 histories including the initial state. `velocity_verlet(...)` returns
 `VerletResult(t, q, v)` for separable second-order systems with acceleration
 callback `a(q, t)`. The method page is [](../10-theory/ode.md).
+
+### `jaxstro.numerics.operators`
+
+`DenseOperator(...)` and `DiagonalOperator(...)` are primitive PyTree operators
+with `matvec`, `rmatvec`, `shape`, and `to_dense` methods. `scale(...)`,
+`add(...)`, `compose(...)`, `transpose(...)`, and `block_diag(...)` build scaled,
+summed, product, transpose-view, and block-diagonal operators. The method page is
+[](../10-theory/operators.md).
 
 ### `jaxstro.numerics.special`
 

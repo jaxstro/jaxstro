@@ -30,8 +30,9 @@ gradient killer) — or go straight to the method pages:
 The dense helper layer for small fits and covariance diagnostics is
 [](./linear-algebra.md), objective helpers live in [](./optimization.md),
 fixed-step ODE helpers live in [](./ode.md), and generic special-function kernels
-live in [](./special-functions.md). Grid construction, conservative rebinning,
-and stratified uniforms are in [](./grids.md).
+live in [](./special-functions.md). Matrix-free algebra helpers live in
+[](./operators.md). Grid construction, conservative rebinning, and stratified
+uniforms are in [](./grids.md).
 :::
 
 (p1-differentiability)=
@@ -181,6 +182,9 @@ shows them in specific methods. Read on:
 - [](./ode.md) — fixed-step Euler, midpoint/RK2, RK4, and velocity-Verlet
   integration with scan-friendly gradient flow (principles
   [1](#p1-differentiability), [2](#p2-fixed-iteration), [10](#p10-vectorize)).
+- [](./operators.md) — dense, diagonal, scaled, summed, composed, transposed,
+  and block-diagonal linear operators as PyTrees (principles
+  [1](#p1-differentiability), [9](#p9-correctness), [10](#p10-vectorize)).
 - [](./special-functions.md) — stable Planck kernels, normalized log weights,
   and orthogonal polynomial bases (principles [3](#p3-guard-singularities),
   [5](#p5-floating-point), [9](#p9-correctness)).

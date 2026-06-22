@@ -38,6 +38,8 @@ optimization
     Loss, line-search, and convergence helpers.
 ode
     Fixed-step ODE integration helpers.
+operators
+    Small PyTree linear operators.
 rng
     PRNG key management helpers for JAX.
 """
@@ -50,6 +52,7 @@ from . import (
     interpolation,
     linear_algebra,
     ode,
+    operators,
     optimization,
     quadrature,
     regular_grid,
@@ -100,6 +103,21 @@ from .ode import (
     rk4_step,
     solve_fixed_step,
     velocity_verlet,
+)
+from .operators import (
+    BlockDiagonalOperator,
+    DenseOperator,
+    DiagonalOperator,
+    LinearOperator,
+    ProductOperator,
+    ScaledOperator,
+    SumOperator,
+    TransposeOperator,
+    add,
+    block_diag,
+    compose,
+    scale,
+    transpose,
 )
 from .quadrature import (
     clenshaw_curtis_nodes,
@@ -205,6 +223,7 @@ __all__ = [
     "linear_algebra",
     "optimization",
     "ode",
+    "operators",
     "weighted_lstsq",
     "qr_solve",
     "svd_solve",
@@ -233,6 +252,19 @@ __all__ = [
     "rk4",
     "solve_fixed_step",
     "velocity_verlet",
+    "LinearOperator",
+    "DenseOperator",
+    "DiagonalOperator",
+    "ScaledOperator",
+    "SumOperator",
+    "ProductOperator",
+    "TransposeOperator",
+    "BlockDiagonalOperator",
+    "scale",
+    "add",
+    "compose",
+    "transpose",
+    "block_diag",
     "rng",
 ]
 __version__ = "0.1.0"
