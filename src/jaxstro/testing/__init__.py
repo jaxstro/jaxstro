@@ -42,6 +42,15 @@ from jaxstro.testing.ratchet import (
     scan_module_numeric_literals,
     test_body_has_assert,
 )
+from jaxstro.testing.reports import (
+    EvidenceAnchor,
+    MethodEvidence,
+    NumericalTrustReport,
+    default_numerics_trust_report,
+    trust_report_to_dict,
+    trust_report_to_json,
+    trust_report_to_markdown,
+)
 
 __all__ = [
     "audit_entry_point",
@@ -72,4 +81,11 @@ __all__ = [
     "resolve_node_ids",
     "scan_module_numeric_literals",
     "test_body_has_assert",
+    "EvidenceAnchor",
+    "MethodEvidence",
+    "NumericalTrustReport",
+    "trust_report_to_dict",
+    "trust_report_to_json",
+    "trust_report_to_markdown",
+    "default_numerics_trust_report",
 ]

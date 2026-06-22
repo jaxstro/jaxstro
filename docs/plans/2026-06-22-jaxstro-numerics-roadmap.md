@@ -243,6 +243,10 @@ sampling.
 
 **Goal:** Make numerical method trust easier to audit without binding to a specific data product.
 
+**Status:** Implemented in `jaxstro.testing.reports`: frozen evidence dataclasses,
+deterministic JSON/Markdown renderers, and a default numerical-method trust
+report covering the implemented roadmap batches.
+
 **Files:**
 - Create: `src/jaxstro/provenance.py` or `src/jaxstro/testing/reports.py`
 - Test: `tests/unit/test_provenance.py`

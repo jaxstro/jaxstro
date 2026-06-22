@@ -40,7 +40,7 @@ stellar-model policy, and data packages own their archive-specific schemas.
 - [x] **Sampling and grid utilities.** Log grids, geometric bin centers/edges,
   conservative binning, stratified sampling, and carefully validated
   quasi-random sequences if they can be added without a dependency.
-- [ ] **Provenance and trust reports.** Deterministic JSON/Markdown summaries
+- [x] **Provenance and trust reports.** Deterministic JSON/Markdown summaries
   that connect numerical methods to their validation anchors.
 
 ## Acceptance Standard

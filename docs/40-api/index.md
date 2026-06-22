@@ -218,4 +218,8 @@ ownership boundary is in [](../20-architecture/spectra-data-architecture.md).
 The grad-audit engine classifies curated differentiability cases, while the
 finite-difference diagnostics expose reusable central-difference gradients,
 Jacobians, directional derivatives, and structured AD-vs-FD comparison reports.
-These helpers are intended for test suites and validation scripts.
+`EvidenceAnchor`, `MethodEvidence`, and `NumericalTrustReport` describe
+method-level evidence, and `trust_report_to_json(...)`,
+`trust_report_to_markdown(...)`, and `default_numerics_trust_report(...)` render
+deterministic trust summaries. These helpers are intended for test suites and
+validation scripts.
