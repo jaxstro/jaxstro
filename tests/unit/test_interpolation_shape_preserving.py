@@ -136,3 +136,80 @@ def test_shape_preserving_interpolation_rejects_invalid_inputs():
             jnp.array([0.0, 1.0]),
             jnp.asarray(0.5),
         )
+
+
+def test_natural_cubic_spline_matches_scipy_cubic_spline():
+    scipy_interpolate = pytest.importorskip("scipy.interpolate")
+    x = jnp.array([0.12, 0.27, 0.41, 0.63, 0.89, 1.35])
+    y = jnp.array([3.1, 2.4, 1.9, 1.2, 0.7, 0.4])
+    x_new = jnp.linspace(float(x[0]), float(x[-1]), 73)
+
+    coeffs = interpolation.natural_cubic_spline_coeffs(x, y)
+    result = interpolation.eval_cubic_spline(x, coeffs, x_new)
+    expected = scipy_interpolate.CubicSpline(
+        np.asarray(x),
+        np.asarray(y),
+        bc_type="natural",
+    )(np.asarray(x_new))
+
+    np.testing.assert_allclose(result, expected, atol=1e-11, rtol=1e-11)
+
+
+def test_natural_cubic_spline_coefficients_satisfy_natural_boundary_conditions():
+    x = jnp.array([0.0, 0.5, 1.5, 2.0])
+    y = jnp.array([0.0, 1.0, -0.25, 0.5])
+
+    a, b, c, d = interpolation.natural_cubic_spline_coeffs(x, y)
+    h = jnp.diff(x)
+    left_second = 2.0 * c[0]
+    right_second = 2.0 * c[-1] + 6.0 * d[-1] * h[-1]
+
+    np.testing.assert_allclose(a, y[:-1], atol=1e-12)
+    np.testing.assert_allclose(left_second, 0.0, atol=1e-12)
+    np.testing.assert_allclose(right_second, 0.0, atol=1e-12)
+    assert b.shape == c.shape == d.shape == (x.shape[0] - 1,)
+
+
+def test_eval_cubic_spline_clamps_outside_domain_to_endpoint_values():
+    x = jnp.array([0.0, 1.0, 2.0])
+    y = jnp.array([1.0, 3.0, 2.0])
+    coeffs = interpolation.natural_cubic_spline_coeffs(x, y)
+    x_new = jnp.array([-1.0, 0.5, 3.0])
+
+    result = interpolation.eval_cubic_spline(x, coeffs, x_new)
+
+    np.testing.assert_allclose(result[0], y[0], atol=1e-12)
+    np.testing.assert_allclose(result[-1], y[-1], atol=1e-12)
+
+
+def test_natural_cubic_spline_wrapper_is_pytree_and_jit_compatible():
+    x = jnp.array([0.0, 0.5, 1.0, 2.0])
+    y = jnp.array([0.0, 1.0, 0.5, 0.25])
+    spline = interpolation.NaturalCubicSpline1D(x=x, y=y)
+
+    @jax.jit
+    def call_spline(model, x_new):
+        return model(x_new)
+
+    result = call_spline(spline, jnp.array([0.25, 0.75, 1.5]))
+
+    assert result.shape == (3,)
+    assert jnp.all(jnp.isfinite(result))
+
+
+def test_natural_cubic_spline_is_jit_vmap_and_grad_compatible():
+    x = jnp.array([0.0, 0.5, 1.0, 2.0])
+    y = jnp.array([0.0, 1.0, 0.5, 0.25])
+    x_new = jnp.array([0.25, 0.75, 1.5])
+
+    @jax.jit
+    def evaluate(values, xq):
+        coeffs = interpolation.natural_cubic_spline_coeffs(x, values)
+        return interpolation.eval_cubic_spline(x, coeffs, xq)
+
+    result = evaluate(y, x_new)
+    vmapped = jax.vmap(lambda xq: evaluate(y, xq))(x_new)
+    grad_y = jax.grad(lambda values: jnp.sum(evaluate(values, x_new)))(y)
+
+    np.testing.assert_allclose(result, vmapped, atol=1e-12)
+    assert jnp.all(jnp.isfinite(grad_y))

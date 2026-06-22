@@ -201,6 +201,17 @@ class TestInterpolationGradChecks:
             rtol=1e-5,
         )
 
+    def test_natural_cubic_spline_wrt_y(self):
+        x = jnp.array([0.0, 0.4, 1.0, 1.8])
+        y0 = jnp.array([0.0, 0.8, 0.2, 0.5])
+        x_new = jnp.array([0.2, 0.7, 1.4])
+
+        def loss(y):
+            coeffs = interpolation.natural_cubic_spline_coeffs(x, y)
+            return jnp.sum(interpolation.eval_cubic_spline(x, coeffs, x_new))
+
+        assert_grad_matches(loss, y0, eps=1e-5, atol=1e-5, rtol=1e-5)
+
 
 # =============================================================================
 # regular grid interpolation

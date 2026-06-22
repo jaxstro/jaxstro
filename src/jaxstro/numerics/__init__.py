@@ -105,6 +105,11 @@ from .grids import (
     geometric_bin_edges,
     log_grid,
 )
+from .interpolation import (
+    NaturalCubicSpline1D,
+    eval_cubic_spline,
+    natural_cubic_spline_coeffs,
+)
 from .linear_algebra import (
     add_diagonal_jitter,
     correlation_from_covariance,
@@ -225,6 +230,9 @@ __all__ = [
     "distributions",
     "stats",
     "interpolation",
+    "natural_cubic_spline_coeffs",
+    "eval_cubic_spline",
+    "NaturalCubicSpline1D",
     "rootfinding",
     "bracket_expand",
     "bisect_many",

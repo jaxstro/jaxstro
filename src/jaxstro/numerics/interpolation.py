@@ -259,6 +259,102 @@ def monotone_cubic_interp(
     )
 
 
+def natural_cubic_spline_coeffs(
+    x: Float[Array, " m"],
+    y: Float[Array, " m"],
+) -> Tuple[
+    Float[Array, " m_minus_1"],
+    Float[Array, " m_minus_1"],
+    Float[Array, " m_minus_1"],
+    Float[Array, " m_minus_1"],
+]:
+    """Return natural cubic spline coefficients about each left knot."""
+    x = jnp.asarray(x)
+    y = jnp.asarray(y)
+    _validate_x_y(x, y, axis=0)
+    return _natural_cubic_spline_coeffs_core(x, y)
+
+
+@jax.jit
+def _natural_cubic_spline_coeffs_core(
+    x: Float[Array, " m"],
+    y: Float[Array, " m"],
+) -> Tuple[
+    Float[Array, " m_minus_1"],
+    Float[Array, " m_minus_1"],
+    Float[Array, " m_minus_1"],
+    Float[Array, " m_minus_1"],
+]:
+    h = jnp.diff(x)
+    slopes = jnp.diff(y) / h
+    n = x.shape[0]
+
+    if n == 2:
+        m = jnp.zeros_like(x)
+    else:
+        lower = jnp.concatenate([h[:-1], jnp.zeros(1, dtype=x.dtype)])
+        diag = jnp.concatenate(
+            [
+                jnp.ones(1, dtype=x.dtype),
+                2.0 * (h[:-1] + h[1:]),
+                jnp.ones(1, dtype=x.dtype),
+            ]
+        )
+        upper = jnp.concatenate([jnp.zeros(1, dtype=x.dtype), h[1:]])
+        rhs = jnp.concatenate(
+            [
+                jnp.zeros(1, dtype=x.dtype),
+                6.0 * (slopes[1:] - slopes[:-1]),
+                jnp.zeros(1, dtype=x.dtype),
+            ]
+        )
+        system = jnp.diag(diag) + jnp.diag(lower, k=-1) + jnp.diag(upper, k=1)
+        m = jnp.linalg.solve(system, rhs)
+
+    a = y[:-1]
+    b = slopes - h * (2.0 * m[:-1] + m[1:]) / 6.0
+    c = 0.5 * m[:-1]
+    d = (m[1:] - m[:-1]) / (6.0 * h)
+    return a, b, c, d
+
+
+def eval_cubic_spline(
+    x_knots: Float[Array, " m"],
+    coeffs: Tuple[
+        Float[Array, " m_minus_1"],
+        Float[Array, " m_minus_1"],
+        Float[Array, " m_minus_1"],
+        Float[Array, " m_minus_1"],
+    ],
+    x_query: Float[Array, "..."],
+) -> Float[Array, "..."]:
+    """Evaluate per-interval cubic spline coefficients at query points."""
+    x_knots = jnp.asarray(x_knots)
+    is_increasing = try_concrete_bool(jnp.all(jnp.diff(x_knots) > 0))
+    if is_increasing is False:
+        raise ValueError("eval_cubic_spline requires x_knots to be strictly increasing")
+    return _eval_cubic_spline_core(x_knots, coeffs, jnp.asarray(x_query))
+
+
+@jax.jit
+def _eval_cubic_spline_core(
+    x_knots: Float[Array, " m"],
+    coeffs: Tuple[
+        Float[Array, " m_minus_1"],
+        Float[Array, " m_minus_1"],
+        Float[Array, " m_minus_1"],
+        Float[Array, " m_minus_1"],
+    ],
+    x_query: Float[Array, "..."],
+) -> Float[Array, "..."]:
+    a, b, c, d = coeffs
+    x_eval = jnp.clip(x_query, x_knots[0], x_knots[-1])
+    idx = jnp.searchsorted(x_knots, x_eval, side="right") - 1
+    idx = jnp.clip(idx, 0, x_knots.shape[0] - 2)
+    dx = x_eval - x_knots[idx]
+    return a[idx] + dx * (b[idx] + dx * (c[idx] + dx * d[idx]))
+
+
 @partial(jax.jit, static_argnames=("axis", "left", "right", "extrapolate"))
 def _interp1d_core(
     x: Float[Array, " m"],
@@ -368,11 +464,46 @@ class MonotoneTabulatedFunction1D:
         return cls(x=x, y=y, axis=aux_data)
 
 
+@jax.tree_util.register_pytree_node_class
+@dataclass(frozen=True)
+class NaturalCubicSpline1D:
+    """Natural cubic spline wrapper for 1D tabulated data."""
+
+    x: Float[Array, " m"]
+    y: Float[Array, " m"]
+
+    def __call__(self, x_new: Float[Array, "..."]) -> Float[Array, "..."]:
+        return eval_cubic_spline(self.x, self.coeffs(), x_new)
+
+    def coeffs(
+        self,
+    ) -> Tuple[
+        Float[Array, " m_minus_1"],
+        Float[Array, " m_minus_1"],
+        Float[Array, " m_minus_1"],
+        Float[Array, " m_minus_1"],
+    ]:
+        return natural_cubic_spline_coeffs(self.x, self.y)
+
+    def tree_flatten(
+        self,
+    ) -> Tuple[Tuple[Float[Array, " m"], Float[Array, " m"]], None]:
+        return (self.x, self.y), None
+
+    @classmethod
+    def tree_unflatten(cls, aux_data, children):
+        x, y = children
+        return cls(x=x, y=y)
+
+
 __all__ = [
     "interp1d",
     "cubic_hermite_interp",
     "pchip_slopes",
     "monotone_cubic_interp",
+    "natural_cubic_spline_coeffs",
+    "eval_cubic_spline",
     "TabulatedFunction1D",
     "MonotoneTabulatedFunction1D",
+    "NaturalCubicSpline1D",
 ]

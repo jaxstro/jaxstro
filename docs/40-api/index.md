@@ -126,6 +126,9 @@ caveats, and when to use each are in [](../10-theory/rootfinding.md).
 
 `interp1d(...)` is the clamped linear baseline. `cubic_hermite_interp(...)`
 evaluates cubic Hermite interpolation from supplied node derivatives;
+`natural_cubic_spline_coeffs(...)` computes natural cubic spline coefficients;
+`eval_cubic_spline(...)` evaluates those coefficients; `NaturalCubicSpline1D`
+wraps a natural spline table as a PyTree;
 `pchip_slopes(...)` constructs shape-preserving slopes; `monotone_cubic_interp(...)`
 combines those slopes with the Hermite evaluator; and
 `MonotoneTabulatedFunction1D` wraps a monotone table as a PyTree. The method page
