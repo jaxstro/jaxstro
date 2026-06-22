@@ -1,9 +1,9 @@
 # jaxstro — status
 
 next: Core-capability expansion in progress (2026-06-22): optimization,
-fixed-step ODE, LinearOperator, and distribution-kernel batches added with
-focused unit and FD-vs-AD validation. Next action: implement geometry helpers
-under strict TDD.
+fixed-step ODE, LinearOperator, distribution-kernel, and geometry batches added
+with focused unit and FD-vs-AD validation. Next action: implement autodiff
+helpers under strict TDD.
 
 previous: Phase C MERGED + PUSHED to origin/main (2026-06-17, 25508f7, fast-forward; 447 tests green on
 merged main; feature branch deleted). NOT tagged — tag still held. Phase D remaining: (1) tag/version

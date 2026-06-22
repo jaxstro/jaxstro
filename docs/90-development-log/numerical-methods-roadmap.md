@@ -51,7 +51,7 @@ stellar-model policy, and data packages own their archive-specific schemas.
   sum/product, transpose/rmatvec, and block composition as small PyTrees.
 - [x] **Distribution kernels, first slice.** Stable logpdf/CDF/inverse-CDF
   helpers for generic families and truncated variants.
-- [ ] **Geometry helpers, first slice.** Vector normalization, angular
+- [x] **Geometry helpers, first slice.** Vector normalization, angular
   distance, rotations, quaternions, rigid transforms, and composition helpers.
 - [ ] **Autodiff helpers, first slice.** JVP/VJP/HVP, Jacobian-vector,
   vector-Jacobian, Gauss-Newton, and generic Fisher-style products.

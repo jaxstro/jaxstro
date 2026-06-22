@@ -31,7 +31,8 @@ The dense helper layer for small fits and covariance diagnostics is
 [](./linear-algebra.md), objective helpers live in [](./optimization.md),
 fixed-step ODE helpers live in [](./ode.md), and generic special-function kernels
 live in [](./special-functions.md). Generic distribution kernels live in
-[](./distributions.md), and matrix-free algebra helpers live in
+[](./distributions.md), vector geometry lives in [](./geometry.md), and
+matrix-free algebra helpers live in
 [](./operators.md). Grid construction, conservative rebinning, and stratified
 uniforms are in [](./grids.md).
 :::
@@ -177,6 +178,9 @@ shows them in specific methods. Read on:
 - [](./linear-algebra.md) — weighted fits, solve wrappers, covariance helpers,
   and positive-definite jitter for small dense problems (principles
   [3](#p3-guard-singularities), [8](#p8-precision), [9](#p9-correctness)).
+- [](./geometry.md) — vector normalization, angular distances, rotations,
+  quaternions, rigid transforms, and explicit composition helpers (principles
+  [1](#p1-differentiability), [9](#p9-correctness), [10](#p10-vectorize)).
 - [](./distributions.md) — logpdf, CDF, and inverse-CDF kernels for normal,
   lognormal, finite power-law, and truncated-normal families (principles
   [3](#p3-guard-singularities), [5](#p5-floating-point), [7](#p7-quadrature)).

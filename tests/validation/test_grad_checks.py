@@ -32,6 +32,7 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
+from jaxstro import geometry
 from jaxstro.numerics import (
     compensated,
     distributions,
@@ -318,6 +319,30 @@ class TestDistributionGradChecks:
                 distributions.powerlaw_logpdf(x, alpha=1.2, xmin=1.0, xmax=3.0)
             ),
             x0,
+        )
+
+
+# =============================================================================
+# geometry helpers
+# =============================================================================
+class TestGeometryGradChecks:
+    def test_rotation_matrix_wrt_angle(self):
+        axis = jnp.array([0.0, 0.0, 1.0])
+        vector = jnp.array([1.0, 2.0, 0.0])
+        assert_grad_matches(
+            lambda angle: jnp.sum(geometry.rotation_matrix(axis, angle) @ vector),
+            jnp.array(0.3),
+        )
+
+    def test_angular_distance_wrt_vector_away_from_degenerate_cases(self):
+        fixed = jnp.array([0.0, 1.0, 0.0])
+        vector0 = jnp.array([1.0, 0.2, 0.0])
+        assert_grad_matches(
+            lambda vector: geometry.angular_distance(vector, fixed),
+            vector0,
+            eps=1e-5,
+            atol=1e-5,
+            rtol=1e-5,
         )
 
     def test_truncated_normal_logpdf_wrt_interior_x(self):

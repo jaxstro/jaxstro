@@ -16,6 +16,7 @@ from . import (
     atmospheres,
     constants,
     coords,
+    geometry,
     numerics,
     params,
     testing,
@@ -31,6 +32,7 @@ __all__ = [
     "astrometry",
     "numerics",
     "coords",
+    "geometry",
     "params",
     "testing",
 ]

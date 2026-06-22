@@ -17,7 +17,7 @@ claims.
 
 ```python
 import jaxstro
-from jaxstro import atmospheres, constants, units, numerics, coords, spatial, params, testing
+from jaxstro import atmospheres, constants, units, numerics, coords, geometry, spatial, params, testing
 from jaxstro.jaxconfig import enable_high_precision
 ```
 
@@ -44,6 +44,9 @@ utility. There is no private or experimental tier at release.
   - Astrometric constants (e.g. `K_PROPER_MOTION`, mas/radian conversions).
 * - `jaxstro.coords`
   - Coordinate transforms — sky-tangent, galactic/equatorial, spherical, parallax.
+* - `jaxstro.geometry`
+  - Generic vector geometry — normalization, angular distances, rotations,
+    quaternions, and rigid transforms with explicit composition order.
 * - `jaxstro.numerics`
   - Differentiable numerical utilities: stats, interpolation, root-finding,
     integration (incl. `cumulative_trapz` + quadrature factory + `newton_ppf`),
@@ -189,6 +192,16 @@ kernels. `lognormal_*`, `powerlaw_*`, and `truncated_normal_*` provide logpdf,
 CDF, and inverse-CDF helpers for positive lognormal, finite-support power-law,
 and truncated-normal families. The method page is
 [](../10-theory/distributions.md).
+
+### `jaxstro.geometry`
+
+`normalize(...)` and `angular_distance(...)` cover vector geometry.
+`rotation_matrix(...)`, `quaternion_from_axis_angle(...)`,
+`quaternion_multiply(...)`, `quaternion_conjugate(...)`, and
+`quaternion_rotate(...)` cover axis-angle and quaternion rotations.
+`rigid_transform(...)`, `invert_rigid(...)`, and `compose_rigid(...)` cover
+3D rigid transforms with explicit composition order. The method page is
+[](../10-theory/geometry.md).
 
 ### `jaxstro.numerics.optimization`
 
