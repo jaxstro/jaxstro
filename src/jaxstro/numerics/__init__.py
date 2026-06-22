@@ -22,6 +22,8 @@ quadrature
     Gaussian quadrature factory (Gauss-Legendre, Gauss-Hermite, Hermite basis).
 sampling
     Differentiable inverse-CDF (PPF) sampling primitives.
+splines
+    JAX-native 1D B-spline basis and evaluation helpers.
 checks
     Numerical validation helpers (finiteness, monotonicity, ranges).
 linear_algebra
@@ -40,6 +42,7 @@ from . import (
     rng,
     rootfinding,
     sampling,
+    splines,
     stats,
 )
 from .quadrature import (
@@ -50,6 +53,15 @@ from .quadrature import (
 )
 from .rootfinding import newton_ppf
 from .sampling import inverse_cdf_draw
+from .splines import (
+    BSpline1D,
+    bspline_basis,
+    bspline_derivative,
+    bspline_design_matrix,
+    bspline_eval,
+    fit_bspline_lstsq,
+    open_uniform_knots,
+)
 from .types import Array, ScalarFn
 
 __all__ = [
@@ -68,6 +80,14 @@ __all__ = [
     "hermite_coefficients",
     "sampling",
     "inverse_cdf_draw",
+    "splines",
+    "BSpline1D",
+    "bspline_basis",
+    "bspline_derivative",
+    "bspline_design_matrix",
+    "bspline_eval",
+    "fit_bspline_lstsq",
+    "open_uniform_knots",
     "checks",
     "linear_algebra",
     "rng",

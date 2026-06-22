@@ -48,6 +48,8 @@ project:
         - file: 10-theory/index.md
         - file: 10-theory/rootfinding.md
         - file: 10-theory/cumulative-trapz.md
+        - file: 10-theory/interpolation.md
+        - file: 10-theory/bsplines.md
     - title: Architecture
       children:
         - file: 20-architecture/index.md
@@ -84,6 +86,7 @@ project:
     - title: Development log
       children:
         - file: 90-development-log/index.md
+        - file: 90-development-log/numerical-methods-roadmap.md
     - title: Release notes
       children:
         - file: 95-release/index.md

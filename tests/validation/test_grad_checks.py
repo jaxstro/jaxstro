@@ -38,6 +38,7 @@ from jaxstro.numerics import (
     interpolation,
     linear_algebra,
     rootfinding,
+    splines,
     stats,
 )
 
@@ -131,6 +132,81 @@ class TestInterpolationGradChecks:
         table = interpolation.TabulatedFunction1D(x=x, y=y)
         xn0 = jnp.array([0.25, 1.1, 1.7])
         assert_grad_matches(lambda xn: jnp.sum(table(xn)), xn0)
+
+    def test_cubic_hermite_interp_wrt_y_and_derivatives(self):
+        x = jnp.array([0.0, 1.0, 2.0, 3.0])
+        y0 = jnp.array([0.0, 0.2, 0.8, 1.0])
+        dydx0 = jnp.array([0.1, 0.4, 0.2, 0.1])
+        x_new = jnp.array([0.25, 1.25, 2.25])
+        assert_grad_matches(
+            lambda y: jnp.sum(interpolation.cubic_hermite_interp(x, y, dydx0, x_new)),
+            y0,
+        )
+        assert_grad_matches(
+            lambda dydx: jnp.sum(
+                interpolation.cubic_hermite_interp(x, y0, dydx, x_new)
+            ),
+            dydx0,
+        )
+
+    def test_monotone_cubic_interp_wrt_y(self):
+        x = jnp.array([0.0, 1.0, 2.0, 3.0])
+        y0 = jnp.array([0.0, 0.4, 1.4, 3.0])
+        x_new = jnp.array([0.25, 1.25, 2.25])
+        assert_grad_matches(
+            lambda y: jnp.sum(interpolation.monotone_cubic_interp(x, y, x_new)),
+            y0,
+            eps=1e-5,
+            atol=1e-5,
+            rtol=1e-5,
+        )
+
+
+# =============================================================================
+# splines
+# =============================================================================
+class TestSplineGradChecks:
+    def test_bspline_eval_wrt_coefficients(self):
+        knots = splines.open_uniform_knots(0.0, 1.0, n_basis=6, degree=3)
+        x = jnp.array([0.15, 0.37, 0.81])
+        coeffs = jnp.sin(jnp.linspace(0.0, 1.0, 6))
+        assert_grad_matches(
+            lambda c: jnp.sum(splines.bspline_eval(knots, c, x, degree=3)),
+            coeffs,
+        )
+
+    def test_bspline_eval_wrt_x(self):
+        knots = splines.open_uniform_knots(0.0, 1.0, n_basis=6, degree=3)
+        coeffs = jnp.sin(jnp.linspace(0.0, 1.0, 6))
+        x0 = jnp.array([0.15, 0.37, 0.81])
+        assert_grad_matches(
+            lambda x: jnp.sum(splines.bspline_eval(knots, coeffs, x, degree=3)),
+            x0,
+            eps=1e-5,
+            atol=1e-5,
+            rtol=1e-5,
+        )
+
+    def test_bspline_derivative_wrt_coefficients(self):
+        knots = splines.open_uniform_knots(0.0, 1.0, n_basis=6, degree=3)
+        x = jnp.array([0.15, 0.37, 0.81])
+        coeffs = jnp.sin(jnp.linspace(0.0, 1.0, 6))
+        assert_grad_matches(
+            lambda c: jnp.sum(splines.bspline_derivative(knots, c, x, degree=3)),
+            coeffs,
+        )
+
+    def test_fit_bspline_lstsq_wrt_sample_values(self):
+        knots = splines.open_uniform_knots(0.0, 1.0, n_basis=5, degree=3)
+        x = jnp.linspace(0.0, 1.0, 9)
+        y0 = jnp.sin(2.0 * x)
+        assert_grad_matches(
+            lambda y: jnp.sum(splines.fit_bspline_lstsq(knots, x, y, degree=3)),
+            y0,
+            eps=1e-5,
+            atol=1e-5,
+            rtol=1e-5,
+        )
 
 
 # =============================================================================

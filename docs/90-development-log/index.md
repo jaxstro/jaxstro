@@ -10,8 +10,5 @@ the change that prompted it and showing the metric or diff that justified it. It
 written for the person — likely future-you — trying to reconstruct *why* a decision
 was made a year from now.
 
-:::{warning} Planned — not yet written
-This section is a stub. Released changes are summarized in
-[](../95-release/index.md); the rationale behind structural choices is in the
-[decision log](../30-decisions/index.md).
-:::
+Start with [](./numerical-methods-roadmap.md) for the chunked plan to grow
+`jaxstro.numerics` beyond the first B-spline slice.

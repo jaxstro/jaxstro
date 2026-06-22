@@ -24,6 +24,45 @@ def _move_axis_to_last(x: Float[Array, "..."], axis: int) -> Float[Array, "..."]
     return jnp.moveaxis(x, axis, -1)
 
 
+def _normalize_axis(axis: int, ndim: int) -> int:
+    if ndim == 0:
+        raise ValueError("interpolation values must have a sample axis")
+    if axis < 0:
+        axis = ndim + axis
+    if axis < 0 or axis >= ndim:
+        raise ValueError("interpolation axis is out of bounds")
+    return axis
+
+
+def _validate_x_y(x: Float[Array, " m"], y: Float[Array, "..."], axis: int) -> int:
+    if x.ndim != 1:
+        raise ValueError("interpolation x grid must be a 1D array")
+    if x.shape[0] < 2:
+        raise ValueError("interpolation requires at least two grid points")
+    axis = _normalize_axis(axis, y.ndim)
+    if y.shape[axis] != x.shape[0]:
+        raise ValueError(
+            "interpolation value axis length must equal "
+            f"len(x)={x.shape[0]}; got axis length {y.shape[axis]}"
+        )
+
+    is_increasing = try_concrete_bool(jnp.all(jnp.diff(x) > 0))
+    if is_increasing is False:
+        raise ValueError(
+            "interpolation requires x to be strictly increasing (x[i+1] > x[i])."
+        )
+    return axis
+
+
+def _safe_div_zero(
+    numerator: Float[Array, "..."],
+    denominator: Float[Array, "..."],
+) -> Float[Array, "..."]:
+    denominator_safe = jnp.where(denominator == 0.0, 1.0, denominator)
+    ratio = numerator / denominator_safe
+    return jnp.where(denominator == 0.0, 0.0, ratio)
+
+
 def interp1d(
     x: Float[Array, " m"],
     y: Float[Array, "..."],
@@ -56,6 +95,167 @@ def interp1d(
         )
     return _interp1d_core(
         x, y, x_new, axis=axis, left=left, right=right, extrapolate=extrapolate
+    )
+
+
+def cubic_hermite_interp(
+    x: Float[Array, " m"],
+    y: Float[Array, "..."],
+    dydx: Float[Array, "..."],
+    x_new: Float[Array, "..."],
+    *,
+    axis: int = -1,
+    extrapolate: bool = False,
+) -> Float[Array, "..."]:
+    """Evaluate cubic Hermite interpolation with supplied node derivatives."""
+    x = jnp.asarray(x)
+    y = jnp.asarray(y)
+    dydx = jnp.asarray(dydx)
+    axis = _validate_x_y(x, y, axis)
+    if dydx.shape != y.shape:
+        raise ValueError("cubic_hermite_interp derivatives must match y shape")
+    return _cubic_hermite_interp_core(
+        x,
+        y,
+        dydx,
+        jnp.asarray(x_new),
+        axis=axis,
+        extrapolate=extrapolate,
+    )
+
+
+@partial(jax.jit, static_argnames=("axis", "extrapolate"))
+def _cubic_hermite_interp_core(
+    x: Float[Array, " m"],
+    y: Float[Array, "..."],
+    dydx: Float[Array, "..."],
+    x_new: Float[Array, "..."],
+    *,
+    axis: int,
+    extrapolate: bool,
+) -> Float[Array, "..."]:
+    y_moved = _move_axis_to_last(y, axis)
+    dydx_moved = _move_axis_to_last(dydx, axis)
+
+    idx = jnp.searchsorted(x, x_new, side="right") - 1
+    idx = jnp.clip(idx, 0, x.shape[0] - 2)
+
+    x0 = x[idx]
+    x1 = x[idx + 1]
+    h = x1 - x0
+    t = (x_new - x0) / h
+
+    y0 = jnp.take(y_moved, idx, axis=-1)
+    y1 = jnp.take(y_moved, idx + 1, axis=-1)
+    m0 = jnp.take(dydx_moved, idx, axis=-1)
+    m1 = jnp.take(dydx_moved, idx + 1, axis=-1)
+
+    t2 = t * t
+    t3 = t2 * t
+    h00 = 2.0 * t3 - 3.0 * t2 + 1.0
+    h10 = t3 - 2.0 * t2 + t
+    h01 = -2.0 * t3 + 3.0 * t2
+    h11 = t3 - t2
+
+    y_interp = h00 * y0 + h10 * h * m0 + h01 * y1 + h11 * h * m1
+
+    if not extrapolate:
+        below = x_new < x[0]
+        above = x_new > x[-1]
+        left_vals = jnp.take(y_moved, 0, axis=-1)
+        right_vals = jnp.take(y_moved, x.shape[0] - 1, axis=-1)
+        left_vals = jnp.reshape(left_vals, left_vals.shape + (1,) * x_new.ndim)
+        right_vals = jnp.reshape(right_vals, right_vals.shape + (1,) * x_new.ndim)
+        y_interp = jnp.where(below, left_vals, y_interp)
+        y_interp = jnp.where(above, right_vals, y_interp)
+
+    return y_interp
+
+
+def pchip_slopes(
+    x: Float[Array, " m"],
+    y: Float[Array, "..."],
+    *,
+    axis: int = -1,
+) -> Float[Array, "..."]:
+    """Return monotone piecewise-cubic slopes using the PCHIP limiter."""
+    x = jnp.asarray(x)
+    y = jnp.asarray(y)
+    axis = _validate_x_y(x, y, axis)
+    return _pchip_slopes_core(x, y, axis=axis)
+
+
+@partial(jax.jit, static_argnames=("axis",))
+def _pchip_slopes_core(
+    x: Float[Array, " m"],
+    y: Float[Array, "..."],
+    *,
+    axis: int,
+) -> Float[Array, "..."]:
+    y_moved = _move_axis_to_last(y, axis)
+    h = jnp.diff(x)
+    delta = jnp.diff(y_moved, axis=-1) / h
+
+    if x.shape[0] == 2:
+        slopes_moved = jnp.concatenate([delta, delta], axis=-1)
+        return jnp.moveaxis(slopes_moved, -1, axis)
+
+    d_prev = delta[..., :-1]
+    d_next = delta[..., 1:]
+    h_prev = h[:-1]
+    h_next = h[1:]
+
+    w1 = 2.0 * h_next + h_prev
+    w2 = h_next + 2.0 * h_prev
+    harmonic = _safe_div_zero(
+        w1 + w2,
+        _safe_div_zero(w1, d_prev) + _safe_div_zero(w2, d_next),
+    )
+    interior = jnp.where(d_prev * d_next > 0.0, harmonic, 0.0)
+
+    left = _pchip_endpoint_slope(delta[..., 0], delta[..., 1], h[0], h[1])
+    right = _pchip_endpoint_slope(delta[..., -1], delta[..., -2], h[-1], h[-2])
+
+    slopes_moved = jnp.concatenate(
+        [left[..., None], interior, right[..., None]],
+        axis=-1,
+    )
+    return jnp.moveaxis(slopes_moved, -1, axis)
+
+
+def _pchip_endpoint_slope(
+    d0: Float[Array, "..."],
+    d1: Float[Array, "..."],
+    h0: Float[Array, ""],
+    h1: Float[Array, ""],
+) -> Float[Array, "..."]:
+    raw = ((2.0 * h0 + h1) * d0 - h0 * d1) / (h0 + h1)
+    same_direction = jnp.sign(raw) == jnp.sign(d0)
+    limited = jnp.where(same_direction, raw, 0.0)
+    overshoots = (jnp.sign(d0) != jnp.sign(d1)) & (jnp.abs(limited) > 3.0 * jnp.abs(d0))
+    return jnp.where(overshoots, 3.0 * d0, limited)
+
+
+def monotone_cubic_interp(
+    x: Float[Array, " m"],
+    y: Float[Array, "..."],
+    x_new: Float[Array, "..."],
+    *,
+    axis: int = -1,
+    extrapolate: bool = False,
+) -> Float[Array, "..."]:
+    """Evaluate PCHIP-style monotone cubic interpolation."""
+    x = jnp.asarray(x)
+    y = jnp.asarray(y)
+    axis = _validate_x_y(x, y, axis)
+    slopes = _pchip_slopes_core(x, y, axis=axis)
+    return _cubic_hermite_interp_core(
+        x,
+        y,
+        slopes,
+        jnp.asarray(x_new),
+        axis=axis,
+        extrapolate=extrapolate,
     )
 
 
@@ -142,4 +342,37 @@ class TabulatedFunction1D:
         return cls(x=x, y=y)
 
 
-__all__ = ["interp1d", "TabulatedFunction1D"]
+@jax.tree_util.register_pytree_node_class
+@dataclass(frozen=True)
+class MonotoneTabulatedFunction1D:
+    """Shape-preserving 1D tabulated function using PCHIP-style slopes."""
+
+    x: Float[Array, " m"]
+    y: Float[Array, "..."]
+    axis: int = -1
+
+    def __call__(self, x_new: Float[Array, "..."]) -> Float[Array, "..."]:
+        return monotone_cubic_interp(self.x, self.y, x_new, axis=self.axis)
+
+    def slopes(self) -> Float[Array, "..."]:
+        return pchip_slopes(self.x, self.y, axis=self.axis)
+
+    def tree_flatten(
+        self,
+    ) -> Tuple[Tuple[Float[Array, " m"], Float[Array, "..."]], int]:
+        return (self.x, self.y), self.axis
+
+    @classmethod
+    def tree_unflatten(cls, aux_data, children):
+        x, y = children
+        return cls(x=x, y=y, axis=aux_data)
+
+
+__all__ = [
+    "interp1d",
+    "cubic_hermite_interp",
+    "pchip_slopes",
+    "monotone_cubic_interp",
+    "TabulatedFunction1D",
+    "MonotoneTabulatedFunction1D",
+]

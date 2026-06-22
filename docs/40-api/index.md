@@ -42,7 +42,8 @@ utility. There is no private or experimental tier at release.
 * - `jaxstro.numerics`
   - Differentiable numerical utilities: stats, interpolation, root-finding,
     integration (incl. `cumulative_trapz` + quadrature factory + `newton_ppf`),
-    checks, compensated summation, linear algebra, RNG, sampling.
+    B-spline basis/evaluation, checks, compensated summation, linear algebra,
+    RNG, sampling.
 * - `jaxstro.spatial`
   - Morton (Z-order) encoding/decoding, grid binning, neighbor-candidate gathering.
 * - `jaxstro.params`
@@ -105,6 +106,15 @@ Provenance discipline — every constant cites its authority — is principle
 `bisect`, `newton`, `newton_with_grad`, `newton_ppf`. Behavior, the differentiability
 caveats, and when to use each are in [](../10-theory/rootfinding.md).
 
+### `jaxstro.numerics.interpolation`
+
+`interp1d(...)` is the clamped linear baseline. `cubic_hermite_interp(...)`
+evaluates cubic Hermite interpolation from supplied node derivatives;
+`pchip_slopes(...)` constructs shape-preserving slopes; `monotone_cubic_interp(...)`
+combines those slopes with the Hermite evaluator; and
+`MonotoneTabulatedFunction1D` wraps a monotone table as a PyTree. The method page
+is [](../10-theory/interpolation.md).
+
 ### `jaxstro.numerics.integration`
 
 `trapz`, `cumulative_trapz` (dx-outside uniform path), `simpson`. The method and the
@@ -117,6 +127,17 @@ ordering choice are in [](../10-theory/cumulative-trapz.md).
 the host (Golub–Welsch via numpy) and frozen to constants; gradients flow through
 the integrand values, not the nodes (principle
 [7](../10-theory/index.md#p7-quadrature)).
+
+### `jaxstro.numerics.splines`
+
+`bspline_basis(knots, x, degree=3)` evaluates all basis functions;
+`bspline_design_matrix(knots, x, degree=3)` gives the explicit sample-matrix
+spelling; `bspline_eval(knots, coeffs, x, degree=3, axis=-1)` contracts basis
+values with supplied coefficients; `bspline_derivative(...)` evaluates
+`dS/dx`; `fit_bspline_lstsq(...)` fits coefficients for fixed knots; and
+`BSpline1D` wraps knots and coefficients as a PyTree. Smoothing,
+tensor-product splines, adaptive knots, and extrapolation are deliberate
+follow-up work. The method page is [](../10-theory/bsplines.md).
 
 :::{note} Per-symbol reference pages are planned
 A complete, auto-generated per-module symbol reference (signatures, parameters,
