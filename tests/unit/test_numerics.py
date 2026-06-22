@@ -215,6 +215,41 @@ class TestTabulatedFunction1D:
         assert jnp.allclose(result, 0.5)
 
 
+class TestCumulativeSimpson:
+    """Tests for cumulative Simpson panel integration."""
+
+    def test_cumulative_simpson_panel_endpoints_exact_for_cubic(self):
+        x = jnp.linspace(0.0, 4.0, 9)
+        y = x**3
+
+        result = integration.cumulative_simpson(y, x)
+
+        expected = x[::2] ** 4 / 4.0
+        assert result.shape == expected.shape
+        assert jnp.allclose(result, expected, atol=1e-12)
+
+    def test_cumulative_simpson_supports_axis_and_dx(self):
+        x = jnp.linspace(0.0, 4.0, 9)
+        y = jnp.stack([x**2, 2.0 * x**2], axis=0)
+
+        result = integration.cumulative_simpson(y, dx=0.5, axis=-1)
+
+        expected = jnp.stack([x[::2] ** 3 / 3.0, 2.0 * x[::2] ** 3 / 3.0], axis=0)
+        assert result.shape == (2, 5)
+        assert jnp.allclose(result, expected, atol=1e-12)
+
+    def test_cumulative_simpson_rejects_even_sample_count(self):
+        with pytest.raises(ValueError, match="odd number"):
+            integration.cumulative_simpson(jnp.ones(4))
+
+    def test_cumulative_simpson_rejects_nonuniform_x(self):
+        with pytest.raises(ValueError, match="uniform spacing"):
+            integration.cumulative_simpson(
+                jnp.ones(5),
+                jnp.array([0.0, 0.5, 1.5, 2.0, 3.0]),
+            )
+
+
 class TestBisect:
     """Tests for bisect rootfinding."""
 

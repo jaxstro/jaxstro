@@ -23,7 +23,7 @@ work, so you can read the idea and then read the code that obeys it.
 Skip to the principle that bites you most often — most people's is
 [](#p3-guard-singularities) (the `where`-trap) or [](#p4-saturation) (the silent
 gradient killer) — or go straight to the method pages:
-[](./rootfinding.md), [](./cumulative-trapz.md),
+[](./rootfinding.md), [](./cumulative-trapz.md), [](./quadrature.md),
 [](./interpolation.md), [](./regular-grid.md), and [](./bsplines.md).
 :::
 
@@ -103,6 +103,9 @@ nothing it should not.
 
 → [](./cumulative-trapz.md) — Newton–Cotes integration over a grid of values.
 
+→ [](./quadrature.md) — fixed-node Gaussian, Clenshaw-Curtis, and cumulative
+Simpson rules differentiate through values rather than node generation.
+
 → [](./interpolation.md) — PCHIP-style interpolation differentiates inside
 stable limiter branches and avoids inventing monotone-table overshoot.
 
@@ -150,6 +153,9 @@ shows them in specific methods. Read on:
   [4](#p4-saturation)).
 - [](./cumulative-trapz.md) — Newton–Cotes integration and the dx-outside ordering
   (principles [5](#p5-floating-point), [7](#p7-quadrature)).
+- [](./quadrature.md) — fixed-node Gaussian and Clenshaw-Curtis quadrature plus
+  cumulative Simpson panel sums (principles [7](#p7-quadrature),
+  [10](#p10-vectorize)).
 - [](./interpolation.md) — cubic Hermite and PCHIP-style interpolation for
   smooth table evaluation without overshoot (principles [3](#p3-guard-singularities),
   [4](#p4-saturation), [7](#p7-quadrature)).

@@ -85,6 +85,49 @@ class TestGaussHermite:
             assert jnp.allclose(odd, 0.0, atol=1e-12), m
 
 
+class TestGaussLaguerre:
+    """Gauss-Laguerre moments on [0, infinity) with weight exp(-x)."""
+
+    def test_returns_pair_correct_shape(self):
+        nodes, weights = quadrature.gauss_laguerre_nodes(16)
+        assert nodes.shape == (16,)
+        assert weights.shape == (16,)
+        assert jnp.all(nodes > 0.0)
+        assert jnp.all(weights > 0.0)
+
+    def test_exponential_weight_moments_exact(self):
+        n = 8
+        nodes, weights = quadrature.gauss_laguerre_nodes(n)
+        for k in range(2 * n):
+            approx = jnp.sum(weights * nodes**k)
+            exact = math.factorial(k)
+            assert jnp.allclose(approx, exact, rtol=1e-10, atol=1e-10), k
+
+
+class TestClenshawCurtis:
+    """Clenshaw-Curtis interpolatory quadrature on [-1, 1]."""
+
+    def test_returns_pair_correct_shape_and_endpoints(self):
+        nodes, weights = quadrature.clenshaw_curtis_nodes(9)
+        assert nodes.shape == (9,)
+        assert weights.shape == (9,)
+        assert jnp.allclose(nodes[0], 1.0)
+        assert jnp.allclose(nodes[-1], -1.0)
+        assert jnp.all(weights > 0.0)
+
+    def test_weights_sum_to_interval_length(self):
+        _, weights = quadrature.clenshaw_curtis_nodes(17)
+        assert jnp.allclose(weights.sum(), 2.0, atol=1e-12)
+
+    def test_exact_to_interpolatory_degree(self):
+        n = 9
+        nodes, weights = quadrature.clenshaw_curtis_nodes(n)
+        for k in range(n):
+            approx = jnp.sum(weights * nodes**k)
+            exact = 0.0 if (k % 2 == 1) else 2.0 / (k + 1)
+            assert jnp.allclose(approx, exact, atol=1e-12), k
+
+
 class TestHermiteEBasis:
     """Probabilists' Hermite He_n recurrence."""
 

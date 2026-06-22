@@ -24,6 +24,7 @@ to a row here.
 | Shape-preserving interpolation avoids monotone-table overshoot and differentiates inside stable limiter branches | Exact synthetic identities and FD-vs-AD checks | Cubic Hermite recovery, clamped boundaries, PCHIP turning-point slopes, monotone bounds, PyTree/JAX transforms | `tests/unit/test_interpolation_shape_preserving.py`, `tests/validation/test_grad_checks.py` |
 | Regular-grid interpolation recovers affine tables and differentiates inside grid cells | Exact synthetic identities and FD-vs-AD checks | Bilinear/trilinear affine recovery, vector payloads, clamp/fill/reject policies, JAX transforms | `tests/unit/test_regular_grid.py`, `tests/validation/test_grad_checks.py` |
 | B-spline basis, evaluation, derivatives, and fixed-knot fitting preserve local-basis invariants | Exact synthetic identities and FD-vs-AD checks | Partition of unity, nonnegativity, local support, Bernstein cubic, degree-1 parity with `interp1d`, analytic derivatives, least-squares recovery, PyTree/JAX transforms | `tests/unit/test_splines.py`, `tests/validation/test_grad_checks.py` |
+| Fixed-node quadrature and cumulative Simpson preserve their exactness contracts | Exact polynomial/moment identities and FD-vs-AD checks | Gauss-Legendre, Gauss-Laguerre, Gauss-Hermite, Clenshaw-Curtis, Hermite coefficients, cumulative Simpson panel sums | `tests/unit/test_quadrature.py`, `tests/unit/test_numerics.py`, `tests/validation/test_grad_checks.py` |
 | FD-vs-AD audits classify gradient contracts conservatively | Existing audit tolerances | Smooth, known-zero, blocked, surrogate, and validation-only cases | `tests/integration/test_grad_audit.py` |
 | Spatial candidate gathering excludes self and preserves exact-kNN recall when stencil/capacity settings make recall possible | Exact set containment for small clouds | Regular, boundary, and clustered cases | `tests/unit/test_spatial.py` |
 | Atmosphere data indexing does not vendor raw PHOENIX data | Fixture size guard and parser-only tests | Synthetic tiny NewEra-like files only | `tests/unit/test_atmospheres.py` |
@@ -47,6 +48,7 @@ uv run pytest tests/unit/test_atmospheres.py tests/unit/test_atmospheres_spectra
 uv run pytest tests/unit/test_interpolation_shape_preserving.py tests/validation/test_grad_checks.py
 uv run pytest tests/unit/test_regular_grid.py tests/validation/test_grad_checks.py
 uv run pytest tests/unit/test_splines.py tests/validation/test_grad_checks.py
+uv run pytest tests/unit/test_quadrature.py tests/unit/test_numerics.py tests/validation/test_grad_checks.py
 uv run --extra data pytest tests/unit/test_atmospheres*.py tests/unit/test_*conversion_script.py
 uv run --extra data pytest tests/validation/test_atmospheres_local_artifacts.py
 uv run pytest tests/validation/test_atmospheres_spectra.py

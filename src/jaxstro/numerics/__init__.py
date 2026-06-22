@@ -49,7 +49,9 @@ from . import (
     stats,
 )
 from .quadrature import (
+    clenshaw_curtis_nodes,
     gauss_hermite_nodes,
+    gauss_laguerre_nodes,
     gauss_legendre_nodes,
     hermite_coefficients,
     hermite_e_basis,
@@ -80,6 +82,8 @@ __all__ = [
     "quadrature",
     "gauss_legendre_nodes",
     "gauss_hermite_nodes",
+    "gauss_laguerre_nodes",
+    "clenshaw_curtis_nodes",
     "hermite_e_basis",
     "hermite_coefficients",
     "regular_grid",

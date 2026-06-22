@@ -27,7 +27,7 @@ stellar-model policy, and data packages own their archive-specific schemas.
   interpolation for gridded models with explicit clamp/fill/reject policies.
 - [x] **Numerical differentiation diagnostics.** Public finite-difference,
   directional-derivative, and Jacobian-check utilities in `jaxstro.testing`.
-- [ ] **Quadrature expansion.** Additional fixed-node rules such as
+- [x] **Quadrature expansion.** Additional fixed-node rules such as
   Gauss-Laguerre and Clenshaw-Curtis, plus cumulative Simpson variants with
   explicit shape contracts.
 - [ ] **Root-finding and monotone inversion.** Bracket discovery, vectorized

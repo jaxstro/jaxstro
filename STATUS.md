@@ -1,9 +1,9 @@
 # jaxstro — status
 
-next: Numerical diagnostics batch implemented (2026-06-22): `jaxstro.testing`
-adds public finite-difference gradients, Jacobians, directional derivatives, and
-structured AD-vs-FD comparison reports. Next action: review/merge after final
-local gates.
+next: Quadrature expansion batch implemented (2026-06-22): `jaxstro.numerics`
+adds Gauss-Laguerre nodes, Clenshaw-Curtis nodes, and cumulative Simpson
+panel-endpoint integration with validation coverage. Next action: review/merge
+after final local gates.
 
 previous: Phase C MERGED + PUSHED to origin/main (2026-06-17, 25508f7, fast-forward; 447 tests green on
 merged main; feature branch deleted). NOT tagged — tag still held. Phase D remaining: (1) tag/version

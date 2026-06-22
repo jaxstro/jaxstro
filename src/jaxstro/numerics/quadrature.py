@@ -1,7 +1,8 @@
 # src/jaxstro/numerics/quadrature.py
 r"""
-Gaussian quadrature factory: Gauss-Legendre, Gauss-Hermite (probabilists'),
-and the probabilists' Hermite-e polynomial basis / expansion coefficients.
+Gaussian quadrature factory: Gauss-Legendre, Gauss-Laguerre,
+Gauss-Hermite (probabilists'), Clenshaw-Curtis, and the probabilists'
+Hermite-e polynomial basis / expansion coefficients.
 
 Quadrature theory
 -----------------
@@ -13,10 +14,13 @@ integrates polynomials **exactly up to degree** :math:`2n-1`:
     \int_a^b f(x)\, \omega(x)\, dx \;\approx\; \sum_{i=1}^{n} w_i\, f(x_i).
 
 - **Gauss-Legendre**: :math:`\omega(x) = 1` on :math:`[-1, 1]`.
+- **Gauss-Laguerre**: :math:`\omega(x) = e^{-x}` on :math:`[0, \infty)`.
 - **Gauss-Hermite (probabilists')**: :math:`\omega(x) = e^{-x^2/2}/\sqrt{2\pi}`
   on :math:`(-\infty, \infty)`, i.e. the standard-normal density. The rule then
   computes expectations under :math:`\mathcal{N}(0, 1)`:
   :math:`\langle f \rangle = \sum_i w_i\, f(x_i)`, with :math:`\sum_i w_i = 1`.
+- **Clenshaw-Curtis**: interpolatory quadrature on Chebyshev-Lobatto nodes
+  :math:`x_i = \cos(i\pi/(n-1))` over :math:`[-1, 1]`.
 
 Nodes/weights are the classical Gauss rule whose nodes are the roots of the
 orthogonal polynomial and whose weights follow from the Golub & Welsch (1969)
@@ -45,6 +49,9 @@ References
   ``numpy.polynomial.hermite.hermgauss`` (physicists' Gauss-Hermite); the
   probabilists' rule is obtained from the physicists' rule by the substitution
   :math:`g = \sqrt{2}\, x`, :math:`w \mapsto w / \sqrt{\pi}` (see below).
+- NumPy ``numpy.polynomial.laguerre.laggauss`` (Gauss-Laguerre).
+- Trefethen, L. N. 2008, "Is Gauss quadrature better than Clenshaw-Curtis?",
+  SIAM Review 50, 67 (Clenshaw-Curtis context and algorithmic comparison).
 - Probabilists' Hermite ``He_n`` recurrence: Abramowitz & Stegun (1964),
   22.7; ``He_{n+1}(x) = x He_n(x) - n He_{n-1}(x)``.
 """
@@ -112,6 +119,54 @@ def gauss_hermite_nodes(n: int) -> tuple[Array, Array]:
     return g_nodes, weights
 
 
+def gauss_laguerre_nodes(n: int) -> tuple[Array, Array]:
+    r"""Gauss-Laguerre nodes and weights on :math:`[0, \infty)`.
+
+    Returns ``(nodes, weights)`` such that
+    :math:`\int_0^\infty e^{-x} f(x)\,dx \approx \sum_i w_i f(x_i)`, exact for
+    polynomials up to degree :math:`2n - 1`.
+    """
+    if n < 1:
+        raise ValueError("gauss_laguerre_nodes requires n >= 1")
+    nodes, weights = np.polynomial.laguerre.laggauss(n)
+    return jnp.asarray(nodes), jnp.asarray(weights)
+
+
+def clenshaw_curtis_nodes(n: int) -> tuple[Array, Array]:
+    r"""Clenshaw-Curtis nodes and weights on :math:`[-1, 1]`.
+
+    The nodes are Chebyshev-Lobatto points ordered from ``1`` to ``-1``. The
+    weights are generated host-side by the standard cosine-series construction
+    from Trefethen's ``clencurt`` algorithm and frozen as JAX constants.
+    """
+    if n < 1:
+        raise ValueError("clenshaw_curtis_nodes requires n >= 1")
+    if n == 1:
+        return jnp.asarray([0.0]), jnp.asarray([2.0])
+
+    intervals = n - 1
+    theta = np.pi * np.arange(n) / intervals
+    nodes = np.cos(theta)
+    weights = np.zeros(n)
+    interior = np.arange(1, intervals)
+    v = np.ones(intervals - 1)
+
+    if intervals % 2 == 0:
+        weights[0] = 1.0 / (intervals**2 - 1.0)
+        weights[-1] = weights[0]
+        for k in range(1, intervals // 2):
+            v -= 2.0 * np.cos(2.0 * k * theta[interior]) / (4.0 * k**2 - 1.0)
+        v -= np.cos(intervals * theta[interior]) / (intervals**2 - 1.0)
+    else:
+        weights[0] = 1.0 / intervals**2
+        weights[-1] = weights[0]
+        for k in range(1, (intervals + 1) // 2):
+            v -= 2.0 * np.cos(2.0 * k * theta[interior]) / (4.0 * k**2 - 1.0)
+
+    weights[interior] = 2.0 * v / intervals
+    return jnp.asarray(nodes), jnp.asarray(weights)
+
+
 def hermite_e_basis(g: Float[Array, " q"], n_max: int) -> Float[Array, " n q"]:
     r"""Probabilists' Hermite polynomials :math:`He_0..He_{n_{max}}` at points ``g``.
 
@@ -173,6 +228,8 @@ def hermite_coefficients(
 __all__ = [
     "gauss_legendre_nodes",
     "gauss_hermite_nodes",
+    "gauss_laguerre_nodes",
+    "clenshaw_curtis_nodes",
     "hermite_e_basis",
     "hermite_coefficients",
 ]

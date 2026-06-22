@@ -280,6 +280,11 @@ class TestIntegrationGradChecks:
         y0 = jnp.array([0.2, 1.0, 0.5, 2.0, 1.5])
         assert_grad_matches(lambda y: integration.simpson(y, x), y0)
 
+    def test_cumulative_simpson(self):
+        x = jnp.linspace(0.0, 1.0, 7)
+        y0 = jnp.sin(x)
+        assert_grad_matches(lambda y: jnp.sum(integration.cumulative_simpson(y, x)), y0)
+
 
 # =============================================================================
 # rootfinding  (bisect, newton; newton_ppf already covered in test_numerics)

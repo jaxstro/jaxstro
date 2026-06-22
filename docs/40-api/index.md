@@ -128,16 +128,19 @@ Boundary policy is explicit: clamp, fill, or reject. The method page is
 
 ### `jaxstro.numerics.integration`
 
-`trapz`, `cumulative_trapz` (dx-outside uniform path), `simpson`. The method and the
-ordering choice are in [](../10-theory/cumulative-trapz.md).
+`trapz`, `cumulative_trapz` (dx-outside uniform path), `simpson`, and
+`cumulative_simpson` panel-endpoint sums. The trapezoid ordering choice is in
+[](../10-theory/cumulative-trapz.md); fixed-node and Simpson-panel rules are in
+[](../10-theory/quadrature.md).
 
 ### `jaxstro.numerics.quadrature`
 
-`gauss_legendre_nodes(n)`, `gauss_hermite_nodes(n)` (probabilists'),
-`hermite_e_basis`, and Hermite expansion coefficients. Nodes are generated once on
-the host (Golub–Welsch via numpy) and frozen to constants; gradients flow through
-the integrand values, not the nodes (principle
-[7](../10-theory/index.md#p7-quadrature)).
+`gauss_legendre_nodes(n)`, `gauss_laguerre_nodes(n)`,
+`gauss_hermite_nodes(n)` (probabilists'), `clenshaw_curtis_nodes(n)`,
+`hermite_e_basis`, and Hermite expansion coefficients. Nodes are generated once
+on the host and frozen to constants; gradients flow through the integrand
+values, not the nodes (principle [7](../10-theory/index.md#p7-quadrature)).
+The method page is [](../10-theory/quadrature.md).
 
 ### `jaxstro.numerics.splines`
 

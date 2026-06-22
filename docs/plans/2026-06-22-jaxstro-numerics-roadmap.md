@@ -120,6 +120,10 @@ directional derivatives, AD-vs-FD comparison reports, and tolerance metadata in
 
 **Goal:** Broaden fixed-node integration support while preserving AD flow through values rather than node generation.
 
+**Status:** Implemented: Gauss-Laguerre nodes, Clenshaw-Curtis nodes, and
+`cumulative_simpson(...)` panel-endpoint sums with explicit odd-sample shape
+contract.
+
 **Files:**
 - Modify: `src/jaxstro/numerics/quadrature.py`
 - Test: `tests/unit/test_quadrature.py`

@@ -158,6 +158,83 @@ def simpson(
     return _simpson_core(y, x, axis=axis)
 
 
+def cumulative_simpson(
+    y: Float[Array, "..."],
+    x: Optional[Float[Array, " n"]] = None,
+    *,
+    dx: float = 1.0,
+    axis: int = -1,
+) -> Float[Array, "..."]:
+    """Cumulative Simpson integration at panel endpoints.
+
+    Requires an odd number of uniformly spaced samples. The result keeps all
+    non-integration axes and replaces the integration axis length ``n`` with
+    ``(n + 1) // 2``: the first entry is zero, and subsequent entries are the
+    cumulative Simpson sums at every other input sample.
+    """
+    y = jnp.asarray(y)
+    n = y.shape[axis]
+    if n < 3 or (n % 2) == 0:
+        raise ValueError("cumulative_simpson requires an odd number of points >= 3")
+
+    if x is not None:
+        x = jnp.asarray(x)
+        if x.ndim != 1:
+            raise ValueError("x must be 1D if provided")
+        if x.shape[0] != n:
+            raise ValueError(
+                "x and y must have matching lengths along the integration axis"
+            )
+        step = (x[-1] - x[0]) / (n - 1)
+        spacings = jnp.diff(x)
+        is_uniform = try_concrete_bool(jnp.allclose(spacings, step))
+        if is_uniform is False:
+            raise ValueError(
+                "cumulative_simpson assumes uniform spacing in x; got a "
+                "non-uniform grid."
+            )
+
+    return _cumulative_simpson_core(y, x, dx=dx, axis=axis)
+
+
+@partial(jax.jit, static_argnames=("axis",))
+def _cumulative_simpson_core(
+    y: Float[Array, "..."],
+    x: Optional[Float[Array, " n"]] = None,
+    *,
+    dx: float = 1.0,
+    axis: int = -1,
+) -> Float[Array, "..."]:
+    y = jnp.asarray(y)
+    n = y.shape[axis]
+    if n < 3 or (n % 2) == 0:
+        raise ValueError("cumulative_simpson requires an odd number of points >= 3")
+
+    if x is None:
+        step = jnp.asarray(dx)
+    else:
+        x = jnp.asarray(x)
+        if x.ndim != 1:
+            raise ValueError("x must be 1D if provided")
+        if x.shape[0] != n:
+            raise ValueError(
+                "x and y must have matching lengths along the integration axis"
+            )
+        step = (x[-1] - x[0]) / (n - 1)
+
+    idx = jnp.arange(n)
+    y0 = jnp.take(y, idx[0:-2:2], axis=axis)
+    y1 = jnp.take(y, idx[1:-1:2], axis=axis)
+    y2 = jnp.take(y, idx[2::2], axis=axis)
+    panels = (step / 3.0) * (y0 + 4.0 * y1 + y2)
+    cumsum = jnp.cumsum(panels, axis=axis)
+
+    pad_shape = list(cumsum.shape)
+    pad_shape[axis] = 1
+    zeros = jnp.zeros(pad_shape, dtype=cumsum.dtype)
+    return jnp.concatenate([zeros, cumsum], axis=axis)
+
+
 @partial(jax.jit, static_argnames=("axis",))
 def _simpson_core(
     y: Float[Array, "..."],
@@ -191,4 +268,4 @@ def _simpson_core(
     return (dx / 3.0) * jnp.sum(y0 + 4.0 * y1 + y2, axis=axis)
 
 
-__all__ = ["trapz", "cumulative_trapz", "simpson"]
+__all__ = ["trapz", "cumulative_trapz", "cumulative_simpson", "simpson"]
