@@ -1,11 +1,11 @@
 # jaxstro — status
 
-next: Atmospheres library phase in progress (2026-06-21): catalog-first
-AtmosphereLibrary selector + deterministic coverage reporting + source-preserving
-Sonora/TLUSTY converter scripts + diagnostic overlap/acquisition tables are being
-implemented in jaxstro only. Focused synthetic atmosphere regression is green
-(`45 passed`). Next action: run lint/type/full tests and decide whether to execute
-full local Sonora/TLUSTY conversions from staged archives.
+next: Atmospheres library phase in progress (2026-06-21): local Sonora/TLUSTY
+artifact conversion is complete from staged archives with raw archives preserved.
+Processed counts: Sonora 1440 valid spectra + 4 skipped macOS resource-fork entries;
+TLUSTY 981/551/690 spectra across ragged frequency-grid subgroups. Focused converter
++ local-artifact validation is green (`6 passed`). Next action: add SonoraBackend and
+TlustyBackend against the proven processed schemas before overlap/trust reports.
 
 previous: Phase C MERGED + PUSHED to origin/main (2026-06-17, 25508f7, fast-forward; 447 tests green on
 merged main; feature branch deleted). NOT tagged — tag still held. Phase D remaining: (1) tag/version

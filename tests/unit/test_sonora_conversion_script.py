@@ -41,6 +41,50 @@ def _spec_text(offset: float) -> str:
     )
 
 
+def _spec_text_with_wavelengths(wavelengths: list[float]) -> str:
+    lines = [
+        "wavelength (micron) \t flux (W/m2/m)",
+        "calculated using grid spacing: synthetic",
+        "molecules included: ['h2o']",
+    ]
+    lines.extend(
+        f"{wavelength} {index + 1.0}" for index, wavelength in enumerate(wavelengths)
+    )
+    return "\n".join([*lines, ""])
+
+
+def test_source_discovery_skips_macos_resource_fork_members(
+    tmp_path, capsys, monkeypatch
+):
+    converter = _load_converter()
+    raw_zip = tmp_path / "spectra.zip"
+    with zipfile.ZipFile(raw_zip, "w") as archive:
+        archive.writestr("spectra/t900g31nc_m0.0_co1.0.spec", _spec_text(0.0))
+        archive.writestr("spectra/t1000g100f2_m0.0_co1.0.spec", _spec_text(1.0))
+        archive.writestr("__MACOSX/spectra/._bad.spec", "not a spectrum")
+
+    discovery = converter.discover_sonora_sources(raw_zip)
+
+    assert discovery.valid_count == 2
+    assert discovery.skipped_count == 1
+    assert discovery.skipped_members == ("__MACOSX/spectra/._bad.spec",)
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "convert_sonora_2024.py",
+            "--raw-zip",
+            str(raw_zip),
+            "--dry-run",
+        ],
+    )
+    converter.main()
+    output = capsys.readouterr().out
+    assert "valid_count=2" in output
+    assert "skipped_count=1" in output
+
+
 def test_converter_writes_processed_artifact_without_deleting_zip(tmp_path):
     converter = _load_converter()
     raw_zip = tmp_path / "spectra.zip"
@@ -77,3 +121,23 @@ def test_converter_writes_processed_artifact_without_deleting_zip(tmp_path):
     assert flux.dtype == np.dtype("float32")
     assert flux.shape == (2, 3)
     np.testing.assert_allclose(flux[1, :], [2.0, 3.0, 4.0])
+
+
+def test_converter_rejects_inconsistent_sonora_wavelength_grid(tmp_path):
+    converter = _load_converter()
+    raw_zip = tmp_path / "spectra.zip"
+    with zipfile.ZipFile(raw_zip, "w") as archive:
+        archive.writestr(
+            "spectra/t900g31nc_m0.0_co1.0.spec",
+            _spec_text_with_wavelengths([250.0, 249.5, 249.0]),
+        )
+        archive.writestr(
+            "spectra/t1000g100f2_m0.0_co1.0.spec",
+            _spec_text_with_wavelengths([250.0, 249.0, 248.0]),
+        )
+
+    with pytest.raises(ValueError, match="wavelength grid"):
+        converter.convert_sonora_zip(
+            raw_zip,
+            processed_dir=tmp_path / "processed",
+        )

@@ -52,6 +52,10 @@ back to the theory it implements.
 - **Porting code from a sibling package?** The [decision log](./30-decisions/index.md)
   explains the hoists and reconciliations (`cumulative_trapz`, Newton-PPF, the
   quadrature factory) that changed call sites.
+- **Working with atmosphere spectra?** Start with
+  [](./20-architecture/atmosphere-capabilities.md) for the local dataset matrix,
+  processed-artifact status, and the boundary between jaxstro spectra and
+  downstream photometry.
 - **Auditing a number?** Constants carry provenance to CODATA 2018 / IAU 2015
   in [](./40-api/index.md); the [validation](./60-validation/index.md) section is
   where claims meet their tests.

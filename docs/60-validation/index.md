@@ -28,6 +28,7 @@ to a row here.
 | Catalog-first atmosphere selection preserves provenance and reports raw-only staged data without selecting unavailable backends | Exact synthetic coverage rows and status strings | Processed backend match, raw-only backend-unavailable match, and no-match reason | `tests/unit/test_atmospheres_library.py` |
 | Atmosphere coverage reports are deterministic | Exact Markdown/JSON ordering | Synthetic catalog rows summarized into stable coverage tables | `tests/unit/test_atmospheres_coverage.py`, `tests/unit/test_report_atmosphere_coverage_script.py` |
 | Sonora and TLUSTY converters preserve raw semantic columns and archive provenance | Synthetic zip/tar readback with float32 storage checks | Sonora wavelength/`W/m2/m`; TLUSTY frequency/`F_nu`; source archives are not deleted | `tests/unit/test_sonora_conversion_script.py`, `tests/unit/test_tlusty_conversion_script.py` |
+| Local processed atmosphere artifacts match measured coverage | Exact local counts and finite sampled flux | Sonora 1440 valid spectra + 4 skipped resource forks; TLUSTY 981/551/690 spectra with raw archives preserved and ragged-grid Zarr subgroups | `tests/validation/test_atmospheres_local_artifacts.py` |
 | Cross-library overlap validation is diagnostic, not a strict model-equality claim | Shape/domain/finite checks and normalized SED difference only | Synthetic overlapping and non-overlapping spectra | `tests/unit/test_atmospheres_overlap.py` |
 | Prepared spectra run through JAX transform paths at moderate wavelength size | Shape and finite-output checks | `jit(vmap(...))` over 4096-wavelength spectra | `tests/validation/test_atmospheres_spectra.py` |
 
@@ -39,6 +40,7 @@ Use the focused commands below when changing one subsystem:
 uv run pytest tests/integration/test_grad_audit.py tests/unit/test_spatial.py
 uv run pytest tests/unit/test_atmospheres.py tests/unit/test_atmospheres_spectra.py
 uv run --extra data pytest tests/unit/test_atmospheres*.py tests/unit/test_*conversion_script.py
+uv run --extra data pytest tests/validation/test_atmospheres_local_artifacts.py
 uv run pytest tests/validation/test_atmospheres_spectra.py
 ```
 

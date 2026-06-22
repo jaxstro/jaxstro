@@ -51,6 +51,7 @@ project:
     - title: Architecture
       children:
         - file: 20-architecture/index.md
+        - file: 20-architecture/atmosphere-capabilities.md
         - file: 20-architecture/spectra-data-architecture.md
     - title: Decisions (ADRs)
       children:

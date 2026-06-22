@@ -49,9 +49,11 @@ utility. There is no private or experimental tier at release.
   - Equinox-only PyTree↔flat-vector bridge (`Parameterization`) plus a bijector
     registry (Identity/Exp/Softplus/Sigmoid) for unconstrained-space inference.
 * - `jaxstro.atmospheres`
-  - Host-side PHOENIX/NewEra discovery and processed-artifact loading; JAX-ready
-    raw spectra types (`AtmosphereParams`, `Spectrum`, `SpectrumResult`,
-    `SpectrumStatus`, `PreparedSpectralGrid`) and `NewEraBackend`.
+  - Catalog-first local atmosphere coverage; host-side processed-artifact
+    loading; JAX-ready spectra types (`AtmosphereParams`, `Spectrum`,
+    `SpectrumResult`, `SpectrumStatus`, `PreparedSpectralGrid`); implemented
+    `NewEraBackend` and `BoszBackend`; source-preserving Sonora/TLUSTY metadata
+    and conversion support.
 * - `jaxstro.testing`
   - The grad-audit engine (`audit_entry_point`, `Case`, `AuditResult`, `EdgeConfig`)
     for FD-vs-AD gradient checks.
@@ -126,11 +128,16 @@ module map.
 ### `jaxstro.atmospheres`
 
 `jaxstro.atmospheres` exposes the shared foundation boundary
-`AtmosphereParams -> SpectrumResult`. Host-side backends open processed NewEra
-and BOSZ artifacts; `AtmosphereLibrary` ranks local catalog coverage without
-hiding provenance or pretending raw-only staged data have runtime backends.
-`PreparedSpectralGrid` carries the already-loaded wavelength grid and corner
+`AtmosphereParams -> SpectrumResult`. `AtmosphereLibrary` ranks local catalog
+coverage without hiding provenance or pretending artifact-only data have runtime
+backends. Host-side backends currently open processed NewEra and BOSZ artifacts.
+Sonora and TLUSTY are processed and validated locally, but their runtime backends
+are intentionally separate follow-up work because each needs an explicit
+interpolation and unit policy.
+
+`PreparedSpectralGrid` carries an already-loaded wavelength grid and corner
 spectra for JAX-side bilinear interpolation over `teff` and `logg` at one exact
 abundance plane. Coverage reporting, source-preserving Sonora/TLUSTY converters,
-and overlap diagnostics stay host-side. The architecture and downstream
-ownership boundary are in [](../20-architecture/spectra-data-architecture.md).
+and overlap diagnostics stay host-side. The dataset matrix is in
+[](../20-architecture/atmosphere-capabilities.md); the runtime and downstream
+ownership boundary is in [](../20-architecture/spectra-data-architecture.md).

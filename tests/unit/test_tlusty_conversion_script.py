@@ -82,9 +82,11 @@ def test_converter_writes_processed_artifact_without_deleting_tar(tmp_path):
     assert catalog["flux_unit"].unique().to_list() == ["erg s-1 cm-2 Hz-1"]
     assert catalog["frequency_unit"].unique().to_list() == ["Hz"]
 
+    subgroup = catalog["zarr_subgroup"].unique().item()
     root = zarr.open_group(processed_dir / converter.DEFAULT_TLUSTY_ZARR, mode="r")
-    np.testing.assert_allclose(root["frequency_hz"][:], [3.0e15, 2.0e15, 1.0e15])
-    flux = root["spectra"]["flux_fnu"]
+    group = root["spectra"][subgroup]
+    np.testing.assert_allclose(group["frequency_hz"][:], [3.0e15, 2.0e15, 1.0e15])
+    flux = group["flux_fnu"]
     assert flux.dtype == np.dtype("float32")
     assert flux.shape == (2, 3)
     np.testing.assert_allclose(flux[1, :], [2.0e-10, 0.0, 4.0e-08])

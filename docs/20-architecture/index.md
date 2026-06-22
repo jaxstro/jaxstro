@@ -46,11 +46,12 @@ convenience wrappers may resolve `units=None` to the package default.
 ## Data-layer boundary
 
 Large third-party scientific data is not vendored into the package. Foundation
-data adapters may expose local discovery and metadata indexing, but raw products
-remain in user cache locations or explicitly gitignored local mirrors. The first
-example is `jaxstro.atmospheres`: it can index local PHOENIX/NewEra files, while
-spectral interpolation, filter projection, survey rendering, and photometric
-semantics remain later backend or downstream-package responsibilities.
+data adapters may expose local discovery, provenance, processed-artifact
+validation, and catalog-first runtime selection, but raw products remain in user
+cache locations or explicitly gitignored local mirrors. The first large example
+is `jaxstro.atmospheres`: it can process and index local NewEra, BOSZ, Sonora,
+and TLUSTY atmosphere spectra, while filters, photometry, bolometric
+corrections, survey rendering, and physical interpretation remain downstream.
 
 ## Test layers
 
@@ -67,9 +68,13 @@ a decision record that explains why the boundary exists.
 
 ## Spectra data architecture
 
-The first large-data runtime boundary is documented in
-[](./spectra-data-architecture.md). It defines the shared
-`AtmosphereParams -> SpectrumResult` interface, the split between host-side
-processed-artifact loading and JAX-side prepared interpolation, and the dataset
-ownership rule that keeps filters, photometry, bolometric corrections, and survey
-semantics downstream until a genuinely shared lower-level abstraction exists.
+The local atmosphere capability map is in
+[](./atmosphere-capabilities.md). It explains which libraries are processed,
+which have runtime backends, and why TLUSTY uses ragged frequency-grid subgroups.
+
+The runtime boundary is documented in [](./spectra-data-architecture.md). It
+defines the shared `AtmosphereParams -> SpectrumResult` interface, the split
+between catalog-first host-side selection and JAX-side prepared interpolation,
+and the dataset ownership rule that keeps filters, photometry, bolometric
+corrections, and survey semantics downstream until a genuinely shared lower-level
+abstraction exists.
