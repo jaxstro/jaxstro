@@ -37,6 +37,7 @@ from jaxstro.numerics import (
     integration,
     interpolation,
     linear_algebra,
+    regular_grid,
     rootfinding,
     splines,
     stats,
@@ -156,6 +157,38 @@ class TestInterpolationGradChecks:
         assert_grad_matches(
             lambda y: jnp.sum(interpolation.monotone_cubic_interp(x, y, x_new)),
             y0,
+            eps=1e-5,
+            atol=1e-5,
+            rtol=1e-5,
+        )
+
+
+# =============================================================================
+# regular grid interpolation
+# =============================================================================
+class TestRegularGridGradChecks:
+    def test_regular_grid_interp_wrt_values(self):
+        x = jnp.array([0.0, 1.0, 2.0])
+        y = jnp.array([0.0, 1.0])
+        xx, yy = jnp.meshgrid(x, y, indexing="ij")
+        values = xx**2 + yy
+        xi = jnp.array([[0.25, 0.5], [1.5, 0.25]])
+        assert_grad_matches(
+            lambda v: jnp.sum(regular_grid.regular_grid_interp((x, y), v, xi)),
+            values,
+        )
+
+    def test_regular_grid_interp_wrt_coordinates(self):
+        x = jnp.array([0.0, 1.0, 2.0])
+        y = jnp.array([0.0, 1.0])
+        xx, yy = jnp.meshgrid(x, y, indexing="ij")
+        values = xx**2 + yy
+        xi = jnp.array([[0.25, 0.5], [1.5, 0.25]])
+        assert_grad_matches(
+            lambda points: jnp.sum(
+                regular_grid.regular_grid_interp((x, y), values, points)
+            ),
+            xi,
             eps=1e-5,
             atol=1e-5,
             rtol=1e-5,

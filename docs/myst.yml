@@ -49,6 +49,7 @@ project:
         - file: 10-theory/rootfinding.md
         - file: 10-theory/cumulative-trapz.md
         - file: 10-theory/interpolation.md
+        - file: 10-theory/regular-grid.md
         - file: 10-theory/bsplines.md
     - title: Architecture
       children:

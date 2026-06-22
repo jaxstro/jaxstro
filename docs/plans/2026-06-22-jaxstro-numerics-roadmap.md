@@ -76,6 +76,10 @@ PCHIP-style slope construction, monotone cubic interpolation, and
 
 **Goal:** Support 2D/ND grid interpolation for atmosphere tables, tracks, and calibration surfaces without tying to any domain schema.
 
+**Status:** Implemented: `regular_grid_interp(...)`, `bilinear_interp(...)`,
+and `trilinear_interp(...)` with clamp/fill/reject boundary policies and
+vector-valued payload support.
+
 **Files:**
 - Create: `src/jaxstro/numerics/regular_grid.py`
 - Test: `tests/unit/test_regular_grid.py`

@@ -24,7 +24,7 @@ Skip to the principle that bites you most often — most people's is
 [](#p3-guard-singularities) (the `where`-trap) or [](#p4-saturation) (the silent
 gradient killer) — or go straight to the method pages:
 [](./rootfinding.md), [](./cumulative-trapz.md),
-[](./interpolation.md), and [](./bsplines.md).
+[](./interpolation.md), [](./regular-grid.md), and [](./bsplines.md).
 :::
 
 (p1-differentiability)=
@@ -106,6 +106,9 @@ nothing it should not.
 → [](./interpolation.md) — PCHIP-style interpolation differentiates inside
 stable limiter branches and avoids inventing monotone-table overshoot.
 
+→ [](./regular-grid.md) — multilinear interpolation differentiates inside grid
+cells while making out-of-domain policy explicit.
+
 → [](./bsplines.md) — B-spline evaluation differentiates cleanly through
 coefficients and interior coordinates for fixed knots.
 
@@ -150,6 +153,9 @@ shows them in specific methods. Read on:
 - [](./interpolation.md) — cubic Hermite and PCHIP-style interpolation for
   smooth table evaluation without overshoot (principles [3](#p3-guard-singularities),
   [4](#p4-saturation), [7](#p7-quadrature)).
+- [](./regular-grid.md) — static-rank multilinear interpolation for gridded
+  tables with explicit boundary policy (principles [4](#p4-saturation),
+  [7](#p7-quadrature), [10](#p10-vectorize)).
 - [](./bsplines.md) — local smooth basis functions for AD-friendly tabulated
   functions (principles [3](#p3-guard-singularities), [7](#p7-quadrature),
   [10](#p10-vectorize)).

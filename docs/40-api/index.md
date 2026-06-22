@@ -115,6 +115,15 @@ combines those slopes with the Hermite evaluator; and
 `MonotoneTabulatedFunction1D` wraps a monotone table as a PyTree. The method page
 is [](../10-theory/interpolation.md).
 
+### `jaxstro.numerics.regular_grid`
+
+`regular_grid_interp(points, values, xi, boundary="clamp")` performs static-rank
+multilinear interpolation on a tensor-product grid. `bilinear_interp(...)` and
+`trilinear_interp(...)` are convenience wrappers. Grid axes occupy the leading
+dimensions of `values`; trailing dimensions are treated as vector-valued payloads.
+Boundary policy is explicit: clamp, fill, or reject. The method page is
+[](../10-theory/regular-grid.md).
+
 ### `jaxstro.numerics.integration`
 
 `trapz`, `cumulative_trapz` (dx-outside uniform path), `simpson`. The method and the

@@ -1,9 +1,9 @@
 # jaxstro — status
 
-next: Shape-preserving interpolation batch implemented (2026-06-22):
-`jaxstro.numerics.interpolation` now includes cubic Hermite evaluation,
-PCHIP-style slopes, monotone cubic interpolation, and a monotone PyTree wrapper.
-Next action: review/merge after final local gates.
+next: Regular-grid interpolation batch implemented (2026-06-22):
+`jaxstro.numerics.regular_grid` adds static-rank multilinear interpolation plus
+bilinear/trilinear wrappers with clamp/fill/reject boundary policies. Next
+action: review/merge after final local gates.
 
 previous: Phase C MERGED + PUSHED to origin/main (2026-06-17, 25508f7, fast-forward; 447 tests green on
 merged main; feature branch deleted). NOT tagged — tag still held. Phase D remaining: (1) tag/version

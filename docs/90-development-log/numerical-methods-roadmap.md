@@ -23,7 +23,7 @@ stellar-model policy, and data packages own their archive-specific schemas.
   construction.
 - [x] **Shape-preserving interpolation.** Cubic Hermite and monotone PCHIP-style
   interpolation for table-like functions where overshoot is unacceptable.
-- [ ] **Regular-grid interpolation.** Bilinear, trilinear, and static-rank ND
+- [x] **Regular-grid interpolation.** Bilinear, trilinear, and static-rank ND
   interpolation for gridded models with explicit clamp/fill/reject policies.
 - [ ] **Numerical differentiation diagnostics.** Public finite-difference,
   directional-derivative, and Jacobian-check utilities in `jaxstro.testing`.

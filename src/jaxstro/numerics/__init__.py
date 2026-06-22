@@ -20,6 +20,8 @@ integration
     Lightweight quadrature and cumulative integral helpers.
 quadrature
     Gaussian quadrature factory (Gauss-Legendre, Gauss-Hermite, Hermite basis).
+regular_grid
+    Static-rank regular-grid interpolation helpers.
 sampling
     Differentiable inverse-CDF (PPF) sampling primitives.
 splines
@@ -39,6 +41,7 @@ from . import (
     interpolation,
     linear_algebra,
     quadrature,
+    regular_grid,
     rng,
     rootfinding,
     sampling,
@@ -51,6 +54,7 @@ from .quadrature import (
     hermite_coefficients,
     hermite_e_basis,
 )
+from .regular_grid import bilinear_interp, regular_grid_interp, trilinear_interp
 from .rootfinding import newton_ppf
 from .sampling import inverse_cdf_draw
 from .splines import (
@@ -78,6 +82,10 @@ __all__ = [
     "gauss_hermite_nodes",
     "hermite_e_basis",
     "hermite_coefficients",
+    "regular_grid",
+    "regular_grid_interp",
+    "bilinear_interp",
+    "trilinear_interp",
     "sampling",
     "inverse_cdf_draw",
     "splines",
