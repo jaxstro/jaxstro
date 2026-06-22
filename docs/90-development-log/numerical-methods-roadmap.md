@@ -57,7 +57,7 @@ stellar-model policy, and data packages own their archive-specific schemas.
   vector-Jacobian, Gauss-Newton, and generic Fisher-style products.
 - [x] **Runtime provenance, first slice.** Artifact hashing, environment
   snapshots, method manifests, and deterministic JSON/Markdown rendering.
-- [ ] **Random helpers, first slice.** Explicit key streams, resampling
+- [x] **Random helpers, first slice.** Explicit key streams, resampling
   methods, seed manifests, and shape-stable APIs.
 - [ ] **Structured 1D mesh helpers, first slice.** Cell centers/volumes,
   face geometry, finite-volume stencils, and conservative remap.

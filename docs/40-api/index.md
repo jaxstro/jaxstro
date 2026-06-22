@@ -52,7 +52,7 @@ utility. There is no private or experimental tier at release.
     integration (incl. `cumulative_trapz` + quadrature factory + `newton_ppf`),
     B-spline basis/evaluation, checks, compensated summation, linear algebra,
     autodiff products, distribution kernels, optimization helpers, fixed-step
-    ODE helpers, linear operators, RNG, sampling.
+    ODE helpers, linear operators, RNG/key-stream helpers, sampling.
 * - `jaxstro.spatial`
   - Morton (Z-order) encoding/decoding, grid binning, neighbor-candidate gathering.
 * - `jaxstro.params`
@@ -256,6 +256,14 @@ last. The method page is [](../10-theory/special-functions.md).
 `stratified_uniform(...)` draws one uniform sample from each equal-width stratum
 with deterministic shape. The method pages are [](../10-theory/rootfinding.md) and
 [](../10-theory/grids.md).
+
+### `jaxstro.numerics.random`
+
+`key_stream(...)` and `fold_in_stream(...)` make JAX PRNG key flow explicit.
+`seed_manifest(...)` renders deterministic seed metadata.
+`systematic_resample(...)`, `stratified_resample(...)`, and
+`residual_resample(...)` return shape-stable resampled indices from nonnegative
+weights. The method page is [](../10-theory/random.md).
 
 :::{note} Per-symbol reference pages are planned
 A complete, auto-generated per-module symbol reference (signatures, parameters,

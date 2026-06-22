@@ -35,7 +35,8 @@ live in [](./special-functions.md). Generic distribution kernels live in
 matrix-free algebra helpers live in
 [](./operators.md). Autodiff product helpers live in [](./autodiff.md). Grid
 construction, conservative rebinning, and stratified uniforms are in
-[](./grids.md).
+[](./grids.md), while explicit PRNG streams and resampling helpers are in
+[](./random.md).
 :::
 
 (p1-differentiability)=
@@ -200,6 +201,9 @@ shows them in specific methods. Read on:
 - [](./special-functions.md) — stable Planck kernels, normalized log weights,
   and orthogonal polynomial bases (principles [3](#p3-guard-singularities),
   [5](#p5-floating-point), [9](#p9-correctness)).
+- [](./random.md) — explicit key streams, deterministic seed manifests, and
+  systematic/stratified/residual resampling (principles [6](#p6-non-diff-ops),
+  [9](#p9-correctness), [10](#p10-vectorize)).
 - [](./grids.md) — log grids, conservative binning, and stratified uniforms
   (principles [7](#p7-quadrature), [9](#p9-correctness), [10](#p10-vectorize)).
 

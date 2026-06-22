@@ -61,6 +61,7 @@ project:
         - file: 10-theory/ode.md
         - file: 10-theory/operators.md
         - file: 10-theory/special-functions.md
+        - file: 10-theory/random.md
         - file: 10-theory/grids.md
     - title: Architecture
       children:

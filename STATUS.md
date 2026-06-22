@@ -2,8 +2,9 @@
 
 next: Core-capability expansion in progress (2026-06-22): optimization,
 fixed-step ODE, LinearOperator, distribution-kernel, geometry, and provenance
-batches added with focused validation. Next action: implement random helpers
-under strict TDD.
+batches added with focused validation; random helper batch added with
+deterministic key/resampling tests. Next action: implement structured 1D mesh
+helpers under strict TDD.
 
 previous: Phase C MERGED + PUSHED to origin/main (2026-06-17, 25508f7, fast-forward; 447 tests green on
 merged main; feature branch deleted). NOT tagged — tag still held. Phase D remaining: (1) tag/version

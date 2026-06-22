@@ -24,6 +24,8 @@ integration
     Lightweight quadrature and cumulative integral helpers.
 quadrature
     Gaussian quadrature factory (Gauss-Legendre, Gauss-Hermite, Hermite basis).
+random
+    Explicit PRNG streams and resampling helpers.
 grids
     Grid construction and conservative binning helpers.
 regular_grid
@@ -61,6 +63,7 @@ from . import (
     operators,
     optimization,
     quadrature,
+    random,
     regular_grid,
     rng,
     rootfinding,
@@ -156,6 +159,14 @@ from .quadrature import (
     hermite_coefficients,
     hermite_e_basis,
 )
+from .random import (
+    fold_in_stream,
+    key_stream,
+    residual_resample,
+    seed_manifest,
+    stratified_resample,
+    systematic_resample,
+)
 from .regular_grid import bilinear_interp, regular_grid_interp, trilinear_interp
 from .rootfinding import (
     bisect_many,
@@ -214,6 +225,7 @@ __all__ = [
     "gauss_newton_product",
     "empirical_fisher_product",
     "quadrature",
+    "random",
     "grids",
     "log_grid",
     "geometric_bin_edges",
@@ -238,6 +250,12 @@ __all__ = [
     "clenshaw_curtis_nodes",
     "hermite_e_basis",
     "hermite_coefficients",
+    "key_stream",
+    "fold_in_stream",
+    "seed_manifest",
+    "systematic_resample",
+    "stratified_resample",
+    "residual_resample",
     "regular_grid",
     "regular_grid_interp",
     "bilinear_interp",
