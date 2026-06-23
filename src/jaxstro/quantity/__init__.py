@@ -1,6 +1,6 @@
 """JAX-aware physical quantities and units."""
 
-from . import dimensions
+from . import astro, dimensions, units
 from .astro import AU, Lsun, Msun, Rsun, pc
 from .dimensions import (
     Dimension,
@@ -25,6 +25,7 @@ from .errors import (
     UnitRegistryError,
 )
 from .quantity import Quantity
+from .registry import UnitRegistry
 from .unit import Unit
 from .units import (
     Hz,
@@ -46,6 +47,22 @@ from .units import (
     yr,
 )
 
+DEFAULT_REGISTRY = astro.ASTRO_REGISTRY
+GLOBAL_REGISTRY = UnitRegistry("global", parent=DEFAULT_REGISTRY, mutable=True)
+
+
+def get_unit(symbol: str, *, registry: UnitRegistry | None = None) -> Unit:
+    """Look up a unit by exact symbol in the selected registry."""
+
+    return (registry or GLOBAL_REGISTRY).lookup(symbol)
+
+
+def register_global_unit(unit: Unit, *, aliases: tuple[str, ...] = ()) -> None:
+    """Register a unit globally for interactive sessions and notebooks."""
+
+    GLOBAL_REGISTRY.register(unit, aliases=aliases)
+
+
 __all__ = [
     "AU",
     "Dimension",
@@ -58,10 +75,13 @@ __all__ = [
     "Quantity",
     "QuantityError",
     "Rsun",
+    "DEFAULT_REGISTRY",
+    "GLOBAL_REGISTRY",
     "Unit",
     "UnitConversionError",
     "UnitParseError",
     "UnitRegistryError",
+    "UnitRegistry",
     "acceleration",
     "amount",
     "cm",
@@ -90,4 +110,8 @@ __all__ = [
     "um",
     "velocity",
     "yr",
+    "get_unit",
+    "register_global_unit",
+    "astro",
+    "units",
 ]

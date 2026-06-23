@@ -7,6 +7,7 @@ import math
 from jaxstro import constants as C
 
 from . import dimensions as d
+from .registry import UnitRegistry
 from .unit import Unit, dimensionless
 
 g = Unit("g", 1.0, d.mass, name="gram")
@@ -43,7 +44,31 @@ deg = Unit(
     metadata={"semantic": "angle"},
 )
 
+CORE_REGISTRY = UnitRegistry(
+    "core",
+    units={
+        "1": dimensionless,
+        "g": g,
+        "kg": kg,
+        "cm": cm,
+        "m": m,
+        "km": km,
+        "nm": nm,
+        "micron": micron,
+        "s": s,
+        "day": day,
+        "yr": yr,
+        "K": K,
+        "erg": erg,
+        "Hz": Hz,
+        "rad": rad,
+        "deg": deg,
+    },
+    aliases={"um": "micron"},
+)
+
 __all__ = [
+    "CORE_REGISTRY",
     "Hz",
     "K",
     "cm",
