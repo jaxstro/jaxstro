@@ -48,6 +48,8 @@ class Unit:
     name: str | None = None
     metadata: Mapping[str, Any] = field(default_factory=dict)
 
+    __array_priority__ = 1000
+
     def __post_init__(self) -> None:
         object.__setattr__(self, "scale_to_cgs", float(self.scale_to_cgs))
         object.__setattr__(self, "metadata", dict(self.metadata))
@@ -61,7 +63,9 @@ class Unit:
 
     def __mul__(self, other: "Unit") -> "Unit":
         if not isinstance(other, Unit):
-            return NotImplemented
+            from .quantity import Quantity
+
+            return Quantity(other, self)
         return _canonicalize(
             Unit(
                 _combine_symbols(str(self), str(other), "*"),
@@ -69,6 +73,11 @@ class Unit:
                 self.dimensions * other.dimensions,
             )
         )
+
+    def __rmul__(self, other):
+        from .quantity import Quantity
+
+        return Quantity(other, self)
 
     def __truediv__(self, other: "Unit") -> "Unit":
         if not isinstance(other, Unit):
@@ -80,6 +89,11 @@ class Unit:
                 self.dimensions / other.dimensions,
             )
         )
+
+    def __rtruediv__(self, other):
+        from .quantity import Quantity
+
+        return Quantity(other, dimensionless / self)
 
     def __pow__(self, power: int | Fraction) -> "Unit":
         exponent = _coerce_power(power)

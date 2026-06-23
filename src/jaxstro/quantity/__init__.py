@@ -7,7 +7,6 @@ from .dimensions import (
     acceleration,
     amount,
     current,
-    dimensionless,
     energy,
     length,
     luminosity,
@@ -25,8 +24,27 @@ from .errors import (
     UnitParseError,
     UnitRegistryError,
 )
+from .quantity import Quantity
 from .unit import Unit
-from .units import Hz, K, cm, day, deg, erg, g, kg, km, m, micron, nm, rad, s, um, yr
+from .units import (
+    Hz,
+    K,
+    cm,
+    day,
+    deg,
+    dimensionless,
+    erg,
+    g,
+    kg,
+    km,
+    m,
+    micron,
+    nm,
+    rad,
+    s,
+    um,
+    yr,
+)
 
 __all__ = [
     "AU",
@@ -37,6 +55,7 @@ __all__ = [
     "K",
     "Lsun",
     "Msun",
+    "Quantity",
     "QuantityError",
     "Rsun",
     "Unit",

@@ -20,6 +20,7 @@ from . import (
     numerics,
     params,
     provenance,
+    quantity,
     testing,
     units,
 )
@@ -36,6 +37,7 @@ __all__ = [
     "geometry",
     "params",
     "provenance",
+    "quantity",
     "testing",
 ]
 __version__ = "0.1.0"
