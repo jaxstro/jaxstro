@@ -1,15 +1,15 @@
 ---
 title: Quantity system architecture
 description: >-
-  The planned jaxstro.quantity design: concrete units, dimensional analysis,
+  The jaxstro.quantity design: concrete units, dimensional analysis,
   JAX-aware quantities, astrophysical bases, exact parsing, and migration from
   legacy unit systems.
 ---
 
-`jaxstro.quantity` is the planned unit-aware value layer for jaxstro. It is
-designed to become the computational-astrophysics counterpart to observation-led
-unit ecosystems: concrete enough for day-to-day science, strict enough for
-library internals, and light enough to stay inside the foundation package.
+`jaxstro.quantity` is the unit-aware value layer for jaxstro. It is the
+computational-astrophysics counterpart to observation-led unit ecosystems:
+concrete enough for day-to-day science, strict enough for library internals, and
+light enough to stay inside the foundation package.
 
 The system is additive. Existing `jaxstro.units` code remains stable while
 downstream packages migrate at their own pace.

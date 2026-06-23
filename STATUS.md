@@ -1,8 +1,8 @@
 # jaxstro — status
 
-next: Quantity architecture approved and captured in docs/plans plus the
-architecture website page (2026-06-23). Next action: implement
-`jaxstro.quantity` from the task-by-task plan when Anna gives the go.
+next: `jaxstro.quantity` implementation in progress on branch
+`codex/quantity-implementation` (2026-06-23). Tasks 1-11 complete with per-task
+commits; docs/final integration gate running next.
 
 previous: Phase C MERGED + PUSHED to origin/main (2026-06-17, 25508f7, fast-forward; 447 tests green on
 merged main; feature branch deleted). NOT tagged — tag still held. Phase D remaining: (1) tag/version

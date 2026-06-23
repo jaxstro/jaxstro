@@ -11,6 +11,7 @@ re-teaching everything from scratch.
 
 Current recipes:
 
+- [](./quantity-migration.md)
 - [](./newera-data-processing.md)
 - [](./bosz-data-processing.md)
 - [](./sonora-data-processing.md)

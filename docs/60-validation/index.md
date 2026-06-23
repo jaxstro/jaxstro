@@ -18,6 +18,8 @@ to a row here.
 | --- | --- | --- | --- |
 | Constants match their recorded CGS values | Exact or documented floating tolerance per constant | Unit tests compare exported constants and derived values | `tests/unit/test_constants.py` |
 | Unit-system conversions round-trip through CGS | Floating tolerance in the unit tests | Mass, length, time, velocity, and `G` conversions | `tests/unit/test_units.py` |
+| Quantity dimensions, units, parser, serialization, bases, constants, equivalencies, and math wrappers preserve explicit contracts | Exact rational equality, CGS scale parity, structured errors, and focused floating tolerances | `Quantity` PyTree arithmetic, unit parsing/formatting, registry lookup, constants provenance, opt-in equivalencies, and dimension-aware math | `tests/unit/test_quantity_*.py` |
+| Quantity values survive representative JAX transforms | Exact or close transform outputs | `jit`, `vmap`, and `grad` through quantity construction, conversion, where, reductions, and math wrappers | `tests/validation/test_quantity_jax_transforms.py`, `tests/validation/test_quantity_math_gradients.py` |
 | `enable_high_precision()` configures JAX x64 before array creation | Exact config state | `jax_enable_x64=True` and highest matmul precision | `tests/unit/test_jaxconfig.py` |
 | AD-safe numerical primitives avoid NaN gradients on guarded paths | Test-specific finite/close checks | Root-finding, interpolation, sampling, quadrature, and safe math | `tests/unit/test_numerics.py`, `tests/validation/test_grad_checks.py` |
 | Root bracketing and monotone inverse tables expose explicit value/gradient contracts | Exact synthetic roots and FD-vs-AD checks where smooth | Fixed-count bracket expansion, independent bisection arrays, clamped monotone inverse interpolation, documented branchy-solver AD policy | `tests/unit/test_numerics.py`, `tests/validation/test_grad_checks.py` |
@@ -58,6 +60,7 @@ Use the focused commands below when changing one subsystem:
 ```bash
 uv run pytest tests/integration/test_grad_audit.py
 uv run pytest tests/integration/test_grad_audit.py tests/unit/test_spatial.py
+uv run pytest tests/unit/test_quantity_*.py tests/validation/test_quantity_*.py
 uv run pytest tests/unit/test_atmospheres.py tests/unit/test_atmospheres_spectra.py
 uv run pytest tests/unit/test_interpolation_shape_preserving.py tests/validation/test_grad_checks.py
 uv run pytest tests/unit/test_regular_grid.py tests/validation/test_grad_checks.py

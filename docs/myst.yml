@@ -47,6 +47,7 @@ project:
     - title: Theory — AD-safe numerics
       children:
         - file: 10-theory/index.md
+        - file: 10-theory/quantities.md
         - file: 10-theory/rootfinding.md
         - file: 10-theory/cumulative-trapz.md
         - file: 10-theory/quadrature.md
@@ -93,6 +94,7 @@ project:
     - title: How-to
       children:
         - file: 50-howto/index.md
+        - file: 50-howto/quantity-migration.md
         - file: 50-howto/newera-data-processing.md
         - file: 50-howto/bosz-data-processing.md
         - file: 50-howto/sonora-data-processing.md

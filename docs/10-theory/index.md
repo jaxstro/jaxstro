@@ -36,7 +36,8 @@ matrix-free algebra helpers live in
 [](./operators.md). Autodiff product helpers live in [](./autodiff.md). Grid
 construction, conservative rebinning, and stratified uniforms are in
 [](./grids.md), structured 1D mesh helpers are in [](./meshes.md), and explicit
-PRNG streams and resampling helpers are in [](./random.md).
+PRNG streams and resampling helpers are in [](./random.md). Quantity semantics
+and boundary conversion live in [](./quantities.md).
 :::
 
 (p1-differentiability)=
@@ -209,6 +210,10 @@ shows them in specific methods. Read on:
 - [](./meshes.md) — structured 1D cell/face geometry, finite-volume stencils,
   and conservative cell-average remapping (principles [7](#p7-quadrature),
   [9](#p9-correctness), [10](#p10-vectorize)).
+- [](./quantities.md) — exact dimensions, JAX PyTree quantities, parser
+  canonicalization, bases, constants, equivalencies, and the raw-array boundary
+  pattern (principles [1](#p1-differentiability), [9](#p9-correctness),
+  [10](#p10-vectorize)).
 
 Then map principles to call signatures in [](../40-api/index.md), and the design
 *choices* behind them in [](../30-decisions/index.md).
