@@ -1,6 +1,7 @@
 """JAX-aware physical quantities and units."""
 
 from . import dimensions
+from .astro import AU, Lsun, Msun, Rsun, pc
 from .dimensions import (
     Dimension,
     acceleration,
@@ -24,26 +25,50 @@ from .errors import (
     UnitParseError,
     UnitRegistryError,
 )
+from .unit import Unit
+from .units import Hz, K, cm, day, deg, erg, g, kg, km, m, micron, nm, rad, s, um, yr
 
 __all__ = [
+    "AU",
     "Dimension",
     "DimensionError",
     "EquivalencyError",
+    "Hz",
+    "K",
+    "Lsun",
+    "Msun",
     "QuantityError",
+    "Rsun",
+    "Unit",
     "UnitConversionError",
     "UnitParseError",
     "UnitRegistryError",
     "acceleration",
     "amount",
+    "cm",
     "current",
+    "day",
+    "deg",
     "dimensionless",
     "dimensions",
     "energy",
+    "erg",
+    "g",
+    "kg",
+    "km",
     "length",
     "luminosity",
+    "m",
     "mass",
+    "micron",
+    "nm",
+    "pc",
     "power",
+    "rad",
+    "s",
     "temperature",
     "time",
+    "um",
     "velocity",
+    "yr",
 ]
