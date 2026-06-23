@@ -24,6 +24,7 @@ from .errors import (
     UnitParseError,
     UnitRegistryError,
 )
+from .parser import format_unit, parse_unit
 from .quantity import Quantity
 from .registry import UnitRegistry
 from .unit import Unit
@@ -111,6 +112,8 @@ __all__ = [
     "velocity",
     "yr",
     "get_unit",
+    "format_unit",
+    "parse_unit",
     "register_global_unit",
     "astro",
     "units",

@@ -23,6 +23,8 @@ def _coerce_power(power: int | Fraction) -> Fraction:
 
 
 def _format_power(symbol: str, power: Fraction) -> str:
+    if " " in symbol or "/" in symbol:
+        symbol = f"({symbol})"
     if power == 1:
         return symbol
     if power.denominator == 1:
