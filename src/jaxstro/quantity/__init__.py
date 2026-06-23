@@ -1,6 +1,6 @@
 """JAX-aware physical quantities and units."""
 
-from . import astro, bases, constants, dimensions, units
+from . import astro, bases, constants, dimensions, equivalencies, units
 from .astro import AU, Lsun, Msun, Rsun, pc
 from .dimensions import (
     Dimension,
@@ -95,6 +95,7 @@ __all__ = [
     "deg",
     "dimensionless",
     "dimensions",
+    "equivalencies",
     "energy",
     "erg",
     "g",

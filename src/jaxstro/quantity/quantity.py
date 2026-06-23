@@ -9,7 +9,7 @@ from typing import Any
 import jax
 
 from . import dimensions as d
-from .errors import DimensionError
+from .errors import DimensionError, EquivalencyError
 from .unit import Unit
 from .unit import dimensionless as dimensionless_unit
 
@@ -49,10 +49,22 @@ class Quantity:
 
     def to(self, unit: Unit, *, equivalencies=None) -> "Quantity":
         if equivalencies is not None:
-            for equivalency in equivalencies:
+            equivalency_items = (
+                equivalencies
+                if isinstance(equivalencies, tuple | list)
+                else (equivalencies,)
+            )
+            for equivalency in equivalency_items:
                 converted = equivalency.convert(self, unit)
                 if converted is not None:
                     return converted
+            if not self.unit.is_compatible_with(unit):
+                raise EquivalencyError(
+                    f"No provided equivalency can convert {self.unit} to {unit}.",
+                    operation="equivalency-convert",
+                    expected=unit.dimensions,
+                    actual=self.unit.dimensions,
+                )
         return Quantity(self.value * _conversion_factor(self.unit, unit), unit)
 
     def to_value(self, unit: Unit, *, equivalencies=None):
