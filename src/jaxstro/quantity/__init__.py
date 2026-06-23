@@ -1,6 +1,6 @@
 """JAX-aware physical quantities and units."""
 
-from . import astro, bases, dimensions, units
+from . import astro, bases, constants, dimensions, units
 from .astro import AU, Lsun, Msun, Rsun, pc
 from .dimensions import (
     Dimension,
@@ -89,6 +89,7 @@ __all__ = [
     "acceleration",
     "amount",
     "cm",
+    "constants",
     "current",
     "day",
     "deg",
