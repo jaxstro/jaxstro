@@ -86,6 +86,10 @@ evidence.
 - **Evaluating the broader package vision?** Read
   [](./20-architecture/science-general-vision.md) for the module boundary, the
   non-astronomy value proposition, and the checklist for future core modules.
+- **Planning quantity-aware APIs?** Read
+  [](./20-architecture/quantity-system.md) for the planned `jaxstro.quantity`
+  design: concrete units, dimensional arithmetic, parser/serialization,
+  role-aware bases, constants, equivalencies, and migration from `jaxstro.units`.
 - **Porting code from a sibling package?** The [decision log](./30-decisions/index.md)
   explains the hoists and reconciliations (`cumulative_trapz`, Newton-PPF, the
   quadrature factory) that changed call sites.

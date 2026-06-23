@@ -52,6 +52,16 @@ New foundation modules should pass four checks before they belong here:
 The broader product vision and future-module map are in
 [](./science-general-vision.md).
 
+## Quantity architecture
+
+`jaxstro.quantity` is the planned unit-aware value layer: concrete unit objects,
+dimension-safe arithmetic, exact parser/serialization, role-aware astrophysical
+bases, versioned constants, and explicit equivalencies. It is additive to the
+existing `jaxstro.units` API so downstream packages can migrate deliberately.
+The approved architecture is in [](./quantity-system.md), and it extends the
+decision recorded in
+[](../30-decisions/0006-build-own-quantity-not-unxt.md).
+
 ## Numerical shape
 
 Public numerical helpers are JAX-native and are designed for `jit`, `vmap`, and

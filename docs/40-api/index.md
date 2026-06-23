@@ -26,6 +26,13 @@ The committed surface for 0.1.0 is below. `units`, `constants`, `astrometry`,
 `atmospheres` are **stable-but-evolving**; `testing` is a **public, semi-stable**
 utility. There is no private or experimental tier at release.
 
+The next planned foundation surface is `jaxstro.quantity`: a concrete
+unit/quantity namespace with dimensional arithmetic, exact unit-string parsing,
+role-aware astrophysical bases, versioned constants, explicit equivalencies, and
+dimension-aware math wrappers. It is documented as an additive future layer in
+[](../20-architecture/quantity-system.md); existing `jaxstro.units` remains the
+backwards-compatible `UnitSystem` API during downstream migration.
+
 ```{list-table} Public modules
 :header-rows: 1
 :label: tbl-modules
@@ -37,6 +44,11 @@ utility. There is no private or experimental tier at release.
     `ASTRO_STELLAR`/`solar`, `ASTRO_DYNAMICAL`/`stellar`, `ASTRO_PLANETARY`/`binary`)
     and aliases; `DEFAULT` (= CGS) re-exported as `jaxstro.DEFAULT_UNITS`;
     `PhotometricUnits`.
+* - `jaxstro.quantity` (planned)
+  - Future `Quantity` and `Unit` layer with ergonomic concrete units (`cm`,
+    `erg`, `Msun`, `micron`), exact dimensions, conversions, parser and
+    serialization, role-aware bases, versioned constants, equivalencies, and
+    dimension-aware math wrappers. See [](../20-architecture/quantity-system.md).
 * - `jaxstro.constants`
   - CGS physical constants from CODATA 2018 and IAU 2015, each with a provenance
     comment, plus photometric constants (Oke & Gunn 1983).

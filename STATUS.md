@@ -1,8 +1,8 @@
 # jaxstro — status
 
-next: Natural cubic spline added to `jaxstro.numerics.interpolation` for fluxax
-extinction-curve reuse (2026-06-22). Next action: run final gates and then
-continue quantity-module design.
+next: Quantity architecture approved and captured in docs/plans plus the
+architecture website page (2026-06-23). Next action: implement
+`jaxstro.quantity` from the task-by-task plan when Anna gives the go.
 
 previous: Phase C MERGED + PUSHED to origin/main (2026-06-17, 25508f7, fast-forward; 447 tests green on
 merged main; feature branch deleted). NOT tagged — tag still held. Phase D remaining: (1) tag/version
