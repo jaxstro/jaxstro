@@ -17,6 +17,7 @@ from jaxstro.coords import (
     galactic_to_equatorial,
     sky_tangent,
     spherical_to_cartesian,
+    zenith_parallactic,
 )
 
 
@@ -412,3 +413,81 @@ class TestClusterToGalacticCartesian:
 
         out = compute(pos)
         assert out.shape == (16, 3)
+
+
+class TestZenithParallactic:
+    """Tests for zenith_parallactic observational-geometry helper."""
+
+    def test_transit_at_zenith(self):
+        """Source at transit (H=0) from a site at lat=dec sits at the zenith."""
+        lat = jnp.deg2rad(-30.2446)
+        tan_z, q = zenith_parallactic(0.0, lat, lat)
+        # alt = 90 deg -> z = 0 -> tan_z = 0; q = 0 at transit.
+        assert jnp.abs(tan_z) < 1e-6
+        assert jnp.abs(q) < 1e-6
+
+    def test_transit_zenith_distance_equals_dec_minus_lat(self):
+        """At transit, zenith distance = |dec - lat| (meridian geometry)."""
+        lat = jnp.deg2rad(-30.0)
+        dec = jnp.deg2rad(0.0)
+        tan_z, q = zenith_parallactic(0.0, dec, lat)
+        expected = jnp.tan(jnp.abs(dec - lat))
+        assert jnp.abs(tan_z - expected) < 1e-6
+        # On the meridian the parallactic angle is 0 (north) or pi (south).
+        assert jnp.abs(jnp.abs(q) - 0.0) < 1e-6 or jnp.abs(jnp.abs(q) - jnp.pi) < 1e-6
+
+    def test_zenith_distance_grows_off_meridian(self):
+        """tan_z increases as the source moves away from transit."""
+        lat = jnp.deg2rad(-30.0)
+        dec = jnp.deg2rad(-10.0)
+        tz0, _ = zenith_parallactic(0.0, dec, lat)
+        tz1, _ = zenith_parallactic(jnp.deg2rad(45.0), dec, lat)
+        assert tz1 > tz0
+
+    def test_parallactic_angle_sign_flips_with_hour_angle(self):
+        """q is antisymmetric in hour angle (east vs west of meridian)."""
+        lat = jnp.deg2rad(-30.0)
+        dec = jnp.deg2rad(-10.0)
+        _, q_east = zenith_parallactic(jnp.deg2rad(-40.0), dec, lat)
+        _, q_west = zenith_parallactic(jnp.deg2rad(40.0), dec, lat)
+        assert jnp.sign(q_east) == -jnp.sign(q_west)
+        assert jnp.abs(q_east + q_west) < 1e-6
+
+    def test_matches_inline_identities(self):
+        """Reproduces the raw spherical-astronomy formulae exactly."""
+        H, dec, lat = 0.7, -0.2, jnp.deg2rad(-30.2446)
+        sin_alt = jnp.sin(lat) * jnp.sin(dec) + jnp.cos(lat) * jnp.cos(dec) * jnp.cos(H)
+        alt = jnp.arcsin(jnp.clip(sin_alt, -1.0, 1.0))
+        tan_z_ref = jnp.tan(0.5 * jnp.pi - alt)
+        q_ref = jnp.arctan2(
+            jnp.sin(H), jnp.tan(lat) * jnp.cos(dec) - jnp.sin(dec) * jnp.cos(H)
+        )
+        tan_z, q = zenith_parallactic(H, dec, lat)
+        assert jnp.abs(tan_z - tan_z_ref) < 1e-12
+        assert jnp.abs(q - q_ref) < 1e-12
+
+    def test_vmap_over_visits(self):
+        """vmap over an array of hour angles."""
+        H = jnp.linspace(-0.5, 0.5, 32)
+        dec = jnp.deg2rad(-10.0)
+        lat = jnp.deg2rad(-30.0)
+        tan_z, q = jax.vmap(lambda h: zenith_parallactic(h, dec, lat))(H)
+        assert tan_z.shape == (32,)
+        assert q.shape == (32,)
+        assert jnp.all(jnp.isfinite(tan_z))
+        assert jnp.all(jnp.isfinite(q))
+
+    def test_jit_compiles(self):
+        """JIT-compilable."""
+        f = jax.jit(zenith_parallactic)
+        tan_z, q = f(0.3, -0.1, -0.5)
+        assert jnp.isfinite(tan_z) and jnp.isfinite(q)
+
+    def test_grad_finite(self):
+        """Gradients w.r.t. hour angle are finite (differentiable geometry)."""
+        lat = jnp.deg2rad(-30.0)
+        dec = jnp.deg2rad(-10.0)
+        g_tz = jax.grad(lambda h: zenith_parallactic(h, dec, lat)[0])(0.4)
+        g_q = jax.grad(lambda h: zenith_parallactic(h, dec, lat)[1])(0.4)
+        assert jnp.isfinite(g_tz)
+        assert jnp.isfinite(g_q)

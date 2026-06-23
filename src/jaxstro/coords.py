@@ -45,6 +45,7 @@ __all__ = [
     "spherical_to_cartesian",
     "compute_parallax",
     "compute_proper_motions",
+    "zenith_parallactic",
 ]
 
 
@@ -500,6 +501,69 @@ def spherical_to_cartesian(
     y = r * jnp.sin(theta) * jnp.sin(phi)
     z = r * jnp.cos(theta)
     return jnp.stack([x, y, z], axis=1)
+
+
+# ===========================================================================
+# Observational Geometry (telescope pointing)
+# ===========================================================================
+
+
+@jax.jit
+def zenith_parallactic(
+    hour_angle: "Float[Array, '...']",
+    dec: "Float[Array, '...']",
+    lat: "Float[Array, '...']",
+) -> tuple["Float[Array, '...']", "Float[Array, '...']"]:
+    """
+    Zenith distance (as ``tan z``) and parallactic angle for a pointing.
+
+    Standard spherical-astronomy identities for a source at hour angle ``H`` and
+    declination ``delta`` observed from a site at geographic latitude ``phi``::
+
+        sin(alt) = sin(phi) sin(delta) + cos(phi) cos(delta) cos(H)
+        z        = pi/2 - alt
+        q        = atan2( sin(H), tan(phi) cos(delta) - sin(delta) cos(H) )
+
+    The parallactic angle ``q`` is the position angle of the local vertical (zenith
+    direction) at the source, measured from north through east -- the direction along
+    which differential chromatic refraction displaces a centroid.
+
+    Parameters
+    ----------
+    hour_angle : Float[Array, "..."]
+        Local hour angle ``H`` [radians] (0 at transit, increasing westward).
+    dec : Float[Array, "..."]
+        Source declination ``delta`` [radians].
+    lat : Float[Array, "..."]
+        Site geographic latitude ``phi`` [radians].
+
+    Returns
+    -------
+    tan_z : Float[Array, "..."]
+        ``tan`` of the zenith distance ``z = pi/2 - alt`` (the airmass/DCR amplitude).
+    q : Float[Array, "..."]
+        Parallactic angle [radians] (the DCR displacement direction).
+
+    Notes
+    -----
+    Fully differentiable and ``vmap``-safe. Single source of truth for the LSST
+    synthetic and real-OpSim cadence geometry (fluxax ``instruments/rubin``).
+
+    References
+    ----------
+    Smart, W. M. (1977), *Textbook on Spherical Astronomy*, 6th ed., Ch. II
+    (the spherical triangle pole-zenith-source).
+    """
+    sin_alt = jnp.sin(lat) * jnp.sin(dec) + jnp.cos(lat) * jnp.cos(dec) * jnp.cos(
+        hour_angle
+    )
+    alt = jnp.arcsin(jnp.clip(sin_alt, -1.0, 1.0))
+    tan_z = jnp.tan(0.5 * jnp.pi - alt)
+    q = jnp.arctan2(
+        jnp.sin(hour_angle),
+        jnp.tan(lat) * jnp.cos(dec) - jnp.sin(dec) * jnp.cos(hour_angle),
+    )
+    return tan_z, q
 
 
 # ===========================================================================
