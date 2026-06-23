@@ -33,6 +33,7 @@ def parse_unit(expr: str, *, registry: UnitRegistry | None = None) -> Unit:
     unit = parser.parse_expression()
     if parser.peek() is not None:
         token = parser.peek()
+        assert token is not None
         raise UnitParseError(
             f"Unexpected token {token.value!r} at the end of unit expression.",
             operation="unit-parse",
@@ -88,20 +89,22 @@ class _Parser:
         return token
 
     def accept(self, kind: str) -> bool:
-        if self.peek() is not None and self.peek().kind == kind:
+        token = self.peek()
+        if token is not None and token.kind == kind:
             self.pop()
             return True
         return False
 
     def expect(self, kind: str) -> _Token:
-        if self.peek() is None:
+        token = self.peek()
+        if token is None:
             raise UnitParseError(
                 f"Expected {kind!r}, got end of expression.",
                 operation="unit-parse",
                 expected=kind,
                 actual=None,
             )
-        token = self.pop()
+        self.pos += 1
         if token.kind != kind:
             raise UnitParseError(
                 f"Expected {kind!r}, got {token.value!r}.",
@@ -113,12 +116,12 @@ class _Parser:
 
     def parse_expression(self) -> Unit:
         unit = self.parse_power()
-        while self.peek() is not None and self.peek().kind != ")":
+        while (token := self.peek()) is not None and token.kind != ")":
             if self.accept("*"):
                 unit = unit * self.parse_power()
             elif self.accept("/"):
                 unit = unit / self.parse_power()
-            elif self.peek() is not None and self.peek().kind in {"symbol", "("}:
+            elif token.kind in {"symbol", "("}:
                 unit = unit * self.parse_power()
             else:
                 break
@@ -126,7 +129,8 @@ class _Parser:
 
     def parse_power(self) -> Unit:
         unit = self.parse_primary()
-        if self.peek() is not None and self.peek().kind in {"^", "**"}:
+        token = self.peek()
+        if token is not None and token.kind in {"^", "**"}:
             self.pop()
             unit = unit ** self.parse_exponent()
         return unit

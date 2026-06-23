@@ -15,8 +15,8 @@ class UnitRegistry:
     """Exact-symbol unit registry with optional parent lookup."""
 
     name: str
-    units: Mapping[str, Unit] = field(default_factory=dict)
-    aliases: Mapping[str, str] = field(default_factory=dict)
+    units: dict[str, Unit] = field(default_factory=dict)
+    aliases: dict[str, str] = field(default_factory=dict)
     parent: "UnitRegistry | None" = None
     mutable: bool = False
 
@@ -77,9 +77,9 @@ class UnitRegistry:
                 operation="unit-register",
                 actual=self.name,
             )
-        dict.__setitem__(self.units, unit.symbol, unit)
+        self.units[unit.symbol] = unit
         for alias in aliases:
-            dict.__setitem__(self.aliases, alias, unit.symbol)
+            self.aliases[alias] = unit.symbol
 
 
 __all__ = ["UnitRegistry"]
