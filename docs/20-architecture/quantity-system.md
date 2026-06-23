@@ -239,6 +239,11 @@ existing `UnitSystem` behavior, aliases, and `DEFAULT_UNITS` policy. Quantity is
 the future refactor target for fluxax, gravax, progenax, and related packages,
 but deprecations wait until those downstream migrations have a tested path.
 
+For compatibility, each legacy `UnitSystem` may expose representative quantity
+units through `quantity_units` and `quantity_scales`. These helpers are bridges
+for boundary conversion and migration notebooks; they do not replace
+`UnitSystem`, change existing aliases, or emit deprecation warnings.
+
 The docs should teach both worlds: legacy `UnitSystem` patterns for existing
 code and quantity-first boundary validation for new code. Package internals
 should converge on quantity-aware public APIs and raw-array internal kernels.

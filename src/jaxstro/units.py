@@ -246,6 +246,36 @@ class UnitSystem:
             time_cgs / self.time_scale_cgs,
         )
 
+    @property
+    def quantity_units(self):
+        """
+        Representative :mod:`jaxstro.quantity` units for this legacy system.
+
+        This additive bridge keeps ``UnitSystem`` stable while letting callers
+        migrate boundary code to the richer quantity layer at their own pace.
+        """
+
+        from jaxstro import quantity as q
+
+        return (
+            q.get_unit(self.mass_unit),
+            q.get_unit(self.length_unit),
+            q.get_unit(self.time_unit),
+        )
+
+    @property
+    def quantity_scales(self) -> dict[str, float]:
+        """
+        CGS scales for the representative quantity units in this system.
+        """
+
+        mass_unit, length_unit, time_unit = self.quantity_units
+        return {
+            "mass": mass_unit.scale_to_cgs,
+            "length": length_unit.scale_to_cgs,
+            "time": time_unit.scale_to_cgs,
+        }
+
     def __str__(self) -> str:  # pragma: no cover - cosmetic
         return (
             f"{self.name} "
