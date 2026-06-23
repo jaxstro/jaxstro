@@ -1,6 +1,6 @@
 """JAX-aware physical quantities and units."""
 
-from . import astro, dimensions, units
+from . import astro, bases, dimensions, units
 from .astro import AU, Lsun, Msun, Rsun, pc
 from .dimensions import (
     Dimension,
@@ -32,6 +32,7 @@ from .unit import Unit
 from .units import (
     Hz,
     K,
+    Myr,
     cm,
     day,
     deg,
@@ -74,6 +75,7 @@ __all__ = [
     "K",
     "Lsun",
     "Msun",
+    "Myr",
     "Quantity",
     "QuantityError",
     "Rsun",
@@ -121,5 +123,6 @@ __all__ = [
     "unit_from_dict",
     "unit_to_dict",
     "astro",
+    "bases",
     "units",
 ]

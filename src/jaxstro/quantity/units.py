@@ -23,6 +23,7 @@ um = micron
 s = Unit("s", 1.0, d.time, name="second")
 day = Unit("day", 86400.0, d.time, name="day")
 yr = Unit("yr", C.YR_S, d.time, name="Julian year")
+Myr = Unit("Myr", C.MYR_S, d.time, name="megayear")
 
 K = Unit("K", 1.0, d.temperature, name="kelvin")
 
@@ -58,6 +59,7 @@ CORE_REGISTRY = UnitRegistry(
         "s": s,
         "day": day,
         "yr": yr,
+        "Myr": Myr,
         "K": K,
         "erg": erg,
         "Hz": Hz,
@@ -71,6 +73,7 @@ __all__ = [
     "CORE_REGISTRY",
     "Hz",
     "K",
+    "Myr",
     "cm",
     "day",
     "deg",

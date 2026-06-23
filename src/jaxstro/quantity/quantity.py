@@ -64,6 +64,9 @@ class Quantity:
     def to_cgs_value(self):
         return self.value * self.unit.scale_to_cgs
 
+    def to_basis(self, basis, *, role: str | None = None) -> "Quantity":
+        return self.to(basis.unit_for(self, role=role))
+
     def to_dict(self):
         from .serialization import to_dict
 
