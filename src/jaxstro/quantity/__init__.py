@@ -1,6 +1,6 @@
 """JAX-aware physical quantities and units."""
 
-from . import astro, bases, constants, dimensions, equivalencies, units
+from . import astro, bases, constants, dimensions, equivalencies, math, units
 from .astro import AU, Lsun, Msun, Rsun, pc
 from .dimensions import (
     Dimension,
@@ -105,6 +105,7 @@ __all__ = [
     "luminosity",
     "m",
     "mass",
+    "math",
     "micron",
     "nm",
     "pc",
