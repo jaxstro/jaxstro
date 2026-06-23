@@ -64,6 +64,17 @@ class Quantity:
     def to_cgs_value(self):
         return self.value * self.unit.scale_to_cgs
 
+    def to_dict(self):
+        from .serialization import to_dict
+
+        return to_dict(self)
+
+    @classmethod
+    def from_dict(cls, payload):
+        from .serialization import from_dict
+
+        return from_dict(payload)
+
     def _require_compatible(self, other: "Quantity", operation: str) -> None:
         if not self.unit.is_compatible_with(other.unit):
             raise DimensionError(

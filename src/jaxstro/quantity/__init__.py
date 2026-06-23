@@ -27,6 +27,7 @@ from .errors import (
 from .parser import format_unit, parse_unit
 from .quantity import Quantity
 from .registry import UnitRegistry
+from .serialization import from_dict, to_dict, unit_from_dict, unit_to_dict
 from .unit import Unit
 from .units import (
     Hz,
@@ -115,6 +116,10 @@ __all__ = [
     "format_unit",
     "parse_unit",
     "register_global_unit",
+    "from_dict",
+    "to_dict",
+    "unit_from_dict",
+    "unit_to_dict",
     "astro",
     "units",
 ]
