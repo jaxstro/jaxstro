@@ -10,6 +10,7 @@ import jax.numpy as jnp
 # These imports should fail until implementation exists
 from jaxstro.coords import (
     cartesian_to_spherical,
+    cluster_to_galactic_cartesian,
     compute_parallax,
     compute_proper_motions,
     equatorial_to_galactic,
@@ -329,3 +330,85 @@ class TestJITCompilation:
 
         result = compute(positions, 1000.0)
         assert result.shape == (1,)
+
+
+class TestClusterToGalacticCartesian:
+    """Tests for the cluster->heliocentric-Galactic-Cartesian placement transform."""
+
+    def test_center_toward_galactic_center(self):
+        """Center star at (l=0, b=0, 1 kpc) -> (1000, 0, 0) pc toward GC."""
+        uvw = cluster_to_galactic_cartesian(
+            jnp.array([[0.0, 0.0, 0.0]]), 0.0, 0.0, 1000.0
+        )
+        assert jnp.allclose(uvw[0], jnp.array([1000.0, 0.0, 0.0]), atol=1e-6)
+
+    def test_center_at_l90(self):
+        """Center at (l=90, b=0, 1 kpc) -> (0, 1000, 0) pc."""
+        uvw = cluster_to_galactic_cartesian(
+            jnp.array([[0.0, 0.0, 0.0]]), 90.0, 0.0, 1000.0
+        )
+        assert jnp.allclose(uvw[0], jnp.array([0.0, 1000.0, 0.0]), atol=1e-6)
+
+    def test_center_at_ngp(self):
+        """Center at (b=90, 1 kpc) -> (0, 0, 1000) pc toward NGP."""
+        uvw = cluster_to_galactic_cartesian(
+            jnp.array([[0.0, 0.0, 0.0]]), 0.0, 90.0, 1000.0
+        )
+        assert jnp.allclose(uvw[0], jnp.array([0.0, 0.0, 1000.0]), atol=1e-6)
+
+    def test_los_offset_increases_distance(self):
+        """A +z (LOS) offset increases heliocentric distance by exactly that amount."""
+        uvw = cluster_to_galactic_cartesian(
+            jnp.array([[0.0, 0.0, 5.0]]), 12.0, -3.0, 1000.0
+        )
+        r, _, _ = cartesian_to_spherical(uvw)
+        assert jnp.abs(float(r[0]) - 1005.0) < 1e-6
+
+    def test_east_offset_increases_l(self):
+        """A +x (East) offset increases Galactic longitude l."""
+        base = cluster_to_galactic_cartesian(
+            jnp.array([[0.0, 0.0, 0.0]]), 30.0, 0.0, 1000.0
+        )
+        east = cluster_to_galactic_cartesian(
+            jnp.array([[2.0, 0.0, 0.0]]), 30.0, 0.0, 1000.0
+        )
+        _, _, phi_base = cartesian_to_spherical(base)
+        _, _, phi_east = cartesian_to_spherical(east)
+        assert float(phi_east[0]) > float(phi_base[0])
+
+    def test_roundtrip_to_lbd(self):
+        """Recover (l, b, d) of the center via cartesian_to_spherical."""
+        uvw = cluster_to_galactic_cartesian(
+            jnp.array([[0.0, 0.0, 0.0]]), 47.0, 18.0, 1500.0
+        )
+        r, theta, phi = cartesian_to_spherical(uvw)
+        d = float(r[0])
+        b = 90.0 - float(jnp.rad2deg(theta[0]))
+        ll = float(jnp.rad2deg(phi[0])) % 360.0
+        assert abs(d - 1500.0) < 1e-6
+        assert abs(b - 18.0) < 1e-6
+        assert abs(ll - 47.0) < 1e-6
+
+    def test_differentiable_wrt_placement(self):
+        """Differentiable in distance and (l, b) — the placement leaves."""
+        pos = jnp.array([[1.0, -2.0, 3.0]])
+
+        def loss(args):
+            l0, b0, d0 = args
+            uvw = cluster_to_galactic_cartesian(pos, l0, b0, d0)
+            return jnp.sum(uvw**2)
+
+        g = jax.grad(loss)(jnp.array([30.0, 10.0, 1000.0]))
+        assert jnp.all(jnp.isfinite(g))
+        assert jnp.abs(g[2]) > 0.0  # distance gradient nonzero
+
+    def test_jit_and_batch(self):
+        """JIT-compilable over a batch of stars."""
+        pos = jax.random.normal(jax.random.PRNGKey(0), (16, 3)) * 2.0
+
+        @jax.jit
+        def compute(p):
+            return cluster_to_galactic_cartesian(p, 25.0, 5.0, 800.0)
+
+        out = compute(pos)
+        assert out.shape == (16, 3)

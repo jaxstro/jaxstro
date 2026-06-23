@@ -38,6 +38,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "sky_tangent",
+    "cluster_to_galactic_cartesian",
     "galactic_to_equatorial",
     "equatorial_to_galactic",
     "cartesian_to_spherical",
@@ -188,6 +189,92 @@ def sky_tangent(
     dec_deg = jnp.rad2deg(dec)
 
     return jnp.stack([ra_deg, dec_deg], axis=-1)
+
+
+def cluster_to_galactic_cartesian(
+    positions: "Float[Array, 'N 3']",
+    l_center_deg: "float | Float[Array, '']",
+    b_center_deg: "float | Float[Array, '']",
+    distance_pc: "float | Float[Array, '']",
+    psi_deg: "float | Float[Array, '']" = 0.0,
+) -> "Float[Array, 'N 3']":
+    """Map cluster-frame offsets [pc] to heliocentric GALACTIC Cartesian [pc].
+
+    The cluster center sits at Galactic ``(l_center_deg, b_center_deg)`` at
+    ``distance_pc``. Local cluster-frame offsets are interpreted exactly as in
+    :func:`sky_tangent`, but in the Galactic triad:
+
+    - ``x`` -> East (increasing l), rotated by ``psi``
+    - ``y`` -> North (increasing b), rotated by ``psi``
+    - ``z`` -> line of sight (positive = away from observer)
+
+    The returned heliocentric Galactic Cartesian frame is the IAU convention used
+    by the ZG24 maps: ``u`` toward the Galactic center (l=0, b=0), ``v`` toward
+    l=90 deg (b=0), ``w`` toward the North Galactic Pole.
+
+    This is the same orthonormal-triad construction as :func:`sky_tangent`,
+    returning the 3-D vector ``(distance + z)·LOS + x·East + y·North`` instead of
+    projecting it onto the celestial sphere. It is the placement primitive for the
+    ZG24-anchored spatial R_V cube (fluxax ADR-0021 rung 2): fully differentiable
+    in ``(l_center_deg, b_center_deg, distance_pc, psi_deg)`` so cluster sky
+    placement can be an inference leaf.
+
+    Parameters
+    ----------
+    positions : Float[Array, "N 3"]
+        Cluster-frame offsets [pc] as (x_East, y_North, z_LOS).
+    l_center_deg, b_center_deg : float
+        Galactic longitude/latitude of the cluster center [degrees].
+    distance_pc : float
+        Heliocentric distance to the cluster center [pc].
+    psi_deg : float, optional
+        Roll / position angle about the line of sight [degrees]. Default 0.
+
+    Returns
+    -------
+    Float[Array, "N 3"]
+        Heliocentric Galactic Cartesian positions (u, v, w) [pc].
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> from jaxstro.coords import cluster_to_galactic_cartesian
+    >>> # Cluster center at l=0, b=0, 1 kpc -> (1000, 0, 0) pc toward GC
+    >>> uvw = cluster_to_galactic_cartesian(
+    ...     jnp.array([[0.0, 0.0, 0.0]]), 0.0, 0.0, 1000.0
+    ... )
+    """
+    positions = jnp.asarray(positions, dtype=jnp.float64)
+    distance_pc = jnp.float64(distance_pc)
+
+    l0 = jnp.deg2rad(jnp.float64(l_center_deg))
+    b0 = jnp.deg2rad(jnp.float64(b_center_deg))
+    psi = jnp.deg2rad(jnp.float64(psi_deg))
+
+    cos_l0, sin_l0 = jnp.cos(l0), jnp.sin(l0)
+    cos_b0, sin_b0 = jnp.cos(b0), jnp.sin(b0)
+
+    # Line-of-sight unit vector toward cluster center (Galactic Cartesian).
+    z_hat = jnp.array([cos_b0 * cos_l0, cos_b0 * sin_l0, sin_b0], dtype=jnp.float64)
+    # East = increasing l at constant b.
+    e_hat_0 = jnp.array([-sin_l0, cos_l0, 0.0], dtype=jnp.float64)
+    # North = increasing b at constant l.
+    n_hat_0 = jnp.array([-sin_b0 * cos_l0, -sin_b0 * sin_l0, cos_b0], dtype=jnp.float64)
+
+    # Roll/position-angle rotation about the line of sight.
+    cos_psi, sin_psi = jnp.cos(psi), jnp.sin(psi)
+    e_hat = cos_psi * e_hat_0 + sin_psi * n_hat_0
+    n_hat = -sin_psi * e_hat_0 + cos_psi * n_hat_0
+
+    x_local = positions[:, 0]  # East offset [pc]
+    y_local = positions[:, 1]  # North offset [pc]
+    z_LOS = positions[:, 2]  # LOS offset [pc]
+
+    return (
+        (distance_pc + z_LOS)[:, None] * z_hat[None, :]
+        + x_local[:, None] * e_hat[None, :]
+        + y_local[:, None] * n_hat[None, :]
+    )
 
 
 # ===========================================================================
