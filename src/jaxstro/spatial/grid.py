@@ -243,13 +243,13 @@ def fill_bins(
     pid_u32 = jnp.uint32(particle_ids)
     h = wyhash32(pid_u32 ^ (bin_u32 * jnp.uint32(0x9E3779B1)))  # uint32
 
-    # Lexicographic key: (bin << 32) | hash
-    # Ascending sort groups by bin, then LOWEST hash first (reservoir criterion)
-    key64 = (jnp.uint64(bin_u32) << jnp.uint64(32)) | jnp.uint64(h)
-
-    # Single sort: O(N log N). Sort a POSITION permutation, not particle_ids, so
-    # bin_of is indexed by position (does NOT assume particle_ids == arange(N)).
-    perm = jnp.argsort(key64)  # positions in sorted order
+    # Multi-key lexicographic sort (NO 64-bit packing, so it does not depend on
+    # x64 being enabled). Primary key = bin_of (last arg to lexsort), secondary
+    # key = hash h. Ascending: groups by bin, then LOWEST hash first (the same
+    # reservoir criterion as a packed (bin << 32) | hash key would give).
+    # Sort a POSITION permutation, not particle_ids, so bin_of is indexed by
+    # position (does NOT assume particle_ids == arange(N)).
+    perm = jnp.lexsort((h, bin_of))  # positions in sorted order
     bins_sorted = bin_of[perm]
     ids_sorted = particle_ids[perm]
 
@@ -324,12 +324,11 @@ def fill_bins_exact(
     pid_u32 = jnp.uint32(particle_ids)
     h = wyhash32(pid_u32 ^ (bin_u32 * jnp.uint32(0x9E3779B1)))  # uint32
 
-    # Lexicographic key: (bin << 32) | hash
-    key64 = (jnp.uint64(bin_u32) << jnp.uint64(32)) | jnp.uint64(h)
-
-    # Sort a POSITION permutation, not particle_ids, so bin_of is indexed by
-    # position (does NOT assume particle_ids == arange(N)).
-    perm = jnp.argsort(key64)  # positions in sorted order
+    # Multi-key lexicographic sort (NO 64-bit packing, x64-independent). Primary
+    # key = bin_of, secondary = hash h -> groups by bin, LOWEST hash first (same
+    # reservoir criterion as a packed (bin << 32) | hash key). Sort a POSITION
+    # permutation, not particle_ids (does NOT assume particle_ids == arange(N)).
+    perm = jnp.lexsort((h, bin_of))  # positions in sorted order
     bins_sorted = bin_of[perm]
     ids_sorted = particle_ids[perm]
 

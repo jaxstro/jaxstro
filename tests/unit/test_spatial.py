@@ -11,6 +11,8 @@ Tests cover:
 
 from __future__ import annotations
 
+import inspect
+
 import jax
 
 jax.config.update("jax_enable_x64", True)  # f64 distances for a clean cutoff compare
@@ -501,6 +503,53 @@ class TestFillBinsSoundness:
         assert set(bm[0][mask[0]].tolist()) == {100, 101}
         assert set(bm[1][mask[1]].tolist()) == {102, 103}
         assert set(bm[2][mask[2]].tolist()) == {104, 105}
+
+
+class TestBinSortX64Independence:
+    """The bin sort must not depend on x64 (JAX default is x64 OFF)."""
+
+    def test_no_uint64_packed_key_in_source(self):
+        # PIN (Critical 2): both fill_bins and fill_bins_exact used a packed key
+        # key64 = (uint64(bin) << 32) | uint64(hash). With x64 DISABLED (JAX
+        # default) uint64 silently truncates to uint32, collapsing the key to
+        # hash-only and breaking bin-contiguity (bincount/cumsum then fill bins
+        # with the WRONG particles). The fix uses a multi-key lexsort that needs
+        # no 64-bit packing. Guard structurally so the x64 dependency can't creep
+        # back (toggling x64 off mid-session is impractical -- JAX caches config).
+        import jaxstro.spatial.grid as grid_mod
+
+        src = inspect.getsource(grid_mod)
+        assert "uint64" not in src, (
+            "bin sort must not construct a uint64 packed key (x64-dependent); "
+            "use jnp.lexsort((h, bin_of)) instead"
+        )
+
+    def test_fill_bins_exact_groups_by_bin_nontrivial(self):
+        # Hand-built, interleaved (non-contiguous) bin_of with per-bin overflow
+        # potential. Grouping must be exact regardless of the sort key encoding.
+        pids = jnp.arange(12, dtype=jnp.int32)
+        bin_of = jnp.array([3, 0, 3, 1, 0, 3, 1, 0, 3, 0, 1, 3], dtype=jnp.int32)
+        bm, mask, did = fill_bins_exact(pids, bin_of, Nbins=4, Bcap=8)
+        assert not bool(did)
+        for b in range(4):
+            want = {
+                int(p) for p, bb in zip(pids.tolist(), bin_of.tolist()) if bb == b
+            }
+            got = set(bm[b][mask[b]].tolist())
+            assert got == want, f"bin {b}: got {got}, want {want}"
+
+    def test_fill_bins_groups_by_bin_nontrivial(self):
+        # Same, for the non-exact fill_bins (reservoir path); Bcap large enough
+        # that no downsampling occurs -> every particle grouped into its bin.
+        pids = (50 + jnp.arange(12)).astype(jnp.int32)  # non-arange ids too
+        bin_of = jnp.array([2, 5, 2, 0, 5, 2, 0, 5, 2, 0, 5, 2], dtype=jnp.int32)
+        bm, mask = fill_bins(pids, bin_of, Nbins=6, Bcap=8)
+        for b in range(6):
+            want = {
+                int(p) for p, bb in zip(pids.tolist(), bin_of.tolist()) if bb == b
+            }
+            got = set(bm[b][mask[b]].tolist())
+            assert got == want, f"bin {b}: got {got}, want {want}"
 
 
 class TestLinearCellIndex:
