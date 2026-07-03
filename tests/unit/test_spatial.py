@@ -153,6 +153,49 @@ class TestMortonEncoding:
         with pytest.raises(ValueError, match="Only bits=10"):
             morton_decode_3d(jnp.array([42]), bits=12)
 
+    def test_roundtrip_10bit_ceiling(self):
+        """Encode/decode round-trips exactly across the full 10-bit range.
+
+        Existing tests only exercise power-of-2 sizes (max coord 127). This
+        probes the ceiling itself: coords {0, 1, 1022, 1023} form the boundary
+        of the representable 10-bit range (0..2^10-1). Every (x, y, z) triple
+        drawn from that set must survive a round-trip bit-exactly.
+        """
+        vals = [0, 1, 1022, 1023]  # {min, min+1, max-1, max} for 10-bit coords
+        xyz = jnp.array([[a, b, c] for a in vals for b in vals for c in vals])
+
+        codes = morton_encode_3d(xyz)
+        x2, y2, z2 = morton_decode_3d(codes)
+        xyz_decoded = jnp.stack([x2, y2, z2], axis=-1)
+
+        assert jnp.array_equal(xyz, xyz_decoded), "10-bit ceiling roundtrip failed"
+        # And the codes are all distinct (no collision at the ceiling).
+        assert len(jnp.unique(codes)) == xyz.shape[0]
+
+    def test_coord_at_cap_wraps_via_10bit_mask(self):
+        """PIN: coord == 1024 (just past the 10-bit cap) silently wraps to 0.
+
+        This characterises a KNOWN LIMITATION, not a bug: the encoder masks each
+        coordinate to 10 bits (``& 0x3FF``), so any value >= 2^10 loses its high
+        bits. 1024 == 0b100_0000_0000 masks to 0. Callers must guarantee coords
+        are < 1024 (``assign_particles_to_bins`` enforces this by requiring
+        Nbins_per_dim <= 1024 AND clipping bins to [0, Nbins-1], so the encoder
+        is never fed 1024). We pin the wrap here so any future change to the
+        masking width is caught.
+        """
+        # 1024 == 0x400 -> masked to 0x3FF gives 0; 1025 -> 1; 2048 -> 0.
+        assert (1024 & 0x3FF) == 0  # sanity: the mask arithmetic itself
+        xyz = jnp.array([[1024, 0, 0], [1025, 0, 0], [2048, 7, 0]])
+        codes = morton_encode_3d(xyz)
+        x, y, z = morton_decode_3d(codes)
+
+        # x wraps: 1024->0, 1025->1, 2048->0. Untouched coords survive.
+        assert int(x[0]) == 0 and int(codes[0]) == 0
+        assert int(x[1]) == 1
+        assert int(x[2]) == 0 and int(y[2]) == 7
+        # The wrapped triple aliases the true (0, 0, 0) code -- a collision.
+        assert int(codes[0]) == int(morton_encode_3d(jnp.array([[0, 0, 0]]))[0])
+
 
 class TestWyhash:
     """Tests for wyhash32 hashing function."""
@@ -274,6 +317,72 @@ class TestBinAssignment:
         assert x[0] == 2
         assert y[0] == 2
         assert z[0] == 2
+
+    def test_edge_at_plus_half_lands_in_last_bin(self):
+        """A particle exactly at +L/2 lands in the last bin (Nbins-1).
+
+        The box spans [-L/2, +L/2]. A particle sitting *exactly* on the upper
+        face maps to floor(L/dx) == Nbins, which the clip pulls back to the last
+        valid bin (Nbins-1) rather than an out-of-range bin. Existing corner
+        tests only probe *just inside* (half - 0.001); this pins the exact edge.
+        """
+        L, N = 4.0, 8
+        pos = jnp.array(
+            [
+                [L / 2, 0.0, 0.0],  # +x face
+                [0.0, L / 2, 0.0],  # +y face
+                [0.0, 0.0, L / 2],  # +z face
+            ]
+        )
+        bin_of = assign_particles_to_bins(pos, L_box=L, Nbins_per_dim=N)
+        x, y, z = morton_decode_3d(bin_of)
+
+        assert int(x[0]) == N - 1  # +L/2 on x -> last x-bin
+        assert int(y[1]) == N - 1  # +L/2 on y -> last y-bin
+        assert int(z[2]) == N - 1  # +L/2 on z -> last z-bin
+
+    def test_edge_at_minus_half_lands_in_bin_zero(self):
+        """A particle exactly at -L/2 lands in bin 0 (the lower face).
+
+        Mirror of the +L/2 test: the lower face maps to floor(0) == 0 exactly.
+        """
+        L, N = 4.0, 8
+        pos = jnp.array(
+            [
+                [-L / 2, 0.0, 0.0],  # -x face
+                [0.0, -L / 2, 0.0],  # -y face
+                [0.0, 0.0, -L / 2],  # -z face
+            ]
+        )
+        bin_of = assign_particles_to_bins(pos, L_box=L, Nbins_per_dim=N)
+        x, y, z = morton_decode_3d(bin_of)
+
+        assert int(x[0]) == 0  # -L/2 on x -> bin 0
+        assert int(y[1]) == 0  # -L/2 on y -> bin 0
+        assert int(z[2]) == 0  # -L/2 on z -> bin 0
+
+    def test_offbox_clamps_without_wrap(self):
+        """Off-box particles clamp to the boundary bin -- they do NOT wrap.
+
+        A particle far beyond +L/2 must land in the LAST bin, and one far below
+        -L/2 in bin 0 -- never wrapped to the opposite face (which would happen
+        if the raw bin index were fed to the 10-bit Morton mask without the
+        prior clip). We use asymmetric signs per axis to catch any axis mixing.
+        """
+        L, N = 4.0, 8
+        big = 1.0e6  # ~250000 box-lengths outside -- deep off-box
+        pos = jnp.array(
+            [
+                [big, -big, big],  # (+,-,+) far
+                [-big, big, -big],  # (-,+,-) far
+            ]
+        )
+        bin_of = assign_particles_to_bins(pos, L_box=L, Nbins_per_dim=N)
+        x, y, z = morton_decode_3d(bin_of)
+
+        # Clamped to the near boundary of each axis, NOT wrapped to the far side.
+        assert (int(x[0]), int(y[0]), int(z[0])) == (N - 1, 0, N - 1)
+        assert (int(x[1]), int(y[1]), int(z[1])) == (0, N - 1, 0)
 
 
 # =============================================================================
