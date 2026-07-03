@@ -18,6 +18,7 @@ import pytest
 from jaxstro.spatial import (
     approx_knn_candidates,
     assign_particles_to_bins,
+    assign_to_cells_linear,
     fill_bins,
     gather_candidates_from_bins,
     gather_candidates_two_stencil,
@@ -386,6 +387,35 @@ class TestFillBinsSoundness:
         assert set(bm[0][mask[0]].tolist()) == {100, 101}
         assert set(bm[1][mask[1]].tolist()) == {102, 103}
         assert set(bm[2][mask[2]].tolist()) == {104, 105}
+
+
+class TestLinearCellIndex:
+    def test_dense_range_arbitrary_dims(self):
+        # Non-power-of-2, non-cubic dims: index must be dense in [0, prod(dims)).
+        dims = (10, 7, 13)
+        origin = jnp.array([-2.0, -1.0, -3.0])
+        cell_size = 0.4
+        key = jax.random.PRNGKey(1)
+        # positions spanning the full box
+        box = jnp.array(dims) * cell_size
+        pos = origin + jax.random.uniform(key, (5000, 3)) * box
+        cell_of = assign_to_cells_linear(pos, origin, cell_size, dims)
+        assert int(jnp.min(cell_of)) >= 0
+        assert int(jnp.max(cell_of)) < dims[0] * dims[1] * dims[2]
+
+    def test_known_cell(self):
+        dims = (4, 4, 4)
+        origin = jnp.array([0.0, 0.0, 0.0])
+        pos = jnp.array([[0.5, 1.5, 2.5]])  # -> ix,iy,iz = 0,1,2 with cell_size=1
+        cell = assign_to_cells_linear(pos, origin, 1.0, dims)
+        assert int(cell[0]) == 0 + 4 * (1 + 4 * 2)  # = 36
+
+    def test_off_box_clamps(self):
+        dims = (4, 4, 4)
+        origin = jnp.array([0.0, 0.0, 0.0])
+        pos = jnp.array([[-100.0, 100.0, 2.0]])  # clamp to (0, 3, 2)
+        cell = assign_to_cells_linear(pos, origin, 1.0, dims)
+        assert int(cell[0]) == 0 + 4 * (3 + 4 * 2)  # = 44
 
 
 # =============================================================================

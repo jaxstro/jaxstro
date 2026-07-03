@@ -123,6 +123,36 @@ def assign_particles_to_bins(
     return bin_of
 
 
+def assign_to_cells_linear(
+    pos: Float[Array, "N 3"],
+    origin: Float[Array, "3"],
+    cell_size: float,
+    dims: tuple[int, int, int],
+) -> Int[Array, "N"]:
+    """Dense row-major cell index for a uniform grid (open boundary, clamped).
+
+    cell = ix + nx*(iy + ny*iz), dense in [0, nx*ny*nz) for ANY dims (unlike
+    morton, which is only dense for power-of-2 dims). Off-box positions clamp to
+    the boundary cell. Use this (not morton) for exact fixed-radius neighbour
+    gathers where Nbins must be tight and correct for arbitrary cell counts.
+
+    Args:
+        pos: Particle positions [N, 3].
+        origin: Lower corner of the grid [3] (the (0,0,0) cell's min corner).
+        cell_size: Uniform cell side length (scalar).
+        dims: (nx, ny, nz) number of cells per axis. May be non-cubic.
+
+    Returns:
+        cell_of: Dense row-major cell id per particle [N], in [0, nx*ny*nz).
+    """
+    nx, ny, nz = int(dims[0]), int(dims[1]), int(dims[2])
+    u = (pos - origin) / cell_size  # (N,3) cell coords
+    ix = jnp.clip(jnp.floor(u[:, 0]).astype(jnp.int32), 0, nx - 1)
+    iy = jnp.clip(jnp.floor(u[:, 1]).astype(jnp.int32), 0, ny - 1)
+    iz = jnp.clip(jnp.floor(u[:, 2]).astype(jnp.int32), 0, nz - 1)
+    return ix + nx * (iy + ny * iz)
+
+
 # =============================================================================
 # Bin Filling with Overflow Handling
 # =============================================================================

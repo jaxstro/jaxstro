@@ -44,7 +44,11 @@ Example:
 
 from __future__ import annotations
 
-from jaxstro.spatial.grid import assign_particles_to_bins, fill_bins
+from jaxstro.spatial.grid import (
+    assign_particles_to_bins,
+    assign_to_cells_linear,
+    fill_bins,
+)
 from jaxstro.spatial.morton import morton_decode_3d, morton_encode_3d, wyhash32
 from jaxstro.spatial.neighbor import (
     approx_knn_candidates,
@@ -60,6 +64,7 @@ __all__ = [
     "wyhash32",
     # Grid binning
     "assign_particles_to_bins",
+    "assign_to_cells_linear",
     "fill_bins",
     # Neighbor candidate gathering
     "gather_candidates_from_bins",
