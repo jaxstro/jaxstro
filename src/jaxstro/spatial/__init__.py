@@ -57,6 +57,7 @@ from jaxstro.spatial.neighbor import (
     gather_candidates_two_stencil,
     gather_candidates_with_stencil,
 )
+from jaxstro.spatial.pairs import gather_pairs_within_radius
 
 __all__ = [
     # Morton encoding
@@ -73,4 +74,6 @@ __all__ = [
     "gather_candidates_with_stencil",
     "gather_candidates_two_stencil",
     "approx_knn_candidates",
+    # Exact fixed-radius neighbour pairs
+    "gather_pairs_within_radius",
 ]

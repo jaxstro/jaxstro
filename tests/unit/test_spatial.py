@@ -12,6 +12,9 @@ Tests cover:
 from __future__ import annotations
 
 import jax
+
+jax.config.update("jax_enable_x64", True)  # f64 distances for a clean cutoff compare
+
 import jax.numpy as jnp
 import pytest
 
@@ -24,6 +27,7 @@ from jaxstro.spatial import (
     gather_candidates_from_bins,
     gather_candidates_two_stencil,
     gather_candidates_with_stencil,
+    gather_pairs_within_radius,
     morton_decode_3d,
     morton_encode_3d,
     wyhash32,
@@ -919,3 +923,62 @@ class TestEdgeCases:
         # Should still work, though maybe fewer candidates due to sparsity
         n_cand = jnp.sum(cand_mask, axis=1)
         assert jnp.all(n_cand >= 0), "Negative candidate counts"
+
+
+class TestGatherPairsWithinRadius:
+    def _brute_within(self, pos, cutoff):
+        r2 = jnp.sum((pos[:, None] - pos[None, :]) ** 2, axis=-1)
+        within = (r2 > 0) & (r2 <= cutoff ** 2)
+        return [set(jnp.where(within[i])[0].tolist()) for i in range(pos.shape[0])]
+
+    def test_matches_bruteforce_random(self):
+        key = jax.random.PRNGKey(7)
+        N = 300
+        origin = jnp.array([-1.0, -1.0, -1.0]); box = 2.0; cutoff = 0.3
+        pos = origin + jax.random.uniform(key, (N, 3)) * box
+        got, mask, did = gather_pairs_within_radius(
+            pos, origin=origin, cell_size=cutoff, cutoff=cutoff, k_max=64)
+        assert not bool(did)
+        want = self._brute_within(pos, cutoff)
+        for i in range(N):
+            assert set(got[i][mask[i]].tolist()) == want[i]
+
+    def test_matches_bruteforce_clustered(self):
+        key = jax.random.PRNGKey(11)
+        N = 400
+        # two tight clumps -> dense cells, stresses coverage + capacity
+        c = jax.random.uniform(key, (N, 3)) * 0.15
+        c = c.at[: N // 2].add(jnp.array([0.5, 0.5, 0.5]))
+        origin = jnp.array([-0.2, -0.2, -0.2]); cutoff = 0.2
+        got, mask, did = gather_pairs_within_radius(
+            c, origin=origin, cell_size=cutoff, cutoff=cutoff, k_max=N)
+        assert not bool(did)
+        want = self._brute_within(c, cutoff)
+        for i in range(N):
+            assert set(got[i][mask[i]].tolist()) == want[i]
+
+    def test_overflow_flag_when_kmax_too_small(self):
+        key = jax.random.PRNGKey(5)
+        N = 200
+        pos = jax.random.uniform(key, (N, 3)) * 0.05  # all within one small region
+        origin = jnp.array([0.0, 0.0, 0.0])
+        _, _, did = gather_pairs_within_radius(
+            pos, origin=origin, cell_size=0.1, cutoff=0.1, k_max=8)  # too small
+        assert bool(did) is True
+
+    def test_cell_size_smaller_than_cutoff_raises(self):
+        pos = jnp.zeros((3, 3))
+        with pytest.raises((ValueError, AssertionError)):
+            gather_pairs_within_radius(
+                pos, origin=jnp.zeros(3), cell_size=0.1, cutoff=0.5, k_max=4)
+
+    def test_symmetry(self):
+        # j in nbr(i)  <=>  i in nbr(j)  (needed for the 1/2 factor in the energy sum)
+        key = jax.random.PRNGKey(9)
+        pos = jax.random.uniform(key, (150, 3)) * 1.0
+        got, mask, _ = gather_pairs_within_radius(
+            pos, origin=jnp.zeros(3), cell_size=0.25, cutoff=0.25, k_max=64)
+        nbr = [set(got[i][mask[i]].tolist()) for i in range(150)]
+        for i in range(150):
+            for j in nbr[i]:
+                assert i in nbr[j]
