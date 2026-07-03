@@ -357,6 +357,27 @@ class TestBinFilling:
         assert jnp.all(bin_members[1:] == sentinel)
 
 
+class TestFillBinsSoundness:
+    def test_no_silent_loss_when_bin_of_exceeds_Nbins(self):
+        # A bin index >= Nbins must raise, never silently drop.
+        pids = jnp.arange(5, dtype=jnp.int32)
+        bin_of = jnp.array([0, 1, 2, 999, 4], dtype=jnp.int32)  # 999 >= Nbins=8
+        with pytest.raises((ValueError, AssertionError)):
+            fill_bins(pids, bin_of, Nbins=8, Bcap=4)
+
+    def test_conserves_all_particles_no_overflow(self):
+        # Every particle with a valid bin < Nbins must appear exactly once.
+        N = 200
+        key = jax.random.PRNGKey(0)
+        bin_of = jax.random.randint(key, (N,), 0, 64).astype(jnp.int32)
+        pids = jnp.arange(N, dtype=jnp.int32)
+        bm, mask = fill_bins(pids, bin_of, Nbins=64, Bcap=N)  # Bcap huge -> no overflow
+        assert int(jnp.sum(mask)) == N
+        # each particle id present exactly once
+        present = jnp.sort(bm[mask])
+        assert jnp.array_equal(present, jnp.arange(N, dtype=jnp.int32))
+
+
 # =============================================================================
 # Neighbor Candidate Gathering Tests
 # =============================================================================

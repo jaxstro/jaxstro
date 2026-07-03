@@ -195,6 +195,19 @@ def fill_bins(
     if sentinel_N is None:
         sentinel_N = N  # Expect position arrays padded to length N+1
 
+    # Eager soundness guard (skipped under trace): bins must be in [0, Nbins).
+    # For a non-power-of-2 Nbins_per_dim, morton codes exceed Nbins_per_dim**3 and
+    # would be silently dropped by bincount / corrupt the cumsum offsets. Fail loud.
+    if not isinstance(bin_of, jax.core.Tracer):
+        if N > 0 and (int(jnp.max(bin_of)) >= Nbins or int(jnp.min(bin_of)) < 0):
+            raise ValueError(
+                f"fill_bins: bin_of out of range [0, {Nbins}); got "
+                f"[{int(jnp.min(bin_of))}, {int(jnp.max(bin_of))}]. For a morton index, "
+                f"Nbins must be the morton CODE range (2**(3*ceil(log2(Nbins_per_dim)))), "
+                f"not Nbins_per_dim**3 unless Nbins_per_dim is a power of 2. Prefer the "
+                f"dense linear index (assign_to_cells_linear) for arbitrary cell counts."
+            )
+
     # 32-bit hash per particle, mixed with bin ID (deterministic, unbiased)
     bin_u32 = jnp.uint32(bin_of)
     pid_u32 = jnp.uint32(particle_ids)
@@ -204,9 +217,11 @@ def fill_bins(
     # Ascending sort groups by bin, then LOWEST hash first (reservoir criterion)
     key64 = (jnp.uint64(bin_u32) << jnp.uint64(32)) | jnp.uint64(h)
 
-    # Single sort: O(N log N)
-    _, idx_sorted = jax.lax.sort_key_val(key64, particle_ids, dimension=0)
-    bins_sorted = bin_of[idx_sorted]
+    # Single sort: O(N log N). Sort a POSITION permutation, not particle_ids, so
+    # bin_of is indexed by position (does NOT assume particle_ids == arange(N)).
+    perm = jnp.argsort(key64)  # positions in sorted order
+    bins_sorted = bin_of[perm]
+    ids_sorted = particle_ids[perm]
 
     # Compute segment boundaries per bin
     counts = jnp.bincount(bins_sorted, length=Nbins).astype(jnp.int32)  # [Nbins]
@@ -223,8 +238,8 @@ def fill_bins(
     # Guard against empty bins when gathering (clamp to valid range)
     abs_pos_safe = jnp.clip(abs_pos, 0, jnp.maximum(N - 1, 0))
 
-    # Gather sorted particle IDs
-    picked = idx_sorted[abs_pos_safe]  # [Nbins, Bcap]
+    # Gather particle IDs through the sorted order
+    picked = ids_sorted[abs_pos_safe]  # [Nbins, Bcap]
 
     # Use sentinel N for invalid slots
     bin_members = jnp.where(valid, picked, sentinel_N)
