@@ -377,6 +377,16 @@ class TestFillBinsSoundness:
         present = jnp.sort(bm[mask])
         assert jnp.array_equal(present, jnp.arange(N, dtype=jnp.int32))
 
+    def test_non_arange_particle_ids(self):
+        # bins must contain the right IDS by POSITION, not indexed by id value.
+        pids = (100 + jnp.arange(6)).astype(jnp.int32)  # NOT arange from 0
+        bin_of = jnp.array([0, 0, 1, 1, 2, 2], dtype=jnp.int32)
+        bm, mask = fill_bins(pids, bin_of, Nbins=4, Bcap=4)
+        # bin 0 -> positions 0,1 -> ids 100,101 ; bin 1 -> 102,103 ; bin 2 -> 104,105
+        assert set(bm[0][mask[0]].tolist()) == {100, 101}
+        assert set(bm[1][mask[1]].tolist()) == {102, 103}
+        assert set(bm[2][mask[2]].tolist()) == {104, 105}
+
 
 # =============================================================================
 # Neighbor Candidate Gathering Tests
