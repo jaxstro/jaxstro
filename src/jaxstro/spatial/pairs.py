@@ -29,6 +29,20 @@ def gather_pairs_within_radius(
     r_close for SDAR). NO top-K truncation of the true set unless did_overflow.
 
     Returns (nbr_idx [N,k_max] int32, nbr_mask [N,k_max] bool, did_overflow []).
+
+    Preconditions / guarantees:
+        (a) In-grid coverage holds for ANY dims and for off-box particles: cell
+            assignment is non-expansive (clamped to [0, n-1] per axis), and the
+            27-cell stencil is gated by an IN-RANGE offset mask computed before
+            clamping. Each true neighbour cell c_j = c_i + off (off in {-1,0,+1})
+            lies in [0, n-1], so exactly one in-range offset reaches it -- no
+            true neighbour is dropped and no boundary cell is counted twice.
+        (b) The `dims=None` auto-size path reads `pos` on the host (eager only).
+            Under jit you MUST pass an explicit static `dims`.
+        (c) Dense row-major cell ids are int32, so nx*ny*nz must stay under the
+            int32 ceiling (~2.1e9 cells); size the grid accordingly.
+        (d) Coincident particles (r == 0) are EXCLUDED by the `0 < r` contract;
+            only {j : 0 < |x_i-x_j| <= cutoff} are returned.
     """
     if float(cell_size) < float(cutoff):
         raise ValueError(
@@ -56,20 +70,43 @@ def gather_pairs_within_radius(
     iy = (cell_of - iz * nx * ny) // nx
     ix = cell_of - iz * nx * ny - iy * nx
     offs = jnp.array([-1, 0, 1], dtype=jnp.int32)
-    # 27 neighbour cells (clamped, open boundary)
-    jx = jnp.clip(ix[:, None] + offs[None, :], 0, nx - 1)  # [N,3]
-    jy = jnp.clip(iy[:, None] + offs[None, :], 0, ny - 1)
-    jz = jnp.clip(iz[:, None] + offs[None, :], 0, nz - 1)
+    # 27 neighbour cells. Clamp keeps the gather index in-bounds, but a boundary
+    # cell would otherwise be reached by TWO offsets that clamp to the same id
+    # (e.g. -1 and 0 both -> 0), duplicating its members in `cand`. To avoid
+    # that we gate candidates by the IN-RANGE stencil validity computed BEFORE
+    # clamping: each true neighbour cell c_j = c_i + off with off in {-1,0,+1}
+    # satisfies c_j in [0, n-1], so exactly one in-range offset reaches it. This
+    # is provably lossless (no true neighbour dropped) while removing duplicates.
+    ax = ix[:, None] + offs[None, :]  # [N,3] raw x-offsets (pre-clamp)
+    ay = iy[:, None] + offs[None, :]
+    az = iz[:, None] + offs[None, :]
+    inx = (ax >= 0) & (ax <= nx - 1)  # [N,3] per-axis in-range masks
+    iny = (ay >= 0) & (ay <= ny - 1)
+    inz = (az >= 0) & (az <= nz - 1)
+    jx = jnp.clip(ax, 0, nx - 1)  # [N,3] clamped ONLY to keep gather in-bounds
+    jy = jnp.clip(ay, 0, ny - 1)
+    jz = jnp.clip(az, 0, nz - 1)
     cx, cy, cz = jnp.broadcast_arrays(
         jx[:, :, None, None], jy[:, None, :, None], jz[:, None, None, :]
     )
     ncell = (cx + nx * (cy + ny * cz)).reshape(N, 27)  # [N,27] neighbour cell ids
+    # [N,27] in-range mask via the same broadcast/Cartesian pattern as the cells
+    mx, my, mz = jnp.broadcast_arrays(
+        inx[:, :, None, None], iny[:, None, :, None], inz[:, None, None, :]
+    )
+    in_range = (mx & my & mz).reshape(N, 27)  # [N,27] True where offset is valid
     cand = members[ncell].reshape(N, 27 * Bcap)  # [N, 27*Bcap] candidate ids (sentinel=N)
+    # broadcast the per-cell in-range mask over Bcap slots -> [N, 27*Bcap]
+    cand_in_range = jnp.broadcast_to(
+        in_range[:, :, None], (N, 27, Bcap)
+    ).reshape(N, 27 * Bcap)
     # distances
     d = pos[:, None, :] - pos_s[cand]  # [N, 27*Bcap, 3]
     r2 = jnp.sum(d * d, axis=-1)
     is_self = cand == pids[:, None]
-    within = (r2 > 0.0) & (r2 <= cutoff * cutoff) & (~is_self) & (cand != N)
+    within = (
+        (r2 > 0.0) & (r2 <= cutoff * cutoff) & (~is_self) & (cand != N) & cand_in_range
+    )
     # count within per particle -> overflow if > k_max
     n_within = jnp.sum(within, axis=1)
     did_overflow = jnp.any(n_within > k_max) | did_bins

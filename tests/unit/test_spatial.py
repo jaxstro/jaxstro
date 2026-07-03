@@ -1091,3 +1091,66 @@ class TestGatherPairsWithinRadius:
         for i in range(150):
             for j in nbr[i]:
                 assert i in nbr[j]
+
+    def test_no_duplicate_neighbours_origin_at_corner(self):
+        # PIN (Critical 1): with `origin` at the cloud's LOWER CORNER, many
+        # particles land in boundary cells (ix in {0, nx-1}). The 27-cell
+        # stencil clamps offsets, so -1 and 0 (or 0 and +1) collapse to the SAME
+        # cell id; the Cartesian product then gathers that cell 2x/4x/8x and the
+        # same neighbour index is returned multiple times with mask=True. That
+        # double-counts forces downstream. Every particle's returned neighbour
+        # list must be a proper SET (no duplicate ids).
+        key = jax.random.PRNGKey(13)
+        N = 400
+        cutoff = 0.2
+        pos = jax.random.uniform(key, (N, 3)) * 1.0  # in [0, 1]^3
+        origin = jnp.array([0.0, 0.0, 0.0])  # lower corner -> heavy boundary occupancy
+        got, mask, did = gather_pairs_within_radius(
+            pos, origin=origin, cell_size=cutoff, cutoff=cutoff, k_max=N)
+        # true neighbour counts are all <= k_max=N, so no genuine overflow;
+        # a spurious did_overflow here signals duplicate-inflated n_within.
+        assert not bool(did)
+        for i in range(N):
+            ids = got[i][mask[i]].tolist()
+            assert len(ids) == len(set(ids)), (
+                f"particle {i} has duplicate neighbours: {ids}"
+            )
+
+    def test_slot_sum_matches_bruteforce_origin_at_corner(self):
+        # PIN (Critical 1): a per-slot sum of 1/r (as an MSM force sum would do,
+        # NOT deduplicated) must equal the brute-force sum over the true
+        # neighbour set. Duplicates from clamped boundary cells would inflate the
+        # slot sum, so this is a multiset-aware check that set()-based tests miss.
+        key = jax.random.PRNGKey(17)
+        N = 300
+        cutoff = 0.25
+        pos = jax.random.uniform(key, (N, 3)) * 1.0
+        origin = jnp.array([0.0, 0.0, 0.0])
+        got, mask, did = gather_pairs_within_radius(
+            pos, origin=origin, cell_size=cutoff, cutoff=cutoff, k_max=N)
+        assert not bool(did)
+        r2 = jnp.sum((pos[:, None] - pos[None, :]) ** 2, axis=-1)
+        within = (r2 > 0) & (r2 <= cutoff ** 2)
+        inv_r = jnp.where(within, 1.0 / jnp.sqrt(jnp.where(within, r2, 1.0)), 0.0)
+        brute_sum = jnp.sum(inv_r, axis=1)
+        for i in range(N):
+            ids = got[i][mask[i]]
+            d = pos[i][None, :] - pos[ids]
+            rr = jnp.sqrt(jnp.sum(d * d, axis=-1))
+            slot_sum = float(jnp.sum(1.0 / rr))
+            assert abs(slot_sum - float(brute_sum[i])) <= 1e-12 * (
+                1.0 + abs(float(brute_sum[i]))
+            ), f"particle {i}: slot sum {slot_sum} != brute {float(brute_sum[i])}"
+
+    def test_r_equals_cutoff_boundary_straddle_included(self):
+        # A pair exactly at r == cutoff must be INCLUDED (contract: 0 < r <= cutoff).
+        # Separation 0.5 with cutoff 0.5 is exactly representable in f64, so this
+        # pins the closed upper bound (and both particles sit on cell boundaries).
+        cutoff = 0.5
+        pos = jnp.array([[0.0, 0.0, 0.0], [0.5, 0.0, 0.0]])  # r == cutoff exactly
+        origin = jnp.zeros(3)
+        got, mask, did = gather_pairs_within_radius(
+            pos, origin=origin, cell_size=cutoff, cutoff=cutoff, k_max=4)
+        assert not bool(did)
+        assert set(got[0][mask[0]].tolist()) == {1}
+        assert set(got[1][mask[1]].tolist()) == {0}
