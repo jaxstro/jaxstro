@@ -20,6 +20,7 @@ from jaxstro.spatial import (
     assign_particles_to_bins,
     assign_to_cells_linear,
     fill_bins,
+    fill_bins_exact,
     gather_candidates_from_bins,
     gather_candidates_two_stencil,
     gather_candidates_with_stencil,
@@ -416,6 +417,31 @@ class TestLinearCellIndex:
         pos = jnp.array([[-100.0, 100.0, 2.0]])  # clamp to (0, 3, 2)
         cell = assign_to_cells_linear(pos, origin, 1.0, dims)
         assert int(cell[0]) == 0 + 4 * (3 + 4 * 2)  # = 44
+
+
+class TestFillBinsExact:
+    def test_no_overflow_flag_false_and_conserves(self):
+        N = 100
+        key = jax.random.PRNGKey(3)
+        bin_of = jax.random.randint(key, (N,), 0, 27).astype(jnp.int32)
+        pids = jnp.arange(N, dtype=jnp.int32)
+        bm, mask, did = fill_bins_exact(pids, bin_of, Nbins=27, Bcap=N)
+        assert not bool(did)
+        assert int(jnp.sum(mask)) == N
+
+    def test_overflow_flag_true_when_bin_exceeds_Bcap(self):
+        N = 30
+        pids = jnp.arange(N, dtype=jnp.int32)
+        bin_of = jnp.zeros(N, dtype=jnp.int32)  # all in bin 0
+        bm, mask, did = fill_bins_exact(pids, bin_of, Nbins=4, Bcap=10)
+        assert bool(did) is True  # 30 > 10 -> loud
+        assert int(jnp.sum(mask)) == 10  # still fills Bcap deterministically
+
+    def test_jit_returns_overflow(self):
+        f = jax.jit(lambda pids, b: fill_bins_exact(pids, b, Nbins=8, Bcap=4))
+        pids = jnp.arange(10, dtype=jnp.int32)
+        _, _, did = f(pids, jnp.zeros(10, jnp.int32))
+        assert bool(did) is True
 
 
 # =============================================================================

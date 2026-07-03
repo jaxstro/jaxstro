@@ -48,6 +48,7 @@ from jaxstro.spatial.grid import (
     assign_particles_to_bins,
     assign_to_cells_linear,
     fill_bins,
+    fill_bins_exact,
 )
 from jaxstro.spatial.morton import morton_decode_3d, morton_encode_3d, wyhash32
 from jaxstro.spatial.neighbor import (
@@ -66,6 +67,7 @@ __all__ = [
     "assign_particles_to_bins",
     "assign_to_cells_linear",
     "fill_bins",
+    "fill_bins_exact",
     # Neighbor candidate gathering
     "gather_candidates_from_bins",
     "gather_candidates_with_stencil",
