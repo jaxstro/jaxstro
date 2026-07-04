@@ -44,7 +44,12 @@ Example:
 
 from __future__ import annotations
 
-from jaxstro.spatial.grid import assign_particles_to_bins, fill_bins
+from jaxstro.spatial.grid import (
+    assign_particles_to_bins,
+    assign_to_cells_linear,
+    fill_bins,
+    fill_bins_exact,
+)
 from jaxstro.spatial.morton import morton_decode_3d, morton_encode_3d, wyhash32
 from jaxstro.spatial.neighbor import (
     approx_knn_candidates,
@@ -52,6 +57,7 @@ from jaxstro.spatial.neighbor import (
     gather_candidates_two_stencil,
     gather_candidates_with_stencil,
 )
+from jaxstro.spatial.pairs import gather_pairs_within_radius
 
 __all__ = [
     # Morton encoding
@@ -60,10 +66,14 @@ __all__ = [
     "wyhash32",
     # Grid binning
     "assign_particles_to_bins",
+    "assign_to_cells_linear",
     "fill_bins",
+    "fill_bins_exact",
     # Neighbor candidate gathering
     "gather_candidates_from_bins",
     "gather_candidates_with_stencil",
     "gather_candidates_two_stencil",
     "approx_knn_candidates",
+    # Exact fixed-radius neighbour pairs
+    "gather_pairs_within_radius",
 ]

@@ -123,6 +123,36 @@ def assign_particles_to_bins(
     return bin_of
 
 
+def assign_to_cells_linear(
+    pos: Float[Array, "N 3"],
+    origin: Float[Array, "3"],
+    cell_size: float,
+    dims: tuple[int, int, int],
+) -> Int[Array, "N"]:
+    """Dense row-major cell index for a uniform grid (open boundary, clamped).
+
+    cell = ix + nx*(iy + ny*iz), dense in [0, nx*ny*nz) for ANY dims (unlike
+    morton, which is only dense for power-of-2 dims). Off-box positions clamp to
+    the boundary cell. Use this (not morton) for exact fixed-radius neighbour
+    gathers where Nbins must be tight and correct for arbitrary cell counts.
+
+    Args:
+        pos: Particle positions [N, 3].
+        origin: Lower corner of the grid [3] (the (0,0,0) cell's min corner).
+        cell_size: Uniform cell side length (scalar).
+        dims: (nx, ny, nz) number of cells per axis. May be non-cubic.
+
+    Returns:
+        cell_of: Dense row-major cell id per particle [N], in [0, nx*ny*nz).
+    """
+    nx, ny, nz = int(dims[0]), int(dims[1]), int(dims[2])
+    u = (pos - origin) / cell_size  # (N,3) cell coords
+    ix = jnp.clip(jnp.floor(u[:, 0]).astype(jnp.int32), 0, nx - 1)
+    iy = jnp.clip(jnp.floor(u[:, 1]).astype(jnp.int32), 0, ny - 1)
+    iz = jnp.clip(jnp.floor(u[:, 2]).astype(jnp.int32), 0, nz - 1)
+    return ix + nx * (iy + ny * iz)
+
+
 # =============================================================================
 # Bin Filling with Overflow Handling
 # =============================================================================
@@ -195,18 +225,33 @@ def fill_bins(
     if sentinel_N is None:
         sentinel_N = N  # Expect position arrays padded to length N+1
 
+    # Eager soundness guard (skipped under trace): bins must be in [0, Nbins).
+    # For a non-power-of-2 Nbins_per_dim, morton codes exceed Nbins_per_dim**3 and
+    # would be silently dropped by bincount / corrupt the cumsum offsets. Fail loud.
+    if not isinstance(bin_of, jax.core.Tracer):
+        if N > 0 and (int(jnp.max(bin_of)) >= Nbins or int(jnp.min(bin_of)) < 0):
+            raise ValueError(
+                f"fill_bins: bin_of out of range [0, {Nbins}); got "
+                f"[{int(jnp.min(bin_of))}, {int(jnp.max(bin_of))}]. For a morton index, "
+                f"Nbins must be the morton CODE range (2**(3*ceil(log2(Nbins_per_dim)))), "
+                f"not Nbins_per_dim**3 unless Nbins_per_dim is a power of 2. Prefer the "
+                f"dense linear index (assign_to_cells_linear) for arbitrary cell counts."
+            )
+
     # 32-bit hash per particle, mixed with bin ID (deterministic, unbiased)
     bin_u32 = jnp.uint32(bin_of)
     pid_u32 = jnp.uint32(particle_ids)
     h = wyhash32(pid_u32 ^ (bin_u32 * jnp.uint32(0x9E3779B1)))  # uint32
 
-    # Lexicographic key: (bin << 32) | hash
-    # Ascending sort groups by bin, then LOWEST hash first (reservoir criterion)
-    key64 = (jnp.uint64(bin_u32) << jnp.uint64(32)) | jnp.uint64(h)
-
-    # Single sort: O(N log N)
-    _, idx_sorted = jax.lax.sort_key_val(key64, particle_ids, dimension=0)
-    bins_sorted = bin_of[idx_sorted]
+    # Multi-key lexicographic sort (NO 64-bit packing, so it does not depend on
+    # x64 being enabled). Primary key = bin_of (last arg to lexsort), secondary
+    # key = hash h. Ascending: groups by bin, then LOWEST hash first (the same
+    # reservoir criterion as a packed (bin << 32) | hash key would give).
+    # Sort a POSITION permutation, not particle_ids, so bin_of is indexed by
+    # position (does NOT assume particle_ids == arange(N)).
+    perm = jnp.lexsort((h, bin_of))  # positions in sorted order
+    bins_sorted = bin_of[perm]
+    ids_sorted = particle_ids[perm]
 
     # Compute segment boundaries per bin
     counts = jnp.bincount(bins_sorted, length=Nbins).astype(jnp.int32)  # [Nbins]
@@ -223,11 +268,85 @@ def fill_bins(
     # Guard against empty bins when gathering (clamp to valid range)
     abs_pos_safe = jnp.clip(abs_pos, 0, jnp.maximum(N - 1, 0))
 
-    # Gather sorted particle IDs
-    picked = idx_sorted[abs_pos_safe]  # [Nbins, Bcap]
+    # Gather particle IDs through the sorted order
+    picked = ids_sorted[abs_pos_safe]  # [Nbins, Bcap]
 
     # Use sentinel N for invalid slots
     bin_members = jnp.where(valid, picked, sentinel_N)
     bin_mask = valid
 
     return bin_members.astype(jnp.int32), bin_mask
+
+
+def fill_bins_exact(
+    particle_ids: Int[Array, "N"],
+    bin_of: Int[Array, "N"],
+    Nbins: int,
+    Bcap: int,
+    sentinel_N: Optional[int] = None,
+) -> tuple[Int[Array, "Nbins Bcap"], Bool[Array, "Nbins Bcap"], Bool[Array, ""]]:
+    """Exact bin fill: fixed capacity Bcap, plus a did_overflow flag.
+
+    Identical position-permutation gather to :func:`fill_bins`, but NEVER
+    silently downsamples — if any bin has > Bcap members, ``did_overflow`` is
+    True and the caller must resize/raise (the first Bcap are still filled
+    deterministically, same reservoir criterion as ``fill_bins``).
+
+    Args:
+        particle_ids: Particle indices [N]. These are the values stored in bins.
+        bin_of: Bin assignment per particle [N] (dense linear or morton).
+        Nbins: Total number of bins.
+        Bcap: Capacity per bin. Bins with more than Bcap members trip
+            ``did_overflow``; only the first Bcap are stored.
+        sentinel_N: Sentinel value for invalid/empty slots. Default: N.
+
+    Returns:
+        bin_members: Particle IDs in each bin [Nbins, Bcap] (sentinel in empties).
+        bin_mask: Boolean mask [Nbins, Bcap] (True = valid particle).
+        did_overflow: Traced bool scalar = any(count > Bcap). Works under jit.
+    """
+    N = particle_ids.shape[0]
+    if sentinel_N is None:
+        sentinel_N = N  # Expect position arrays padded to length N+1
+
+    # Eager soundness guard (skipped under trace): bins must be in [0, Nbins).
+    if not isinstance(bin_of, jax.core.Tracer) and N > 0:
+        if int(jnp.max(bin_of)) >= Nbins or int(jnp.min(bin_of)) < 0:
+            raise ValueError(
+                f"fill_bins_exact: bin_of out of range [0, {Nbins}); got "
+                f"[{int(jnp.min(bin_of))}, {int(jnp.max(bin_of))}]. Prefer the "
+                f"dense linear index (assign_to_cells_linear) for arbitrary "
+                f"cell counts."
+            )
+
+    # 32-bit hash per particle, mixed with bin ID (deterministic, unbiased)
+    bin_u32 = jnp.uint32(bin_of)
+    pid_u32 = jnp.uint32(particle_ids)
+    h = wyhash32(pid_u32 ^ (bin_u32 * jnp.uint32(0x9E3779B1)))  # uint32
+
+    # Multi-key lexicographic sort (NO 64-bit packing, x64-independent). Primary
+    # key = bin_of, secondary = hash h -> groups by bin, LOWEST hash first (same
+    # reservoir criterion as a packed (bin << 32) | hash key). Sort a POSITION
+    # permutation, not particle_ids (does NOT assume particle_ids == arange(N)).
+    perm = jnp.lexsort((h, bin_of))  # positions in sorted order
+    bins_sorted = bin_of[perm]
+    ids_sorted = particle_ids[perm]
+
+    # Segment boundaries per bin
+    counts = jnp.bincount(bins_sorted, length=Nbins).astype(jnp.int32)  # [Nbins]
+    did_overflow = jnp.any(counts > Bcap)  # traced bool scalar (jit-safe)
+    starts = jnp.cumsum(counts) - counts  # [Nbins]
+    ends = starts + counts  # [Nbins]
+
+    # Absolute positions for first Bcap particles per bin (static [Nbins, Bcap])
+    offsets = jnp.arange(Bcap, dtype=jnp.int32)[None, :]  # [1, Bcap]
+    abs_pos = starts[:, None] + offsets  # [Nbins, Bcap]
+    valid = abs_pos < ends[:, None]
+
+    # Guard against empty bins when gathering (clamp to valid range)
+    abs_pos_safe = jnp.clip(abs_pos, 0, jnp.maximum(N - 1, 0))
+    picked = ids_sorted[abs_pos_safe]  # [Nbins, Bcap]
+
+    bin_members = jnp.where(valid, picked, sentinel_N)
+
+    return bin_members.astype(jnp.int32), valid, did_overflow

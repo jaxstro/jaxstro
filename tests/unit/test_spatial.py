@@ -11,17 +11,25 @@ Tests cover:
 
 from __future__ import annotations
 
+import inspect
+
 import jax
+
+jax.config.update("jax_enable_x64", True)  # f64 distances for a clean cutoff compare
+
 import jax.numpy as jnp
 import pytest
 
 from jaxstro.spatial import (
     approx_knn_candidates,
     assign_particles_to_bins,
+    assign_to_cells_linear,
     fill_bins,
+    fill_bins_exact,
     gather_candidates_from_bins,
     gather_candidates_two_stencil,
     gather_candidates_with_stencil,
+    gather_pairs_within_radius,
     morton_decode_3d,
     morton_encode_3d,
     wyhash32,
@@ -147,6 +155,49 @@ class TestMortonEncoding:
         with pytest.raises(ValueError, match="Only bits=10"):
             morton_decode_3d(jnp.array([42]), bits=12)
 
+    def test_roundtrip_10bit_ceiling(self):
+        """Encode/decode round-trips exactly across the full 10-bit range.
+
+        Existing tests only exercise power-of-2 sizes (max coord 127). This
+        probes the ceiling itself: coords {0, 1, 1022, 1023} form the boundary
+        of the representable 10-bit range (0..2^10-1). Every (x, y, z) triple
+        drawn from that set must survive a round-trip bit-exactly.
+        """
+        vals = [0, 1, 1022, 1023]  # {min, min+1, max-1, max} for 10-bit coords
+        xyz = jnp.array([[a, b, c] for a in vals for b in vals for c in vals])
+
+        codes = morton_encode_3d(xyz)
+        x2, y2, z2 = morton_decode_3d(codes)
+        xyz_decoded = jnp.stack([x2, y2, z2], axis=-1)
+
+        assert jnp.array_equal(xyz, xyz_decoded), "10-bit ceiling roundtrip failed"
+        # And the codes are all distinct (no collision at the ceiling).
+        assert len(jnp.unique(codes)) == xyz.shape[0]
+
+    def test_coord_at_cap_wraps_via_10bit_mask(self):
+        """PIN: coord == 1024 (just past the 10-bit cap) silently wraps to 0.
+
+        This characterises a KNOWN LIMITATION, not a bug: the encoder masks each
+        coordinate to 10 bits (``& 0x3FF``), so any value >= 2^10 loses its high
+        bits. 1024 == 0b100_0000_0000 masks to 0. Callers must guarantee coords
+        are < 1024 (``assign_particles_to_bins`` enforces this by requiring
+        Nbins_per_dim <= 1024 AND clipping bins to [0, Nbins-1], so the encoder
+        is never fed 1024). We pin the wrap here so any future change to the
+        masking width is caught.
+        """
+        # 1024 == 0x400 -> masked to 0x3FF gives 0; 1025 -> 1; 2048 -> 0.
+        assert (1024 & 0x3FF) == 0  # sanity: the mask arithmetic itself
+        xyz = jnp.array([[1024, 0, 0], [1025, 0, 0], [2048, 7, 0]])
+        codes = morton_encode_3d(xyz)
+        x, y, z = morton_decode_3d(codes)
+
+        # x wraps: 1024->0, 1025->1, 2048->0. Untouched coords survive.
+        assert int(x[0]) == 0 and int(codes[0]) == 0
+        assert int(x[1]) == 1
+        assert int(x[2]) == 0 and int(y[2]) == 7
+        # The wrapped triple aliases the true (0, 0, 0) code -- a collision.
+        assert int(codes[0]) == int(morton_encode_3d(jnp.array([[0, 0, 0]]))[0])
+
 
 class TestWyhash:
     """Tests for wyhash32 hashing function."""
@@ -269,6 +320,72 @@ class TestBinAssignment:
         assert y[0] == 2
         assert z[0] == 2
 
+    def test_edge_at_plus_half_lands_in_last_bin(self):
+        """A particle exactly at +L/2 lands in the last bin (Nbins-1).
+
+        The box spans [-L/2, +L/2]. A particle sitting *exactly* on the upper
+        face maps to floor(L/dx) == Nbins, which the clip pulls back to the last
+        valid bin (Nbins-1) rather than an out-of-range bin. Existing corner
+        tests only probe *just inside* (half - 0.001); this pins the exact edge.
+        """
+        L, N = 4.0, 8
+        pos = jnp.array(
+            [
+                [L / 2, 0.0, 0.0],  # +x face
+                [0.0, L / 2, 0.0],  # +y face
+                [0.0, 0.0, L / 2],  # +z face
+            ]
+        )
+        bin_of = assign_particles_to_bins(pos, L_box=L, Nbins_per_dim=N)
+        x, y, z = morton_decode_3d(bin_of)
+
+        assert int(x[0]) == N - 1  # +L/2 on x -> last x-bin
+        assert int(y[1]) == N - 1  # +L/2 on y -> last y-bin
+        assert int(z[2]) == N - 1  # +L/2 on z -> last z-bin
+
+    def test_edge_at_minus_half_lands_in_bin_zero(self):
+        """A particle exactly at -L/2 lands in bin 0 (the lower face).
+
+        Mirror of the +L/2 test: the lower face maps to floor(0) == 0 exactly.
+        """
+        L, N = 4.0, 8
+        pos = jnp.array(
+            [
+                [-L / 2, 0.0, 0.0],  # -x face
+                [0.0, -L / 2, 0.0],  # -y face
+                [0.0, 0.0, -L / 2],  # -z face
+            ]
+        )
+        bin_of = assign_particles_to_bins(pos, L_box=L, Nbins_per_dim=N)
+        x, y, z = morton_decode_3d(bin_of)
+
+        assert int(x[0]) == 0  # -L/2 on x -> bin 0
+        assert int(y[1]) == 0  # -L/2 on y -> bin 0
+        assert int(z[2]) == 0  # -L/2 on z -> bin 0
+
+    def test_offbox_clamps_without_wrap(self):
+        """Off-box particles clamp to the boundary bin -- they do NOT wrap.
+
+        A particle far beyond +L/2 must land in the LAST bin, and one far below
+        -L/2 in bin 0 -- never wrapped to the opposite face (which would happen
+        if the raw bin index were fed to the 10-bit Morton mask without the
+        prior clip). We use asymmetric signs per axis to catch any axis mixing.
+        """
+        L, N = 4.0, 8
+        big = 1.0e6  # ~250000 box-lengths outside -- deep off-box
+        pos = jnp.array(
+            [
+                [big, -big, big],  # (+,-,+) far
+                [-big, big, -big],  # (-,+,-) far
+            ]
+        )
+        bin_of = assign_particles_to_bins(pos, L_box=L, Nbins_per_dim=N)
+        x, y, z = morton_decode_3d(bin_of)
+
+        # Clamped to the near boundary of each axis, NOT wrapped to the far side.
+        assert (int(x[0]), int(y[0]), int(z[0])) == (N - 1, 0, N - 1)
+        assert (int(x[1]), int(y[1]), int(z[1])) == (0, N - 1, 0)
+
 
 # =============================================================================
 # Bin Filling Tests
@@ -355,6 +472,138 @@ class TestBinFilling:
         # Empty slots should have custom sentinel
         assert jnp.all(bin_members[0, 10:] == sentinel)
         assert jnp.all(bin_members[1:] == sentinel)
+
+
+class TestFillBinsSoundness:
+    def test_no_silent_loss_when_bin_of_exceeds_Nbins(self):
+        # A bin index >= Nbins must raise, never silently drop.
+        pids = jnp.arange(5, dtype=jnp.int32)
+        bin_of = jnp.array([0, 1, 2, 999, 4], dtype=jnp.int32)  # 999 >= Nbins=8
+        with pytest.raises((ValueError, AssertionError)):
+            fill_bins(pids, bin_of, Nbins=8, Bcap=4)
+
+    def test_conserves_all_particles_no_overflow(self):
+        # Every particle with a valid bin < Nbins must appear exactly once.
+        N = 200
+        key = jax.random.PRNGKey(0)
+        bin_of = jax.random.randint(key, (N,), 0, 64).astype(jnp.int32)
+        pids = jnp.arange(N, dtype=jnp.int32)
+        bm, mask = fill_bins(pids, bin_of, Nbins=64, Bcap=N)  # Bcap huge -> no overflow
+        assert int(jnp.sum(mask)) == N
+        # each particle id present exactly once
+        present = jnp.sort(bm[mask])
+        assert jnp.array_equal(present, jnp.arange(N, dtype=jnp.int32))
+
+    def test_non_arange_particle_ids(self):
+        # bins must contain the right IDS by POSITION, not indexed by id value.
+        pids = (100 + jnp.arange(6)).astype(jnp.int32)  # NOT arange from 0
+        bin_of = jnp.array([0, 0, 1, 1, 2, 2], dtype=jnp.int32)
+        bm, mask = fill_bins(pids, bin_of, Nbins=4, Bcap=4)
+        # bin 0 -> positions 0,1 -> ids 100,101 ; bin 1 -> 102,103 ; bin 2 -> 104,105
+        assert set(bm[0][mask[0]].tolist()) == {100, 101}
+        assert set(bm[1][mask[1]].tolist()) == {102, 103}
+        assert set(bm[2][mask[2]].tolist()) == {104, 105}
+
+
+class TestBinSortX64Independence:
+    """The bin sort must not depend on x64 (JAX default is x64 OFF)."""
+
+    def test_no_uint64_packed_key_in_source(self):
+        # PIN (Critical 2): both fill_bins and fill_bins_exact used a packed key
+        # key64 = (uint64(bin) << 32) | uint64(hash). With x64 DISABLED (JAX
+        # default) uint64 silently truncates to uint32, collapsing the key to
+        # hash-only and breaking bin-contiguity (bincount/cumsum then fill bins
+        # with the WRONG particles). The fix uses a multi-key lexsort that needs
+        # no 64-bit packing. Guard structurally so the x64 dependency can't creep
+        # back (toggling x64 off mid-session is impractical -- JAX caches config).
+        import jaxstro.spatial.grid as grid_mod
+
+        src = inspect.getsource(grid_mod)
+        assert "uint64" not in src, (
+            "bin sort must not construct a uint64 packed key (x64-dependent); "
+            "use jnp.lexsort((h, bin_of)) instead"
+        )
+
+    def test_fill_bins_exact_groups_by_bin_nontrivial(self):
+        # Hand-built, interleaved (non-contiguous) bin_of with per-bin overflow
+        # potential. Grouping must be exact regardless of the sort key encoding.
+        pids = jnp.arange(12, dtype=jnp.int32)
+        bin_of = jnp.array([3, 0, 3, 1, 0, 3, 1, 0, 3, 0, 1, 3], dtype=jnp.int32)
+        bm, mask, did = fill_bins_exact(pids, bin_of, Nbins=4, Bcap=8)
+        assert not bool(did)
+        for b in range(4):
+            want = {
+                int(p) for p, bb in zip(pids.tolist(), bin_of.tolist()) if bb == b
+            }
+            got = set(bm[b][mask[b]].tolist())
+            assert got == want, f"bin {b}: got {got}, want {want}"
+
+    def test_fill_bins_groups_by_bin_nontrivial(self):
+        # Same, for the non-exact fill_bins (reservoir path); Bcap large enough
+        # that no downsampling occurs -> every particle grouped into its bin.
+        pids = (50 + jnp.arange(12)).astype(jnp.int32)  # non-arange ids too
+        bin_of = jnp.array([2, 5, 2, 0, 5, 2, 0, 5, 2, 0, 5, 2], dtype=jnp.int32)
+        bm, mask = fill_bins(pids, bin_of, Nbins=6, Bcap=8)
+        for b in range(6):
+            want = {
+                int(p) for p, bb in zip(pids.tolist(), bin_of.tolist()) if bb == b
+            }
+            got = set(bm[b][mask[b]].tolist())
+            assert got == want, f"bin {b}: got {got}, want {want}"
+
+
+class TestLinearCellIndex:
+    def test_dense_range_arbitrary_dims(self):
+        # Non-power-of-2, non-cubic dims: index must be dense in [0, prod(dims)).
+        dims = (10, 7, 13)
+        origin = jnp.array([-2.0, -1.0, -3.0])
+        cell_size = 0.4
+        key = jax.random.PRNGKey(1)
+        # positions spanning the full box
+        box = jnp.array(dims) * cell_size
+        pos = origin + jax.random.uniform(key, (5000, 3)) * box
+        cell_of = assign_to_cells_linear(pos, origin, cell_size, dims)
+        assert int(jnp.min(cell_of)) >= 0
+        assert int(jnp.max(cell_of)) < dims[0] * dims[1] * dims[2]
+
+    def test_known_cell(self):
+        dims = (4, 4, 4)
+        origin = jnp.array([0.0, 0.0, 0.0])
+        pos = jnp.array([[0.5, 1.5, 2.5]])  # -> ix,iy,iz = 0,1,2 with cell_size=1
+        cell = assign_to_cells_linear(pos, origin, 1.0, dims)
+        assert int(cell[0]) == 0 + 4 * (1 + 4 * 2)  # = 36
+
+    def test_off_box_clamps(self):
+        dims = (4, 4, 4)
+        origin = jnp.array([0.0, 0.0, 0.0])
+        pos = jnp.array([[-100.0, 100.0, 2.0]])  # clamp to (0, 3, 2)
+        cell = assign_to_cells_linear(pos, origin, 1.0, dims)
+        assert int(cell[0]) == 0 + 4 * (3 + 4 * 2)  # = 44
+
+
+class TestFillBinsExact:
+    def test_no_overflow_flag_false_and_conserves(self):
+        N = 100
+        key = jax.random.PRNGKey(3)
+        bin_of = jax.random.randint(key, (N,), 0, 27).astype(jnp.int32)
+        pids = jnp.arange(N, dtype=jnp.int32)
+        bm, mask, did = fill_bins_exact(pids, bin_of, Nbins=27, Bcap=N)
+        assert not bool(did)
+        assert int(jnp.sum(mask)) == N
+
+    def test_overflow_flag_true_when_bin_exceeds_Bcap(self):
+        N = 30
+        pids = jnp.arange(N, dtype=jnp.int32)
+        bin_of = jnp.zeros(N, dtype=jnp.int32)  # all in bin 0
+        bm, mask, did = fill_bins_exact(pids, bin_of, Nbins=4, Bcap=10)
+        assert bool(did) is True  # 30 > 10 -> loud
+        assert int(jnp.sum(mask)) == 10  # still fills Bcap deterministically
+
+    def test_jit_returns_overflow(self):
+        f = jax.jit(lambda pids, b: fill_bins_exact(pids, b, Nbins=8, Bcap=4))
+        pids = jnp.arange(10, dtype=jnp.int32)
+        _, _, did = f(pids, jnp.zeros(10, jnp.int32))
+        assert bool(did) is True
 
 
 # =============================================================================
@@ -832,3 +1081,125 @@ class TestEdgeCases:
         # Should still work, though maybe fewer candidates due to sparsity
         n_cand = jnp.sum(cand_mask, axis=1)
         assert jnp.all(n_cand >= 0), "Negative candidate counts"
+
+
+class TestGatherPairsWithinRadius:
+    def _brute_within(self, pos, cutoff):
+        r2 = jnp.sum((pos[:, None] - pos[None, :]) ** 2, axis=-1)
+        within = (r2 > 0) & (r2 <= cutoff ** 2)
+        return [set(jnp.where(within[i])[0].tolist()) for i in range(pos.shape[0])]
+
+    def test_matches_bruteforce_random(self):
+        key = jax.random.PRNGKey(7)
+        N = 300
+        origin = jnp.array([-1.0, -1.0, -1.0]); box = 2.0; cutoff = 0.3
+        pos = origin + jax.random.uniform(key, (N, 3)) * box
+        got, mask, did = gather_pairs_within_radius(
+            pos, origin=origin, cell_size=cutoff, cutoff=cutoff, k_max=64)
+        assert not bool(did)
+        want = self._brute_within(pos, cutoff)
+        for i in range(N):
+            assert set(got[i][mask[i]].tolist()) == want[i]
+
+    def test_matches_bruteforce_clustered(self):
+        key = jax.random.PRNGKey(11)
+        N = 400
+        # two tight clumps -> dense cells, stresses coverage + capacity
+        c = jax.random.uniform(key, (N, 3)) * 0.15
+        c = c.at[: N // 2].add(jnp.array([0.5, 0.5, 0.5]))
+        origin = jnp.array([-0.2, -0.2, -0.2]); cutoff = 0.2
+        got, mask, did = gather_pairs_within_radius(
+            c, origin=origin, cell_size=cutoff, cutoff=cutoff, k_max=N)
+        assert not bool(did)
+        want = self._brute_within(c, cutoff)
+        for i in range(N):
+            assert set(got[i][mask[i]].tolist()) == want[i]
+
+    def test_overflow_flag_when_kmax_too_small(self):
+        key = jax.random.PRNGKey(5)
+        N = 200
+        pos = jax.random.uniform(key, (N, 3)) * 0.05  # all within one small region
+        origin = jnp.array([0.0, 0.0, 0.0])
+        _, _, did = gather_pairs_within_radius(
+            pos, origin=origin, cell_size=0.1, cutoff=0.1, k_max=8)  # too small
+        assert bool(did) is True
+
+    def test_cell_size_smaller_than_cutoff_raises(self):
+        pos = jnp.zeros((3, 3))
+        with pytest.raises((ValueError, AssertionError)):
+            gather_pairs_within_radius(
+                pos, origin=jnp.zeros(3), cell_size=0.1, cutoff=0.5, k_max=4)
+
+    def test_symmetry(self):
+        # j in nbr(i)  <=>  i in nbr(j)  (needed for the 1/2 factor in the energy sum)
+        key = jax.random.PRNGKey(9)
+        pos = jax.random.uniform(key, (150, 3)) * 1.0
+        got, mask, _ = gather_pairs_within_radius(
+            pos, origin=jnp.zeros(3), cell_size=0.25, cutoff=0.25, k_max=64)
+        nbr = [set(got[i][mask[i]].tolist()) for i in range(150)]
+        for i in range(150):
+            for j in nbr[i]:
+                assert i in nbr[j]
+
+    def test_no_duplicate_neighbours_origin_at_corner(self):
+        # PIN (Critical 1): with `origin` at the cloud's LOWER CORNER, many
+        # particles land in boundary cells (ix in {0, nx-1}). The 27-cell
+        # stencil clamps offsets, so -1 and 0 (or 0 and +1) collapse to the SAME
+        # cell id; the Cartesian product then gathers that cell 2x/4x/8x and the
+        # same neighbour index is returned multiple times with mask=True. That
+        # double-counts forces downstream. Every particle's returned neighbour
+        # list must be a proper SET (no duplicate ids).
+        key = jax.random.PRNGKey(13)
+        N = 400
+        cutoff = 0.2
+        pos = jax.random.uniform(key, (N, 3)) * 1.0  # in [0, 1]^3
+        origin = jnp.array([0.0, 0.0, 0.0])  # lower corner -> heavy boundary occupancy
+        got, mask, did = gather_pairs_within_radius(
+            pos, origin=origin, cell_size=cutoff, cutoff=cutoff, k_max=N)
+        # true neighbour counts are all <= k_max=N, so no genuine overflow;
+        # a spurious did_overflow here signals duplicate-inflated n_within.
+        assert not bool(did)
+        for i in range(N):
+            ids = got[i][mask[i]].tolist()
+            assert len(ids) == len(set(ids)), (
+                f"particle {i} has duplicate neighbours: {ids}"
+            )
+
+    def test_slot_sum_matches_bruteforce_origin_at_corner(self):
+        # PIN (Critical 1): a per-slot sum of 1/r (as an MSM force sum would do,
+        # NOT deduplicated) must equal the brute-force sum over the true
+        # neighbour set. Duplicates from clamped boundary cells would inflate the
+        # slot sum, so this is a multiset-aware check that set()-based tests miss.
+        key = jax.random.PRNGKey(17)
+        N = 300
+        cutoff = 0.25
+        pos = jax.random.uniform(key, (N, 3)) * 1.0
+        origin = jnp.array([0.0, 0.0, 0.0])
+        got, mask, did = gather_pairs_within_radius(
+            pos, origin=origin, cell_size=cutoff, cutoff=cutoff, k_max=N)
+        assert not bool(did)
+        r2 = jnp.sum((pos[:, None] - pos[None, :]) ** 2, axis=-1)
+        within = (r2 > 0) & (r2 <= cutoff ** 2)
+        inv_r = jnp.where(within, 1.0 / jnp.sqrt(jnp.where(within, r2, 1.0)), 0.0)
+        brute_sum = jnp.sum(inv_r, axis=1)
+        for i in range(N):
+            ids = got[i][mask[i]]
+            d = pos[i][None, :] - pos[ids]
+            rr = jnp.sqrt(jnp.sum(d * d, axis=-1))
+            slot_sum = float(jnp.sum(1.0 / rr))
+            assert abs(slot_sum - float(brute_sum[i])) <= 1e-12 * (
+                1.0 + abs(float(brute_sum[i]))
+            ), f"particle {i}: slot sum {slot_sum} != brute {float(brute_sum[i])}"
+
+    def test_r_equals_cutoff_boundary_straddle_included(self):
+        # A pair exactly at r == cutoff must be INCLUDED (contract: 0 < r <= cutoff).
+        # Separation 0.5 with cutoff 0.5 is exactly representable in f64, so this
+        # pins the closed upper bound (and both particles sit on cell boundaries).
+        cutoff = 0.5
+        pos = jnp.array([[0.0, 0.0, 0.0], [0.5, 0.0, 0.0]])  # r == cutoff exactly
+        origin = jnp.zeros(3)
+        got, mask, did = gather_pairs_within_radius(
+            pos, origin=origin, cell_size=cutoff, cutoff=cutoff, k_max=4)
+        assert not bool(did)
+        assert set(got[0][mask[0]].tolist()) == {1}
+        assert set(got[1][mask[1]].tolist()) == {0}
