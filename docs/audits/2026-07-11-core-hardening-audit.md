@@ -17,9 +17,9 @@ increased the fast-tier result to 876 passed (2 slow tests deselected).
 
 | Area | Authority | Audit status |
 | --- | --- | --- |
-| Fundamental constants | [NIST CODATA 2018 archive](https://physics.nist.gov/cuu/Constants/archive2018.html) | Package values intentionally follow the archived 2018 adjustment. NIST identifies 2022 as current; 2018 must remain versioned rather than called current. |
-| Nominal solar conversions | [IAU 2015 Resolution B3](https://www.iau.org/common/Uploaded%20files/IAUGA2015-Resolution-B3-recommended-nominal-conversion.pdf) | Exact nominal radius, luminosity, effective temperature, and mass *parameter* verified. |
-| Bolometric zero point | IAU 2015 Resolution B2 | Numerical convention is consistent; the repository's aggregate IAU locator needs replacement with a stable, directly verified locator before registry carding. |
+| Fundamental constants | [NIST CODATA 2018 archive](https://physics.nist.gov/cuu/Constants/archive2018.html) | Package values intentionally follow the archived 2018 adjustment. NIST identifies 2022 as current; 2018 remains versioned rather than called current. |
+| Nominal solar conversions | [IAU 2015 Resolution B3](https://www.iau.org/common/Uploaded%20files/IAUGA2015-Resolution-B3-recommended-nominal-conversion.pdf) | Exact nominal radius, luminosity, effective temperature, and solar mass *parameter* verified. B3 does not define a solar mass in grams. |
+| Bolometric zero point | [IAU 2015 Resolution B2](https://www.iau.org/static/resolutions/IAU2015_English.pdf) | B2 defines exact $L_0$; the stored $M_{\rm bol,\odot}=4.74$ is the conventional rounded result after combining B2 with B3's nominal luminosity. |
 | Galactic/ICRS transform | [IAU SOFA manual](https://www.iausofa.org/s/manual_c.pdf) | Matrix values are correct; the convention is IAU 1958 Galactic coordinates to ICRS, not “IAU 2000”. |
 
 ## Confirmed findings
@@ -29,11 +29,11 @@ increased the fast-tier result to 876 passed (2 slow tests deselected).
 | A-001 | P1 | Default-float32 numerical defect | `safe_exp(100)`, `safe_div(1, 0)`, `relative_error(1, 0)`, and the zero-denominator `safe_div` gradient were non-finite in a clean `jax_enable_x64=False` process. The test suite globally enabled x64, masking it. | **Fixed** in `08792a3`; a clean-subprocess regression now requires finite float32 results while preserving x64 behavior. |
 | A-002 | P1 | API/coordinate ownership mismatch | `compute_proper_motions` projected global x/y components but labeled them RA*/Dec. At an off-axis line of sight, the promised local RA basis differs from global x. | **Fixed:** require explicit sky-tangent center/roll; transform local position and velocity to ICRS; project onto each star's exact RA*/Dec basis. The old implicit x/y path is retired. |
 | A-003 | P2 | Eager contract defect | `sky_tangent(..., warn_large_field=True)` checked whether a JAX scalar was a Python `float`/`int`, so normal eager JAX inputs never issued the documented warning. | **Fixed:** `try_concrete_bool` emits the warning for concrete eager fields and intentionally skips it while traced; regression coverage pins the eager path. |
-| A-004 | P2 | Provenance/claim defect | IAU B3 defines exact nominal \((GM)_\odot^\mathrm{N}\), not a nominal solar mass in grams. `MSUN_G` is a rounded legacy conversion; current text overstates its provenance. The repository's IAU aggregate URL is stale/dead in direct retrieval. | Preserve the legacy numeric value; correct language/locators and distinguish nominal conversions from compatibility values. |
-| A-005 | P2 | Exactness claim defect | Stored `A_RAD` and `R_GAS` literals are rounded, not bit-identical to their defining expressions; existing tests tolerate residuals much larger than the stored precision. | Tighten provenance tests to the intended stored precision and replace “exact” language with an accurate rounding/consistency statement. |
+| A-004 | P2 | Provenance/claim defect | IAU B3 defines exact nominal \((GM)_\odot^\mathrm{N}\), not a nominal solar mass in grams. `MSUN_G` is a rounded legacy conversion. | **Fixed:** legacy value preserved; inline/API/bibliography language now distinguishes B3 nominal conversion constants from the gram compatibility scale and records direct B2/B3 locators. |
+| A-005 | P2 | Exactness claim defect | Stored `A_RAD` and `R_GAS` literals are rounded, not bit-identical to their defining expressions; prior tests tolerated residuals much larger than the stored precision. | **Fixed:** comments state the rounding contract and tests enforce the ten-significant-figure relative budget without asserting bit identity. |
 | A-006 | P2 | Gradient coverage gap | `jaxstro.testing.grad_audit` contained only engine/toy cases; no jaxstro public-entry-point registry existed. Existing coordinate checks were mostly finite-gradient smoke tests. | **Fixed:** `tests/validation/test_coords_grad_audit.py` now exercises nine interior public-coordinate AD-vs-FD contracts. The registry covers sky tangent, parallax, Galactic placement, both Galactic/ICRS directions, both spherical directions, observing geometry, and proper motion. |
 | A-007 | P2 | Singular-domain contract gap | Coincident observer/star geometry, spherical origin, zero normalization, and zenith/horizon geometry have non-finite derivatives or undefined bases. | **Fixed:** every public coordinate transform now documents its domain restrictions. Regressions explicitly record the non-finite Cartesian-origin angular Jacobian and coincident-parallax gradient; these geometries are excluded from the inference contract rather than silently regularized. |
-| A-008 | P2 | Convention documentation defect | The Galactic-to-ICRS matrix is numerically correct but documented as “IAU 2000/J2000.0”; SOFA identifies this transform as IAU 1958 Galactic coordinates to ICRS. | Correct wording and add an authority-anchored reference-vector test. |
+| A-008 | P2 | Convention documentation defect | The Galactic-to-ICRS matrix is numerically correct but was documented as “IAU 2000/J2000.0”; SOFA identifies this transform as IAU 1958 Galactic coordinates to ICRS. | **Fixed:** code references identify IAU SOFA as the convention authority; existing reference-vector tests remain the numerical regression evidence. |
 
 ## Verified non-defect observations
 
@@ -64,5 +64,6 @@ increased the fast-tier result to 876 passed (2 slow tests deselected).
 
 ## Open decisions and next checks
 
-1. Correct A-004/A-005/A-008 provenance wording only after each locator/source statement
-   is independently checked.
+1. Carry the direct CODATA/IAU/SOFA locators into the Slice-B registry cards; their
+   source wording is now reconciled, but registry rendering/validation is out of scope
+   for Slice A.

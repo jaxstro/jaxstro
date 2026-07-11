@@ -119,7 +119,7 @@ CGS constants with sourced values. A few that downstream packages rely on:
   - CODATA 2018 (Thomson cross-section)
 * - `MSUN_G`
   - $1.9884\times10^{33}\ \mathrm{g}$
-  - IAU 2015 nominal
+  - Legacy CGS compatibility scale derived from IAU 2015 B3 $(GM)_\odot^\mathrm{N}$
 * - `AB_ZEROPOINT_JY`
   - $3631\ \mathrm{Jy}$
   - Oke & Gunn 1983
@@ -127,6 +127,12 @@ CGS constants with sourced values. A few that downstream packages rely on:
 
 Provenance discipline — every constant cites its authority — is principle
 [9](../10-theory/index.md#p9-correctness).
+
+`MSUN_G` is deliberately not labelled an IAU nominal solar mass: Resolution B3
+defines the exact nominal solar *mass parameter* $(GM)_\odot^\mathrm{N}$, while
+the retained gram value is a rounded compatibility conversion using jaxstro's
+frozen CODATA-2018 $G$. The nominal radius, luminosity, and effective temperature
+are B3 conversion constants, not measurements of the time-varying Sun.
 
 ### `jaxstro.numerics.rootfinding`
 

@@ -1,7 +1,7 @@
 # src/jaxstro/astrometry.py
 
 """
-Astrometric constants and helpers (IAU-friendly).
+Astrometric constants and helpers.
 
 These values are convenient for converting proper motions and
 distances into velocities, and for general angular conversions.
@@ -15,7 +15,9 @@ All constants are module-level for direct access:
 # Astrometric constants
 # ===========================================================================
 
-# Kilometres per parsec (IAU 2015, consistent with constants.PC_CM)
+# Kilometres per parsec, derived from constants.PC_CM / constants.KM_CM.
+# The parsec uses the IAU 2012 exact astronomical unit and the angular
+# definition of an arcsecond; this stored value is a compatibility literal.
 KM_PER_PC: float = 3.0856775814913673e13
 
 # Milliarcseconds per radian
@@ -30,8 +32,10 @@ DEG_PER_RAD: float = 57.29577951308232
 # Years per megayear (exact)
 YR_PER_MYR: float = 1.0e6
 
-# Proper motion constant: km/s per (mas/yr × kpc)
-# 1 mas/yr at 1 kpc corresponds to 4.74047 km/s.
+# Proper-motion conversion [km/s per (mas/yr × kpc)].
+# 1 mas/yr at 1 kpc equals 1 AU per Julian year. The exact conventional
+# conversion from constants.AU_PER_YR_TO_KM_PER_S is 4.740470463... km/s;
+# K_PROPER_MOTION retains the long-standing rounded compatibility literal.
 K_PROPER_MOTION: float = 4.74047
 
 # ===========================================================================

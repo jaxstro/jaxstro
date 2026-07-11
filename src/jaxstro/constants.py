@@ -14,9 +14,14 @@ Units:
     - Pressure: dyn/cm² = g/(cm·s²)
 
 References:
-    - CODATA 2018: Tiesinga et al. (2021), Rev. Mod. Phys., 93, 025010
+    - CODATA 2018: Tiesinga et al. (2021), Rev. Mod. Phys., 93, 025010;
+      archived by NIST at https://physics.nist.gov/cuu/Constants/archive2018.html
     - IAU 2012 B2: astronomical unit (AU)
-    - IAU 2015 B3: nominal solar parameters (M_sun, R_sun, L_sun)
+    - IAU 2015 B3: nominal solar conversion constants (R_sun, L_sun,
+      T_eff,sun, and (GM)_sun; not a solar mass in grams),
+      https://www.iau.org/common/Uploaded%20files/IAUGA2015-Resolution-B3-recommended-nominal-conversion.pdf
+    - IAU 2015 B2: bolometric-magnitude zero points,
+      https://www.iau.org/static/resolutions/IAU2015_English.pdf
     - Asplund et al. (2009), ARA&A, 47, 481: Solar composition
 """
 
@@ -39,8 +44,9 @@ K_B: float = 1.380649e-16
 # Radiation constant a = 4σ/c [erg cm⁻³ K⁻⁴].
 # CODATA-derived: a = 4 * SIGMA_SB / C_CGS, with the CODATA-2018 Stefan–Boltzmann
 # constant and the exact speed of light below
-# (4 * 5.670374419e-5 / 2.99792458e10 = 7.565733250e-15). Kept internally
-# consistent with SIGMA_SB and C_CGS rather than an independent rounding.
+# (4 * 5.670374419e-5 / 2.99792458e10 = 7.565733250033928...e-15).
+# The compatibility literal is rounded to its stored decimal precision; it is
+# not bit-identical to the expression below.
 A_RAD: float = 7.565733250e-15
 
 # Avogadro's number [mol⁻¹]
@@ -75,7 +81,9 @@ SIGMA_T: float = 6.6524587321e-25
 
 # Molar gas constant R = k_B N_A [erg mol⁻¹ K⁻¹].
 # CODATA 2018: 8.314462618 J mol⁻¹ K⁻¹ = 8.314462618e7 erg mol⁻¹ K⁻¹
-# (×1e7 for the J→erg conversion). Exact in the revised SI (k_B, N_A exact).
+# (×1e7 for the J→erg conversion). k_B and N_A are exact in the revised SI;
+# this frozen compatibility literal is rounded, so it is not bit-identical to
+# K_B * N_A.
 R_GAS: float = 8.314462618e7
 
 # ===========================================================================
@@ -95,20 +103,29 @@ M_P: float = 1.67262192369e-24
 M_N: float = 1.67492749804e-24
 
 # ===========================================================================
-# Solar parameters (IAU 2015 nominal values)
-# https://www.iau.org/static/resolutions/IAU2015_English.pdf
+# Solar parameters and compatibility scales
+# IAU 2015 Resolution B3 (direct locator):
+# https://www.iau.org/common/Uploaded%20files/IAUGA2015-Resolution-B3-recommended-nominal-conversion.pdf
+# B3 defines exact nominal conversion constants R_sun^N, L_sun^N,
+# T_eff,sun^N, and (GM)_sun^N. They are conversion factors, not estimates of
+# the true solar properties, and B3 does not define a nominal solar mass [g].
 # ===========================================================================
 
-MSUN_G: float = 1.9884e33  # Solar mass [g]
-RSUN_CM: float = 6.957e10  # Solar radius [cm]
-LSUN_ERG_S: float = 3.828e33  # Solar luminosity [erg/s]
-TEFF_SUN: float = 5772.0  # Solar effective temperature [K]
+# Legacy solar-mass compatibility scale [g]. It is the rounded result of
+# (GM)_sun^N / G_CGS using B3's exact 1.3271244e20 m^3 s^-2 and this module's
+# frozen CODATA-2018 G_CGS; it is not an IAU nominal solar mass.
+MSUN_G: float = 1.9884e33
+# IAU B3 nominal conversion constants, converted exactly from their SI forms.
+RSUN_CM: float = 6.957e10
+LSUN_ERG_S: float = 3.828e33
+TEFF_SUN: float = 5772.0
 
-# Nominal solar absolute bolometric magnitude [mag].
-# IAU 2015 Resolution B2 fixes the absolute bolometric magnitude zero point at
-# L_0 = 3.0128e28 W (M_bol = 0 at L_0). With the IAU nominal solar luminosity
-# L_sun = 3.828e26 W, M_bol,sun = -2.5 * log10(L_sun / L_0)
-#       = -2.5 * log10(3.828e26 / 3.0128e28) = 4.74.
+# Conventionally rounded solar absolute bolometric magnitude [mag].
+# IAU 2015 Resolution B2 fixes the absolute-bolometric zero point at
+# L_0 = 3.0128e28 W (M_bol = 0 at L_0). With B3's nominal luminosity
+# L_sun^N = 3.828e26 W, -2.5 * log10(L_sun^N / L_0) =
+# 4.7399959339...; M_BOL_SUN retains the customary 4.74 rounding.
+# B2 locator (Resolution B2):
 # https://www.iau.org/static/resolutions/IAU2015_English.pdf
 M_BOL_SUN: float = 4.74
 

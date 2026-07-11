@@ -12,8 +12,11 @@ the number rather than trust it (principle
 
 - **{cite:t}`Tiesinga2021`** — CODATA 2018. The values of the fundamental constants
   in `jaxstro.constants` (G, $k_B$, $\sigma_\mathrm{SB}$, $\sigma_T$, …), all in CGS.
-- **{cite:t}`IAU2015B3`** — IAU 2015 nominal solar/planetary parameters, the source
-  for $\Msun$, $\Rsun$, $\Lsun$.
+- **{cite:t}`IAU2015B3`** — IAU 2015 nominal solar/planetary conversion constants:
+  $\Rsun$, $\Lsun$, $T_\mathrm{eff,\odot}$, and the solar mass parameter
+  $(GM)_\odot^\mathrm{N}$ (not a nominal solar mass in grams).
+- **{cite:t}`IAU2015B2`** — IAU 2015 absolute/apparent bolometric-magnitude zero
+  points, including $L_0$ used to state the conventional $M_{\rm bol,\odot}=4.74$.
 - **{cite:t}`OkeGunn1983`** — the AB magnitude system; the $3631\ \mathrm{Jy}$ zero
   point in `PhotometricUnits`.
 - **{cite:t}`GolubWelsch1969`** — the eigenvalue construction behind the Gaussian

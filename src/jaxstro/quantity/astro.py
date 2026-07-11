@@ -11,7 +11,7 @@ from .units import CORE_REGISTRY
 
 AU = Unit("AU", C.AU_CM, d.length, name="astronomical unit")
 pc = Unit("pc", C.PC_CM, d.length, name="parsec")
-Msun = Unit("Msun", C.MSUN_G, d.mass, name="nominal solar mass")
+Msun = Unit("Msun", C.MSUN_G, d.mass, name="legacy solar mass scale")
 Rsun = Unit("Rsun", C.RSUN_CM, d.length, name="nominal solar radius")
 Lsun = Unit("Lsun", C.LSUN_ERG_S, d.power, name="nominal solar luminosity")
 

@@ -252,10 +252,13 @@ constant. Authorities in use:
 
 - **CODATA 2018** — Tiesinga et al. (2021), Rev. Mod. Phys. 93, 025010 — fundamental
   constants (`G_CGS`, `C_CGS`, `K_B`, `SIGMA_SB`, `ALPHA_FS`, `E_ESU`, `R_E`, `SIGMA_T`,
-  `R_GAS`, particle masses, ...). Example invariant: `A_RAD = 7.565733250e-15`, derived
-  exactly as `4·SIGMA_SB / C_CGS` from the CODATA-2018 Stefan–Boltzmann constant (the
-  old `7.565767e-15` was a 4σ-discrepant stale value — see CHANGELOG).
-- **IAU 2015 B3** — nominal solar parameters (`MSUN_G`, `RSUN_CM`, `LSUN_ERG_S`);
+  `R_GAS`, particle masses, ...). Example invariant: `A_RAD = 7.565733250e-15`, a
+  stored-precision rounded representation of `4·SIGMA_SB / C_CGS` from the
+  CODATA-2018 Stefan–Boltzmann constant (the old `7.565767e-15` was a 4σ-discrepant
+  stale value — see CHANGELOG).
+- **IAU 2015 B3** — nominal solar conversion constants (`RSUN_CM`, `LSUN_ERG_S`,
+  `TEFF_SUN`, `(GM)_sun^N`); `MSUN_G` is a legacy rounded gram compatibility scale,
+  not an IAU nominal solar mass;
   **IAU 2012 B2** — astronomical unit. The year is the **Julian** year
   (365.25 d × 86400 s = 31 557 600 s exactly), *not* the tropical year — the provenance
   comment in `constants.py` is load-bearing; preserve it.

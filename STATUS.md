@@ -86,7 +86,8 @@ Register jaxstro in `~/brain/roots.yml` so federate.py pulls this STATUS.md into
   checks.try_concrete_bool; simpson/interp1d wrapper+core eager validation.
 - [x] T7b grad-check sweep + provenance + full jaxtyping ✅ reviewed (APPROVE)
   `69de872`+`22192c4`+`a117d86` — 380 tests (+30); ruff+mypy clean on numerics.
-  VALUE FIX: A_RAD 7.565767e-15 → 7.565733250e-15 (= 4σ/c exactly; old test was vacuous) — reviewer verified.
+  VALUE FIX: A_RAD 7.565767e-15 → 7.565733250e-15 (stored-precision rounding of 4σ/c;
+  old test was vacuous) — reviewer verified.
   bisect: structurally zero grad wrt params (documented). x64 fail-loud guard added.
 - [x] T7c condition_number 0.0 → +inf (Anna-approved) + E731 lint fix → `8d61801`; ruff check src/ clean; 381 tests
 - [x] T8 constants round-out (CODATA 2018) ✅ reviewed — `28f4193`; +5 constants

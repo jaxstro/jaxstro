@@ -490,7 +490,8 @@ Cross-check against `.claude-work/PHASE_B_COMPLETE.md` (T0–T8 table) and
   hatchling/Apache-2.0/py.typed/uv.lock release baseline.
 - **Changed** — `cumulative_trapz` uniform path → dx-outside (progenax parity);
   `condition_number` singular sentinel → `+inf`.
-- **Fixed** — A_RAD `7.565767e-15 → 7.565733250e-15` (= 4σ/c exactly); Julian-vs-tropical
+- **Fixed** — A_RAD `7.565767e-15 → 7.565733250e-15` (stored-precision rounding of
+  $4\sigma/c$); Julian-vs-tropical
   year provenance comment; `project_onto(eps=0)` NaN.
 Header text: "All notable changes … adheres to Semantic Versioning."
 

@@ -45,14 +45,15 @@ class TestFundamentalConstants:
         assert C.SIGMA_SB == 5.670374419e-5
 
     def test_radiation_constant(self):
-        """a_rad should be 4 * sigma_SB / c (CODATA-derived, tight).
+        """a_rad should match 4 * sigma_SB / c at its stored precision.
 
         Compares as a ratio to dodge pytest.approx's default abs=1e-12 floor,
         which would otherwise swamp these ~1e-14 magnitudes and make the check
-        vacuous. A_RAD is stored to match 4*sigma/c to better than 1e-7.
+        vacuous. A_RAD is a frozen rounded compatibility literal, not an exact
+        floating-point expression; 5e-10 is its ten-significant-figure budget.
         """
         a_computed = 4 * C.SIGMA_SB / C.C_CGS
-        assert C.A_RAD / a_computed == pytest.approx(1.0, rel=1e-7)
+        assert C.A_RAD / a_computed == pytest.approx(1.0, rel=5e-10)
 
 
 class TestElectromagneticAndAtomicConstants:
@@ -94,8 +95,8 @@ class TestElectromagneticAndAtomicConstants:
         assert C.R_GAS == pytest.approx(8.314462618e7, rel=1e-10)
 
     def test_molar_gas_constant_from_k_b_n_a(self):
-        """R = k_B * N_A (with the CGS erg-based k_B)."""
-        assert C.R_GAS == pytest.approx(C.K_B * C.N_A, rel=1e-6)
+        """R matches k_B * N_A at the frozen literal's stored precision."""
+        assert C.R_GAS == pytest.approx(C.K_B * C.N_A, rel=5e-10)
 
 
 class TestParticleMasses:
@@ -127,9 +128,10 @@ class TestSolarParameters:
     """Tests for solar constants."""
 
     def test_solar_mass(self):
-        """M_sun should match IAU 2015 nominal value."""
-        # IAU 2015 B3: GM_sun = 1.3271244e26 cm³/s², so M = GM/G
-        assert C.MSUN_G == pytest.approx(1.9884e33, rel=1e-4)
+        """MSUN_G is the frozen compatibility conversion, not an IAU nominal mass."""
+        # IAU 2015 B3 defines exact (GM)_sun^N = 1.3271244e26 cm^3/s^2.
+        # Dividing by the frozen CODATA-2018 G gives the compatibility scale.
+        assert C.MSUN_G == pytest.approx(1.3271244e26 / C.G_CGS, rel=5.1e-6)
 
     def test_solar_radius(self):
         """R_sun should match IAU 2015 nominal value."""
@@ -151,7 +153,7 @@ class TestSolarParameters:
         assert C.LSUN_ERG_S == pytest.approx(L_computed, rel=0.005)
 
     def test_m_bol_sun_value_and_consistency(self):
-        """M_bol_sun should be 4.74 and consistent with the IAU 2015 zero point."""
+        """M_bol_sun retains the conventional 4.74 rounding of the IAU scale."""
         from jaxstro.constants import M_BOL_SUN
 
         assert M_BOL_SUN == 4.74
