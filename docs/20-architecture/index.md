@@ -6,21 +6,32 @@ description: >-
   that keeps the foundation thin.
 ---
 
-This section will tell the narrative "why" of the software's *shape* — the
-JAX-native functional and PyTree design, the explicit-units policy, the one-way
-dependency rule, and the thin-foundation posture — as connected prose that cites
-the decisions behind each. Where the [theory section](../10-theory/index.md)
-covers the math of the methods, this section covers the structure of the package.
+This section explains *why* the software has its current shape: JAX-native
+functional and PyTree design, explicit unit boundaries, one-way package
+dependencies, evidence ownership, and a deliberately thin foundation. Where the
+[theory section](../10-theory/index.md) covers mathematical method contracts,
+this section covers package structure and responsibility.
 
 ## Foundation boundary
 
-`jaxstro` is the ecosystem foundation: constants, unit systems, coordinate
-transforms, AD-safe numerics, spatial utilities, parameter-vector bridges, and
-testing harnesses. It does not own simulations, survey rendering, stellar
-evolution, or inference workflows. Downstream packages depend on `jaxstro`; the
-dependency arrow does not point back into package-specific code. This keeps
-`import jaxstro` small and makes foundation changes auditable before they reach
-Fluxax, Progenax, Gravax, Startrax, or later packages.
+`jaxstro` is the ecosystem foundation. Its directly importable modules are
+`units`, `quantity`, `constants`, `astrometry`, `coords`, `geometry`,
+`numerics`, `spatial`, `params`, `atmospheres`, `provenance`, `testing`, and
+`jaxconfig`. It does not own simulations, survey rendering, stellar evolution,
+or inference workflows. Domain packages depend on `jaxstro`; `jaxstro` never
+imports package-specific code back from them. That one-way rule keeps foundation
+changes auditable before they reach Gravax, Progenax, Fluxax, Startrax, or later
+packages.
+
+:::{figure} ./figures/jaxstro-foundation.webp
+:name: fig-jaxstro-foundation
+:alt: One-way package dependency diagram with downstream astronomy packages depending on the jaxstro foundation
+
+The package boundary is an ownership diagram, not a runtime data-flow graph.
+Arrows point from a consumer to its dependency. The highlighted host-side band
+marks discrete selection and indexing work that is intentionally outside a
+differentiable array kernel.
+:::
 
 The keystone decision is [](../30-decisions/0001-thin-foundation-posture.md).
 The dependency and packaging decisions are recorded in
@@ -54,21 +65,24 @@ The broader product vision and future-module map are in
 
 ## Quantity architecture
 
-`jaxstro.quantity` is the planned unit-aware value layer: concrete unit objects,
-dimension-safe arithmetic, exact parser/serialization, role-aware astrophysical
-bases, versioned constants, and explicit equivalencies. It is additive to the
-existing `jaxstro.units` API so downstream packages can migrate deliberately.
-The approved architecture is in [](./quantity-system.md), and it extends the
-decision recorded in
+`jaxstro.units` remains the current canonical ecosystem contract. The
+`jaxstro.quantity` layer is implemented: it provides concrete units,
+dimension-safe arithmetic, exact parser/serialization, role-aware bases,
+versioned constants, and explicit equivalencies. However, ecosystem adoption and any replacement cutover remain deferred.
+The architecture is documented in [](./quantity-system.md), but that page is an
+evaluation surface rather than a migration instruction. It extends the decision recorded in
 [](../30-decisions/0006-build-own-quantity-not-unxt.md).
 
 ## Numerical shape
 
-Public numerical helpers are JAX-native and are designed for `jit`, `vmap`, and
-`grad`. Iterative primitives use fixed-shape control flow; AD-sensitive branches
-sanitize dangerous operations before selecting values; tests check both forward
-values and gradient behavior. The detailed mathematical contracts live in
-[](../10-theory/index.md).
+Array kernels are JAX-native and use `jit`, `vmap`, or `grad` only where each
+public method's contract supports that transform. Fixed-shape numerical
+iterations and sanitized branches protect traced execution, while tests check
+forward values and gradients on the smooth domains named by each method. This
+does not make discrete indexing, sorting, catalog lookup, or every branch
+differentiable. The detailed mathematical contracts live in
+[](../10-theory/index.md), and quantitative checks live in
+[](../60-validation/index.md).
 
 ## Units policy
 
@@ -77,6 +91,28 @@ domain-agnostic base layer. Domain packages choose their own package-level
 defaults. Core APIs either accept explicit units or explicit physical constants;
 convenience wrappers may resolve `units=None` to the package default.
 [](../30-decisions/0007-cgs-as-default-units.md) records this policy.
+
+## Provenance ownership
+
+Two provenance surfaces answer different questions. The
+[source-backed provenance cards](../40-api/provenance/index.md) connect constants,
+transforms, and capability boundaries to references, code symbols, validation
+paths, and evidence states. They describe why a public scientific claim is
+trustworthy.
+
+The [runtime artifact manifests](./provenance.md) instead record what a particular
+computation consumed: configuration, environment, seeds, hashes, and method
+identifiers. They make a run reproducible. A card does not replace a manifest,
+and a manifest does not establish the scientific source behind a constant or
+transform.
+
+## Differentiable and discrete boundaries
+
+`spatial` indexing and candidate construction, together with atmosphere catalog
+selection, are host-side, discrete preprocessing. Their selected arrays can feed
+JAX-native kernels, but the selection decisions themselves are not advertised as
+differentiable. This division keeps runtime shapes and ownership explicit rather
+than hiding Python decisions inside traced code.
 
 ## Data-layer boundary
 
@@ -87,6 +123,9 @@ cache locations or explicitly gitignored local mirrors. The first large example
 is `jaxstro.atmospheres`: it can process and index local NewEra, BOSZ, Sonora,
 and TLUSTY atmosphere spectra, while filters, photometry, bolometric
 corrections, survey rendering, and physical interpretation remain downstream.
+Atmosphere support remains in progress: the capability map distinguishes staged
+data, processed artifacts, and implemented runtime backends rather than treating
+every catalog entry as available interpolation support.
 
 ## Test layers
 

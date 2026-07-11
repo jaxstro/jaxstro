@@ -1,16 +1,17 @@
 # jaxstro — status
 
-next: Present the Slice C4 architecture-index page card for Anna's explicit approval. Do not
-edit `docs/20-architecture/index.md` until that page-specific approval is given.
+next: Present the Slice C5 science-general-vision page card for Anna's explicit approval. Do
+not edit `docs/20-architecture/science-general-vision.md` until that approval is given.
 
-previous: Slice C3 website landing-page hardening completed locally (2026-07-11). The landing
-now has an import-backed 13-module inventory, names `jaxstro.units` as the current contract,
-keeps quantity adoption/cutover deferred, marks Startrax active and atmospheres in progress,
-and routes to spatial validation and provenance cards. Three focused tests pass in 0.62 s;
-strict MyST builds 58 pages in 3.74 s; rendered `/` has the correct anchor and resolved routes.
+previous: Slice C4 architecture-index hardening completed locally (2026-07-11). The page now
+defines current module ownership, scoped transform contracts, host/discrete preprocessing,
+current units versus deferred quantity adoption, and card-versus-runtime provenance. The new
+optional `viz` extra supports a registered deterministic architecture figure; masters are
+ignored and the site WebP is committed. Seven focused tests pass in 3.53 s; strict MyST builds
+58 pages in 3.80 s; rendered `/index-3` has the figure, alt text, asset, routes, and xref target.
 Nothing has been pushed.
 
-blocker: None for Slice C4 once Anna approves its website page card. Tag/release/PyPI remain
+blocker: None for Slice C5 once Anna approves its website page card. Tag/release/PyPI remain
 held on Anna's permanent package-name decision.
 due:
 

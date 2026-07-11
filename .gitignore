@@ -217,4 +217,9 @@ __marimo__/
 /downloads/atmospheres/
 /PHOENIX-NewEra*/
 
+# Repository-local figure laboratory: masters stay local; the site WebP is tracked.
+laboratory/figures/plots/
+docs/20-architecture/figures/*.pdf
+docs/20-architecture/figures/*.png
+
 .adr/
