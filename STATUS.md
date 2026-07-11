@@ -1,17 +1,16 @@
 # jaxstro — status
 
-next: Slice C2 Getting Started hardening awaits Anna's page-specific approval (2026-07-11):
-replace the target-dependent-bracket bisection derivative lesson with a dimensionless,
-independently checked Newton example. Do not edit the page until its card is approved.
+next: Slice C3 website landing-page hardening awaits Anna's page-specific approval
+(2026-07-11): reconcile the routes and module/status summary with current jaxstro while
+keeping quantity adoption explicitly deferred. Do not edit the page until its card is approved.
 
-previous: Slice C1 README hardening completed locally (2026-07-11). The actual coordinate
-and compensated-summation fences now execute standalone; parallax passes explicit positions,
-ordinary reduction is described as backend-dependent, and blanket JIT/AD claims are replaced
-with method-level contracts. Solar-mass wording is scientifically precise without calling the
-current UnitSystem API legacy. Five focused subprocess/wording tests pass. Quantity
-ecosystem adoption and any replacement cutover are explicitly deferred. Nothing has been pushed.
+previous: Slice C2 Getting Started website hardening completed locally (2026-07-11). The
+target-dependent bisection derivative lesson is replaced by a dimensionless Newton solve with
+a parameter-independent initial guess. The executable page test checks x=ln(10), AD=-10, and
+central-FD agreement; 2 focused tests pass. Strict MyST builds 58 pages, and rendered `/index-1`
+contains the example/callout with resolved internal links. Nothing has been pushed.
 
-blocker: None for Slice C2 once Anna approves the Getting Started page card. Tag/release/PyPI remain held on Anna's permanent package-name decision.
+blocker: None for Slice C3 once Anna approves the website landing-page card. Tag/release/PyPI remain held on Anna's permanent package-name decision.
 due:
 
 ## Phase C — DONE (2026-06-17, branch feature/phase-c-release-hardening, HEAD 40f936e)

@@ -8,7 +8,7 @@ description: >-
 This is the page you open first. By the end of it you will have jaxstro
 installed, float64 enabled, and one small example running that exercises the two
 habits everything else in the package depends on: **guard your arithmetic** and
-**differentiate through your solvers**.
+**verify solver gradients independently**.
 
 ## Prerequisites
 
@@ -57,13 +57,20 @@ other import that might touch JAX.
 ## A first worked example: safe math + a root-find
 
 Here is the whole habit in one example. We solve a tiny physical equation —
-"at what radius does an isothermal density profile fall to a target value?" — and
-we do it so the answer is **differentiable** with respect to that target.
+"how many scale heights does an isothermal density profile need to fall to a
+chosen fraction of its central density?" — and verify that the answer is
+**differentiable** with respect to that fraction.
 
-The density profile is $\rho(r) = \rho_0\, e^{-r/h}$ with scale height $h$. We want
-the radius $r$ where $\rho(r) = \rho_\mathrm{target}$. Inverting by hand gives
-$r = h \ln(\rho_0 / \rho_\mathrm{target})$, which we will use only to check the
-solver — the point is that the solver gets there without us inverting anything.
+The density profile is $\rho(r) = \rho_0 e^{-r/h}$ with scale height $h$. Define
+$x=r/h$ and the density fraction $f=\rho/\rho_0$. The root problem is then
+
+```{math}
+e^{-x} - f = 0.
+```
+
+Nondimensionalizing first keeps the Newton solve near order unity instead of
+mixing radii near $10^{18}$ cm with densities near $10^{-22}$ g cm$^{-3}$. The
+analytic result $x=-\ln f$ is used only as an independent check.
 
 ```python
 from jaxstro.jaxconfig import enable_high_precision
@@ -72,51 +79,63 @@ enable_high_precision()
 
 import jax
 import jax.numpy as jnp
-from jaxstro.numerics.rootfinding import bisect
+from jaxstro.numerics.rootfinding import newton
 from jaxstro.numerics.stats import safe_log
 
-rho0 = 1.0e-22        # central density [g cm^-3]
-h = 3.086e18          # scale height: 1 pc in cm
+def scale_heights_at_fraction(fraction):
+    # Keep x0 independent of fraction so the measured sensitivity comes from
+    # the solved equation, not from a parameter-dependent initial guess.
+    residual = lambda x: jnp.exp(-x) - fraction
+    return newton(residual, x0=2.0)
 
-def radius_at_density(rho_target):
-    # Solve rho0 * exp(-r/h) = rho_target  ->  find the root of the residual.
-    # safe_log guards the log against a zero/negative argument without
-    # killing the gradient (see the theory section on floating-point math).
-    r_guess_hi = h * safe_log(rho0 / rho_target)  # analytic, used only as a bracket
-    f = lambda r: rho0 * jnp.exp(-r / h) - rho_target
-    return bisect(f, a=0.0, b=2.0 * r_guess_hi)
+fraction = jnp.asarray(0.1)
+scale_heights = scale_heights_at_fraction(fraction)
+analytic_scale_heights = -safe_log(fraction)
 
-rho_target = 1.0e-23  # one tenth of central
-r = radius_at_density(rho_target)
-print(f"r = {r:.6e} cm = {r / 3.086e18:.4f} pc")
+# Compare automatic differentiation with an independent central difference.
+ad_grad = jax.grad(scale_heights_at_fraction)(fraction)
+eps = 1.0e-5
+fd_grad = (
+    scale_heights_at_fraction(fraction + eps)
+    - scale_heights_at_fraction(fraction - eps)
+) / (2.0 * eps)
+
+print(f"x = r/h = {scale_heights:.12f}")
+print(f"analytic x = {analytic_scale_heights:.12f}")
+print(f"dx/df: AD = {ad_grad:.12f}, FD = {fd_grad:.12f}")
 ```
 
-For these numbers the answer is $r = h\ln(10) \approx 2.303\,h$, i.e.
-about **2.30 pc** — a sanity check you can do in your head. The solver lands on
-it to roughly 15 digits because `bisect` runs 50 fixed iterations (each halves the
-bracket, $2^{-50} \approx 10^{-15}$).
+At $f=0.1$, the answer is $x=\ln 10\approx2.302585$: the density falls to one
+tenth of its central value after about **2.30 scale heights**. If $h=1$ pc, that
+is a radius of about 2.30 pc.
 
-Now the part that matters. Because the whole computation is JAX-native and uses a
-**fixed-iteration** solver (never `while_loop`), you can differentiate the answer:
+The analytic sensitivity is
 
-```python
-drho = jax.grad(radius_at_density)(rho_target)
-print(f"dr/d(rho_target) = {drho:.6e} cm / (g cm^-3)")
+```{math}
+\frac{dx}{df}=-\frac{1}{f},
 ```
 
-The analytic derivative is $\partial r / \partial\rho_\mathrm{target} =
--h / \rho_\mathrm{target}$. For our values that is
-$-3.086\times10^{18} / 10^{-23} \approx -3.09\times10^{41}$, and the autodiff
-result matches. That agreement — finite-difference versus autodiff — is the test
-every differentiable function in jaxstro must pass.
+so the expected gradient is $-10$ at $f=0.1$. The example reports AD $=-10$ and
+central FD $\approx-10.00000003$. Agreement among the solved value, analytic
+answer, AD, and FD is the evidence that this smooth path is working.
+
+:::{important} Fixed iteration is necessary, not sufficient
+`newton` uses a fixed number of JAX-traceable iterations, but that alone does not
+guarantee a scientifically meaningful derivative. The update must also remain on
+a smooth path, and the initial guess must not smuggle the analytic answer's
+parameter dependence into the result. Branch-selected solvers such as bisection
+remain excellent forward-value tools, but their root sensitivities need a
+different contract.
+:::
 
 ## Where to go next
 
-You just used two ideas without unpacking them: *why a fixed-iteration solver is
-differentiable but a convergence loop is not*, and *why `safe_log` guards the
-gradient as well as the value*. Both are principles in the theory section.
+You just used three ideas without unpacking them: *why nondimensionalization
+improves a solve*, *why fixed iteration does not by itself prove a derivative*,
+and *why `safe_log` guards the analytic check*. These are developed in the
+theory section.
 
 - Read [](../10-theory/index.md) — the ten-principle thesis on AD-safe numerics.
-- Then [](../10-theory/rootfinding.md) explains exactly why `bisect`, `newton`,
-  and `newton_ppf` behave the way they did above.
+- Then [](../10-theory/rootfinding.md) explains the distinct value and gradient
+  contracts for `bisect`, `newton`, and `newton_ppf`.
 - When you need a call signature, jump to [](../40-api/index.md).
