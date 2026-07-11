@@ -56,8 +56,8 @@ env -u VIRTUAL_ENV uv run --no-sync pytest -m validation -q    # ≡ tests/valid
 env -u VIRTUAL_ENV uv run --no-sync pytest tests/unit -q       # same, by path
 env -u VIRTUAL_ENV uv run --no-sync pytest -m "not slow" -q    # fast inner loop
 
-# Full local gate (mirrors the dormant CI: lock-check, lint, mypy, test matrix slice,
-# ml-integration, wheel-smoke). This is the real Phase-C gate — run it before a commit:
+# Full local release gate (covers lock-check, lint, mypy, the fast test tier,
+# ML integration, and wheel smoke). Run it before a release-facing commit:
 bash scripts/check.sh
 
 # Lint / format / type (any task touching src/ or tests/):

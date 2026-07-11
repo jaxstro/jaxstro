@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Local mirror of the dormant GitHub Actions gate (Actions minutes are exhausted).
+# Full local release gate. PR CI is intentionally smaller; the scheduled/manual
+# full-gate workflow mirrors these exhaustive checks across supported Python versions.
 # Run from repo root. Any failure aborts (set -e).
 set -euo pipefail
 RUN="env -u VIRTUAL_ENV uv run --no-sync"

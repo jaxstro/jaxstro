@@ -1,15 +1,16 @@
 # jaxstro — status
 
-next: Slice A adversarial audit + hardening awaits Anna's approval (2026-07-11): source-verify
-constants/units/coordinates/astrometry, expand jaxstro's existing AD-vs-FD audit registry, and
-fix only confirmed findings with regression tests.
+next: Slice B provenance-registry hoist awaits Anna's approval (2026-07-11): move the
+package-independent model-card schema/renderer into `jaxstro.testing`, then card jaxstro's
+own constants and transforms without adding YAML to the core runtime dependencies.
 
-previous: A0 baseline restored (2026-07-11). Quantity commit `655e756` is on main; the stale
-`codex/quantity-implementation` branch is absent. `bash scripts/check.sh` passed: 875 fast-tier
-tests passed (2 slow deselected), 39 ML-integration tests passed, and wheel smoke imported cleanly.
+previous: D0 efficient public CI completed locally (2026-07-11). Pull requests now have a
+cancellation-aware aggregate gate covering lock, Ruff/format/mypy, 222 focused unit tests,
+34 AD-vs-FD gradient checks, and wheel smoke. Measured local command times were 0.01 s,
+2.53 s, 10.30 s, 3.43 s, and 12.58 s respectively; jobs run in parallel. The exhaustive
+Python 3.11-3.13/validation/ML workflow is weekly or manual. Nothing has been pushed.
 
-blocker: None for Slice A. D0 CI activation is approved after A; GitHub standard-runner minutes are
-free for this public repository. Tag/release/PyPI remain held on Anna's permanent package-name decision.
+blocker: None for Slice B. Tag/release/PyPI remain held on Anna's permanent package-name decision.
 due:
 
 ## Phase C — DONE (2026-06-17, branch feature/phase-c-release-hardening, HEAD 40f936e)

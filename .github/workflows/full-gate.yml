@@ -1,0 +1,63 @@
+name: full gate
+
+on:
+  schedule:
+    - cron: "17 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: full-gate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAX_ENABLE_X64: "1"
+  XLA_PYTHON_CLIENT_PREALLOCATE: "false"
+  XLA_PYTHON_CLIENT_ALLOCATOR: platform
+  OMP_NUM_THREADS: "1"
+
+jobs:
+  test-matrix:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - run: uv sync --locked --extra dev
+      - run: uv run --no-sync pytest -m "not slow" -q
+
+  full-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - run: uv sync --locked --extra dev
+      - run: uv run --no-sync pytest tests/validation -q
+
+  ml-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - run: uv sync --locked --extra dev --extra ml
+      - run: uv run --no-sync pytest tests/integration -q
