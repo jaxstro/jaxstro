@@ -13,8 +13,11 @@ Read them when you want to know *why* the code is shaped the way it is — the t
 section tells you how the methods work; these tell you why the package made the
 calls it did.
 
-These are ported verbatim from the project's working ADR log; the published copies
-here are the canonical record.
+The published copies here are the canonical record. The maintainer may capture draft
+decisions in the gitignored `.adr/` working directory, but a decision becomes part of
+jaxstro only when it is promoted here, added to this index and `docs/myst.yml`, and
+passes `pytest tests/unit/test_adr_workflow.py -q`. Never commit `.adr/.state` or its
+session logs.
 
 ```{list-table} Architecture decision records
 :header-rows: 1
@@ -58,6 +61,12 @@ here are the canonical record.
   - accepted
 * - [0012](./0012-ecosystem-multi-package-maintenance.md)
   - Ecosystem multi-package maintenance
+  - accepted
+* - [0013](./0013-distribute-as-siblings-defer-namespace.md)
+  - Distribute as siblings; defer namespace consolidation
+  - accepted
+* - [0014](./0014-provenance-registry-hoist.md)
+  - Hoist provenance-card infrastructure into jaxstro
   - accepted
 ```
 

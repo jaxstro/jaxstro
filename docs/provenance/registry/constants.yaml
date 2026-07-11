@@ -1,0 +1,92 @@
+# Source-backed foundation constants and unit conventions (ADR-0014).
+- id: codata-2018-constants
+  title: CODATA 2018 constants in CGS
+  summary: >-
+    Fundamental and atomic constants are frozen to the versioned CODATA 2018
+    adjustment and expressed in CGS units.
+  scope: >-
+    The CODATA-derived constants in jaxstro.constants, including exact revised-SI
+    constants and explicitly rounded derived compatibility literals.
+  conventions:
+    - "base dimensions are centimetres, grams, and seconds"
+    - "CODATA 2018 is intentionally versioned; it is not described as the current adjustment"
+    - "A_RAD and R_GAS are stored rounded literals, not bit-identical defining expressions"
+  sources:
+    - reference: https://physics.nist.gov/cuu/Constants/archive2018.html
+      locator: "NIST CODATA 2018 archive and linked 2018 recommended-values tables"
+      supports: "the versioned values and exactness states of fundamental constants"
+  code_refs:
+    - "src/jaxstro/constants.py::G_CGS"
+    - "src/jaxstro/constants.py::C_CGS"
+    - "src/jaxstro/constants.py::H_CGS"
+    - "src/jaxstro/constants.py::K_B"
+    - "src/jaxstro/constants.py::A_RAD"
+    - "src/jaxstro/constants.py::R_GAS"
+  validation:
+    - "tests/unit/test_constants.py::TestFundamentalConstants::test_gravitational_constant"
+    - "tests/unit/test_constants.py::TestFundamentalConstants::test_speed_of_light"
+    - "tests/unit/test_constants.py::TestFundamentalConstants::test_radiation_constant"
+    - "tests/unit/test_constants.py::TestElectromagneticAndAtomicConstants::test_molar_gas_constant_from_k_b_n_a"
+  status: verified
+  deviations:
+    - "A_RAD and R_GAS retain rounded decimal compatibility literals within the tested ten-significant-figure budget."
+
+- id: iau-solar-conversions
+  title: IAU nominal solar conversions and bolometric zero point
+  summary: >-
+    Exact IAU nominal radius, luminosity, effective temperature, and solar mass
+    parameter are separated from jaxstro's rounded gram compatibility scale.
+  scope: >-
+    RSUN_CM, LSUN_ERG_S, TEFF_SUN, MSUN_G, and the conventionally rounded
+    M_BOL_SUN value.
+  conventions:
+    - "IAU B3 nominal values are exact conversion factors, not measured solar properties"
+    - "MSUN_G is a legacy gram compatibility scale derived from nominal (GM)_sun and frozen G"
+    - "M_BOL_SUN=4.74 is the rounded value implied by the exact B2 and B3 luminosity scales"
+  sources:
+    - reference: https://www.iau.org/common/Uploaded%20files/IAUGA2015-Resolution-B3-recommended-nominal-conversion.pdf
+      locator: "IAU 2015 Resolution B3, nominal solar conversion constants"
+      supports: "R_sun^N, L_sun^N, T_eff,sun^N, and (GM)_sun^N exact values and semantics"
+    - reference: https://www.iau.org/static/resolutions/IAU2015_English.pdf
+      locator: "IAU 2015 Resolution B2, absolute bolometric magnitude zero point"
+      supports: "the exact L_0 luminosity defining M_bol=0"
+  code_refs:
+    - "src/jaxstro/constants.py::MSUN_G"
+    - "src/jaxstro/constants.py::RSUN_CM"
+    - "src/jaxstro/constants.py::LSUN_ERG_S"
+    - "src/jaxstro/constants.py::TEFF_SUN"
+    - "src/jaxstro/constants.py::M_BOL_SUN"
+  validation:
+    - "tests/unit/test_constants.py::TestSolarParameters::test_solar_mass"
+    - "tests/unit/test_constants.py::TestSolarParameters::test_solar_radius"
+    - "tests/unit/test_constants.py::TestSolarParameters::test_solar_luminosity"
+    - "tests/unit/test_constants.py::TestSolarParameters::test_m_bol_sun_value_and_consistency"
+  status: verified
+  deviations:
+    - "MSUN_G is not an IAU nominal solar mass in grams; it is a rounded compatibility conversion."
+
+- id: unit-system-dimensional-conversion
+  title: CGS-rooted unit systems
+  summary: >-
+    Every UnitSystem is defined by explicit CGS mass, length, and time scales;
+    gravitational constants are derived dimensionally from the frozen CGS value.
+  scope: "UnitSystem conversion methods, predefined systems, aliases, and DEFAULT_UNITS."
+  conventions:
+    - "DEFAULT_UNITS is CGS in the domain-agnostic foundation package"
+    - "G_code = G_CGS M_scale T_scale^2 / L_scale^3"
+    - "downstream domain packages own any different default"
+  sources:
+    - reference: https://github.com/jaxstro/jaxstro/blob/main/docs/audits/2026-07-11-core-hardening-audit.md
+      locator: "Verified non-defect observations; UnitSystem.G dimensional conversion"
+      supports: "the audited implementation contract and tested unit-system aliases"
+  code_refs:
+    - "src/jaxstro/units.py::UnitSystem"
+    - "src/jaxstro/units.py::DEFAULT"
+    - "src/jaxstro/__init__.py::DEFAULT_UNITS"
+  validation:
+    - "tests/unit/test_units.py::TestDefaultSystem::test_default_is_cgs"
+    - "tests/unit/test_units.py::TestGravitationalConstant::test_cgs_g_value"
+    - "tests/unit/test_units.py::TestGravitationalConstant::test_stellar_g_value"
+    - "tests/unit/test_units.py::TestToFromCGS::test_roundtrip"
+  status: verified
+  deviations: []

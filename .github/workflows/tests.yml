@@ -62,6 +62,9 @@ jobs:
           tests/unit/test_units.py
           tests/unit/test_coords.py
           tests/unit/test_numerics.py
+          tests/unit/test_adr_workflow.py
+          tests/unit/test_provenance_cards.py
+          tests/validation/provenance_cards
 
   gradient-gate:
     runs-on: ubuntu-latest

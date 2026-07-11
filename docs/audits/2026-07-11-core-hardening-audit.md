@@ -1,6 +1,6 @@
 # Core hardening audit — Slice A
 
-**Status:** in progress; findings below are either source-backed or directly reproduced.
+**Status:** completed; findings below are either source-backed or directly reproduced.
 
 ## Scope and method
 
@@ -62,8 +62,9 @@ increased the fast-tier result to 876 passed (2 slow tests deselected).
   Cartesian origin, spherical angular poles, celestial/galactic longitude poles, and
   zenith/nadir/horizon observing geometry.
 
-## Open decisions and next checks
+## Slice-B follow-through
 
-1. Carry the direct CODATA/IAU/SOFA locators into the Slice-B registry cards; their
-   source wording is now reconciled, but registry rendering/validation is out of scope
-   for Slice A.
+The direct CODATA/IAU/SOFA locators now feed the machine-readable Slice-B registry
+under `docs/provenance/registry/`. Generated reference pages are freshness-checked,
+and their code/validation references are resolved by
+`tests/validation/provenance_cards/test_registry.py`.

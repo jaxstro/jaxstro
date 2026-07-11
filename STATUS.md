@@ -1,16 +1,20 @@
 # jaxstro — status
 
-next: Slice B provenance-registry hoist awaits Anna's approval (2026-07-11): move the
-package-independent model-card schema/renderer into `jaxstro.testing`, then card jaxstro's
-own constants and transforms without adding YAML to the core runtime dependencies.
+next: Slice C0 documentation-currency inventory awaits Anna's approval (2026-07-11):
+inventory every page/snippet/API claim, add executable README coverage where absent, and
+report the page-by-page revision order before changing pedagogical prose.
 
-previous: D0 efficient public CI completed locally (2026-07-11). Pull requests now have a
-cancellation-aware aggregate gate covering lock, Ruff/format/mypy, 222 focused unit tests,
-34 AD-vs-FD gradient checks, and wheel smoke. Measured local command times were 0.01 s,
-2.53 s, 10.30 s, 3.43 s, and 12.58 s respectively; jobs run in parallel. The exhaustive
-Python 3.11-3.13/validation/ML workflow is weekly or manual. Nothing has been pushed.
+previous: Slice B provenance-registry hoist completed locally (2026-07-11). The installed
+`jaxstro.testing.provenance_cards` API validates already-parsed mappings and renders
+deterministic MyST without YAML/filesystem dependencies. Repository tooling owns PyYAML,
+three registry families, six verified constants/units/transforms cards, and four generated
+pages; atmospheres remains an explicit non-blocking in-progress stub. ADRs 0013/0014 and a
+3-test public ADR ratchet establish the decision workflow. Verification: 32 focused checks;
+254-test PR lane in 10.23 s; MyST 58-page static HTML build plus rendered-DOM inspection;
+919 base tests passed (10 optional data/ML skips) in 133.81 s; corrected locked ML tier 39/39
+passed in 3.41 s; clean wheel import passed. Nothing has been pushed.
 
-blocker: None for Slice B. Tag/release/PyPI remain held on Anna's permanent package-name decision.
+blocker: None for Slice C0. Tag/release/PyPI remain held on Anna's permanent package-name decision.
 due:
 
 ## Phase C — DONE (2026-06-17, branch feature/phase-c-release-hardening, HEAD 40f936e)

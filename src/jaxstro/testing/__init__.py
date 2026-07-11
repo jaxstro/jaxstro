@@ -32,6 +32,19 @@ from jaxstro.testing.grad_audit import (
     Expect,
     audit_entry_point,
 )
+from jaxstro.testing.provenance_cards import (
+    ALLOWED_STATUSES,
+    REQUIRED_FIELDS,
+    CardStatus,
+    ProvenanceCard,
+    ProvenanceCardError,
+    SourceReference,
+    render_card,
+    render_family,
+    render_index,
+    render_registry,
+    validate_card,
+)
 from jaxstro.testing.ratchet import (
     ASSERT_HELPERS,
     DEFAULT_CITE_RE,
@@ -88,4 +101,15 @@ __all__ = [
     "trust_report_to_json",
     "trust_report_to_markdown",
     "default_numerics_trust_report",
+    "ALLOWED_STATUSES",
+    "REQUIRED_FIELDS",
+    "CardStatus",
+    "ProvenanceCard",
+    "ProvenanceCardError",
+    "SourceReference",
+    "render_card",
+    "render_family",
+    "render_index",
+    "render_registry",
+    "validate_card",
 ]

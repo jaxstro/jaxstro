@@ -39,6 +39,7 @@ dev = [
   "pytest",
   "ruff",
   "mypy",
+  "pyyaml>=6.0",
 ]
 ml = [
   "optax>=0.2.8",
@@ -69,6 +70,7 @@ dev = [
   "pytest",
   "ruff",
   "mypy",
+  "pyyaml>=6.0",
 ]
 
 # -----------------------

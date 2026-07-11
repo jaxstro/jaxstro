@@ -88,9 +88,15 @@ project:
         - file: 30-decisions/0010-ecosystem-config-architecture.md
         - file: 30-decisions/0011-apache-2-0-standardization.md
         - file: 30-decisions/0012-ecosystem-multi-package-maintenance.md
+        - file: 30-decisions/0013-distribute-as-siblings-defer-namespace.md
+        - file: 30-decisions/0014-provenance-registry-hoist.md
     - title: API reference
       children:
         - file: 40-api/index.md
+        - file: 40-api/provenance/index.md
+        - file: 40-api/provenance/constants.md
+        - file: 40-api/provenance/transforms.md
+        - file: 40-api/provenance/atmospheres.md
     - title: How-to
       children:
         - file: 50-howto/index.md

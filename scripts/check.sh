@@ -15,10 +15,14 @@ $RUN ruff format --check src/ tests/
 echo "== lint: mypy =="
 $RUN mypy src/jaxstro
 
+echo "== provenance registry freshness =="
+$RUN python scripts/build_provenance_registry.py --check
+
 echo "== test-matrix (current interpreter; CI does 3.11/3.12/3.13) =="
 $RUN pytest -m "not slow" -q
 
 echo "== ml-integration =="
+env -u VIRTUAL_ENV uv sync --locked --extra dev --extra ml
 env -u VIRTUAL_ENV uv run --no-sync --extra ml pytest tests/integration -q
 
 echo "== wheel-smoke =="
