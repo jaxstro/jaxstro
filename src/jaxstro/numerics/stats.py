@@ -147,6 +147,23 @@ def stable_expm1(x: Float[Array, "..."]) -> Float[Array, "..."]:
     return jnp.expm1(x)
 
 
+def _floating_dtype(*values) -> jnp.dtype:
+    """Preserve floating inputs while promoting integer inputs to float32."""
+    dtype = jnp.result_type(*values)
+    if jnp.issubdtype(dtype, jnp.inexact):
+        return dtype
+    return jnp.dtype(jnp.float32)
+
+
+def _representable_floor(*values, requested_floor: float) -> Array:
+    """Return a dtype-aware positive floor with a finite unit-scale reciprocal."""
+    dtype = _floating_dtype(*values)
+    return jnp.maximum(
+        jnp.asarray(abs(requested_floor), dtype=dtype),
+        jnp.sqrt(jnp.asarray(jnp.finfo(dtype).tiny, dtype=dtype)),
+    )
+
+
 @jax.jit
 def safe_exp(ln_x: Float[Array, "..."], max_exp: float = 100.0) -> Float[Array, "..."]:
     """
@@ -164,7 +181,16 @@ def safe_exp(ln_x: Float[Array, "..."], max_exp: float = 100.0) -> Float[Array, 
     ndarray
         exp(min(ln_x, max_exp)).
     """
-    return jnp.exp(jnp.minimum(ln_x, max_exp))
+    dtype = _floating_dtype(ln_x)
+    max_finite_exponent = jnp.nextafter(
+        jnp.log(jnp.asarray(jnp.finfo(dtype).max, dtype=dtype)),
+        jnp.asarray(-jnp.inf, dtype=dtype),
+    )
+    exponent = jnp.minimum(
+        jnp.asarray(ln_x, dtype=dtype),
+        jnp.minimum(jnp.asarray(max_exp, dtype=dtype), max_finite_exponent),
+    )
+    return jnp.exp(exponent)
 
 
 @jax.jit
@@ -196,7 +222,15 @@ def safe_div(
     - Maintains differentiability for JAX autodiff.
     - Epsilon chosen small enough to not affect normal values.
     """
-    return numerator / (denominator + epsilon)
+    dtype = _floating_dtype(numerator, denominator)
+    denominator = jnp.asarray(denominator, dtype=dtype)
+    floor = _representable_floor(denominator, requested_floor=epsilon)
+    denominator_safe = jnp.where(
+        jnp.abs(denominator) < floor,
+        jnp.where(denominator >= 0, floor, -floor),
+        denominator,
+    )
+    return jnp.asarray(numerator, dtype=dtype) / denominator_safe
 
 
 @jax.jit
@@ -228,7 +262,11 @@ def relative_error(
     - Returns value in [0, inf).
     - Floor prevents division by zero.
     """
-    return jnp.abs(x_new - x_old) / jnp.maximum(jnp.abs(x_old), floor)
+    dtype = _floating_dtype(x_new, x_old)
+    x_new = jnp.asarray(x_new, dtype=dtype)
+    x_old = jnp.asarray(x_old, dtype=dtype)
+    denominator_floor = _representable_floor(x_old, requested_floor=floor)
+    return jnp.abs(x_new - x_old) / jnp.maximum(jnp.abs(x_old), denominator_floor)
 
 
 @jax.jit

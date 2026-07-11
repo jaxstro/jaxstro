@@ -5,6 +5,10 @@ Tests for jaxstro.numerics modules.
 Verifies numerical utilities work correctly with JAX transforms.
 """
 
+import os
+import subprocess
+import sys
+
 import jax
 import jax.numpy as jnp
 import pytest
@@ -73,6 +77,33 @@ class TestSafeExp:
         result = stats.safe_exp(jnp.array(100.0), max_exp=50.0)
         expected = jnp.exp(50.0)
         assert jnp.allclose(result, expected)
+
+    def test_safe_primitives_are_finite_with_default_float32(self):
+        """Public safe primitives must not rely on the test suite's global x64 mode."""
+        script = """
+import jax
+import jax.numpy as jnp
+
+from jaxstro.numerics.stats import relative_error, safe_div, safe_exp
+
+x = jnp.array(1.0, dtype=jnp.float32)
+zero = jnp.array(0.0, dtype=jnp.float32)
+assert not jax.config.x64_enabled
+assert bool(jnp.isfinite(safe_exp(jnp.array(100.0, dtype=jnp.float32))))
+assert bool(jnp.isfinite(safe_div(x, zero)))
+assert bool(jnp.isfinite(relative_error(x, zero)))
+assert bool(jnp.isfinite(jax.grad(lambda d: safe_div(x, d))(zero)))
+"""
+        env = os.environ.copy()
+        env["JAX_ENABLE_X64"] = "0"
+        result = subprocess.run(
+            [sys.executable, "-c", script],
+            check=False,
+            capture_output=True,
+            env=env,
+            text=True,
+        )
+        assert result.returncode == 0, result.stderr
 
 
 class TestSafeDiv:
