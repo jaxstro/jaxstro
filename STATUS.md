@@ -1,20 +1,17 @@
 # jaxstro — status
 
-next: Slice C1 README hardening awaits Anna's page-specific approval (2026-07-11):
-make the public quick start executable and exact, with tested parallax, cancellation,
-solar-mass provenance, and transform-boundary wording. Do not continue to Getting Started
-until its separate page card is approved.
+next: Slice C2 Getting Started hardening awaits Anna's page-specific approval (2026-07-11):
+replace the target-dependent-bracket bisection derivative lesson with a dimensionless,
+independently checked Newton example. Do not edit the page until its card is approved.
 
-previous: Slice C0 documentation-currency audit completed locally (2026-07-11). The inventory
-covers README plus 39 site sources and classifies all 43 Python fences. It records 13 verified
-findings, led by a broken README parallax call, an invalid general bisection-gradient lesson,
-and an inconsistent eager top-level spatial ownership contract. Two README subprocess tests
-pass in 1.70 s; lint/format/diff checks pass. Strict MyST built 58 pages in 3.83 s; xref has
-58 unique page URLs, rendered HTML has no missing internal route, and DOM inspection confirms
-the stale quantity wording plus current provenance cards. Atmospheres remains explicitly in
-progress and does not block completed-surface hardening. Nothing has been pushed.
+previous: Slice C1 README hardening completed locally (2026-07-11). The actual coordinate
+and compensated-summation fences now execute standalone; parallax passes explicit positions,
+ordinary reduction is described as backend-dependent, and blanket JIT/AD claims are replaced
+with method-level contracts. Solar-mass wording is scientifically precise without calling the
+current UnitSystem API legacy. Five focused subprocess/wording tests pass. Quantity
+ecosystem adoption and any replacement cutover are explicitly deferred. Nothing has been pushed.
 
-blocker: None for Slice C1 once Anna approves the README page card. Tag/release/PyPI remain held on Anna's permanent package-name decision.
+blocker: None for Slice C2 once Anna approves the Getting Started page card. Tag/release/PyPI remain held on Anna's permanent package-name decision.
 due:
 
 ## Phase C — DONE (2026-06-17, branch feature/phase-c-release-hardening, HEAD 40f936e)

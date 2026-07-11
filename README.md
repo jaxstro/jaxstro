@@ -3,7 +3,7 @@
 <h3 align="center">simulate → observe → optimize</h3>
 
 <p align="center">
-  <em>GPU-accelerated • End-to-end differentiable • JAX-native</em>
+  <em>GPU-accelerated • Differentiability-aware • JAX-native</em>
 </p>
 
 <p align="center">
@@ -29,7 +29,11 @@
 - 🔢 **Numerical helpers** — Root-finding, interpolation, compensated summation
 - 📦 **Spatial algorithms** — Morton encoding, grid binning, neighbor queries
 
-Everything works with `jax.jit`, `jax.vmap`, and `jax.grad`.
+Runtime numerical kernels are designed for `jax.jit` and `jax.vmap`.
+Differentiability is a per-method contract: smooth paths are checked against
+finite differences, while discrete spatial preprocessing, hard boundaries, and
+singular geometries are documented rather than assigned invented gradients. See
+the [validation anchors](docs/60-validation/index.md).
 
 ---
 
@@ -49,7 +53,8 @@ Everything works with `jax.jit`, `jax.vmap`, and `jax.grad`.
 ### Design Principles
 
 1. **Infrastructure only** — No domain-specific physics; just shared building blocks
-2. **JAX-first** — Full compatibility with `jit`, `vmap`, and `grad`
+2. **JAX-first** — Transform behavior is tested per public contract; discrete
+   preprocessing and non-smooth boundaries remain explicit
 3. **Minimal dependencies** — Only `jax`, `jaxlib`, `equinox`, and `jaxtyping`
 4. **One-way arrows** — Higher-level packages depend on jaxstro, not the reverse
 
@@ -99,8 +104,9 @@ enable_high_precision()  # Sets jax_enable_x64=True, matmul_precision="highest"
 import jax.numpy as jnp
 from jaxstro import constants as C, units as U
 
-# Solar mass and radius in CGS
-M = 1.0 * C.MSUN_G     # 1.9884×10³³ g
+# Solar mass conversion and nominal solar radius in CGS
+# MSUN_G is derived from the IAU nominal solar mass parameter and CODATA-2018 G.
+M = 1.0 * C.MSUN_G     # rounded conversion: 1.9884×10³³ g
 R = 1.0 * C.RSUN_CM    # 6.957×10¹⁰ cm
 
 # Escape velocity: v_esc = √(2GM/R)
@@ -113,6 +119,7 @@ G = U.ASTRO_DYNAMICAL.G  # ≈ 0.00450 pc³ M⊙⁻¹ Myr⁻²
 ### Coordinate transforms
 
 ```python
+import jax.numpy as jnp
 from jaxstro.coords import sky_tangent, galactic_to_equatorial, compute_parallax
 
 # Project 3D positions to (RA, Dec)
@@ -123,8 +130,9 @@ ra_dec = sky_tangent(positions_pc, distance_pc=1000.0, ra_center_deg=180.0)
 l, b = 45.0, 30.0  # degrees
 ra, dec = galactic_to_equatorial(l, b)
 
-# Distance → Parallax
-parallax_mas = compute_parallax(distance_pc=100.0)  # → 10 mas
+# A star at the system center, observed from 100 pc, has 10 mas parallax
+center_star_pc = jnp.zeros((1, 3))
+parallax_mas = compute_parallax(center_star_pc, distance_pc=100.0)
 ```
 
 ---
@@ -177,9 +185,14 @@ stats.safe_exp(x, max_exp=100.0)  # exp with ceiling
 stats.safe_div(a, b)              # division with ε
 ```
 
-### Root-finding (fully differentiable)
+### Root-finding with explicit gradient contracts
 
-All solvers use `lax.scan` with fixed iterations — compatible with `jit`, `vmap`, `grad`:
+The solvers use fixed iteration counts so their shapes compose with `jit` and
+`vmap`. Bisection is the robust forward-value solver; its branch decisions do
+not define a trustworthy derivative of the root with respect to captured
+parameters. Use Newton's method when you need gradients through a smooth
+iterative path. The [root-finding theory](docs/10-theory/rootfinding.md) records
+the full contracts.
 
 ```python
 from jaxstro.numerics import rootfinding
@@ -196,14 +209,15 @@ root = rootfinding.newton(lambda x: x**2 - 2.0, x0=1.5)
 Reduce floating-point error when summing many terms:
 
 ```python
+import jax.numpy as jnp
 from jaxstro.numerics.compensated import compensated_sum_array
 
-# Standard sum loses precision
+# Ordinary reduction order is backend-dependent for adversarial cancellation
 terms = jnp.array([1e16, 1.0, -1e16, 1.0])
-jnp.sum(terms)  # → 0.0 (wrong!)
+standard = jnp.sum(terms)
 
-# Compensated sum preserves it
-compensated_sum_array(terms)  # → 2.0 (correct)
+# Neumaier compensation recovers the mathematical sum
+compensated = compensated_sum_array(terms)  # → 2.0
 ```
 
 ---
@@ -291,7 +305,7 @@ cand_idx, cand_mask = approx_knn_candidates(
 | `C_CGS` | $2.998 \times 10^{10}$ | Speed of light [cm/s] |
 | `K_B` | $1.381 \times 10^{-16}$ | Boltzmann constant [erg/K] |
 | `SIGMA_SB` | $5.670 \times 10^{-5}$ | Stefan-Boltzmann [erg cm⁻² s⁻¹ K⁻⁴] |
-| `MSUN_G` | $1.988 \times 10^{33}$ | Solar mass [g] |
+| `MSUN_G` | $1.988 \times 10^{33}$ | Rounded solar-mass conversion [g], derived from nominal $(GM)_\odot$ and CODATA-2018 $G$ |
 | `RSUN_CM` | $6.957 \times 10^{10}$ | Solar radius [cm] |
 | `LSUN_ERG_S` | $3.828 \times 10^{33}$ | Solar luminosity [erg/s] |
 | `PC_CM` | $3.086 \times 10^{18}$ | Parsec [cm] |
@@ -309,7 +323,7 @@ from jaxstro.coords import (
     equatorial_to_galactic,  # (RA, Dec) → (l, b)
     cartesian_to_spherical,  # (x, y, z) → (r, θ, φ)
     spherical_to_cartesian,  # (r, θ, φ) → (x, y, z)
-    compute_parallax,        # distance [pc] → parallax [mas]
+    compute_parallax,        # positions + system distance [pc] → parallax [mas]
     compute_proper_motions,  # 3D velocity → (μ_α*, μ_δ) [mas/yr]
 )
 ```

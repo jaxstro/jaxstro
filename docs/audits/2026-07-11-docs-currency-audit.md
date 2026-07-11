@@ -27,6 +27,15 @@ Atmospheres is explicitly an in-progress subsystem. Its honest capability and
 backend boundaries are recorded here, but its unfinished Sonora/TLUSTY runtime
 work does not block hardening the rest of jaxstro.
 
+`jaxstro.units`, `UnitSystem`, `DEFAULT_UNITS`, and `PhotometricUnits` are the
+current canonical ecosystem contracts. `jaxstro.quantity` is implemented, but
+ecosystem adoption and any replacement cutover are explicitly deferred until a
+separate cross-package program is approved.
+
+The fenced-snippet line numbers and initial finding evidence below refer to the
+C0 snapshot at commit `814229e`. Resolution notes are updated as approved page
+slices land.
+
 ## Inventory
 
 - **40 public-facing sources:** `README.md`, `docs/index.md`, and 38 scoped site
@@ -60,7 +69,7 @@ work does not block hardening the rest of jaxstro.
 | `docs/00-getting-started/index.md:68` | Executable | guarded logarithm plus `bisect` | Forward value runs, but the derivative lesson is not a valid bisection contract |
 | `docs/00-getting-started/index.md:102` | Continuation | `jax.grad(radius_at_density)` | Numerically matches here only because the target-dependent bracket carries the derivative |
 | `docs/40-api/index.md:18` | Executable | top-level public module imports | Runs because Python auto-loads `jaxstro.spatial`; plain `import jaxstro` does not expose that attribute and `__all__` omits it |
-| `docs/50-howto/quantity-migration.md:16` | Executable | legacy `UnitSystem` behavior | Installed API maps correctly |
+| `docs/50-howto/quantity-migration.md:16` | Executable | current `UnitSystem` behavior | Installed API maps correctly |
 | `docs/50-howto/quantity-migration.md:26` | Continuation | `quantity_units`, `quantity_scales` | Requires the earlier `U` import |
 | `docs/50-howto/quantity-migration.md:35` | Continuation/illustrative | quantity boundary conversion | `_escape_speed_cgs` is intentionally supplied by the caller |
 | `docs/50-howto/quantity-migration.md:46` | Continuation | quantity-aware `escape_speed` call | Requires the preceding function and import |
@@ -92,16 +101,16 @@ work does not block hardening the rest of jaxstro.
 
 | ID | Severity | Finding | Direct evidence | Page-slice action |
 | --- | --- | --- | --- | --- |
-| C0-001 | P1 | README parallax quick start cannot run | Installed signature is `compute_parallax(positions, distance_pc)`; the README calls only `distance_pc` | Fix and execute the exact block in the README slice |
+| C0-001 | P1 | README parallax quick start cannot run | Installed signature is `compute_parallax(positions, distance_pc)`; the README calls only `distance_pc` | **Resolved in C1:** the standalone block passes explicit center-star positions and is executed by `test_readme_coordinate_block_is_standalone_and_executable` |
 | C0-002 | P1 | Getting Started teaches an invalid general lesson about differentiating bisection | The dedicated rootfinding page and Slice-A audit classify bisection as branchy/forward-solve-only. The displayed derivative matches only because the analytic, target-dependent upper bracket carries the gradient | Replace the worked derivative with a solver whose parameter derivative is part of its contract, then test AD against FD/analytic truth |
 | C0-003 | P2 | Spatial has an inconsistent top-level ownership contract | Immediately after `import jaxstro`, `jaxstro.spatial` is absent and `jaxstro.__all__` omits it. `from jaxstro import spatial` succeeds only because Python auto-loads the submodule and then attaches the attribute | Decide in the API slice whether `spatial` belongs in the committed eager top-level surface, then make prose, `__all__`, and import tests agree |
-| C0-004 | P2 | README ordinary-sum output is wrong | With documented x64 setup, `jnp.sum([1e16, 1, -1e16, 1])` is `1.0`, not `0.0`; compensated sum is `2.0` | Use a deterministic cancellation example and assert both outputs |
-| C0-005 | P2 | Package-wide JAX/AD claims are overbroad | README says “Everything works” and “Full compatibility”; the audited contracts explicitly exclude spatial preprocessing, hard branches, clamp boundaries, poles, origins, and coincident geometries | Replace blanket claims with transform-specific contracts and links to validation |
+| C0-004 | P2 | README ordinary-sum output is wrong | With documented x64 setup, `jnp.sum([1e16, 1, -1e16, 1])` is `1.0`, not `0.0`; compensated sum is `2.0` | **Resolved in C1:** the README no longer promises a portable ordinary-reduction value; the exact block requires the compensated result to be 2.0 and observes that the local ordinary result differs |
+| C0-005 | P2 | Package-wide JAX/AD claims are overbroad | README says “Everything works” and “Full compatibility”; the audited contracts explicitly exclude spatial preprocessing, hard branches, clamp boundaries, poles, origins, and coincident geometries | **Resolved for README in C1:** transform behavior is now scoped per method and links to validation; remaining site-page claims retain their individual review order |
 | C0-006 | P2 | Quantity is simultaneously documented as implemented and planned/missing | `docs/index.md`, `docs/20-architecture/index.md`, and `science-general-vision.md` retain pre-implementation language while theory/API/validation describe the live package | Reconcile landing, architecture, and vision one page at a time |
 | C0-007 | P2 | Spatial has no dedicated conceptual chapter | Spatial appears in README/API/validation, but there is no theory or architecture page for Morton ordering, capacity/overflow, approximate-candidate recall, exact fixed-radius pairs, or discrete preprocessing boundaries | Add one approved spatial chapter backed by deterministic examples and existing tests |
 | C0-008 | P2 | Slice-B provenance cards are not integrated into the teaching/reference narrative | Generated cards are in navigation, but the API description of `jaxstro.testing`, validation anchors, landing routes, and architecture prose do not describe card validation/rendering or evidence states | Reconcile the API, provenance architecture, validation, and landing pages after their individual approvals |
 | C0-009 | P2 | API reference contains duplicated interpolation prose | `pchip_slopes(...)` and `monotone_cubic_interp(...)` are repeated on adjacent lines | Remove duplication in the API slice |
-| C0-010 | P2 | README mislabels the legacy solar-mass scale | README calls `MSUN_G` simply “Solar mass [g]”; Slice A/B establish it as a rounded compatibility conversion, not an IAU nominal solar mass | Carry the verified compatibility wording into README |
+| C0-010 | P2 | README mislabels the rounded solar-mass conversion | README calls `MSUN_G` simply “Solar mass [g]”; Slice A/B establish it as a rounded conversion from nominal $(GM)_\odot$ and the selected CODATA $G$, not an IAU nominal solar mass | **Resolved in C1:** README carries the derived-conversion wording without implying that the current units API is retired |
 | C0-011 | P2 | Site landing module list and ecosystem status lag the package | The landing omits quantity, atmospheres, geometry, and provenance from its API list, calls quantity planned, and still calls Startrax planned | Reconcile the landing against installed modules and current ecosystem status |
 | C0-012 | P3 | Several completed sections still use stub/future tense | Architecture says it “will tell” its existing narrative; Validation says it “will carry” the table already present | Convert to current-tense, evidence-specific prose in those page slices |
 | C0-013 | P3 | Python fences do not expose their execution contract | Continuations, placeholders, local-data examples, and interface pseudocode all use the same unlabeled `python` fence as runnable snippets | In each page slice, make examples standalone or label the non-executable contract explicitly |
@@ -112,7 +121,7 @@ work does not block hardening the rest of jaxstro.
 | --- | --- | --- |
 | `constants`, `units`, `astrometry`, `coords`, `geometry`, `numerics`, `params`, `quantity`, `provenance`, `testing`, `atmospheres` | Imported from the top-level package; module exports and focused tests exist | Present; page-specific wording still needs the corrections above |
 | `spatial` | `jaxstro.spatial` imports directly and has unit/validation coverage | Implemented; auto-loads under `from jaxstro import spatial`, but is absent after plain top-level import and from `__all__` |
-| Quantity theory/architecture/how-to | `src/jaxstro/quantity/` and quantity test families | Implemented; pre-implementation landing/vision prose is stale |
+| Quantity theory/architecture/how-to | `src/jaxstro/quantity/` and quantity test families | Implemented; ecosystem adoption and replacement of the current units contract are deferred |
 | Spatial neighbor gathering and exact pairs | `src/jaxstro/spatial/` and `tests/unit/test_spatial.py` | Implemented; conceptual documentation is missing |
 | Provenance-card tooling | `jaxstro.testing.provenance_cards`, registry validation tests, generated pages | Implemented; navigation exists, narrative/API/validation integration is incomplete |
 | Atmosphere runtime | NewEra/BOSZ backends plus catalog/prepared-grid tests; Sonora/TLUSTY runtime policies absent | Correctly in progress; keep the boundary honest and non-blocking |
@@ -135,17 +144,16 @@ verified commit. The order prioritizes public breakage before broader pedagogy.
 | C8 | `docs/10-theory/index.md` | Thesis states differentiability contracts without claiming every primitive/branch is smooth | Link claims to Slice-A gradient contracts |
 | C9 | `docs/60-validation/index.md` | Validation includes current coordinate, spatial, quantity, and card-registry anchors in present tense | Resolve every cited node ID and render the table |
 | C10 | `docs/20-architecture/provenance.md` | Runtime manifests and model-card registries have a clear ownership split | Registry freshness and reference-resolution tests |
-| C11 | `docs/10-theory/quantities.md` | Quantity concepts use runnable, clearly scoped examples | Focused quantity example tests |
-| C12 | `docs/20-architecture/quantity-system.md` | Architecture distinguishes executable examples from data-model pseudocode | Parser/import/example checks |
-| C13 | `docs/50-howto/quantity-migration.md` | Recipe is copy-pasteable as one coherent migration example | Focused migration test |
-| C14+ | `bsplines.md`, `interpolation.md`, `random.md`, `regular-grid.md`, `linear-algebra.md`, `spectra-data-architecture.md` | Each illustrative block is either completed or explicitly marked | One page and one focused proof at a time |
+| C11+ | `bsplines.md`, `interpolation.md`, `random.md`, `regular-grid.md`, `linear-algebra.md`, `spectra-data-architecture.md` | Each illustrative block is either completed or explicitly marked | One page and one focused proof at a time |
+| Deferred program | `docs/10-theory/quantities.md`, `docs/20-architecture/quantity-system.md`, `docs/50-howto/quantity-migration.md` | Preserve an honest implemented-but-not-adopted status; do not teach an ecosystem cutover yet | Reopen only after explicit cross-package design approval |
 | Later, not blocking | atmosphere capability/how-to pages | Preserve accurate in-progress status; revise only when backend/data claims change | Existing data-extra and local-artifact gates where applicable |
 
 The remaining theory pages (`autodiff`, `cumulative-trapz`, `distributions`,
 `geometry`, `grids`, `meshes`, `ode`, `operators`, `optimization`, `quadrature`,
 `rootfinding`, and `special-functions`) contain no Python fences requiring C0
 classification. They still receive a claim/link pass under the reusable docs
-gate, but no currency defect found here moves them ahead of C1–C13.
+gate, but no currency defect found here moves them ahead of the approved
+non-quantity page sequence.
 
 ## C0 executable evidence
 

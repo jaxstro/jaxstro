@@ -7,8 +7,19 @@ import os
 import subprocess
 import sys
 import textwrap
+from pathlib import Path
 
 import pytest
+
+ROOT = Path(__file__).resolve().parents[2]
+README = ROOT / "README.md"
+DOCS_AUDIT = ROOT / "docs/audits/2026-07-11-docs-currency-audit.md"
+
+
+def _python_block_after(heading: str) -> str:
+    source = README.read_text()
+    section = source.split(heading, maxsplit=1)[1]
+    return section.split("```python", maxsplit=1)[1].split("```", maxsplit=1)[0]
 
 
 def _run_readme_program(source: str) -> dict[str, object]:
@@ -23,6 +34,55 @@ def _run_readme_program(source: str) -> dict[str, object]:
         timeout=60,
     )
     return json.loads(proc.stdout)
+
+
+def test_readme_coordinate_block_is_standalone_and_executable():
+    source = _python_block_after("### Coordinate transforms")
+    result = _run_readme_program(
+        source
+        + textwrap.dedent(
+            """
+            import json
+            print(json.dumps({
+                "shape": list(ra_dec.shape),
+                "parallax_mas": float(parallax_mas[0]),
+            }))
+            """
+        )
+    )
+
+    assert result["shape"] == [2, 2]
+    assert result["parallax_mas"] == pytest.approx(10.0)
+
+
+def test_readme_compensated_sum_block_is_standalone_and_backend_honest():
+    source = _python_block_after("### Compensated summation")
+    result = _run_readme_program(
+        source
+        + textwrap.dedent(
+            """
+            import json
+            print(json.dumps({
+                "standard": float(standard),
+                "compensated": float(compensated),
+            }))
+            """
+        )
+    )
+
+    assert result["compensated"] == pytest.approx(2.0)
+    assert result["standard"] != result["compensated"]
+
+
+def test_readme_scopes_jax_transform_claims_and_uses_current_units_language():
+    readme = README.read_text()
+    audit = DOCS_AUDIT.read_text()
+
+    assert "Everything works with `jax.jit`, `jax.vmap`, and `jax.grad`." not in readme
+    assert "Full compatibility with `jit`, `vmap`, and `grad`" not in readme
+    assert "Root-finding (fully differentiable)" not in readme
+    assert "Rounded solar-mass conversion [g]" in readme
+    assert "legacy solar-mass scale" not in audit
 
 
 def test_readme_precision_constants_units_and_coordinates():
