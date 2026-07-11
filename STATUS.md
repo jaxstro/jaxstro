@@ -1,16 +1,17 @@
 # jaxstro — status
 
-next: Slice C3 website landing-page hardening awaits Anna's page-specific approval
-(2026-07-11): reconcile the routes and module/status summary with current jaxstro while
-keeping quantity adoption explicitly deferred. Do not edit the page until its card is approved.
+next: Present the Slice C4 architecture-index page card for Anna's explicit approval. Do not
+edit `docs/20-architecture/index.md` until that page-specific approval is given.
 
-previous: Slice C2 Getting Started website hardening completed locally (2026-07-11). The
-target-dependent bisection derivative lesson is replaced by a dimensionless Newton solve with
-a parameter-independent initial guess. The executable page test checks x=ln(10), AD=-10, and
-central-FD agreement; 2 focused tests pass. Strict MyST builds 58 pages, and rendered `/index-1`
-contains the example/callout with resolved internal links. Nothing has been pushed.
+previous: Slice C3 website landing-page hardening completed locally (2026-07-11). The landing
+now has an import-backed 13-module inventory, names `jaxstro.units` as the current contract,
+keeps quantity adoption/cutover deferred, marks Startrax active and atmospheres in progress,
+and routes to spatial validation and provenance cards. Three focused tests pass in 0.62 s;
+strict MyST builds 58 pages in 3.74 s; rendered `/` has the correct anchor and resolved routes.
+Nothing has been pushed.
 
-blocker: None for Slice C3 once Anna approves the website landing-page card. Tag/release/PyPI remain held on Anna's permanent package-name decision.
+blocker: None for Slice C4 once Anna approves its website page card. Tag/release/PyPI remain
+held on Anna's permanent package-name decision.
 due:
 
 ## Phase C — DONE (2026-06-17, branch feature/phase-c-release-hardening, HEAD 40f936e)
