@@ -61,7 +61,9 @@ def gather_pairs_within_radius(
     Ncells = nx * ny * nz
     cell_of = assign_to_cells_linear(pos, origin, cell_size, dims)  # [N]
     pids = jnp.arange(N, dtype=jnp.int32)
-    members, mmask, did_bins = fill_bins_exact(pids, cell_of, Ncells, Bcap)  # [Ncells,Bcap]
+    members, mmask, did_bins = fill_bins_exact(
+        pids, cell_of, Ncells, Bcap
+    )  # [Ncells,Bcap]
     # sentinel row for safe gather of empty slots
     pos_s = jnp.concatenate([pos, jnp.zeros((1, 3), pos.dtype)], axis=0)  # [N+1,3]
     members = jnp.where(mmask, members, N)  # sentinel = N
@@ -95,11 +97,13 @@ def gather_pairs_within_radius(
         inx[:, :, None, None], iny[:, None, :, None], inz[:, None, None, :]
     )
     in_range = (mx & my & mz).reshape(N, 27)  # [N,27] True where offset is valid
-    cand = members[ncell].reshape(N, 27 * Bcap)  # [N, 27*Bcap] candidate ids (sentinel=N)
+    cand = members[ncell].reshape(
+        N, 27 * Bcap
+    )  # [N, 27*Bcap] candidate ids (sentinel=N)
     # broadcast the per-cell in-range mask over Bcap slots -> [N, 27*Bcap]
-    cand_in_range = jnp.broadcast_to(
-        in_range[:, :, None], (N, 27, Bcap)
-    ).reshape(N, 27 * Bcap)
+    cand_in_range = jnp.broadcast_to(in_range[:, :, None], (N, 27, Bcap)).reshape(
+        N, 27 * Bcap
+    )
     # distances
     d = pos[:, None, :] - pos_s[cand]  # [N, 27*Bcap, 3]
     r2 = jnp.sum(d * d, axis=-1)

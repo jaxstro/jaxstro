@@ -1,16 +1,15 @@
 # jaxstro — status
 
-next: `jaxstro.quantity` implementation in progress on branch
-`codex/quantity-implementation` (2026-06-23). Tasks 1-11 complete with per-task
-commits; docs/final integration gate running next.
+next: Slice A adversarial audit + hardening awaits Anna's approval (2026-07-11): source-verify
+constants/units/coordinates/astrometry, expand jaxstro's existing AD-vs-FD audit registry, and
+fix only confirmed findings with regression tests.
 
-previous: Phase C MERGED + PUSHED to origin/main (2026-06-17, 25508f7, fast-forward; 447 tests green on
-merged main; feature branch deleted). NOT tagged — tag still held. Phase D remaining: (1) tag/version
-decision; (2) release-staging decision (jaxstro namespace? rename jaxstro→jaxstro-core?); (3) flip CI
-pull_request trigger on (when Actions usage resets); (4) register jaxstro in ~/brain/roots.yml (Anna);
-(5) sibling pyproject floor bumps (Anna). Optional Phase-D docs: myst-build CI job + GitHub Pages deploy.
-blocker: GitHub Actions minutes exhausted → CI shipped DORMANT (workflow_dispatch only); scripts/check.sh
-is the real gate. TAG/release held (Phase D, Anna's call).
+previous: A0 baseline restored (2026-07-11). Quantity commit `655e756` is on main; the stale
+`codex/quantity-implementation` branch is absent. `bash scripts/check.sh` passed: 875 fast-tier
+tests passed (2 slow deselected), 39 ML-integration tests passed, and wheel smoke imported cleanly.
+
+blocker: None for Slice A. D0 CI activation is approved after A; GitHub standard-runner minutes are
+free for this public repository. Tag/release/PyPI remain held on Anna's permanent package-name decision.
 due:
 
 ## Phase C — DONE (2026-06-17, branch feature/phase-c-release-hardening, HEAD 40f936e)

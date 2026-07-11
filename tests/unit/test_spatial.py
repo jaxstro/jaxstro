@@ -14,9 +14,6 @@ from __future__ import annotations
 import inspect
 
 import jax
-
-jax.config.update("jax_enable_x64", True)  # f64 distances for a clean cutoff compare
-
 import jax.numpy as jnp
 import pytest
 
@@ -35,6 +32,8 @@ from jaxstro.spatial import (
     wyhash32,
 )
 from jaxstro.spatial.morton import MAX_BITS_3D
+
+jax.config.update("jax_enable_x64", True)  # f64 distances for a clean cutoff compare
 
 
 def _exact_knn_indices(pos: jnp.ndarray, k: int) -> jnp.ndarray:
@@ -532,9 +531,7 @@ class TestBinSortX64Independence:
         bm, mask, did = fill_bins_exact(pids, bin_of, Nbins=4, Bcap=8)
         assert not bool(did)
         for b in range(4):
-            want = {
-                int(p) for p, bb in zip(pids.tolist(), bin_of.tolist()) if bb == b
-            }
+            want = {int(p) for p, bb in zip(pids.tolist(), bin_of.tolist()) if bb == b}
             got = set(bm[b][mask[b]].tolist())
             assert got == want, f"bin {b}: got {got}, want {want}"
 
@@ -545,9 +542,7 @@ class TestBinSortX64Independence:
         bin_of = jnp.array([2, 5, 2, 0, 5, 2, 0, 5, 2, 0, 5, 2], dtype=jnp.int32)
         bm, mask = fill_bins(pids, bin_of, Nbins=6, Bcap=8)
         for b in range(6):
-            want = {
-                int(p) for p, bb in zip(pids.tolist(), bin_of.tolist()) if bb == b
-            }
+            want = {int(p) for p, bb in zip(pids.tolist(), bin_of.tolist()) if bb == b}
             got = set(bm[b][mask[b]].tolist())
             assert got == want, f"bin {b}: got {got}, want {want}"
 
@@ -1086,16 +1081,19 @@ class TestEdgeCases:
 class TestGatherPairsWithinRadius:
     def _brute_within(self, pos, cutoff):
         r2 = jnp.sum((pos[:, None] - pos[None, :]) ** 2, axis=-1)
-        within = (r2 > 0) & (r2 <= cutoff ** 2)
+        within = (r2 > 0) & (r2 <= cutoff**2)
         return [set(jnp.where(within[i])[0].tolist()) for i in range(pos.shape[0])]
 
     def test_matches_bruteforce_random(self):
         key = jax.random.PRNGKey(7)
         N = 300
-        origin = jnp.array([-1.0, -1.0, -1.0]); box = 2.0; cutoff = 0.3
+        origin = jnp.array([-1.0, -1.0, -1.0])
+        box = 2.0
+        cutoff = 0.3
         pos = origin + jax.random.uniform(key, (N, 3)) * box
         got, mask, did = gather_pairs_within_radius(
-            pos, origin=origin, cell_size=cutoff, cutoff=cutoff, k_max=64)
+            pos, origin=origin, cell_size=cutoff, cutoff=cutoff, k_max=64
+        )
         assert not bool(did)
         want = self._brute_within(pos, cutoff)
         for i in range(N):
@@ -1107,9 +1105,11 @@ class TestGatherPairsWithinRadius:
         # two tight clumps -> dense cells, stresses coverage + capacity
         c = jax.random.uniform(key, (N, 3)) * 0.15
         c = c.at[: N // 2].add(jnp.array([0.5, 0.5, 0.5]))
-        origin = jnp.array([-0.2, -0.2, -0.2]); cutoff = 0.2
+        origin = jnp.array([-0.2, -0.2, -0.2])
+        cutoff = 0.2
         got, mask, did = gather_pairs_within_radius(
-            c, origin=origin, cell_size=cutoff, cutoff=cutoff, k_max=N)
+            c, origin=origin, cell_size=cutoff, cutoff=cutoff, k_max=N
+        )
         assert not bool(did)
         want = self._brute_within(c, cutoff)
         for i in range(N):
@@ -1121,21 +1121,24 @@ class TestGatherPairsWithinRadius:
         pos = jax.random.uniform(key, (N, 3)) * 0.05  # all within one small region
         origin = jnp.array([0.0, 0.0, 0.0])
         _, _, did = gather_pairs_within_radius(
-            pos, origin=origin, cell_size=0.1, cutoff=0.1, k_max=8)  # too small
+            pos, origin=origin, cell_size=0.1, cutoff=0.1, k_max=8
+        )  # too small
         assert bool(did) is True
 
     def test_cell_size_smaller_than_cutoff_raises(self):
         pos = jnp.zeros((3, 3))
         with pytest.raises((ValueError, AssertionError)):
             gather_pairs_within_radius(
-                pos, origin=jnp.zeros(3), cell_size=0.1, cutoff=0.5, k_max=4)
+                pos, origin=jnp.zeros(3), cell_size=0.1, cutoff=0.5, k_max=4
+            )
 
     def test_symmetry(self):
         # j in nbr(i)  <=>  i in nbr(j)  (needed for the 1/2 factor in the energy sum)
         key = jax.random.PRNGKey(9)
         pos = jax.random.uniform(key, (150, 3)) * 1.0
         got, mask, _ = gather_pairs_within_radius(
-            pos, origin=jnp.zeros(3), cell_size=0.25, cutoff=0.25, k_max=64)
+            pos, origin=jnp.zeros(3), cell_size=0.25, cutoff=0.25, k_max=64
+        )
         nbr = [set(got[i][mask[i]].tolist()) for i in range(150)]
         for i in range(150):
             for j in nbr[i]:
@@ -1155,7 +1158,8 @@ class TestGatherPairsWithinRadius:
         pos = jax.random.uniform(key, (N, 3)) * 1.0  # in [0, 1]^3
         origin = jnp.array([0.0, 0.0, 0.0])  # lower corner -> heavy boundary occupancy
         got, mask, did = gather_pairs_within_radius(
-            pos, origin=origin, cell_size=cutoff, cutoff=cutoff, k_max=N)
+            pos, origin=origin, cell_size=cutoff, cutoff=cutoff, k_max=N
+        )
         # true neighbour counts are all <= k_max=N, so no genuine overflow;
         # a spurious did_overflow here signals duplicate-inflated n_within.
         assert not bool(did)
@@ -1176,10 +1180,11 @@ class TestGatherPairsWithinRadius:
         pos = jax.random.uniform(key, (N, 3)) * 1.0
         origin = jnp.array([0.0, 0.0, 0.0])
         got, mask, did = gather_pairs_within_radius(
-            pos, origin=origin, cell_size=cutoff, cutoff=cutoff, k_max=N)
+            pos, origin=origin, cell_size=cutoff, cutoff=cutoff, k_max=N
+        )
         assert not bool(did)
         r2 = jnp.sum((pos[:, None] - pos[None, :]) ** 2, axis=-1)
-        within = (r2 > 0) & (r2 <= cutoff ** 2)
+        within = (r2 > 0) & (r2 <= cutoff**2)
         inv_r = jnp.where(within, 1.0 / jnp.sqrt(jnp.where(within, r2, 1.0)), 0.0)
         brute_sum = jnp.sum(inv_r, axis=1)
         for i in range(N):
@@ -1199,7 +1204,8 @@ class TestGatherPairsWithinRadius:
         pos = jnp.array([[0.0, 0.0, 0.0], [0.5, 0.0, 0.0]])  # r == cutoff exactly
         origin = jnp.zeros(3)
         got, mask, did = gather_pairs_within_radius(
-            pos, origin=origin, cell_size=cutoff, cutoff=cutoff, k_max=4)
+            pos, origin=origin, cell_size=cutoff, cutoff=cutoff, k_max=4
+        )
         assert not bool(did)
         assert set(got[0][mask[0]].tolist()) == {1}
         assert set(got[1][mask[1]].tolist()) == {0}
