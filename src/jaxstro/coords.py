@@ -4,7 +4,7 @@ Coordinate transformations for the jaxstro ecosystem.
 This module provides coordinate transforms used across jaxstro packages:
 
 - **Sky-tangent projection**: 3D cluster positions -> (RA, Dec)
-- **Galactic <-> Equatorial**: Frame conversions (IAU 2000)
+- **Galactic <-> Equatorial**: IAU 1958 Galactic-frame conversions to ICRS
 - **Cartesian <-> Spherical**: Basic geometry
 - **Astrometry**: Parallax and proper motion computations
 
@@ -283,7 +283,7 @@ def cluster_to_galactic_cartesian(
 # Galactic <-> Equatorial Transformations
 # ===========================================================================
 
-# IAU 2000 rotation matrix: ICRS (Equatorial) = R @ Galactic
+# IAU 1958 Galactic rotation matrix: ICRS (Equatorial) = R @ Galactic
 # Validated against astropy.coordinates to <1e-10 precision
 _GALACTIC_TO_ICRS = jnp.array(
     [
@@ -301,9 +301,10 @@ def galactic_to_equatorial(
     l: "Float[Array, 'N']", b: "Float[Array, 'N']"
 ) -> tuple["Float[Array, 'N']", "Float[Array, 'N']"]:
     """
-    Convert Galactic coordinates (l, b) to Equatorial (RA, Dec) in J2000.0.
+    Convert IAU 1958 Galactic coordinates (l, b) to ICRS (RA, Dec).
 
-    Uses IAU 2000 definitions. Validated against astropy.coordinates.
+    Uses the IAU 1958 Galactic convention expressed in ICRS. Validated against
+    astropy.coordinates.
 
     Parameters
     ----------
@@ -321,7 +322,7 @@ def galactic_to_equatorial(
 
     Notes
     -----
-    IAU 2000 parameters (J2000.0):
+    IAU 1958 Galactic convention, expressed in ICRS:
     - alpha_NGP = 192.85948 deg (RA of North Galactic Pole)
     - delta_NGP = 27.12825 deg (Dec of North Galactic Pole)
     - l_0 = 122.93192 deg (Galactic longitude of NCP)
@@ -369,7 +370,7 @@ def equatorial_to_galactic(
     ra: "Float[Array, 'N']", dec: "Float[Array, 'N']"
 ) -> tuple["Float[Array, 'N']", "Float[Array, 'N']"]:
     """
-    Convert Equatorial coordinates (RA, Dec) in J2000.0 to Galactic (l, b).
+    Convert ICRS Equatorial coordinates (RA, Dec) to IAU 1958 Galactic (l, b).
 
     Inverse transformation of galactic_to_equatorial().
 
