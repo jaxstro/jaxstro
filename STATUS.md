@@ -1,20 +1,20 @@
 # jaxstro — status
 
-next: Slice C0 documentation-currency inventory awaits Anna's approval (2026-07-11):
-inventory every page/snippet/API claim, add executable README coverage where absent, and
-report the page-by-page revision order before changing pedagogical prose.
+next: Slice C1 README hardening awaits Anna's page-specific approval (2026-07-11):
+make the public quick start executable and exact, with tested parallax, cancellation,
+solar-mass provenance, and transform-boundary wording. Do not continue to Getting Started
+until its separate page card is approved.
 
-previous: Slice B provenance-registry hoist completed locally (2026-07-11). The installed
-`jaxstro.testing.provenance_cards` API validates already-parsed mappings and renders
-deterministic MyST without YAML/filesystem dependencies. Repository tooling owns PyYAML,
-three registry families, six verified constants/units/transforms cards, and four generated
-pages; atmospheres remains an explicit non-blocking in-progress stub. ADRs 0013/0014 and a
-3-test public ADR ratchet establish the decision workflow. Verification: 32 focused checks;
-254-test PR lane in 10.23 s; MyST 58-page static HTML build plus rendered-DOM inspection;
-919 base tests passed (10 optional data/ML skips) in 133.81 s; corrected locked ML tier 39/39
-passed in 3.41 s; clean wheel import passed. Nothing has been pushed.
+previous: Slice C0 documentation-currency audit completed locally (2026-07-11). The inventory
+covers README plus 39 site sources and classifies all 43 Python fences. It records 13 verified
+findings, led by a broken README parallax call, an invalid general bisection-gradient lesson,
+and an inconsistent eager top-level spatial ownership contract. Two README subprocess tests
+pass in 1.70 s; lint/format/diff checks pass. Strict MyST built 58 pages in 3.83 s; xref has
+58 unique page URLs, rendered HTML has no missing internal route, and DOM inspection confirms
+the stale quantity wording plus current provenance cards. Atmospheres remains explicitly in
+progress and does not block completed-surface hardening. Nothing has been pushed.
 
-blocker: None for Slice C0. Tag/release/PyPI remain held on Anna's permanent package-name decision.
+blocker: None for Slice C1 once Anna approves the README page card. Tag/release/PyPI remain held on Anna's permanent package-name decision.
 due:
 
 ## Phase C — DONE (2026-06-17, branch feature/phase-c-release-hardening, HEAD 40f936e)
