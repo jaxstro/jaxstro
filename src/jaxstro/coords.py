@@ -32,6 +32,7 @@ import jax
 import jax.numpy as jnp
 
 from jaxstro.astrometry import K_PROPER_MOTION
+from jaxstro.numerics.checks import try_concrete_bool
 
 if TYPE_CHECKING:
     from jaxtyping import Array, Float
@@ -162,7 +163,7 @@ def sky_tangent(
         max_offset_sq = jnp.max(x_local**2 + y_local**2)
         max_offset = jnp.sqrt(max_offset_sq)
         field_rad = max_offset / distance_pc
-        if isinstance(field_rad, (float, int)) and field_rad > 0.1:
+        if try_concrete_bool(field_rad > 0.1):
             warnings.warn(
                 f"Field radius {jnp.rad2deg(field_rad):.1f} deg exceeds TAN validity (~6 deg). "
                 "Consider using a different projection for wide fields.",

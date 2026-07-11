@@ -6,6 +6,7 @@ TDD: Write tests FIRST, verify they FAIL, then implement.
 
 import jax
 import jax.numpy as jnp
+import pytest
 
 # These imports should fail until implementation exists
 from jaxstro.coords import (
@@ -23,6 +24,12 @@ from jaxstro.coords import (
 
 class TestSkyTangent:
     """Tests for sky_tangent coordinate transform."""
+
+    def test_large_field_warns_eagerly(self):
+        """Concrete fields beyond the TAN validity threshold emit a warning."""
+        positions = jnp.array([[200.0, 0.0, 0.0]])
+        with pytest.warns(UserWarning, match="exceeds TAN validity"):
+            sky_tangent(positions, distance_pc=1000.0)
 
     def test_center_returns_center(self):
         """Star at cluster center should return pointing center."""
