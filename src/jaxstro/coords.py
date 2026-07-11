@@ -8,7 +8,9 @@ This module provides coordinate transforms used across jaxstro packages:
 - **Cartesian <-> Spherical**: Basic geometry
 - **Astrometry**: Parallax and proper motion computations
 
-All functions are JAX-native and fully differentiable.
+All functions are JAX-native. Differentiability applies on each function's
+documented regular domain; angular coordinate singularities are intentionally
+exposed rather than replaced with physically arbitrary surrogate bases.
 
 Units Convention:
 - Positions: parsecs (pc)
@@ -125,7 +127,8 @@ def sky_tangent(
 
     Notes
     -----
-    - Fully differentiable in (ra_center_deg, dec_center_deg, distance_pc, psi_deg)
+    - Differentiable in (ra_center_deg, dec_center_deg, distance_pc, psi_deg)
+      away from the singular geometries listed below
     - For small offsets at dec=0: dRA ~ x_E/D rad, dDec ~ y_N/D rad
     - For high-dec fields: dRA ~ x_E/(D*cos(dec)) accounts for cos(dec) factor
     - TAN projection is accurate to <0.1 mas for fields < 6 deg
@@ -136,6 +139,13 @@ def sky_tangent(
 
         e' = cos(psi)*e + sin(psi)*n
         n' = -sin(psi)*e + cos(psi)*n
+
+    Domain restrictions
+    -------------------
+    Each star must remain separated from the observer, so that its ICRS
+    direction can be normalized. RA is a coordinate singularity at the
+    celestial poles; do not differentiate RA there. The TAN approximation is
+    a local projection, not a wide-field coordinate model.
 
     Examples
     --------
@@ -217,9 +227,9 @@ def cluster_to_galactic_cartesian(
     This is the same orthonormal-triad construction as :func:`sky_tangent`,
     returning the 3-D vector ``(distance + z)·LOS + x·East + y·North`` instead of
     projecting it onto the celestial sphere. It is the placement primitive for the
-    ZG24-anchored spatial R_V cube (fluxax ADR-0021 rung 2): fully differentiable
-    in ``(l_center_deg, b_center_deg, distance_pc, psi_deg)`` so cluster sky
-    placement can be an inference leaf.
+    ZG24-anchored spatial R_V cube (fluxax ADR-0021 rung 2): differentiable on
+    its regular domain in ``(l_center_deg, b_center_deg, distance_pc, psi_deg)``
+    so cluster sky placement can be an inference leaf.
 
     Parameters
     ----------
@@ -236,6 +246,14 @@ def cluster_to_galactic_cartesian(
     -------
     Float[Array, "N 3"]
         Heliocentric Galactic Cartesian positions (u, v, w) [pc].
+
+    Domain restrictions
+    -------------------
+    ``distance_pc + z_LOS`` must not place a star at the observer when this
+    transform is composed with an angular projection. Galactic longitude is
+    coordinate-degenerate at ``b_center_deg = +/-90``; the supplied longitude
+    then selects a conventional East/North orientation rather than a physical
+    direction.
 
     Examples
     --------
@@ -283,8 +301,10 @@ def cluster_to_galactic_cartesian(
 # Galactic <-> Equatorial Transformations
 # ===========================================================================
 
-# IAU 1958 Galactic rotation matrix: ICRS (Equatorial) = R @ Galactic
-# Validated against astropy.coordinates to <1e-10 precision
+# IAU 1958 Galactic rotation matrix: ICRS (Equatorial) = R @ Galactic.
+# Coefficients follow the IAU SOFA iauG2icrs convention; Astropy is used only
+# as a regression oracle, not as the source authority. See the SOFA manual:
+# https://www.iausofa.org/s/manual_c.pdf
 _GALACTIC_TO_ICRS = jnp.array(
     [
         [-0.0548755604162154, +0.4941094278755837, -0.8676661490190047],
@@ -303,8 +323,9 @@ def galactic_to_equatorial(
     """
     Convert IAU 1958 Galactic coordinates (l, b) to ICRS (RA, Dec).
 
-    Uses the IAU 1958 Galactic convention expressed in ICRS. Validated against
-    astropy.coordinates.
+    Uses the IAU 1958 Galactic convention expressed in ICRS. The coefficients
+    follow the IAU SOFA ``iauG2icrs`` convention; Astropy is a regression
+    oracle, not the source authority.
 
     Parameters
     ----------
@@ -327,8 +348,18 @@ def galactic_to_equatorial(
     - delta_NGP = 27.12825 deg (Dec of North Galactic Pole)
     - l_0 = 122.93192 deg (Galactic longitude of NCP)
 
+    Domain restrictions
+    -------------------
+    Galactic longitude is undefined at ``b = +/-90``. The returned ICRS
+    direction remains well-defined, but derivatives with respect to the
+    longitude coordinate at a Galactic pole are not a physical tangent-plane
+    derivative.
+
     References
     ----------
+    IAU SOFA, ``iauG2icrs`` (IAU 1958 Galactic system expressed in ICRS),
+    https://www.iausofa.org/s/manual_c.pdf
+
     Liu et al. (2011), "Reconsidering the Galactic Coordinate System", A&A, 526, A16
 
     Examples
@@ -388,9 +419,17 @@ def equatorial_to_galactic(
     b : Float[Array, "N"]
         Galactic latitude [degrees] (-90 to +90)
 
+    Domain restrictions
+    -------------------
+    ICRS right ascension is undefined at ``dec = +/-90``. The returned
+    Galactic direction remains well-defined, but derivatives with respect to
+    the RA coordinate at an ICRS pole are not a physical tangent-plane
+    derivative.
+
     References
     ----------
-    Liu et al. (2011), A&A, 526, A16
+    IAU SOFA, ``iauIcrs2g`` (IAU 1958 Galactic system expressed in ICRS),
+    https://www.iausofa.org/s/manual_c.pdf
 
     Examples
     --------
@@ -453,6 +492,13 @@ def cartesian_to_spherical(
     phi : Float[Array, "N"]
         Azimuthal angle [radians] (0 to 2pi, measured from +x axis toward +y)
 
+    Domain restrictions
+    -------------------
+    At the Cartesian origin, both angles are undefined and their Jacobian is
+    not finite. On the z axis, ``phi`` is undefined (the numerical ``atan2``
+    value is only a coordinate convention). Exclude these locations from
+    angular-gradient objectives.
+
     Examples
     --------
     >>> positions = jnp.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
@@ -490,6 +536,13 @@ def spherical_to_cartesian(
     -------
     positions : Float[Array, "N 3"]
         Cartesian positions [pc]
+
+    Domain restrictions
+    -------------------
+    This forward map is defined algebraically for all finite inputs, but
+    physical spherical coordinates require ``r >= 0``. At ``r = 0`` and at
+    ``theta = 0`` or ``pi``, ``phi`` is coordinate-degenerate; it must not be
+    interpreted as a unique physical direction.
 
     Examples
     --------
@@ -548,8 +601,16 @@ def zenith_parallactic(
 
     Notes
     -----
-    Fully differentiable and ``vmap``-safe. Single source of truth for the LSST
-    synthetic and real-OpSim cadence geometry (fluxax ``instruments/rubin``).
+    Differentiable on its regular domain and ``vmap``-safe. Single source of
+    truth for the LSST synthetic and real-OpSim cadence geometry (fluxax
+    ``instruments/rubin``).
+
+    Domain restrictions
+    -------------------
+    ``tan_z`` diverges at the horizon. The parallactic angle is undefined at
+    the zenith and nadir because the local vertical has no unique position
+    angle there. Values or derivatives at those geometries are not an
+    inference contract.
 
     References
     ----------
@@ -599,6 +660,13 @@ def compute_parallax(
 
     For a system at distance D with internal scale R << D:
     parallax ~ 1/D (all stars have similar parallax)
+
+    Domain restrictions
+    -------------------
+    The observer-star separation must be strictly positive. The small
+    denominator used below prevents a forward divide-by-zero, but does not
+    define a physical or differentiable parallax at a coincident observer and
+    star; callers must exclude that geometry.
 
     Examples
     --------
@@ -670,6 +738,12 @@ def compute_proper_motions(
 
     Therefore:
         mu = v_transverse / (4.74047 * d)
+
+    Domain restrictions
+    -------------------
+    The observer-star separation must be strictly positive. RA* is undefined
+    at the celestial poles, where no unique local RA basis exists. Both cases
+    are intentionally outside this function's finite-gradient contract.
 
     References
     ----------

@@ -191,6 +191,47 @@ class TestSphericalCartesian:
         assert jnp.allclose(positions_back, positions_orig, atol=1e-10)
 
 
+class TestSingularDomainContracts:
+    """Coordinate singularities are documented rather than silently regularized."""
+
+    @pytest.mark.parametrize(
+        "transform",
+        (
+            sky_tangent,
+            cluster_to_galactic_cartesian,
+            galactic_to_equatorial,
+            equatorial_to_galactic,
+            cartesian_to_spherical,
+            spherical_to_cartesian,
+            zenith_parallactic,
+            compute_parallax,
+            compute_proper_motions,
+        ),
+    )
+    def test_public_transform_documents_domain_restrictions(self, transform):
+        """Every public transform names its unsupported coordinate singularities."""
+        assert "Domain restrictions" in transform.__doc__
+
+    def test_cartesian_spherical_origin_has_no_finite_angular_jacobian(self):
+        """The origin has no physical polar or azimuthal direction to differentiate."""
+
+        def angles(position):
+            _, theta, phi = cartesian_to_spherical(position[None, :])
+            return jnp.stack([theta[0], phi[0]])
+
+        jacobian = jax.jacrev(angles)(jnp.zeros(3))
+        assert not jnp.all(jnp.isfinite(jacobian))
+
+    def test_coincident_star_has_no_finite_parallax_gradient(self):
+        """The finite division floor is not a differentiable coincidence surrogate."""
+
+        def parallax_from_los_offset(z):
+            return jnp.sum(compute_parallax(jnp.array([[0.0, 0.0, z]]), 0.0))
+
+        gradient = jax.grad(parallax_from_los_offset)(0.0)
+        assert not jnp.isfinite(gradient)
+
+
 class TestParallax:
     """Tests for parallax computation."""
 
