@@ -54,6 +54,33 @@ __all__ = [
 # ===========================================================================
 
 
+def _sky_tangent_triad(
+    ra_center_deg: float,
+    dec_center_deg: float,
+    psi_deg: float,
+) -> tuple[jax.Array, jax.Array, jax.Array]:
+    """Return the rolled ICRS East, North, and line-of-sight unit vectors."""
+    ra0 = jnp.deg2rad(jnp.float64(ra_center_deg))
+    dec0 = jnp.deg2rad(jnp.float64(dec_center_deg))
+    psi = jnp.deg2rad(jnp.float64(psi_deg))
+
+    cos_ra0, sin_ra0 = jnp.cos(ra0), jnp.sin(ra0)
+    cos_dec0, sin_dec0 = jnp.cos(dec0), jnp.sin(dec0)
+    z_hat = jnp.array(
+        [cos_dec0 * cos_ra0, cos_dec0 * sin_ra0, sin_dec0],
+        dtype=jnp.float64,
+    )
+    e_hat_0 = jnp.array([-sin_ra0, cos_ra0, 0.0], dtype=jnp.float64)
+    n_hat_0 = jnp.array(
+        [-sin_dec0 * cos_ra0, -sin_dec0 * sin_ra0, cos_dec0],
+        dtype=jnp.float64,
+    )
+    cos_psi, sin_psi = jnp.cos(psi), jnp.sin(psi)
+    e_hat = cos_psi * e_hat_0 + sin_psi * n_hat_0
+    n_hat = -sin_psi * e_hat_0 + cos_psi * n_hat_0
+    return e_hat, n_hat, z_hat
+
+
 def sky_tangent(
     positions: "Float[Array, 'N 3']",
     distance_pc: float,
@@ -123,34 +150,7 @@ def sky_tangent(
     positions = jnp.asarray(positions, dtype=jnp.float64)
     distance_pc = jnp.float64(distance_pc)
 
-    # Convert tangent point and roll to radians
-    ra0 = jnp.deg2rad(jnp.float64(ra_center_deg))
-    dec0 = jnp.deg2rad(jnp.float64(dec_center_deg))
-    psi = jnp.deg2rad(jnp.float64(psi_deg))
-
-    # Build orthonormal sky-tangent triad (ICRS-aligned)
-    cos_ra0, sin_ra0 = jnp.cos(ra0), jnp.sin(ra0)
-    cos_dec0, sin_dec0 = jnp.cos(dec0), jnp.sin(dec0)
-
-    # Line-of-sight unit vector (toward cluster, away from observer)
-    z_hat = jnp.array(
-        [cos_dec0 * cos_ra0, cos_dec0 * sin_ra0, sin_dec0],
-        dtype=jnp.float64,
-    )
-
-    # East unit vector (increasing RA at constant Dec)
-    e_hat_0 = jnp.array([-sin_ra0, cos_ra0, 0.0], dtype=jnp.float64)
-
-    # North unit vector (increasing Dec at constant RA)
-    n_hat_0 = jnp.array(
-        [-sin_dec0 * cos_ra0, -sin_dec0 * sin_ra0, cos_dec0],
-        dtype=jnp.float64,
-    )
-
-    # Apply roll/position-angle rotation about LOS
-    cos_psi, sin_psi = jnp.cos(psi), jnp.sin(psi)
-    e_hat = cos_psi * e_hat_0 + sin_psi * n_hat_0
-    n_hat = -sin_psi * e_hat_0 + cos_psi * n_hat_0
+    e_hat, n_hat, z_hat = _sky_tangent_triad(ra_center_deg, dec_center_deg, psi_deg)
 
     # Extract local coordinates from input positions
     x_local = positions[:, 0]  # East offset [pc]
@@ -627,12 +627,17 @@ def compute_proper_motions(
     positions: "Float[Array, 'N 3']",
     velocities: "Float[Array, 'N 3']",
     distance_pc: float,
+    *,
+    ra_center_deg: float,
+    dec_center_deg: float,
+    psi_deg: float = 0.0,
 ) -> tuple["Float[Array, 'N']", "Float[Array, 'N']"]:
     """
     Compute proper motions from Cartesian positions and velocities.
 
-    Assumes observer at (0, 0, -distance_pc).
-    Projects velocities perpendicular to line of sight.
+    The local Cartesian frame is oriented by the supplied sky-tangent center
+    and roll, exactly as in :func:`sky_tangent`. Positions and velocities are
+    transformed to ICRS, then projected onto each star's local RA*/Dec basis.
 
     Parameters
     ----------
@@ -642,6 +647,12 @@ def compute_proper_motions(
         Cartesian velocities [km/s]
     distance_pc : float
         Distance from observer to system center [pc]
+    ra_center_deg, dec_center_deg : float
+        ICRS RA and Dec of the local tangent-frame center [degrees]. These are
+        required: RA*/Dec components are not defined without a sky orientation.
+    psi_deg : float, optional
+        Roll of the local East/North frame about the line of sight [degrees].
+        Default 0 means x=East and y=North at the supplied center.
 
     Returns
     -------
@@ -664,48 +675,50 @@ def compute_proper_motions(
 
     Examples
     --------
-    >>> # Star at system center moving 100 km/s tangentially at 1 kpc
+    >>> # Star in an explicitly oriented local frame moving East at 1 kpc
     >>> positions = jnp.array([[0.0, 0.0, 0.0]])
     >>> velocities = jnp.array([[100.0, 0.0, 0.0]])  # Tangential in x-direction
-    >>> mu_ra, mu_dec = compute_proper_motions(positions, velocities, distance_pc=1000.0)
+    >>> mu_ra, mu_dec = compute_proper_motions(
+    ...     positions, velocities, distance_pc=1000.0,
+    ...     ra_center_deg=180.0, dec_center_deg=0.0,
+    ... )
     >>> # Expected: mu ~ 100 / 4.74 ~ 21.1 mas/yr
     """
-    # Observer at (0, 0, -distance_pc)
-    observer_z = -distance_pc
+    positions = jnp.asarray(positions, dtype=jnp.float64)
+    velocities = jnp.asarray(velocities, dtype=jnp.float64)
+    distance_pc = jnp.float64(distance_pc)
+    e_hat, n_hat, z_hat = _sky_tangent_triad(ra_center_deg, dec_center_deg, psi_deg)
 
-    # Vector from observer to each star
-    r_vec_x = positions[:, 0]
-    r_vec_y = positions[:, 1]
-    r_vec_z = positions[:, 2] - observer_z  # = z + distance_pc
-
-    r = jnp.sqrt(r_vec_x**2 + r_vec_y**2 + r_vec_z**2)
-
-    # Unit vector pointing from observer to star (line of sight)
-    r_safe = r + 1e-10
-    los_x = r_vec_x / r_safe
-    los_y = r_vec_y / r_safe
-    los_z = r_vec_z / r_safe
-
-    # Project velocity perpendicular to line of sight (transverse velocity)
-    v_radial = (
-        velocities[:, 0] * los_x + velocities[:, 1] * los_y + velocities[:, 2] * los_z
+    r_vec = (
+        (distance_pc + positions[:, 2])[:, None] * z_hat[None, :]
+        + positions[:, 0, None] * e_hat[None, :]
+        + positions[:, 1, None] * n_hat[None, :]
     )
-    v_trans_x = velocities[:, 0] - v_radial * los_x
-    v_trans_y = velocities[:, 1] - v_radial * los_y
-    _v_trans_z = velocities[:, 2] - v_radial * los_z  # noqa: F841 - computed for completeness
+    velocity_icrs = (
+        velocities[:, 0, None] * e_hat[None, :]
+        + velocities[:, 1, None] * n_hat[None, :]
+        + velocities[:, 2, None] * z_hat[None, :]
+    )
+    r = jnp.linalg.norm(r_vec, axis=1)
+    los = r_vec / r[:, None]
 
-    # Distance to each star in kpc
+    # At the celestial poles RA is undefined. NaN there is an explicit
+    # singular-domain signal, not an arbitrary surrogate tangent basis.
+    rho = jnp.hypot(los[:, 0], los[:, 1])
+    e_ra = jnp.stack([-los[:, 1] / rho, los[:, 0] / rho, jnp.zeros_like(rho)], axis=1)
+    e_dec = jnp.stack(
+        [
+            -los[:, 0] * los[:, 2] / rho,
+            -los[:, 1] * los[:, 2] / rho,
+            rho,
+        ],
+        axis=1,
+    )
+
     distance_kpc = r / 1000.0
-
-    # Convert transverse velocity to proper motion
-    # v_transverse [km/s] = K_PROPER_MOTION * mu [mas/yr] * d [kpc]
-    # mu [mas/yr] = v_transverse [km/s] / (K_PROPER_MOTION * d [kpc])
     conversion = K_PROPER_MOTION * distance_kpc  # km/s per mas/yr
 
-    # Project transverse velocity onto RA and Dec directions
-    # Simple approximation: x -> RA direction, y -> Dec direction
-    # (Valid for small angular extent and observer looking along +z)
-    mu_ra_cosdec = v_trans_x / conversion  # mas/yr
-    mu_dec = v_trans_y / conversion  # mas/yr
+    mu_ra_cosdec = jnp.sum(velocity_icrs * e_ra, axis=1) / conversion
+    mu_dec = jnp.sum(velocity_icrs * e_dec, axis=1) / conversion
 
     return mu_ra_cosdec, mu_dec

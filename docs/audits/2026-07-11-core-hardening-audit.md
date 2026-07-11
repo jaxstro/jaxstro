@@ -27,7 +27,7 @@ increased the fast-tier result to 876 passed (2 slow tests deselected).
 | ID | Severity | Category | Evidence | Required action |
 | --- | --- | --- | --- | --- |
 | A-001 | P1 | Default-float32 numerical defect | `safe_exp(100)`, `safe_div(1, 0)`, `relative_error(1, 0)`, and the zero-denominator `safe_div` gradient were non-finite in a clean `jax_enable_x64=False` process. The test suite globally enabled x64, masking it. | **Fixed** in `08792a3`; a clean-subprocess regression now requires finite float32 results while preserving x64 behavior. |
-| A-002 | P1 | API/coordinate ownership mismatch | `compute_proper_motions` projects global x/y components but labels them RA*/Dec. At an off-axis line of sight, the promised local RA basis differs from global x. | **Decision required.** The API has no sky-frame orientation or center input, so true RA*/Dec is not reconstructible globally. Either require an explicit tangent basis/sky orientation or hard-cut over to an honestly named local-tangent approximation. |
+| A-002 | P1 | API/coordinate ownership mismatch | `compute_proper_motions` projected global x/y components but labeled them RA*/Dec. At an off-axis line of sight, the promised local RA basis differs from global x. | **Fixed:** require explicit sky-tangent center/roll; transform local position and velocity to ICRS; project onto each star's exact RA*/Dec basis. The old implicit x/y path is retired. |
 | A-003 | P2 | Eager contract defect | `sky_tangent(..., warn_large_field=True)` checks whether a JAX scalar is a Python `float`/`int`, so normal eager JAX inputs never issue the documented warning. | Add a concrete eager warning regression and an explicit JIT policy; fix without attempting a traced Python boolean. |
 | A-004 | P2 | Provenance/claim defect | IAU B3 defines exact nominal \((GM)_\odot^\mathrm{N}\), not a nominal solar mass in grams. `MSUN_G` is a rounded legacy conversion; current text overstates its provenance. The repository's IAU aggregate URL is stale/dead in direct retrieval. | Preserve the legacy numeric value; correct language/locators and distinguish nominal conversions from compatibility values. |
 | A-005 | P2 | Exactness claim defect | Stored `A_RAD` and `R_GAS` literals are rounded, not bit-identical to their defining expressions; existing tests tolerate residuals much larger than the stored precision. | Tighten provenance tests to the intended stored precision and replace “exact” language with an accurate rounding/consistency statement. |
@@ -57,9 +57,8 @@ increased the fast-tier result to 876 passed (2 slow tests deselected).
 
 ## Open decisions and next checks
 
-1. Resolve A-002 as an API-ownership decision before changing `compute_proper_motions`.
-2. Add the A-003 warning regression and its JIT contract.
-3. Build a public jaxstro AD case registry with interior FD-vs-AD cases, then classify
+1. Add the A-003 warning regression and its JIT contract.
+2. Build a public jaxstro AD case registry with interior FD-vs-AD cases, then classify
    rather than conceal A-007 singularities.
-4. Correct A-004/A-005/A-008 provenance wording only after each locator/source statement
+3. Correct A-004/A-005/A-008 provenance wording only after each locator/source statement
    is independently checked.

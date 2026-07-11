@@ -220,15 +220,44 @@ class TestParallax:
         assert jnp.all(jnp.abs(parallax - 1.0) < 0.2)
 
 
+_PROPER_MOTION_FRAME = {
+    "ra_center_deg": 0.0,
+    "dec_center_deg": 0.0,
+    "psi_deg": 0.0,
+}
+
+
 class TestProperMotions:
     """Tests for proper motion computation."""
+
+    def test_off_axis_uses_local_equatorial_basis(self):
+        """RA*/Dec components use the star's local basis, not global x/y."""
+        distance_pc = 1000.0
+        positions = jnp.array([[100.0, 100.0, 0.0]])
+        # At (ra, dec) = (0, 0), local y is global +z (North).
+        velocities = jnp.array([[0.0, 100.0, 0.0]])
+
+        mu_ra, mu_dec = compute_proper_motions(
+            positions,
+            velocities,
+            distance_pc=distance_pc,
+            ra_center_deg=0.0,
+            dec_center_deg=0.0,
+            psi_deg=0.0,
+        )
+
+        r_pc = jnp.sqrt(1000.0**2 + 100.0**2 + 100.0**2)
+        cos_dec = jnp.sqrt(1000.0**2 + 100.0**2) / r_pc
+        expected_mu_dec = 100.0 * cos_dec / (4.74047 * (r_pc / 1000.0))
+        assert jnp.allclose(mu_ra, 0.0, atol=1e-10)
+        assert jnp.allclose(mu_dec, expected_mu_dec, rtol=1e-10)
 
     def test_tangential_velocity_at_1kpc(self):
         """100 km/s tangential at 1 kpc should give ~21 mas/yr."""
         positions = jnp.array([[0.0, 0.0, 0.0]])
         velocities = jnp.array([[100.0, 0.0, 0.0]])  # 100 km/s in x (tangential)
         mu_ra, mu_dec = compute_proper_motions(
-            positions, velocities, distance_pc=1000.0
+            positions, velocities, distance_pc=1000.0, **_PROPER_MOTION_FRAME
         )
         # mu = v / (4.74 * d) = 100 / (4.74 * 1) ≈ 21.1 mas/yr
         expected = 100.0 / 4.74047
@@ -241,7 +270,7 @@ class TestProperMotions:
             [[0.0, 0.0, -100.0]]
         )  # 100 km/s toward observer (radial)
         mu_ra, mu_dec = compute_proper_motions(
-            positions, velocities, distance_pc=1000.0
+            positions, velocities, distance_pc=1000.0, **_PROPER_MOTION_FRAME
         )
         # Radial motion -> zero proper motion
         assert jnp.abs(mu_ra[0]) < 1.0
@@ -252,7 +281,7 @@ class TestProperMotions:
         positions = jnp.array([[0.0, 0.0, 0.0]])
         velocities = jnp.array([[0.0, 100.0, 0.0]])  # 100 km/s in y
         mu_ra, mu_dec = compute_proper_motions(
-            positions, velocities, distance_pc=1000.0
+            positions, velocities, distance_pc=1000.0, **_PROPER_MOTION_FRAME
         )
         expected = 100.0 / 4.74047
         assert jnp.abs(mu_dec[0] - expected) < 1.0
@@ -262,7 +291,7 @@ class TestProperMotions:
         positions = jnp.zeros((10, 3))
         velocities = jnp.ones((10, 3)) * 50.0
         mu_ra, mu_dec = compute_proper_motions(
-            positions, velocities, distance_pc=1000.0
+            positions, velocities, distance_pc=1000.0, **_PROPER_MOTION_FRAME
         )
         assert mu_ra.shape == (10,)
         assert mu_dec.shape == (10,)
@@ -299,7 +328,10 @@ class TestDifferentiability:
 
         def loss(distance_pc):
             mu_ra, mu_dec = compute_proper_motions(
-                positions, velocities, distance_pc=distance_pc
+                positions,
+                velocities,
+                distance_pc=distance_pc,
+                **_PROPER_MOTION_FRAME,
             )
             return jnp.sum(mu_ra) + jnp.sum(mu_dec)
 
