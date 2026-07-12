@@ -1,7 +1,7 @@
 # jaxstro — status
 
-next: Publish verified main, configure GitHub Pages for Actions, and verify the live site. The
-permanent distribution name is jaxstro; tagging, archives, and package-index publication wait.
+next: Deploy the corrected static MyST artifact and verify the live Pages DOM. The permanent
+distribution name is jaxstro; tagging, archives, and package-index publication wait.
 
 previous: Spectra-v1 completed on local main (2026-07-12). Real-artifact holdouts accept
 positive-log interpolation for NewEra and linear interpolation for representative BOSZ/OSTAR;
@@ -18,8 +18,8 @@ laboratory/agent state, internal audits, and plans. The final base-path DOM gate
 The full local release gate passed in 225.68 s: 1,138 core tests passed with 23 expected optional-
 dependency skips, 114 ML-integration tests passed, and the clean-wheel import smoke passed.
 
-blocker: None locally. Remote publication, tag/release, Pages configuration, and PyPI remain outside
-this local implementation slice and require separate authorization.
+blocker: The first Pages run succeeded but uploaded MyST's server/content bundle, which has no root
+index.html and served 404. The fix uploads docs/_build/html and ratchets the static entry point.
 due:
 
 ## Phase C — DONE (2026-06-17, branch feature/phase-c-release-hardening, HEAD 40f936e)

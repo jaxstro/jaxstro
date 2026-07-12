@@ -24,6 +24,11 @@ echo "== docs: strict static build =="
   myst build --html --ci --strict
 )
 
+if [[ ! -f "$ROOT_DIR/docs/_build/html/index.html" ]]; then
+  echo "docs gate failed: docs/_build/html/index.html is missing" >&2
+  exit 1
+fi
+
 echo "== docs: rendered DOM and route manifest =="
 (
   cd "$ROOT_DIR/docs"

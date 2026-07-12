@@ -78,10 +78,11 @@ compatible release is published through that later authorized process.
 
 ## 5. Documentation and Pages
 
-- [ ] `.github/workflows/pages.yml` uses the full docs gate, the `/jaxstro` base
-  path, and uploads `docs/_build/site`.
-- [ ] Anna has explicitly authorized the push containing the Pages workflow.
-- [ ] GitHub Pages source is set once to **GitHub Actions**, using the reviewed
+- [x] `.github/workflows/pages.yml` uses the full docs gate, the `/jaxstro` base
+  path, requires a deployable root `index.html`, and uploads `docs/_build/html`.
+- [x] Anna explicitly authorized the push containing the Pages workflow on
+  2026-07-12.
+- [x] GitHub Pages source is set once to **GitHub Actions**, using the reviewed
   repository-settings or API operation.
 - [ ] The deployed site at `https://jaxstro.github.io/jaxstro/` is checked in the
   rendered DOM for navigation, assets, equations, figures, and internal links.

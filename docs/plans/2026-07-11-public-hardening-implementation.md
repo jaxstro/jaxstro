@@ -436,7 +436,12 @@ git commit -m "docs: add verified documentation gate"
 
 **Step 1: Write workflow contract**
 
-Use `actions/checkout@v4`, `actions/setup-node@v4` with Node 20, the locally validated mystmd version, `BASE_URL=/${{ github.event.repository.name }}`, the full docs gate, `actions/upload-pages-artifact@v3`, and `actions/deploy-pages@v4`. Upload `docs/_build/site`, not progenax's `docs/website/_build/html`.
+Use `actions/checkout@v4`, `actions/setup-node@v4` with Node 20, the locally validated mystmd version, `BASE_URL=/${{ github.event.repository.name }}`, the full docs gate, `actions/upload-pages-artifact@v3`, and `actions/deploy-pages@v4`. Upload the static `docs/_build/html` tree, whose root contains `index.html`; `docs/_build/site` is MyST's server/content bundle and is not a deployable Pages artifact.
+
+The first remote deployment on 2026-07-12 proved this distinction: uploading
+`docs/_build/site` completed successfully in Actions but served a GitHub Pages
+404 because the artifact had no root `index.html`. The corrected contract checks
+for that file before artifact upload.
 
 **Step 2: Verify the local base-path build**
 
