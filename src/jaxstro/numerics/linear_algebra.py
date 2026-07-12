@@ -109,7 +109,7 @@ def weighted_lstsq(
 
     ``design`` is a two-dimensional sample-by-feature matrix. ``y`` may be a
     one-dimensional response or a matrix of vector-valued responses. If
-    supplied, ``weights`` are nonnegative per-sample weights applied as
+    supplied, ``weights`` are finite, nonnegative per-sample weights applied as
     ``sqrt(weights)`` to both the design matrix and response.
     """
     design = jnp.asarray(design)
@@ -128,6 +128,9 @@ def weighted_lstsq(
         weights = jnp.asarray(weights)
         if weights.ndim != 1 or weights.shape[0] != design.shape[0]:
             raise ValueError("weights must be a 1D array matching the samples")
+        _raise_if_concrete_false(
+            jnp.all(jnp.isfinite(weights)), "weights must be finite"
+        )
         _raise_if_concrete_false(jnp.all(weights >= 0.0), "weights must be nonnegative")
         sqrt_w = jnp.sqrt(weights)
         lhs = design * sqrt_w[:, None]
@@ -194,7 +197,6 @@ def svd_solve(
     return vh.T @ scaled
 
 
-@partial(jax.jit, static_argnames=("rowvar", "ddof"))
 def covariance_matrix(
     samples: Float[Array, " n p"],
     weights: Float[Array, " n"] | None = None,
@@ -207,11 +209,41 @@ def covariance_matrix(
 
     With ``rowvar=False`` (default), rows are observations and columns are
     variables. With ``rowvar=True``, rows are variables and columns are
-    observations. Optional weights are interpreted as per-observation weights.
+    observations. Optional weights are interpreted as finite, nonnegative
+    per-observation weights. Concrete calls require a positive normalization
+    denominator; value-dependent checks are skipped while traced.
     """
     samples = jnp.asarray(samples)
     if samples.ndim != 2:
         raise ValueError("samples must be a 2D array")
+    n_obs = samples.shape[1] if rowvar else samples.shape[0]
+
+    if weights is None:
+        if n_obs - ddof <= 0:
+            raise ValueError("covariance normalization denominator must be positive")
+    else:
+        weights = jnp.asarray(weights)
+        if weights.ndim != 1 or weights.shape[0] != n_obs:
+            raise ValueError("weights must be a 1D array matching observations")
+        _raise_if_concrete_false(
+            jnp.all(jnp.isfinite(weights)), "weights must be finite"
+        )
+        _raise_if_concrete_false(jnp.all(weights >= 0.0), "weights must be nonnegative")
+        _raise_if_concrete_false(
+            jnp.sum(weights) - ddof > 0.0,
+            "covariance normalization denominator must be positive",
+        )
+    return _covariance_matrix_core(samples, weights, rowvar=rowvar, ddof=ddof)
+
+
+@partial(jax.jit, static_argnames=("rowvar", "ddof"))
+def _covariance_matrix_core(
+    samples: Float[Array, " n p"],
+    weights: Float[Array, " n"] | None,
+    *,
+    rowvar: bool,
+    ddof: int,
+) -> Float[Array, " p p"]:
     data = samples if rowvar else samples.T
     n_obs = data.shape[1]
 
@@ -219,30 +251,41 @@ def covariance_matrix(
         mean = jnp.mean(data, axis=1, keepdims=True)
         centered = data - mean
         denom = jnp.asarray(n_obs - ddof, dtype=data.dtype)
-        denom_safe = jnp.where(denom == 0.0, 1.0, denom)
-        return centered @ centered.T / denom_safe
+        return centered @ centered.T / denom
 
-    weights = jnp.asarray(weights)
-    if weights.ndim != 1 or weights.shape[0] != n_obs:
-        raise ValueError("weights must be a 1D array matching observations")
-    _raise_if_concrete_false(jnp.all(weights >= 0.0), "weights must be nonnegative")
     w_sum = jnp.sum(weights)
-    w_sum_safe = jnp.where(w_sum == 0.0, 1.0, w_sum)
-    mean = jnp.sum(data * weights[None, :], axis=1, keepdims=True) / w_sum_safe
+    mean = jnp.sum(data * weights[None, :], axis=1, keepdims=True) / w_sum
     centered = data - mean
     denom = w_sum - ddof
-    denom_safe = jnp.where(denom == 0.0, 1.0, denom)
-    return (centered * weights[None, :]) @ centered.T / denom_safe
+    return (centered * weights[None, :]) @ centered.T / denom
 
 
-@jax.jit
 def correlation_from_covariance(
     covariance: Float[Array, " n n"],
 ) -> Float[Array, " n n"]:
     """
     Convert a covariance matrix to a correlation matrix with zero-variance guards.
+
+    Concrete inputs must be square and finite with a nonnegative diagonal.
+    Value-dependent checks are skipped while traced.
     """
     covariance = jnp.asarray(covariance)
+    if covariance.ndim != 2 or covariance.shape[0] != covariance.shape[1]:
+        raise ValueError("covariance must be a square 2D matrix")
+    _raise_if_concrete_false(
+        jnp.all(jnp.isfinite(covariance)), "covariance must be finite"
+    )
+    _raise_if_concrete_false(
+        jnp.all(jnp.diag(covariance) >= 0.0),
+        "covariance must have a nonnegative diagonal",
+    )
+    return _correlation_from_covariance_core(covariance)
+
+
+@jax.jit
+def _correlation_from_covariance_core(
+    covariance: Float[Array, " n n"],
+) -> Float[Array, " n n"]:
     variance = jnp.diag(covariance)
     scale = jnp.sqrt(jnp.outer(variance, variance))
     scale_safe = jnp.where(scale == 0.0, 1.0, scale)
@@ -250,7 +293,6 @@ def correlation_from_covariance(
     return jnp.where(scale == 0.0, 0.0, corr)
 
 
-@partial(jax.jit, static_argnames=("rowvar", "ddof"))
 def correlation_matrix(
     samples: Float[Array, " n p"],
     weights: Float[Array, " n"] | None = None,

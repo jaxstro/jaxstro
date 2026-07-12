@@ -5,6 +5,7 @@ from __future__ import annotations
 from .architecture import build_jaxstro_foundation
 from .bsplines import build_bspline_local_support
 from .interpolation import build_interpolation_shape_contracts
+from .linear_algebra import build_linear_algebra_contracts
 from .regular_grid import build_regular_grid_contracts
 from .spatial import build_spatial_neighbor_contracts
 from .specs import ExportSpec, FigureSpec
@@ -80,6 +81,20 @@ FIGURES: dict[str, FigureSpec] = {
                 "measured from public interpolation APIs."
             ),
             tags=("regular-grid", "interpolation", "pedagogy"),
+            export=ExportSpec(width=9.4, height=4.3),
+        ),
+        FigureSpec(
+            name="linear-algebra-contracts",
+            builder=build_linear_algebra_contracts,
+            stem="linear-algebra-contracts",
+            page="10-theory/linear-algebra.md",
+            site_path="docs/10-theory/figures/linear-algebra-contracts.webp",
+            seed=0,
+            caption=(
+                "Weighted and unweighted regression plus the eigenvalue effect "
+                "of the first successful tested diagonal jitter."
+            ),
+            tags=("linear-algebra", "least-squares", "positive-definite"),
             export=ExportSpec(width=9.4, height=4.3),
         ),
     ]

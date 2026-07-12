@@ -267,7 +267,10 @@ solve policies; `covariance_matrix(...)`, `correlation_from_covariance(...)`, an
 `correlation_matrix(...)` provide finite covariance/correlation helpers; and
 `is_positive_definite(...)`, `add_diagonal_jitter(...)`, and
 `positive_definite_jitter(...)` cover small dense positive-definite diagnostics.
-The method page is [](../10-theory/linear-algebra.md).
+Concrete weighted calls reject non-finite weights and nonpositive covariance
+normalization; covariance-to-correlation conversion rejects non-square,
+non-finite, or negative-variance inputs. Value-dependent checks are skipped while
+traced. The method page is [](../10-theory/linear-algebra.md).
 
 ### `jaxstro.numerics.distributions`
 

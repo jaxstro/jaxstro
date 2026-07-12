@@ -159,6 +159,40 @@ def test_regular_grid_figure_is_registered_and_uses_public_results() -> None:
     assert {"Bilinear corner weights", "Boundary policies"} <= labels
 
 
+def test_linear_algebra_figure_is_registered_and_uses_public_results() -> None:
+    spec = FIGURES["linear-algebra-contracts"]
+
+    assert spec.page == "10-theory/linear-algebra.md"
+    assert spec.seed == 0
+    assert spec.site_path == "docs/10-theory/figures/linear-algebra-contracts.webp"
+
+    from laboratory.jaxtroviz.linear_algebra import linear_algebra_results
+
+    (
+        x,
+        y,
+        unweighted,
+        weighted,
+        eigenvalues_before,
+        eigenvalues_after,
+        jitter,
+        success,
+    ) = linear_algebra_results()
+    assert x.shape == y.shape == (4,)
+    np.testing.assert_allclose(unweighted, [-1.6, 5.9], atol=1e-12)
+    np.testing.assert_allclose(weighted, [1.0, 2.0], atol=1e-12)
+    np.testing.assert_allclose(eigenvalues_before, [-0.03, 2.0], atol=1e-12)
+    np.testing.assert_allclose(eigenvalues_after, [0.07, 2.1], atol=1e-12)
+    assert jitter == pytest.approx(0.1)
+    assert success
+
+    labels = {
+        text.get_text()
+        for text in spec.builder().findobj(match=lambda item: hasattr(item, "get_text"))
+    }
+    assert {"Weight changes the fit", "Jitter crosses the PD boundary"} <= labels
+
+
 def test_architecture_webp_render_is_deterministic_and_committed() -> None:
     spec = FIGURES["jaxstro-foundation"]
     first = render_webp_bytes(spec.builder())
@@ -187,6 +221,7 @@ def test_cli_lists_and_checks_registered_figures(
     assert "bspline-local-support" in listed
     assert "interpolation-shape-contracts" in listed
     assert "regular-grid-contracts" in listed
+    assert "linear-algebra-contracts" in listed
 
     assert main(["--check"]) == 0
 

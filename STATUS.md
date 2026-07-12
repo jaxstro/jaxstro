@@ -1,21 +1,22 @@
 # jaxstro — status
 
-next: Present the Slice C11e linear-algebra page card for Anna's explicit approval. Do not edit
-`docs/10-theory/linear-algebra.md` before that approval.
+next: Present the Slice C11f spectra-data-architecture page card for Anna's explicit approval.
+Do not edit `docs/20-architecture/spectra-data-architecture.md` before that approval.
 
-previous: Slice C11d regular-grid pedagogy and boundary hardening completed locally
-(2026-07-11). Whole-payload fill now broadcasts its outside mask across every trailing payload
-axis instead of silently mixing fill and interpolated rows; scalar axes fail with the public
-1D-axis `ValueError` rather than an accidental `IndexError`. The former placeholder is an
-executable affine-table lesson with generic/bilinear parity, boundary policies, five gradient
-contracts, and the primary Weiser-Zarantonello source. Its JaxtroViz figure measures one-hot
-corner weights and clamp/fill behavior through public APIs. Thirteen runtime/page/gradient tests
-pass in 2.49 s; 21 API/validation cross-page tests pass in 3.50 s; all 11 figure tests pass in
-16.83 s; Ruff and mypy pass; strict MyST builds 59 pages in 1.88 s and static HTML renders in
-4.60 s. Rendered `/regular-grid` has unique figure/table IDs, exact alt text, the built WebP,
-two DOI links, executable code, and three evidence routes. Nothing has been pushed.
+previous: Slice C11e linear-algebra pedagogy and boundary hardening completed locally
+(2026-07-11). Weighted least squares/covariance now reject non-finite weights; covariance rejects
+nonpositive normalization denominators; and covariance-to-correlation uses an eager-validating
+public wrapper over a private jitted kernel for square, finite, nonnegative-diagonal inputs. The
+former return-shape pseudocode is an executable fit/solve/covariance/jitter lesson with six
+gradient contracts and verified Golub-Van Loan and Cheng-Higham sources. Its public-API
+JaxtroViz figure compares weighted/unweighted fits and measured eigenvalues before/after the
+first successful tested jitter. Fifty-seven runtime/page/gradient tests pass in 3.83 s; 60
+API/validation cross-page tests pass in 4.13 s; all 12 figure tests pass in 18.05 s; Ruff and
+mypy pass; strict MyST builds 59 pages in 1.73 s and static HTML renders in 3.90 s. Rendered
+`/linear-algebra` has unique figure/table IDs, exact alt text, both sources, executable code,
+and three evidence routes. Nothing has been pushed.
 
-blocker: None for Slice C11e once Anna approves its website page card. Tag/release/PyPI remain
+blocker: None for Slice C11f once Anna approves its website page card. Tag/release/PyPI remain
 held on Anna's permanent package-name decision.
 due:
 

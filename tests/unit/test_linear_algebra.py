@@ -198,6 +198,16 @@ class TestWeightedLeastSquares:
         with pytest.raises(ValueError, match="weights"):
             la.weighted_lstsq(jnp.ones((3, 2)), jnp.ones(3), weights=jnp.ones(4))
 
+    @pytest.mark.parametrize("bad_weight", [jnp.nan, jnp.inf])
+    def test_rejects_nonfinite_weights_eagerly(self, bad_weight):
+        design = jnp.array([[1.0, 0.0], [1.0, 1.0]])
+        with pytest.raises(ValueError, match="finite"):
+            la.weighted_lstsq(
+                design,
+                jnp.array([1.0, 2.0]),
+                weights=jnp.array([1.0, bad_weight]),
+            )
+
 
 class TestSolveWrappers:
     """Tests for QR and SVD linear solve wrappers."""
@@ -247,6 +257,29 @@ class TestCovarianceCorrelation:
         expected = (centered * weights[:, None]).T @ centered / jnp.sum(weights)
         assert jnp.allclose(result, expected)
 
+    @pytest.mark.parametrize("bad_weight", [jnp.nan, jnp.inf])
+    def test_covariance_rejects_nonfinite_weights_eagerly(self, bad_weight):
+        samples = jnp.array([[0.0, 1.0], [2.0, 3.0]])
+        with pytest.raises(ValueError, match="finite"):
+            la.covariance_matrix(
+                samples,
+                weights=jnp.array([1.0, bad_weight]),
+                ddof=0,
+            )
+
+    def test_covariance_requires_positive_unweighted_denominator(self):
+        with pytest.raises(ValueError, match="denominator must be positive"):
+            la.covariance_matrix(jnp.array([[1.0, 2.0]]), ddof=1)
+
+    def test_covariance_requires_positive_weighted_denominator(self):
+        samples = jnp.array([[1.0, 2.0], [3.0, 4.0]])
+        with pytest.raises(ValueError, match="denominator must be positive"):
+            la.covariance_matrix(
+                samples,
+                weights=jnp.array([0.5, 0.5]),
+                ddof=1,
+            )
+
     def test_correlation_matrix_has_unit_diagonal(self):
         samples = jnp.array([[1.0, 1.0], [2.0, 3.0], [4.0, 5.0], [8.0, 7.0]])
         corr = la.correlation_matrix(samples)
@@ -258,6 +291,23 @@ class TestCovarianceCorrelation:
         corr = la.correlation_from_covariance(cov)
         assert jnp.all(jnp.isfinite(corr))
         assert jnp.allclose(corr, jnp.array([[1.0, 0.0], [0.0, 0.0]]))
+
+    @pytest.mark.parametrize(
+        ("covariance", "message"),
+        [
+            (jnp.ones((2, 3)), "square"),
+            (jnp.array([[1.0, jnp.nan], [jnp.nan, 1.0]]), "finite"),
+            (jnp.array([[-1.0, 0.0], [0.0, 1.0]]), "nonnegative diagonal"),
+        ],
+    )
+    def test_correlation_rejects_invalid_covariance_eagerly(self, covariance, message):
+        with pytest.raises(ValueError, match=message):
+            la.correlation_from_covariance(covariance)
+
+    def test_correlation_valid_path_remains_jit_compatible(self):
+        covariance = jnp.array([[2.0, 0.3], [0.3, 1.5]])
+        result = jax.jit(la.correlation_from_covariance)(covariance)
+        assert jnp.all(jnp.isfinite(result))
 
 
 class TestPositiveDefiniteJitter:
