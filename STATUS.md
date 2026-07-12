@@ -1,18 +1,18 @@
 # jaxstro — status
 
-next: Present the Slice C10 provenance-architecture page card for Anna's explicit approval. Do
-not edit `docs/20-architecture/provenance.md` before that approval.
+next: Present the Slice C11a B-splines page card for Anna's explicit approval. Do not edit
+`docs/10-theory/bsplines.md` before that approval.
 
-previous: Slice C9 validation-page hardening completed locally (2026-07-11). The current-tense
-40-row evidence table now covers astrometry/coordinates, singular gradient contracts, spatial
-candidates versus exact pairs and overflow, implemented-but-not-adopted quantities, provenance
-card registry integrity, and the in-progress atmosphere boundary. Five focused page tests pass
-in 0.79 s; 33 bounded cross-cutting tests pass in 17.99 s; strict MyST builds all 59 pages in
-3.69 s wall time. Rendered `/index-8` has four cells per row, the unique validation anchor, four
-resolved pedagogy routes, both registry node IDs, and no internal new-tab links. Nothing has
-been pushed.
+previous: Slice C10 provenance-architecture hardening completed locally (2026-07-11). The page
+now separates run-specific `jaxstro.provenance` manifests from source-backed `jaxstro.testing`
+cards, explains their composition and non-substitution boundary, names all three card states,
+and preserves the zero-card atmosphere gap. Four focused tests pass in 0.56 s; 38 bounded
+runtime/card/registry tests pass in 2.49 s; strict MyST builds all 59 pages in 6.52 s wall time.
+Rendered `/provenance` has the 3-row/5-column ownership table, unique anchor, five resolved
+evidence routes, exact states, honest gap text, and no internal new-tab links. Nothing has been
+pushed.
 
-blocker: None for Slice C10 once Anna approves its website page card. Tag/release/PyPI remain
+blocker: None for Slice C11a once Anna approves its website page card. Tag/release/PyPI remain
 held on Anna's permanent package-name decision.
 due:
 
