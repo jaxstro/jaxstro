@@ -1,19 +1,17 @@
 # jaxstro — status
 
-next: Present the local Slice D Pages-workflow and release-checklist card for Anna's explicit
-approval. Remote push, Pages-source configuration, deployment, and PyPI remain separately held.
+next: Await Anna's per-slice checkpoint approval, then execute spectra-v1 Task 2: add the canonical
+`jaxstro.spectra` data model, structured statuses, PyTree contracts, and ownership guard via TDD.
 
-previous: Slice C2 reusable documentation gate completed locally (2026-07-11). A committed
-59-page source-to-route manifest now catches silent root-flat slug reassignment; a standard-library
-checker rejects duplicate page URLs/HTML IDs, unresolved internal links, internal new-tab behavior,
-and missing image alt text against every rendered route. The authored bibliography heading that
-collided with MyST's generated `references` anchor is removed. Twelve checker/wiring tests pass;
-the complete rendered gate passes in 7.39 s and closes both temporary ports. The same script is
-called by `scripts/check.sh` and a new parallel scheduled/manual full-gate job pinned to MyST
-1.10.1. The existing fast PR workflow is unchanged. Nothing has been pushed.
+previous: Spectra-v1 Task 1 completed on `codex/spectra-v1` at `d81f741` (2026-07-11). Five
+primary-source atmosphere cards now fix the NewEra, BOSZ, Sonora, TLUSTY OSTAR2002, and TLUSTY
+BSTAR2006 native coordinate/density semantics and canonical conversions before runtime changes.
+The TDD RED state was 4 expected failures against the empty registry; GREEN is 11 passing focused
+registry tests in 1.04 s, generated pages fresh, Ruff clean. The reviewed design and 14-task
+executing-plans artifact are at `a53e617`. Nothing has been pushed.
 
-blocker: None for local Slice D once Anna approves its card. Remote publication requires a
-separate explicit authorization; tag/release/PyPI remain held on the permanent package name.
+blocker: None for spectra-v1 Task 2. Remote publication, tag/release, Pages configuration, and PyPI
+remain outside this local feature branch and require separate authorization.
 due:
 
 ## Phase C — DONE (2026-06-17, branch feature/phase-c-release-hardening, HEAD 40f936e)
