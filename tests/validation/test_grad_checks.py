@@ -552,6 +552,15 @@ class TestIntegrationGradChecks:
 # rootfinding  (bisect, newton; newton_ppf already covered in test_numerics)
 # =============================================================================
 class TestRootfindingGradChecks:
+    def test_safeguarded_solver_declares_value_first_ad_contract(self):
+        """The branch-selected solver must not advertise an IFT derivative."""
+        doc = rootfinding.safeguarded_bracketed_root.__doc__
+        assert doc is not None
+        contract = " ".join(doc.split())
+        assert "value-first" in contract
+        assert "does not implement implicit differentiation" in contract
+        assert "no derivative claim" in contract
+
     def test_bisect_grad_wrt_target_is_structurally_zero(self):
         """bisect has a STRUCTURALLY ZERO gradient w.r.t. the target/function.
 

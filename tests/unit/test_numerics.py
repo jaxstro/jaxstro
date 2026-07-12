@@ -508,6 +508,206 @@ class TestSafeguardedBracketPrimitives:
         assert proposal.kind == rootfinding.PROPOSAL_SECANT
 
 
+class TestSafeguardedBracketedRoot:
+    """Value-first fixed-scan solver contracts and telemetry."""
+
+    @staticmethod
+    def _solve(f, lo=0.0, hi=4.0, **kwargs):
+        controls = {
+            "max_steps": 64,
+            "atol": 1.0e-12,
+            "rtol": 1.0e-12,
+            "safeguard_fraction": 0.1,
+        }
+        controls.update(kwargs)
+        return rootfinding.safeguarded_bracketed_root(f, lo, hi, **controls)
+
+    def test_linear_root_converges_with_deterministic_secant_trace(self):
+        result = self._solve(lambda x: x - 2.0)
+
+        assert bool(result.bracketed)
+        assert bool(result.converged)
+        assert result.root == pytest.approx(2.0)
+        assert result.residual == pytest.approx(0.0)
+        assert int(result.n_evaluations) == 3
+        assert result.trace.proposal.shape == (64,)
+        assert result.trace.residual.shape == (64,)
+        assert result.trace.lo.shape == (64,)
+        assert result.trace.hi.shape == (64,)
+        assert result.trace.f_lo.shape == (64,)
+        assert result.trace.f_hi.shape == (64,)
+        assert result.trace.proposal_kind.shape == (64,)
+        assert result.trace.executed.shape == (64,)
+        assert result.trace.admissible.shape == (64,)
+        assert result.trace.converged.shape == (64,)
+        assert int(result.trace.proposal_kind[0]) == rootfinding.PROPOSAL_SECANT
+        assert bool(result.trace.executed[0])
+        assert bool(result.trace.admissible[0])
+        assert bool(result.trace.converged[0])
+        assert jnp.all(jnp.isnan(result.trace.proposal[1:]))
+        assert jnp.all(jnp.isnan(result.trace.residual[1:]))
+        assert jnp.all(result.trace.proposal_kind[1:] == rootfinding.PROPOSAL_NONE)
+        assert not bool(jnp.any(result.trace.executed[1:]))
+        assert not bool(jnp.any(result.trace.admissible[1:]))
+        assert not bool(jnp.any(result.trace.converged[1:]))
+
+    @pytest.mark.parametrize(
+        ("f", "lo", "hi", "expected"),
+        [
+            pytest.param(lambda x: x - 1.0, 1.0, 3.0, 1.0, id="lo-root"),
+            pytest.param(lambda x: x - 3.0, 1.0, 3.0, 3.0, id="hi-root"),
+        ],
+    )
+    def test_exact_endpoint_root_executes_no_scan_evaluations(
+        self, f, lo, hi, expected
+    ):
+        result = self._solve(f, lo=lo, hi=hi, max_steps=8)
+
+        assert bool(result.bracketed)
+        assert bool(result.converged)
+        assert result.root == expected
+        assert result.residual == 0.0
+        assert int(result.n_evaluations) == 2
+        assert not bool(jnp.any(result.trace.executed))
+        assert jnp.all(jnp.isnan(result.trace.proposal))
+
+    def test_missing_bracket_returns_typed_failure_without_fabricated_root(self):
+        result = self._solve(lambda x: x**2 + 1.0, lo=-1.0, hi=1.0, max_steps=8)
+
+        assert not bool(result.bracketed)
+        assert not bool(result.converged)
+        assert jnp.isnan(result.root)
+        assert jnp.isnan(result.residual)
+        assert int(result.n_evaluations) == 2
+        assert not bool(jnp.any(result.trace.executed))
+        assert jnp.all(result.trace.proposal_kind == rootfinding.PROPOSAL_NONE)
+
+    def test_iteration_exhaustion_returns_best_evidence_but_not_success(self):
+        result = self._solve(
+            lambda x: x**2 - 2.0,
+            lo=0.0,
+            hi=2.0,
+            max_steps=1,
+            atol=0.0,
+            rtol=0.0,
+        )
+
+        assert bool(result.bracketed)
+        assert not bool(result.converged)
+        assert jnp.isfinite(result.root)
+        assert jnp.isfinite(result.residual)
+        assert int(result.n_evaluations) == 3
+        assert bool(result.trace.executed[0])
+        assert not bool(result.trace.converged[0])
+
+    def test_exact_interior_root_and_post_update_bracket_are_recorded(self):
+        result = self._solve(lambda x: x - 2.0, max_steps=4)
+
+        assert result.trace.lo[0] == 2.0
+        assert result.trace.hi[0] == 2.0
+        assert result.trace.f_lo[0] == 0.0
+        assert result.trace.f_hi[0] == 0.0
+
+    @pytest.mark.parametrize(
+        ("f", "lo", "hi", "expected", "max_steps"),
+        [
+            pytest.param(
+                lambda x: x**2 - 2.0,
+                0.0,
+                2.0,
+                jnp.sqrt(2.0),
+                64,
+                id="quadratic",
+            ),
+            pytest.param(
+                lambda x: (x - 1.0) ** 3,
+                0.0,
+                3.0,
+                1.0,
+                64,
+                id="flat-slope",
+            ),
+            pytest.param(
+                lambda x: jnp.where(x < 0.3, 2.0 * (x - 0.3), 0.5 * (x - 0.3)),
+                0.0,
+                1.0,
+                0.3,
+                96,
+                id="monotone-kink",
+            ),
+            pytest.param(
+                lambda h: (0.7 - h) - h,
+                0.0,
+                1.0,
+                0.35,
+                64,
+                id="oscillatory-fixed-point-residual",
+            ),
+        ],
+    )
+    def test_representative_analytic_roots(self, f, lo, hi, expected, max_steps):
+        result = self._solve(f, lo=lo, hi=hi, max_steps=max_steps)
+
+        assert bool(result.converged)
+        assert result.root == pytest.approx(float(expected), abs=2.0e-10)
+        assert abs(float(result.residual)) <= 1.0e-9
+
+    def test_nonfinite_trial_is_executed_but_inadmissible(self):
+        def residual(x):
+            return jnp.where(x == 1.0, jnp.nan, x - 0.25)
+
+        result = self._solve(
+            residual,
+            lo=0.0,
+            hi=2.0,
+            max_steps=1,
+            atol=0.0,
+            rtol=0.0,
+            safeguard_fraction=0.49,
+        )
+
+        assert bool(result.trace.executed[0])
+        assert not bool(result.trace.admissible[0])
+        assert not bool(result.converged)
+
+    def test_no_function_evaluations_occur_after_convergence(self):
+        calls = []
+
+        def residual(x):
+            calls.append(x)
+            return x - 2.0
+
+        with jax.disable_jit():
+            result = self._solve(residual, max_steps=8)
+
+        assert bool(result.converged)
+        assert len(calls) == 3
+        assert int(result.n_evaluations) == len(calls)
+
+    def test_jit_vmap_and_float64_contract(self):
+        @jax.jit
+        def solve(target):
+            return rootfinding.safeguarded_bracketed_root(
+                lambda x: x**2 - target,
+                0.0,
+                4.0,
+                max_steps=64,
+                atol=1.0e-12,
+                rtol=1.0e-12,
+                safeguard_fraction=0.1,
+            )
+
+        targets = jnp.array([1.0, 2.0, 9.0], dtype=jnp.float64)
+        results = jax.vmap(solve)(targets)
+
+        assert results.root.dtype == jnp.float64
+        assert results.trace.proposal.dtype == jnp.float64
+        assert results.root.shape == (3,)
+        assert results.trace.proposal.shape == (3, 64)
+        assert jnp.all(results.converged)
+        assert jnp.allclose(results.root, jnp.sqrt(targets), atol=2.0e-10)
+
+
 class TestBisectMany:
     """Tests for explicit vectorized independent bisection solves."""
 
