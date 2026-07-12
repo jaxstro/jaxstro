@@ -338,14 +338,14 @@ mypy, MyST.
 - Produces: `FluxInterpolation`, `PreparedRectilinearStencil`, and
   `PreparedSimplexStencil`, each with `evaluate(point) -> SpectrumResult`.
 
-- [ ] **Step 1: Write failing 2D/ND interpolation tests**
+- [x] **Step 1: Write failing 2D/ND interpolation tests**
 
   Rectilinear tests cover exact vertices, midpoints, nonuniform axes, and
   missing-corner construction rejection. Simplex tests cover barycentric vertex
   recovery, interior interpolation, and outside-hull status. Invalid evaluation
   returns NaN values plus status rather than clamped spectra.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
   ```bash
   env -u VIRTUAL_ENV uv run --no-sync pytest -q \
@@ -353,7 +353,7 @@ mypy, MyST.
     tests/validation/test_spectra_stencil_gradients.py
   ```
 
-- [ ] **Step 3: Implement fixed-shape JAX kernels**
+- [x] **Step 3: Implement fixed-shape JAX kernels**
 
   Rectilinear weights are products of per-axis lower/upper weights over a static
   corner-bit table. Simplex preparation stores the origin and inverse edge
@@ -361,7 +361,7 @@ mypy, MyST.
   search. Implement linear and positive-log policies. Leave amplitude-shape
   unavailable until Task 12 produces an accepted definition and evidence.
 
-- [ ] **Step 4: Verify GREEN, `jit`, `vmap`, and AD-vs-FD**
+- [x] **Step 4: Verify GREEN, `jit`, `vmap`, and AD-vs-FD**
 
   ```bash
   env -u VIRTUAL_ENV uv run --no-sync pytest -q \
@@ -369,7 +369,7 @@ mypy, MyST.
     tests/validation/test_spectra_stencil_gradients.py
   ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
   ```bash
   git add src/jaxstro/spectra tests/unit/test_spectra_stencils.py \
@@ -522,7 +522,7 @@ mypy, MyST.
 - [ ] **Step 1: Write failing artifact, product-plane, and conversion tests**
 
   Require `cloud_label` and `c_o` to be explicit query/product constraints.
-  Verify that a spectrum with native value `2` becomes canonical value `20`.
+  Verify that a spectrum with native value `2` becomes canonical value `2e-6`.
   Reject wavelength interpolation as a claim about unresolved monochromatic
   features; only the explicit `SpectralPlan` remapping policy may change the
   released sampling.

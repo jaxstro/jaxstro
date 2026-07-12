@@ -1,20 +1,17 @@
 # jaxstro — status
 
-next: Await Anna's per-task checkpoint approval, then execute spectra-v1 Task 5: prepared
-rectilinear and simplex interpolation stencils with fixed-shape JAX evaluation and fail-closed
-outside-domain statuses.
+next: Execute spectra-v1 Task 6 directly on main: atmosphere query, product, adapter, and topology
+contracts with structured preparation outcomes.
 
-previous: Spectra-v1 Task 4A completed on `codex/spectra-v1` (2026-07-12). `SpectralPlan` now owns a
-static point method: linear remains the honest default and delegates to Jaxstro `interp1d`; opt-in
-monotone cubic delegates to the existing PCHIP implementation. Equal axes remain bit-identical,
-bin averages remain conservative, and unsupported windows remain NaN plus status. Smooth-path
-AD/FD ratios are 0.999999999997 (linear values), 1.00000000002 (linear query), 0.999999999998
-(PCHIP values), and 1.00000000001 (PCHIP query), all clean. Claims exclude knots, interval changes,
-limiter transitions, coverage boundaries, and sampling-policy changes. The focused gate is 23 tests
-in 3.81 s (4.54 s wall); the combined spectra gate is 56 tests in 3.19 s (3.94 s wall), with Ruff,
-format, mypy, and diff checks clean. Nothing has been pushed.
+previous: Spectra-v1 Task 5 completed on local main (2026-07-12). Prepared rectilinear stencils
+delegate complete-grid interpolation to Jaxstro regular-grid numerics; prepared simplex stencils
+evaluate fixed host-selected topology with barycentric weights. Linear and positive-log flux spaces
+are available; amplitude-shape remains fail-closed. Exact vertices, nonuniform midpoints, missing
+corners, hull failures, JIT, value/status vmap, and AD-vs-FD are covered. The three smooth-path AD/FD
+ratios are 1.00000000001, 0.999999997987, and 1.0, all clean. Focused gate: 12 tests in 4.36 s
+(5.12 s wall); Ruff, format, mypy, and diff checks clean. Nothing has been pushed.
 
-blocker: None for spectra-v1 Task 5. Remote publication, tag/release, Pages configuration, and PyPI
+blocker: None for spectra-v1 Task 6. Remote publication, tag/release, Pages configuration, and PyPI
 remain outside this local feature branch and require separate authorization.
 due:
 

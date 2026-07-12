@@ -2,6 +2,11 @@
 
 from .plan import CoveragePolicy, PointResamplingMethod, SpectralPlan
 from .resampling import resample_spectrum
+from .stencils import (
+    FluxInterpolation,
+    PreparedRectilinearStencil,
+    PreparedSimplexStencil,
+)
 from .transforms import (
     surface_flux_to_luminosity,
     surface_flux_to_observer_flux,
@@ -24,7 +29,10 @@ from .types import (
 
 __all__ = [
     "CoveragePolicy",
+    "FluxInterpolation",
     "PointResamplingMethod",
+    "PreparedRectilinearStencil",
+    "PreparedSimplexStencil",
     "SpectralAxis",
     "SpectralCoordinate",
     "SpectralSampling",
