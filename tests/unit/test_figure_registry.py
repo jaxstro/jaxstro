@@ -108,6 +108,32 @@ def test_bspline_figure_enables_x64_before_knot_allocation() -> None:
     assert "will be truncated to dtype float32" not in result.stderr
 
 
+def test_interpolation_figure_is_registered_and_uses_public_results() -> None:
+    spec = FIGURES["interpolation-shape-contracts"]
+
+    assert spec.page == "10-theory/interpolation.md"
+    assert spec.seed == 0
+    assert spec.site_path == "docs/10-theory/figures/interpolation-shape-contracts.webp"
+
+    from laboratory.jaxtroviz.interpolation import interpolation_results
+
+    x_grid, values, x_query, natural, monotone = interpolation_results()
+    assert x_grid.shape == values.shape == (5,)
+    assert x_query.shape == natural.shape == monotone.shape == (801,)
+    assert x_query.dtype == np.float64
+    assert np.all(np.diff(values) >= 0.0)
+    assert natural.min() < -0.1
+    assert monotone.min() >= -1e-12
+    assert monotone.max() <= 1.0 + 1e-12
+    assert np.diff(monotone).min() >= -1e-12
+
+    labels = {
+        text.get_text()
+        for text in spec.builder().findobj(match=lambda item: hasattr(item, "get_text"))
+    }
+    assert {"Same monotone samples", "Step-by-step monotonicity"} <= labels
+
+
 def test_architecture_webp_render_is_deterministic_and_committed() -> None:
     spec = FIGURES["jaxstro-foundation"]
     first = render_webp_bytes(spec.builder())
@@ -134,6 +160,7 @@ def test_cli_lists_and_checks_registered_figures(
     assert "jaxstro-foundation" in listed
     assert "spatial-neighbor-contracts" in listed
     assert "bspline-local-support" in listed
+    assert "interpolation-shape-contracts" in listed
 
     assert main(["--check"]) == 0
 

@@ -1,8 +1,8 @@
 ---
 title: Cubic interpolation
 description: >-
-  Cubic Hermite, natural cubic spline, and PCHIP-style interpolation for smooth
-  one-dimensional table evaluation.
+  Cubic Hermite, natural cubic spline, and PCHIP interpolation with explicit
+  smoothness, shape, clamping, and gradient contracts.
 ---
 
 Linear interpolation is hard to beat for honesty: it does not invent curvature.
@@ -13,17 +13,49 @@ cubic can overshoot between samples and create values the table never implied.
 jaxstro's shape-preserving interpolation layer adds a small middle ground:
 
 ```python
+from jaxstro.jaxconfig import enable_high_precision
+
+enable_high_precision()  # before creating JAX arrays
+
+import jax.numpy as jnp
+
 from jaxstro.numerics import interpolation
 
-y = interpolation.cubic_hermite_interp(x_grid, values, dydx, x_new)
-y_spline = interpolation.eval_cubic_spline(
+x_grid = jnp.arange(5.0)
+values = jnp.array([0.0, 0.01, 0.9, 0.91, 1.0])
+x_new = jnp.linspace(0.0, 4.0, 801)
+dydx = interpolation.pchip_slopes(x_grid, values)
+
+hermite = interpolation.cubic_hermite_interp(
+    x_grid, values, dydx, x_new
+)
+natural = interpolation.eval_cubic_spline(
     x_grid,
     interpolation.natural_cubic_spline_coeffs(x_grid, values),
     x_new,
 )
-y_mono = interpolation.monotone_cubic_interp(x_grid, values, x_new)
+monotone = interpolation.monotone_cubic_interp(x_grid, values, x_new)
 table = interpolation.MonotoneTabulatedFunction1D(x_grid, values)
+wrapped_monotone = table(x_new)
+
+assert natural.min() < -0.1  # smooth, but below the monotone sample range
+assert monotone.min() >= -1e-12
+assert monotone.max() <= 1.0 + 1e-12
+assert jnp.all(jnp.diff(monotone) >= -1e-12)
+assert jnp.allclose(hermite, monotone)
+assert jnp.allclose(wrapped_monotone, monotone)
 ```
+
+:::{figure} ./figures/interpolation-shape-contracts.webp
+:name: fig-interpolation-shape-contracts
+:alt: Two-panel comparison of natural cubic and PCHIP interpolation for the same monotone samples, showing natural-spline undershoot and nonnegative PCHIP increments
+
+Both panels are computed from the public APIs and the same five monotone samples.
+The natural cubic is globally smoother but dips below the sampled range and has
+negative successive increments. PCHIP stays within `[0, 1]` and remains monotone
+on the displayed query grid. This fixture demonstrates a contract distinction,
+not universal superiority or an error benchmark.
+:::
 
 `cubic_hermite_interp(...)` is the explicit primitive: callers provide both
 values and derivatives at the knots. `natural_cubic_spline_coeffs(...)` computes
@@ -40,16 +72,19 @@ with respect to `x_new` saturate outside the data domain, just as they do for
 linear interpolation and clamped B-splines.
 
 Callers can request `extrapolate=True` when they explicitly want the endpoint
-Hermite segment continued beyond the table. That is a numerical choice, not a
-physical guarantee.
+Hermite segment continued beyond the table: numerical continuation, not a physical guarantee.
 
 Natural cubic spline evaluation clamps query coordinates to the data domain
 before choosing an interval, so out-of-range queries return endpoint values.
 
+The Python wrappers validate a concrete grid eagerly. Value-dependent exceptions
+cannot fire on a tracer, so eager validation is skipped while the grid is traced;
+the caller must supply a strictly increasing grid under `jax.jit`.
+
 ## Natural Cubic Spline
 
-The natural cubic spline uses the standard second-derivative moment system
-described in Numerical Recipes §3.3 and de Boor's spline text. With
+The natural cubic spline uses the standard second-derivative moment system in
+{cite:t}`deBoor2001`. With
 
 ```{math}
 h_i = x_{i+1} - x_i,\qquad
@@ -83,6 +118,10 @@ the desired contract.
 
 ## PCHIP Slopes
 
+{cite:t}`FritschButland1984` constructs local piecewise-cubic interpolants for
+monotone data by choosing node derivatives from neighboring secant slopes. The
+implemented weighted harmonic mean is the paper's spacing-aware construction.
+
 For intervals with width
 
 ```{math}
@@ -113,6 +152,41 @@ turning point, the local derivative is set to zero at the relevant node.
 
 ## Differentiability
 
+Interpolation does not have one universal derivative contract:
+
+```{list-table} Interpolation gradient contracts
+:header-rows: 1
+:label: tbl-interpolation-gradient-contracts
+
+* - Operation
+  - Contract
+  - Supported claim
+  - Boundary
+* - Hermite values and supplied derivatives
+  - `smooth_pathwise`
+  - AD agrees with finite differences for values, supplied derivatives, and an
+    interior query in a fixed segment.
+  - The query is away from knots and clamping.
+* - Natural-spline values and interior query
+  - `smooth_pathwise`
+  - The coefficient solve and evaluation carry gradients through table values
+    and smooth interior queries.
+  - The grid is strictly increasing and the selected interval is fixed locally.
+* - PCHIP inside a fixed limiter branch
+  - `smooth_pathwise`
+  - AD is meaningful while adjacent secant signs and endpoint-limiter decisions
+    remain unchanged.
+  - Crossing a limiter decision changes the local derivative rule.
+* - Clamped exterior query
+  - `known_zero`
+  - The default public evaluators are constant beyond the endpoint values.
+  - This zero is saturation, not an inference direction.
+* - Knots and limiter transitions
+  - `validation_only`
+  - Values, bounds, and named one-sided behavior can be checked directly.
+  - No universal smooth derivative is claimed at a knot or branch transition.
+```
+
 Natural cubic splines are differentiable with respect to table values and query
 positions away from knots and clamp boundaries. Inside a fixed PCHIP limiter
 branch, the monotone interpolant is differentiable with respect to sample values
@@ -131,3 +205,9 @@ This is still a 1D table primitive. It does not handle regular grids,
 unstructured scattered data, or multidimensional monotonicity constraints. Those
 belong to separate chunks because they need explicit axis, boundary, and
 validation policies.
+
+## From explanation to evidence
+
+Use the [](../40-api/index.md#jaxstro-numerics-interpolation) for signatures and
+ownership, the [](../60-validation/index.md) for measured interpolation anchors,
+and the [](./index.md#gradient-contracts) for the package-wide contract taxonomy.

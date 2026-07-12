@@ -1,18 +1,19 @@
 # jaxstro — status
 
-next: Present the Slice C11b interpolation page card for Anna's explicit approval. Do not edit
-`docs/10-theory/interpolation.md` before that approval.
+next: Present the Slice C11c random-utilities page card for Anna's explicit approval. Do not edit
+`docs/10-theory/random.md` before that approval.
 
-previous: Slice C11a B-spline pedagogy completed locally (2026-07-11). The placeholder snippet
-is now standalone and executable; the page names five gradient boundaries, cites de Boor's 1972
-primary paper for recurrence/derivative relations, and embeds a public-API JaxtroViz figure of
-local support and partition of unity. Five focused page tests pass in 0.55 s; 13 combined
-page/figure-registry tests pass in 12.38 s; 24 spline unit/gradient tests pass in 4.78 s; the
-committed WebP is fresh; strict MyST builds all 59 pages in 3.64 s wall time. Rendered
-`/bsplines` has the figure, alt text, 6-row contract table, unique anchors, DOI, executable code,
-three evidence routes, and no internal new-tab links. Nothing has been pushed.
+previous: Slice C11b interpolation pedagogy completed locally (2026-07-11). The placeholder
+snippet is now an executable monotone-table example that measures natural-spline undershoot,
+PCHIP bounds/monotonicity, Hermite equivalence, and wrapper parity. The page names five gradient
+boundaries, the eager-versus-traced grid-validation contract, and primary de Boor and
+Fritsch-Butland sources. Its public-API JaxtroViz figure shows the same measured shape tradeoff.
+Five page tests pass in 0.66 s; 24 page/unit/gradient tests pass in 3.86 s; 10 figure-registry
+tests pass in 13.65 s; the WebP is fresh; strict MyST builds 59 pages in 3.81 s wall time.
+Rendered `/interpolation` has the figure, alt text, 6-row table, unique anchors, both DOIs,
+executable code, three evidence routes, and no internal new-tab links. Nothing has been pushed.
 
-blocker: None for Slice C11b once Anna approves its website page card. Tag/release/PyPI remain
+blocker: None for Slice C11c once Anna approves its website page card. Tag/release/PyPI remain
 held on Anna's permanent package-name decision.
 due:
 

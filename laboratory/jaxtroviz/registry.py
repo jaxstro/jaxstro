@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .architecture import build_jaxstro_foundation
 from .bsplines import build_bspline_local_support
+from .interpolation import build_interpolation_shape_contracts
 from .spatial import build_spatial_neighbor_contracts
 from .specs import ExportSpec, FigureSpec
 
@@ -51,6 +52,20 @@ FIGURES: dict[str, FigureSpec] = {
             ),
             tags=("bsplines", "basis", "pedagogy"),
             export=ExportSpec(width=9.4, height=4.1),
+        ),
+        FigureSpec(
+            name="interpolation-shape-contracts",
+            builder=build_interpolation_shape_contracts,
+            stem="interpolation-shape-contracts",
+            page="10-theory/interpolation.md",
+            site_path="docs/10-theory/figures/interpolation-shape-contracts.webp",
+            seed=0,
+            caption=(
+                "Natural cubic and PCHIP interpolation of the same monotone "
+                "samples, with stepwise monotonicity measured from public APIs."
+            ),
+            tags=("interpolation", "pchip", "pedagogy"),
+            export=ExportSpec(width=9.4, height=4.3),
         ),
     ]
 }
