@@ -197,7 +197,8 @@ are B3 conversion constants, not measurements of the time-varying Sun.
 `newton_ppf`, and `monotone_inverse_interp`. The value-first safeguarded surface
 exports `BracketState`, `BracketProposal`, `RootTrace`, `BracketedRootResult`,
 `initialize_bracket`, `update_bracket`, `propose_bracketed`, and
-`safeguarded_bracketed_root`, with deterministic `PROPOSAL_NONE`,
+`safeguarded_bracketed_root`, and `map_safeguarded_bracketed_root`, with
+deterministic `PROPOSAL_NONE`,
 `PROPOSAL_SECANT`, `PROPOSAL_MIDPOINT`, `PROPOSAL_LO_ENDPOINT`, and
 `PROPOSAL_HI_ENDPOINT`, and `PROPOSAL_INVERSE_QUADRATIC` identifiers. The
 checkpointable low-level step surface additionally exports `BracketHistory`,

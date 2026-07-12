@@ -22,7 +22,7 @@ Usage:
     # Use Newton when a validated smooth iterative derivative is required.
 """
 
-from typing import Callable, NamedTuple, Optional, Union
+from typing import Any, Callable, NamedTuple, Optional, Union
 
 import jax
 import jax.lax as lax
@@ -116,10 +116,9 @@ class BracketedRootResult(NamedTuple):
 
 
 class _RootCarry(NamedTuple):
-    bracket: BracketState
+    state: BracketedRootState
     best_x: Float[Array, ""]
     best_fx: Float[Array, ""]
-    status: Array
     converged: Array
     exhausted: Array
 
@@ -399,32 +398,25 @@ def safeguarded_bracketed_root(
     endpoint_root = bracket.bracketed & (best_fx == 0.0)
     initial_tolerance = atol + rtol * jnp.abs(best_x)
     width_certified = bracket.bracketed & (bracket.hi - bracket.lo <= initial_tolerance)
-    lo_root = bracket.bracketed & (bracket.f_lo == 0.0)
-    hi_root = bracket.bracketed & ~lo_root & (bracket.f_hi == 0.0)
-    initial_status = jnp.asarray(ROOT_STATUS_RUNNING, dtype=jnp.int32)
+    root_state = initialize_bracketed_root_state(bracket)
     initial_status = jnp.where(
-        ~bracket.bracketed, ROOT_STATUS_MISSING_BRACKET, initial_status
+        width_certified, ROOT_STATUS_WIDTH_CONVERGED, root_state.status
     )
-    initial_status = jnp.where(
-        width_certified, ROOT_STATUS_WIDTH_CONVERGED, initial_status
+    root_state = BracketedRootState(
+        root_state.bracket, root_state.history, initial_status.astype(jnp.int32)
     )
-    initial_status = jnp.where(hi_root, ROOT_STATUS_EXACT_HI, initial_status)
-    initial_status = jnp.where(lo_root, ROOT_STATUS_EXACT_LO, initial_status)
     initial = _RootCarry(
-        bracket,
+        root_state,
         best_x,
         best_fx,
-        initial_status,
         endpoint_root | width_certified,
         jnp.asarray(False, dtype=bool),
     )
     nan = jnp.asarray(jnp.nan, dtype=bracket.lo.dtype)
 
     def scan_step(carry: _RootCarry, _):
-        active = carry.bracket.bracketed & ~carry.converged & ~carry.exhausted
-        proposal = propose_bracketed(
-            carry.bracket, safeguard_fraction=safeguard_fraction
-        )
+        active = carry.state.bracket.bracketed & ~carry.converged & ~carry.exhausted
+        proposal = propose_bracketed(carry.state, safeguard_fraction=safeguard_fraction)
 
         def evaluate(x):
             return jnp.asarray(f(x), dtype=bracket.lo.dtype)
@@ -432,7 +424,10 @@ def safeguarded_bracketed_root(
         fx = lax.cond(active, evaluate, lambda _: nan, proposal.x)
         executed = active
         admissible = executed & jnp.isfinite(fx)
-        updated = update_bracket(carry.bracket, proposal.x, fx, valid=admissible)
+        updated_state = advance_bracketed_root(
+            carry.state, proposal, fx, valid=executed
+        )
+        updated = updated_state.bracket
 
         hi_is_better = jnp.abs(updated.f_hi) < jnp.abs(updated.f_lo)
         best_x_new = jnp.where(hi_is_better, updated.hi, updated.lo)
@@ -441,19 +436,18 @@ def safeguarded_bracketed_root(
         width_converged = admissible & (updated.hi - updated.lo <= tolerance)
         exact_interior = active & admissible & (fx == 0.0)
         converged_now = exact_interior | (active & width_converged)
-        status = carry.status
-        status = jnp.where(
-            active & ~admissible, ROOT_STATUS_NONFINITE_EVALUATION, status
-        )
+        status = updated_state.status
         status = jnp.where(
             active & width_converged, ROOT_STATUS_WIDTH_CONVERGED, status
         )
         status = jnp.where(exact_interior, ROOT_STATUS_EXACT_INTERIOR, status)
+        updated_state = BracketedRootState(
+            updated_state.bracket, updated_state.history, status.astype(jnp.int32)
+        )
         next_carry = _RootCarry(
-            updated,
+            updated_state,
             best_x_new,
             best_fx_new,
-            status,
             carry.converged | converged_now,
             carry.exhausted | (executed & ~admissible),
         )
@@ -483,10 +477,13 @@ def safeguarded_bracketed_root(
         return next_carry, trace
 
     final, trace = lax.scan(scan_step, initial, None, length=max_steps)
-    bracketed = final.bracket.bracketed
+    bracketed = final.state.bracket.bracketed
     final_status = jnp.where(
-        final.status == ROOT_STATUS_RUNNING, ROOT_STATUS_MAX_STEPS, final.status
+        final.state.status == ROOT_STATUS_RUNNING,
+        ROOT_STATUS_MAX_STEPS,
+        final.state.status,
     ).astype(jnp.int32)
+    trace = trace._replace(status=trace.status.at[-1].set(final_status))
     root = jnp.where(bracketed, final.best_x, nan)
     residual = jnp.where(bracketed, final.best_fx, nan)
     n_evaluations = jnp.asarray(2, dtype=jnp.int32) + jnp.sum(
@@ -500,9 +497,53 @@ def safeguarded_bracketed_root(
         bracketed,
         n_evaluations,
         jnp.maximum(jnp.abs(bracket.f_lo), jnp.abs(bracket.f_hi)),
-        final.bracket,
+        final.state.bracket,
         trace,
     )
+
+
+def map_safeguarded_bracketed_root(
+    f: Callable[[Float[Array, ""], Any], Float[Array, ""]],
+    args: Any,
+    lo: Float[Array, " batch"],
+    hi: Float[Array, " batch"],
+    *,
+    max_steps: int,
+    atol: float | Float[Array, ""] = 0.0,
+    rtol: float | Float[Array, ""] = 1.0e-8,
+    safeguard_fraction: float | Float[Array, ""] = 0.1,
+    batch_size: int | None = None,
+) -> BracketedRootResult:
+    """Map independent scalar solves with physical per-lane control flow."""
+    lo = jnp.asarray(lo)
+    hi = jnp.asarray(hi)
+    if lo.ndim < 1 or hi.ndim < 1:
+        raise ValueError("lo and hi must have a leading batch dimension")
+    batch_length = lo.shape[0]
+    if hi.shape[0] != batch_length:
+        raise ValueError("lo and hi must have matching leading dimensions")
+    for leaf in jax.tree.leaves(args):
+        if not hasattr(leaf, "shape") or len(leaf.shape) < 1:
+            raise ValueError("every args leaf must have a leading batch dimension")
+        if leaf.shape[0] != batch_length:
+            raise ValueError("args, lo, and hi must have matching leading dimensions")
+
+    def solve(item):
+        arg, lower, upper = item
+        return safeguarded_bracketed_root(
+            lambda x: f(x, arg),
+            lower,
+            upper,
+            max_steps=max_steps,
+            atol=atol,
+            rtol=rtol,
+            safeguard_fraction=safeguard_fraction,
+        )
+
+    operands = (args, lo, hi)
+    if batch_size is None:
+        return lax.map(solve, operands)
+    return lax.map(solve, operands, batch_size=batch_size)
 
 
 def bracket_expand(

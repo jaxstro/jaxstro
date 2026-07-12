@@ -116,6 +116,7 @@ def test_safeguarded_rootfinding_public_surface_is_documented_and_executable() -
         "propose_bracketed",
         "advance_bracketed_root",
         "safeguarded_bracketed_root",
+        "map_safeguarded_bracketed_root",
     )
     text = _api_text()
 

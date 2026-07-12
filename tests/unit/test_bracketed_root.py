@@ -105,6 +105,7 @@ def test_terminal_statuses_are_explicit() -> None:
     assert exact_interior.status == rootfinding.ROOT_STATUS_EXACT_INTERIOR
     assert missing.status == rootfinding.ROOT_STATUS_MISSING_BRACKET
     assert exhausted.status == rootfinding.ROOT_STATUS_MAX_STEPS
+    assert exhausted.trace.status[-1] == rootfinding.ROOT_STATUS_MAX_STEPS
 
 
 def test_nonfinite_evaluation_has_distinct_status() -> None:
@@ -155,3 +156,40 @@ def test_serialization_complete_result_and_trace_fields() -> None:
         result.final_bracket.f_hi,
         result.final_bracket.bracketed,
     )
+
+
+def test_lax_map_batch_matches_scalar_solves_and_preserves_shapes() -> None:
+    targets = jnp.array([1.0, 2.0, 9.0], dtype=jnp.float64)
+    lo = jnp.zeros_like(targets)
+    hi = jnp.full_like(targets, 4.0)
+    mapped = rootfinding.map_safeguarded_bracketed_root(
+        lambda x, target: x * x - target,
+        targets,
+        lo,
+        hi,
+        max_steps=64,
+        atol=1.0e-12,
+        rtol=1.0e-12,
+        safeguard_fraction=0.1,
+    )
+    scalar = jax.tree.map(
+        lambda *xs: jnp.stack(xs),
+        *[
+            rootfinding.safeguarded_bracketed_root(
+                lambda x, target=target: x * x - target,
+                0.0,
+                4.0,
+                max_steps=64,
+                atol=1.0e-12,
+                rtol=1.0e-12,
+                safeguard_fraction=0.1,
+            )
+            for target in targets
+        ],
+    )
+
+    comparisons = jax.tree.map(
+        lambda x, y: jnp.array_equal(x, y, equal_nan=True), mapped, scalar
+    )
+    assert all(bool(value) for value in jax.tree.leaves(comparisons))
+    assert mapped.trace.proposal.shape == (3, 64)
