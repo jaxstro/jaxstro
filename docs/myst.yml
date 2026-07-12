@@ -116,6 +116,7 @@ project:
       children:
         - file: 90-development-log/index.md
         - file: 90-development-log/numerical-methods-roadmap.md
+        - file: 90-development-log/sota-assessment.md
     - title: Release notes
       children:
         - file: 95-release/index.md

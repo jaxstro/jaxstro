@@ -12,3 +12,7 @@ was made a year from now.
 
 Start with [](./numerical-methods-roadmap.md) for the chunked plan to grow
 `jaxstro.numerics` beyond the first B-spline slice.
+
+The current package and website priorities are in
+[](./sota-assessment.md). It separates delivered strengths from
+high-confidence gaps and ranks investments into Now, Next, and Later horizons.

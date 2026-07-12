@@ -1,6 +1,6 @@
 # jaxstro — status
 
-next: Hand the committed safeguarded value API to Gravax; downstream projects may opt into the separate certified implicit-root API only where its assumptions hold.
+next: Unify evidence-artifact infrastructure and design a generated JAX transform-contract matrix, the two highest-impact Now items in the package-wide SOTA assessment. Hand the committed safeguarded value API to Gravax; downstream projects may opt into the separate certified implicit-root API only where its assumptions hold.
 The Pages Node-action maintenance remains queued behind this numerics handoff.
 
 previous: Safeguarded scalar rootfinding and the separate finite power-law alpha=-1 correctness slice
