@@ -1,16 +1,16 @@
 # jaxstro — status
 
-next: Execute spectra-v1 Task 9 directly on main: implement the Sonora Diamondback adapter with
-explicit cloud/metallicity/C-O planes and canonical per-nm output.
+next: Execute spectra-v1 Task 10 directly on main: implement distinct TLUSTY OSTAR2002 and
+BSTAR2006 vturb=2/vturb=10 adapters with analytic H_nu conversion.
 
-previous: Spectra-v1 Task 8 completed on local main (2026-07-12). BOSZ product IDs now encode the
-atmosphere, resolution, and spectral product; query, catalog, artifact, and provenance must agree.
-Resampled F_lambda converts angstrom to nm and per-angstrom to per-nm exactly once (500 A -> 50 nm;
-[2.5,3.5,4.5] -> [25,35,45]). Original noresam H_lambda remains POLICY_NOT_VALIDATED without an
-explicit 4*pi path. Focused gate: 8 tests in 0.75 s (1.33 s wall); Ruff, format, mypy, and diff
-checks clean. Nothing has been pushed.
+previous: Spectra-v1 Task 9 completed on local main (2026-07-12). Sonora Diamondback product IDs
+separate cloud label, metallicity, and C/O planes. Processed micron wavelengths convert to nm and
+W m^-2 m^-1 flux converts to canonical per-nm CGS by 1e-6; the synthetic midpoint is
+[2.5,3.5,4.5]e-6. Released sampling changes only through the explicit SpectralPlan, and descending
+source grids are reversed without changing spectral pairing. Focused gate: 6 tests in 0.75 s
+(1.36 s wall); Ruff, format, mypy, and diff checks clean. Nothing has been pushed.
 
-blocker: None for spectra-v1 Task 9. Remote publication, tag/release, Pages configuration, and PyPI
+blocker: None for spectra-v1 Task 10. Remote publication, tag/release, Pages configuration, and PyPI
 remain outside this local feature branch and require separate authorization.
 due:
 

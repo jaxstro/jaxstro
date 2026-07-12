@@ -519,7 +519,7 @@ mypy, MyST.
 - Uses canonical factor `1e-6` from `W m^-2 m^-1` to
   `erg s^-1 cm^-2 nm^-1`.
 
-- [ ] **Step 1: Write failing artifact, product-plane, and conversion tests**
+- [x] **Step 1: Write failing artifact, product-plane, and conversion tests**
 
   Require `cloud_label` and `c_o` to be explicit query/product constraints.
   Verify that a spectrum with native value `2` becomes canonical value `2e-6`.
@@ -527,10 +527,10 @@ mypy, MyST.
   features; only the explicit `SpectralPlan` remapping policy may change the
   released sampling.
 
-- [ ] **Step 2: Verify RED**, implement Zarr/catalog loading and prepared output,
+- [x] **Step 2: Verify RED**, implement Zarr/catalog loading and prepared output,
   then verify readback and topology behavior.
 
-- [ ] **Step 3: Verify GREEN**
+- [x] **Step 3: Verify GREEN**
 
   ```bash
   env -u VIRTUAL_ENV uv run --no-sync --extra data pytest -q \
@@ -538,7 +538,7 @@ mypy, MyST.
     tests/validation/test_sonora_interpolation_policy.py
   ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
   ```bash
   git add src/jaxstro/atmospheres/sonora.py tests/unit/test_atmospheres_sonora.py \

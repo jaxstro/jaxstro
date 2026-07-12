@@ -47,7 +47,7 @@ from .newera import DEFAULT_NEWERA_CATALOG, DEFAULT_NEWERA_ZARR, NewEraBackend
 from .overlap import OverlapDiagnostic, validate_spectrum_overlap
 from .params import AtmosphereParams, AtmosphereQuery
 from .products import ArtifactReport, ProductDescriptor
-from .sonora import Sonora2024Metadata, parse_sonora_2024_filename
+from .sonora import Sonora2024Metadata, SonoraBackend, parse_sonora_2024_filename
 from .spectra import (
     STATUS_MISSING_ABUNDANCE,
     STATUS_OK,
@@ -244,6 +244,7 @@ __all__ = [
     "SpectrumResult",
     "SpectrumStatus",
     "Sonora2024Metadata",
+    "SonoraBackend",
     "TlustyFluxMetadata",
     "GridTopology",
     "TopologyKind",
