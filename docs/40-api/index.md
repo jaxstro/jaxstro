@@ -206,8 +206,9 @@ is [](../10-theory/interpolation.md).
 `regular_grid_interp(points, values, xi, boundary="clamp")` performs static-rank
 multilinear interpolation on a tensor-product grid. `bilinear_interp(...)` and
 `trilinear_interp(...)` are convenience wrappers. Grid axes occupy the leading
-dimensions of `values`; trailing dimensions are treated as vector-valued payloads.
-Boundary policy is explicit: clamp, fill, or reject. The method page is
+dimensions of `values`; every trailing dimension is a payload axis. Boundary
+policy is explicit: clamp, whole-payload fill, or eager reject. Value-dependent
+axis/query rejection is skipped while traced. The method page is
 [](../10-theory/regular-grid.md).
 
 ### `jaxstro.numerics.grids`

@@ -58,6 +58,21 @@ def test_regular_grid_interp_supports_vector_values():
     np.testing.assert_allclose(result, expected, atol=1e-12)
 
 
+def test_regular_grid_fill_supports_multiple_payload_axes():
+    x = jnp.array([0.0, 1.0])
+    y = jnp.array([0.0, 1.0])
+    values = jnp.arange(24.0).reshape(2, 2, 2, 3)
+    xi = jnp.array([[-0.5, 0.5], [0.5, 0.5]])
+
+    result = regular_grid.regular_grid_interp(
+        (x, y), values, xi, boundary="fill", fill_value=-99.0
+    )
+
+    assert result.shape == (2, 2, 3)
+    np.testing.assert_allclose(result[0], -99.0, atol=0.0)
+    np.testing.assert_allclose(result[1], jnp.mean(values, axis=(0, 1)), atol=1e-12)
+
+
 def test_regular_grid_boundary_policies_clamp_fill_and_reject():
     x = jnp.array([0.0, 1.0])
     y = jnp.array([0.0, 1.0])
@@ -103,6 +118,13 @@ def test_regular_grid_interp_is_jit_vmap_and_grad_compatible():
 
 
 def test_regular_grid_validation_rejects_invalid_inputs():
+    with pytest.raises(ValueError, match="1D arrays"):
+        regular_grid.regular_grid_interp(
+            (jnp.asarray(1.0),),
+            jnp.asarray([1.0]),
+            jnp.asarray([[1.0]]),
+        )
+
     with pytest.raises(ValueError, match="strictly increasing"):
         regular_grid.regular_grid_interp(
             (jnp.array([0.0, 0.0]),),

@@ -1,20 +1,21 @@
 # jaxstro — status
 
-next: Present the Slice C11d regular-grid page card for Anna's explicit approval. Do not edit
-`docs/10-theory/regular-grid.md` before that approval.
+next: Present the Slice C11e linear-algebra page card for Anna's explicit approval. Do not edit
+`docs/10-theory/linear-algebra.md` before that approval.
 
-previous: Slice C11c random-stream pedagogy and eager-boundary hardening completed locally
-(2026-07-11). The unchanged public resampler names now validate concrete inputs before private
-jitted kernels; empty/non-1D/negative/non-finite weights and nonpositive sample counts fail
-closed, while valid outer-jit calls and the documented nonempty all-zero fallback remain.
-The former placeholder is an executable key-ownership/resampling example with deterministic
-replay, exact residual counts, explicit `validation_only` boundaries, and primary JAX JEP 263
-and Douc-Cappe-Moulines sources. The focused 36-test gate passes in 1.97 s and the API/validation
-cross-page 46-test gate in 3.20 s; Ruff lint passes in 0.02 s, mypy in 0.49 s, strict MyST builds
-59 pages in 1.77 s, and static HTML renders in 3.91 s. Rendered `/random` has one contract-table
-ID, the executable code, both citations, and all three evidence routes. Nothing has been pushed.
+previous: Slice C11d regular-grid pedagogy and boundary hardening completed locally
+(2026-07-11). Whole-payload fill now broadcasts its outside mask across every trailing payload
+axis instead of silently mixing fill and interpolated rows; scalar axes fail with the public
+1D-axis `ValueError` rather than an accidental `IndexError`. The former placeholder is an
+executable affine-table lesson with generic/bilinear parity, boundary policies, five gradient
+contracts, and the primary Weiser-Zarantonello source. Its JaxtroViz figure measures one-hot
+corner weights and clamp/fill behavior through public APIs. Thirteen runtime/page/gradient tests
+pass in 2.49 s; 21 API/validation cross-page tests pass in 3.50 s; all 11 figure tests pass in
+16.83 s; Ruff and mypy pass; strict MyST builds 59 pages in 1.88 s and static HTML renders in
+4.60 s. Rendered `/regular-grid` has unique figure/table IDs, exact alt text, the built WebP,
+two DOI links, executable code, and three evidence routes. Nothing has been pushed.
 
-blocker: None for Slice C11d once Anna approves its website page card. Tag/release/PyPI remain
+blocker: None for Slice C11e once Anna approves its website page card. Tag/release/PyPI remain
 held on Anna's permanent package-name decision.
 due:
 

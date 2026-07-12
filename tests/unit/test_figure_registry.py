@@ -134,6 +134,31 @@ def test_interpolation_figure_is_registered_and_uses_public_results() -> None:
     assert {"Same monotone samples", "Step-by-step monotonicity"} <= labels
 
 
+def test_regular_grid_figure_is_registered_and_uses_public_results() -> None:
+    spec = FIGURES["regular-grid-contracts"]
+
+    assert spec.page == "10-theory/regular-grid.md"
+    assert spec.seed == 0
+    assert spec.site_path == "docs/10-theory/figures/regular-grid-contracts.webp"
+
+    from laboratory.jaxtroviz.regular_grid import regular_grid_results
+
+    query, weights, scan, clamped, filled = regular_grid_results()
+    assert query.shape == (2,)
+    assert weights.shape == (4,)
+    assert scan.shape == clamped.shape == filled.shape == (301,)
+    np.testing.assert_allclose(weights.sum(), 1.0, atol=1e-12)
+    np.testing.assert_allclose(weights, [0.245, 0.455, 0.105, 0.195], atol=1e-12)
+    assert np.all(np.isfinite(clamped))
+    assert np.all(filled[(scan < 0.0) | (scan > 1.0)] == -1.0)
+
+    labels = {
+        text.get_text()
+        for text in spec.builder().findobj(match=lambda item: hasattr(item, "get_text"))
+    }
+    assert {"Bilinear corner weights", "Boundary policies"} <= labels
+
+
 def test_architecture_webp_render_is_deterministic_and_committed() -> None:
     spec = FIGURES["jaxstro-foundation"]
     first = render_webp_bytes(spec.builder())
@@ -161,6 +186,7 @@ def test_cli_lists_and_checks_registered_figures(
     assert "spatial-neighbor-contracts" in listed
     assert "bspline-local-support" in listed
     assert "interpolation-shape-contracts" in listed
+    assert "regular-grid-contracts" in listed
 
     assert main(["--check"]) == 0
 

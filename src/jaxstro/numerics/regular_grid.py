@@ -89,9 +89,8 @@ def _regular_grid_interp_core(
         fill = jnp.asarray(fill_value, dtype=result.dtype)
         fill = jnp.broadcast_to(fill, payload_shape)
         fill = jnp.broadcast_to(fill, result.shape)
-        result = jnp.where(
-            outside[..., None] if payload_shape else outside, fill, result
-        )
+        outside_mask = jnp.reshape(outside, query_shape + (1,) * len(payload_shape))
+        result = jnp.where(outside_mask, fill, result)
 
     return result
 
@@ -165,6 +164,10 @@ def _validate_regular_grid_inputs(
             "regular_grid_interp values leading grid shape must match axes"
         )
 
+    for axis in axes:
+        if axis.ndim != 1:
+            raise ValueError("regular_grid_interp axes must be 1D arrays")
+
     leading_shape = values.shape[: len(axes)]
     expected_shape = tuple(axis.shape[0] for axis in axes)
     if leading_shape != expected_shape:
@@ -174,8 +177,6 @@ def _validate_regular_grid_inputs(
         )
 
     for axis in axes:
-        if axis.ndim != 1:
-            raise ValueError("regular_grid_interp axes must be 1D arrays")
         if axis.shape[0] < 2:
             raise ValueError("regular_grid_interp axes require at least two points")
         is_increasing = try_concrete_bool(jnp.all(jnp.diff(axis) > 0.0))

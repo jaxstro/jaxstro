@@ -14,7 +14,8 @@ the opposite direction.
 - `specs.py`: `PanelSpec`, `EncodingSpec`, `ExportSpec`, and registered
   `FigureSpec` contracts.
 - `style.py`: shared palette, axis polish, and PDF/PNG/WebP export.
-- `architecture.py`, `spatial.py`: one module per figure family.
+- `architecture.py`, `spatial.py`, and numerical-method modules: one module per
+  figure family.
 - `registry.py`: the only place figures are registered.
 - `cli.py`: list, render, and committed-WebP freshness checks.
 - `design/`: human-readable story, evidence, and acceptance specifications.
@@ -29,6 +30,7 @@ uv run --extra viz python -m laboratory.jaxtroviz --only jaxstro-foundation
 uv run --extra viz python -m laboratory.jaxtroviz --only spatial-neighbor-contracts
 uv run --extra viz python -m laboratory.jaxtroviz --only bspline-local-support
 uv run --extra viz python -m laboratory.jaxtroviz --only interpolation-shape-contracts
+uv run --extra viz python -m laboratory.jaxtroviz --only regular-grid-contracts
 uv run --extra viz python -m laboratory.jaxtroviz --check
 ```
 

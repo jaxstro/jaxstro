@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import shutil
 
 from .registry import FIGURES
 from .style import render_webp_bytes, save_figure_formats
@@ -57,7 +56,7 @@ def main(argv: list[str] | None = None) -> int:
         ):
             print(f"wrote {path}")
         spec.site_webp.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(spec.output_stem.with_suffix(".webp"), spec.site_webp)
+        spec.site_webp.write_bytes(render_webp_bytes(spec.builder(), spec=spec.export))
         print(f"wrote {spec.site_webp}  (site embed)")
     return 0
 

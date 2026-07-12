@@ -5,6 +5,7 @@ from __future__ import annotations
 from .architecture import build_jaxstro_foundation
 from .bsplines import build_bspline_local_support
 from .interpolation import build_interpolation_shape_contracts
+from .regular_grid import build_regular_grid_contracts
 from .spatial import build_spatial_neighbor_contracts
 from .specs import ExportSpec, FigureSpec
 
@@ -65,6 +66,20 @@ FIGURES: dict[str, FigureSpec] = {
                 "samples, with stepwise monotonicity measured from public APIs."
             ),
             tags=("interpolation", "pchip", "pedagogy"),
+            export=ExportSpec(width=9.4, height=4.3),
+        ),
+        FigureSpec(
+            name="regular-grid-contracts",
+            builder=build_regular_grid_contracts,
+            stem="regular-grid-contracts",
+            page="10-theory/regular-grid.md",
+            site_path="docs/10-theory/figures/regular-grid-contracts.webp",
+            seed=0,
+            caption=(
+                "Bilinear corner weights and clamp/fill boundary behavior "
+                "measured from public interpolation APIs."
+            ),
+            tags=("regular-grid", "interpolation", "pedagogy"),
             export=ExportSpec(width=9.4, height=4.3),
         ),
     ]
