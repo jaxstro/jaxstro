@@ -80,6 +80,25 @@ def test_zero_slope_returns_nan_value_and_gradient() -> None:
     assert jnp.isnan(jax.grad(solve)(theta))
 
 
+@pytest.mark.parametrize("floor", [0.0, -1.0, jnp.nan])
+def test_invalid_slope_floor_fails_closed_under_jit_and_grad(floor) -> None:
+    def solve(theta, slope_floor):
+        return _solve(
+            lambda x, t: (x - t) ** 3,
+            theta,
+            slope_floor=slope_floor,
+        )
+
+    theta = jnp.asarray(2.0)
+    result = jax.jit(solve)(theta, jnp.asarray(floor))
+    gradient = jax.grad(lambda value: solve(value, jnp.asarray(floor)).root)(theta)
+
+    assert result.status == rootfinding.DERIVATIVE_STATUS_SLOPE_ILL_CONDITIONED
+    assert not result.certified
+    assert jnp.isnan(result.root)
+    assert jnp.isnan(gradient)
+
+
 def test_certified_jaxpr_contains_custom_root_but_no_while() -> None:
     def solve(theta):
         return _solve(lambda x, t: x - t, theta).root

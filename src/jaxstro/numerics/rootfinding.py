@@ -439,7 +439,9 @@ def safeguarded_bracketed_root(
     width_certified = bracket.bracketed & (bracket.hi - bracket.lo <= initial_tolerance)
     root_state = initialize_bracketed_root_state(bracket)
     initial_status = jnp.where(
-        width_certified, ROOT_STATUS_WIDTH_CONVERGED, root_state.status
+        width_certified & (root_state.status == ROOT_STATUS_RUNNING),
+        ROOT_STATUS_WIDTH_CONVERGED,
+        root_state.status,
     )
     root_state = BracketedRootState(
         root_state.bracket, root_state.history, initial_status.astype(jnp.int32)
@@ -626,7 +628,8 @@ def implicit_bracketed_root(
     def tangent_solve(g, y):
         slope = g(jnp.ones_like(y))
         floor = jnp.asarray(derivative_slope_floor, dtype=slope.dtype)
-        safe_slope = jnp.where(jnp.abs(slope) >= floor, slope, 1.0)
+        floor_valid = jnp.isfinite(floor) & (floor > 0.0)
+        safe_slope = jnp.where(floor_valid & (jnp.abs(slope) >= floor), slope, 1.0)
         return y / safe_slope
 
     initial_guess = 0.5 * jnp.asarray(lo) + 0.5 * jnp.asarray(hi)

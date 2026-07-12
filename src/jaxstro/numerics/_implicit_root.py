@@ -74,7 +74,8 @@ def _build_implicit_certificate(
         jnp.isfinite(primal.root) & jnp.isfinite(primal.residual) & jnp.isfinite(slope)
     )
     residual_ok = jnp.abs(primal.residual) <= residual_limit
-    slope_ok = jnp.abs(slope) >= slope_floor
+    slope_floor_valid = jnp.isfinite(slope_floor) & (slope_floor > 0.0)
+    slope_ok = slope_floor_valid & (jnp.abs(slope) >= slope_floor)
     width = primal.final_bracket.hi - primal.final_bracket.lo
     width_ok = width <= width_limit
     certified = (

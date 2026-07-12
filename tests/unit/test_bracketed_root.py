@@ -109,6 +109,21 @@ def test_terminal_statuses_are_explicit() -> None:
     assert exhausted.trace.status[-1] == rootfinding.ROOT_STATUS_MAX_STEPS
 
 
+@pytest.mark.parametrize(
+    ("f", "expected"),
+    [
+        (lambda x: x, rootfinding.ROOT_STATUS_EXACT_LO),
+        (lambda x: x - 2.0, rootfinding.ROOT_STATUS_EXACT_HI),
+    ],
+)
+def test_exact_endpoint_status_precedes_loose_width_tolerance(f, expected) -> None:
+    result = rootfinding.safeguarded_bracketed_root(
+        f, 0.0, 2.0, max_steps=2, atol=3.0, rtol=0.0
+    )
+
+    assert result.status == expected
+
+
 def test_nonfinite_evaluation_has_distinct_status() -> None:
     def f(x):
         return jnp.where((x > 0.0) & (x < 2.0), jnp.nan, x - 1.0)
