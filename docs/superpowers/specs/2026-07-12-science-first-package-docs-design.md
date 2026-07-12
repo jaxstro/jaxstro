@@ -63,6 +63,36 @@ capabilities:
 A compact “science enabled” section will link equations and scientific tasks to
 the relevant module chapters and evidence anchors.
 
+### How to learn with Jaxstro: predict, compute, audit
+
+Add a first-class Getting Started page titled **How to learn with Jaxstro:
+predict, compute, audit**. This is the clearest framing for the primary audience:
+research students and students in computational-science courses. It is more
+actionable than a generic “Why this matters” page and less inward-looking than
+“Why the documentation is designed this way.”
+
+The page explains the site's recurring reasoning cycle:
+
+1. **Predict** the mathematical behavior before execution: units, signs,
+   limiting cases, invariants, conditioning, likely failure modes, and whether a
+   derivative should exist.
+2. **Compute** with an explicit method whose tolerances, branches, shapes, and
+   telemetry are visible rather than hidden behind a plausible scalar answer.
+3. **Audit** the result against analytic identities, independent numerical
+   checks, convergence behavior, provenance, and the exact boundary of the
+   method's scientific claim.
+
+The page must explain why the order matters. Prediction prevents post-hoc
+storytelling; computation connects equations to an executed algorithm; audit
+distinguishes a reproducible result from a merely finite output. It must also
+show that the cycle is iterative: a failed audit changes the model, method,
+tolerance, or claim and begins a new prediction.
+
+Use one compact rootfinding example and one smooth-distribution limiting example
+to demonstrate the cycle. Link each stage to theory, API, and validation pages.
+The page becomes the curriculum bridge from installation to the module chapters
+and supplies a reusable callout pattern for later lessons.
+
 ### Science-enabled patterns page
 
 Add one cross-cutting page organized by scientific pattern rather than module:
@@ -126,6 +156,11 @@ The first curriculum-quality reference chapter is scalar root finding. It will
 teach robust forward solves, telemetry, cost masking, exact-root precedence,
 and the difference between differentiating an algorithm and applying the
 implicit function theorem under a certificate.
+
+Every substantial module chapter should use the three labels consistently when
+an activity is present. The labels describe epistemic work, not interface steps:
+students must state an expectation, inspect the executed numerical map, and
+decide what the evidence warrants claiming.
 
 ## Rootfinding science examples
 
