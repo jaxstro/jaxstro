@@ -38,9 +38,10 @@ Defer PEP 420 namespace consolidation.**
    by ADR-0012.
 2. Revisit the namespace choice before the first PyPI release expected to acquire
    external dependants—not at an undefined future maturity milestone.
-3. Do not upload the core package until the permanent `jaxstro` versus
-   `jaxstro-core` naming decision is settled, so the first public name does not
-   foreclose a future umbrella namespace.
+3. Use **`jaxstro`** as the permanent core distribution and import name. At
+   release staging on 2026-07-12, Anna selected `jaxstro` and rejected a rename
+   to `jaxstro-core`. A future umbrella must use a different name rather than
+   repurposing the established core identity.
 
 ## Rationale
 
@@ -54,6 +55,6 @@ Defer PEP 420 namespace consolidation.**
 
 ## Notes
 
-This decision defers namespace consolidation with an explicit revisit trigger. It
-does not authorize a PyPI upload; release remains blocked on the permanent naming
-decision.
+This decision defers namespace consolidation with an explicit revisit trigger and
+resolves the distribution name as `jaxstro`. It does not authorize a PyPI upload;
+that remains a separate explicit release action.

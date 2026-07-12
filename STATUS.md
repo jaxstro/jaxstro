@@ -1,7 +1,7 @@
 # jaxstro — status
 
-next: Stop for separate authorization before push, Pages configuration/deployment, tagging,
-archives, or package-index publication. Settle the permanent distribution name before PyPI.
+next: Publish verified main, configure GitHub Pages for Actions, and verify the live site. The
+permanent distribution name is jaxstro; tagging, archives, and package-index publication wait.
 
 previous: Spectra-v1 completed on local main (2026-07-12). Real-artifact holdouts accept
 positive-log interpolation for NewEra and linear interpolation for representative BOSZ/OSTAR;

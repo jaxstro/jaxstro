@@ -13,16 +13,18 @@ change, Zenodo deposit, or PyPI upload.
 
 ## 1. Permanent identity — hard stop
 
-- [ ] Anna has settled **jaxstro vs jaxstro-core** as the permanent distribution
-  name after checking PyPI ownership and the ecosystem import/package contract.
-- [ ] The chosen distribution name agrees across `pyproject.toml`, wheel/sdist
+- [x] Anna settled **jaxstro vs jaxstro-core** on 2026-07-12: the permanent
+  distribution and import name is **`jaxstro`**; `jaxstro-core` is rejected.
+- [x] The chosen distribution name agrees across `pyproject.toml`, wheel/sdist
   names, installation documentation, release notes, and downstream constraints.
-- [ ] No test upload or production upload has occurred before that decision.
+- [x] No test upload or production upload occurred before that decision.
+- [ ] PyPI project ownership and publication metadata are verified immediately
+  before the later, separately authorized upload.
 
 **Stop gate:** every PyPI operation requires Anna's separate, explicit
 authorization. PyPI names and published artifacts cannot be treated like a local
-draft. The progenax publication path remains blocked until jaxstro's permanent
-name and first compatible release are settled.
+draft. The progenax publication path remains blocked until jaxstro's first
+compatible release is published through that later authorized process.
 
 ## 2. Version, history, and scientific evidence
 
