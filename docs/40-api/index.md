@@ -199,7 +199,11 @@ exports `BracketState`, `BracketProposal`, `RootTrace`, `BracketedRootResult`,
 `initialize_bracket`, `update_bracket`, `propose_bracketed`, and
 `safeguarded_bracketed_root`, with deterministic `PROPOSAL_NONE`,
 `PROPOSAL_SECANT`, `PROPOSAL_MIDPOINT`, `PROPOSAL_LO_ENDPOINT`, and
-`PROPOSAL_HI_ENDPOINT` identifiers. It exposes fixed-shape evidence and typed
+`PROPOSAL_HI_ENDPOINT` identifiers. Terminal status identifiers are
+`ROOT_STATUS_RUNNING`, `ROOT_STATUS_EXACT_LO`, `ROOT_STATUS_EXACT_HI`,
+`ROOT_STATUS_EXACT_INTERIOR`, `ROOT_STATUS_WIDTH_CONVERGED`,
+`ROOT_STATUS_MISSING_BRACKET`, `ROOT_STATUS_NONFINITE_EVALUATION`, and
+`ROOT_STATUS_MAX_STEPS`. It exposes fixed-shape evidence and typed
 failure state but makes no implicit-root derivative claim. Behavior, field
 definitions, and differentiability caveats are in [](../10-theory/rootfinding.md).
 
@@ -223,9 +227,9 @@ safeguarded_bracketed_root(
 `BracketProposal` fields are `x`, `kind`, and `safeguarded`; the last field is
 true exactly when midpoint fallback replaced a rejected secant. `RootTrace`
 fields are `proposal`, `residual`, `lo`, `hi`, `f_lo`, `f_hi`,
-`proposal_kind`, `executed`, `admissible`, and `converged`.
-`BracketedRootResult` fields are `root`, `residual`, `converged`, `bracketed`,
-`n_evaluations`, and `trace`.
+`proposal_kind`, `executed`, `admissible`, `converged`, and `status`.
+`BracketedRootResult` fields are `root`, `residual`, `status`, `converged`,
+`bracketed`, `n_evaluations`, `residual_scale`, `final_bracket`, and `trace`.
 
 ### `jaxstro.numerics.interpolation`
 

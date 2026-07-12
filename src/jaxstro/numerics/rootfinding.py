@@ -38,6 +38,15 @@ PROPOSAL_MIDPOINT = 2
 PROPOSAL_LO_ENDPOINT = 3
 PROPOSAL_HI_ENDPOINT = 4
 
+ROOT_STATUS_RUNNING = 0
+ROOT_STATUS_EXACT_LO = 1
+ROOT_STATUS_EXACT_HI = 2
+ROOT_STATUS_EXACT_INTERIOR = 3
+ROOT_STATUS_WIDTH_CONVERGED = 4
+ROOT_STATUS_MISSING_BRACKET = 5
+ROOT_STATUS_NONFINITE_EVALUATION = 6
+ROOT_STATUS_MAX_STEPS = 7
+
 
 class BracketState(NamedTuple):
     """True endpoint evidence for a scalar sign-changing bracket."""
@@ -70,6 +79,7 @@ class RootTrace(NamedTuple):
     executed: Array
     admissible: Array
     converged: Array
+    status: Array
 
 
 class BracketedRootResult(NamedTuple):
@@ -77,9 +87,12 @@ class BracketedRootResult(NamedTuple):
 
     root: Float[Array, ""]
     residual: Float[Array, ""]
+    status: Array
     converged: Array
     bracketed: Array
     n_evaluations: Array
+    residual_scale: Float[Array, ""]
+    final_bracket: BracketState
     trace: RootTrace
 
 
@@ -87,6 +100,7 @@ class _RootCarry(NamedTuple):
     bracket: BracketState
     best_x: Float[Array, ""]
     best_fx: Float[Array, ""]
+    status: Array
     converged: Array
     exhausted: Array
 
@@ -262,10 +276,22 @@ def safeguarded_bracketed_root(
     endpoint_root = bracket.bracketed & (best_fx == 0.0)
     initial_tolerance = atol + rtol * jnp.abs(best_x)
     width_certified = bracket.bracketed & (bracket.hi - bracket.lo <= initial_tolerance)
+    lo_root = bracket.bracketed & (bracket.f_lo == 0.0)
+    hi_root = bracket.bracketed & ~lo_root & (bracket.f_hi == 0.0)
+    initial_status = jnp.asarray(ROOT_STATUS_RUNNING, dtype=jnp.int32)
+    initial_status = jnp.where(
+        ~bracket.bracketed, ROOT_STATUS_MISSING_BRACKET, initial_status
+    )
+    initial_status = jnp.where(
+        width_certified, ROOT_STATUS_WIDTH_CONVERGED, initial_status
+    )
+    initial_status = jnp.where(hi_root, ROOT_STATUS_EXACT_HI, initial_status)
+    initial_status = jnp.where(lo_root, ROOT_STATUS_EXACT_LO, initial_status)
     initial = _RootCarry(
         bracket,
         best_x,
         best_fx,
+        initial_status,
         endpoint_root | width_certified,
         jnp.asarray(False, dtype=bool),
     )
@@ -290,11 +316,21 @@ def safeguarded_bracketed_root(
         best_fx_new = jnp.where(hi_is_better, updated.f_hi, updated.f_lo)
         tolerance = atol + rtol * jnp.abs(best_x_new)
         width_converged = admissible & (updated.hi - updated.lo <= tolerance)
-        converged_now = active & ((admissible & (fx == 0.0)) | width_converged)
+        exact_interior = active & admissible & (fx == 0.0)
+        converged_now = exact_interior | (active & width_converged)
+        status = carry.status
+        status = jnp.where(
+            active & ~admissible, ROOT_STATUS_NONFINITE_EVALUATION, status
+        )
+        status = jnp.where(
+            active & width_converged, ROOT_STATUS_WIDTH_CONVERGED, status
+        )
+        status = jnp.where(exact_interior, ROOT_STATUS_EXACT_INTERIOR, status)
         next_carry = _RootCarry(
             updated,
             best_x_new,
             best_fx_new,
+            status,
             carry.converged | converged_now,
             carry.exhausted | (executed & ~admissible),
         )
@@ -319,11 +355,15 @@ def safeguarded_bracketed_root(
             executed,
             admissible,
             converged_now,
+            status,
         )
         return next_carry, trace
 
     final, trace = lax.scan(scan_step, initial, None, length=max_steps)
     bracketed = final.bracket.bracketed
+    final_status = jnp.where(
+        final.status == ROOT_STATUS_RUNNING, ROOT_STATUS_MAX_STEPS, final.status
+    ).astype(jnp.int32)
     root = jnp.where(bracketed, final.best_x, nan)
     residual = jnp.where(bracketed, final.best_fx, nan)
     n_evaluations = jnp.asarray(2, dtype=jnp.int32) + jnp.sum(
@@ -332,9 +372,12 @@ def safeguarded_bracketed_root(
     return BracketedRootResult(
         root,
         residual,
+        final_status,
         final.converged,
         bracketed,
         n_evaluations,
+        jnp.maximum(jnp.abs(bracket.f_lo), jnp.abs(bracket.f_hi)),
+        final.bracket,
         trace,
     )
 
