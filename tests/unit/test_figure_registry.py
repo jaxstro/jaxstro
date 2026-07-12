@@ -276,6 +276,11 @@ def test_root_trace_figure_is_registered_and_uses_public_telemetry() -> None:
     assert np.all(
         np.asarray(result.trace.lo)[executed] <= np.asarray(result.trace.hi)[executed]
     )
+    f_lo = np.asarray(result.trace.f_lo)[executed]
+    f_hi = np.asarray(result.trace.f_hi)[executed]
+    assert np.all(
+        (f_lo == 0.0) | (f_hi == 0.0) | (np.signbit(f_lo) != np.signbit(f_hi))
+    )
 
 
 def test_value_versus_ift_figure_uses_certified_and_rejected_results() -> None:

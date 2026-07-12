@@ -163,7 +163,7 @@ def build_rootfinding_safeguards() -> Figure:
     ax.set(
         xlabel="Executed iteration",
         ylabel="Coordinate / width",
-        title="Bracket evidence contracts",
+        title="Stored interval contraction",
     )
     ax.text(
         0.03,

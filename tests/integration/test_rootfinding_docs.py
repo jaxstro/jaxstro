@@ -63,3 +63,13 @@ def test_rootfinding_metric_table_matches_generated_quadratic_evidence() -> None
         "fd_derivative",
     ):
         assert str(quadratic[metric]["value"]) in text
+
+
+def test_rootfinding_derivative_guidance_separates_executed_and_implicit_maps() -> None:
+    text = ROOTFINDING.read_text(encoding="utf-8")
+
+    assert "sensitivity of its smooth finite executed iteration" in text
+    assert "unique smooth mathematical root" in text
+    assert "not a generic implicit-root" in text
+    assert "opposite-sign endpoint" in text
+    assert "invariant is checked" in text

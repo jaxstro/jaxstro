@@ -83,9 +83,12 @@ root derivative.
 
 :::{warning} Do not differentiate a bisection root w.r.t. function parameters
 If you need $\partial x^\star/\partial\theta$ for a parameter $\theta$ inside $f$,
-`bisect` will hand you zeros, not an error. Use `newton` or `newton_ppf` instead —
-their iterates are smooth functions of the residual and its derivative, so the
-gradient flows. Reserve `bracket_expand` and `bisect` for forward solve
+`bisect` can hand you zeros, not an error. Use `newton` only when you want the
+sensitivity of its smooth finite executed iteration. Use
+`implicit_bracketed_root` when the scientific target is the derivative of a
+unique smooth mathematical root and its validation gates pass. `newton_ppf` is
+a specialized inverse-CDF construction, not a generic implicit-root
+certificate. Reserve `bracket_expand` and `bisect` for forward solve
 reliability, initialization, and validation masks.
 :::
 
@@ -192,10 +195,11 @@ assert result.converged
 :alt: Two-panel safeguarded root trace showing circle IQI, square secant, and triangle midpoint proposals on a quadratic residual and solid lower endpoint, dashed upper endpoint, and dotted bracket width across executed iterations
 
 Both panels are computed from the public solver and its fixed-shape trace. The
-left panel shows which selected proposals were evaluated; the right shows that
-the true sign bracket contracts without being discarded. This fixture
-demonstrates bracket preservation and auditable telemetry, not universal speed
-for every residual.
+left panel shows which selected proposals were evaluated; the right shows the
+stored interval endpoints and width contracting. The opposite-sign endpoint
+invariant is checked from the traced endpoint residuals in the figure test, but
+is not encoded as another curve. This fixture demonstrates auditable interval
+telemetry, not universal speed for every residual.
 :::
 
 The reproducible evaluation-count and warm-timing comparison with fixed-count
