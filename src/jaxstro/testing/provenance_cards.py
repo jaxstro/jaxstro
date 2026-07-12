@@ -6,6 +6,7 @@ and YAML parsing belong to repository or application tooling rather than this mo
 
 from __future__ import annotations
 
+import html
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -194,6 +195,11 @@ def _as_card(card: Mapping[str, object] | ProvenanceCard) -> ProvenanceCard:
     return card if isinstance(card, ProvenanceCard) else validate_card(card)
 
 
+def _render_reference(reference: str) -> str:
+    """Escape a registry source reference for an HTML link target."""
+    return html.escape(reference, quote=True)
+
+
 def render_card(card: Mapping[str, object] | ProvenanceCard) -> str:
     """Render one validated card as deterministic MyST Markdown."""
 
@@ -219,8 +225,9 @@ def render_card(card: Mapping[str, object] | ProvenanceCard) -> str:
 
     lines.extend(["", "### Sources", ""])
     for source in item.sources:
+        reference = _render_reference(source.reference)
         lines.append(
-            f"- [source]({source.reference}) — {source.supports}. "
+            f'- <a href="{reference}">source</a> — {source.supports}. '
             f"*Locator:* `{source.locator}`"
         )
     if not item.sources:

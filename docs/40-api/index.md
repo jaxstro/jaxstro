@@ -109,13 +109,21 @@ schedule.
   - **Implemented.** See
     [](../30-decisions/0009-jaxstro-params-selective-inference.md).
 * - `jaxstro.atmospheres`
-  - Catalog discovery, prepared spectra, NewEra/BOSZ runtime backends, and
-    source-preserving Sonora/TLUSTY conversion metadata.
+  - Catalog discovery, exact-product adapters, topology preparation, and
+    structured scientific outcomes for NewEra, BOSZ, Sonora, and TLUSTY.
   - Catalog selection and artifact loading are host-side; prepared interpolation
-    is JAX-side only where a runtime backend exists.
-  - **Atmosphere support is in progress.** See
+    is JAX-side only where an interpolation policy has passed its evidence gate.
+  - **Implemented with explicit policy gaps.** See
     [](../20-architecture/atmosphere-capabilities.md) and the
     [atmosphere cards](./provenance/atmospheres.md).
+* - `jaxstro.spectra`
+  - Generic spectral axes, semantics, provenance, transformations, resampling,
+    statuses, and prepared rectilinear/simplex stencils.
+  - Fixed-shape array evaluation supports JAX transforms; product selection,
+    artifact I/O, and topology changes remain host-side.
+  - **Canonical spectral owner.** See
+    [](../20-architecture/spectra-data-architecture.md) and
+    [](../60-validation/index.md).
 * - `jaxstro.testing`
   - Gradient audits, finite-difference diagnostics, evidence reports, numeric
     ratchets, and provenance-card validation/rendering.
@@ -360,20 +368,38 @@ module map.
 
 ### `jaxstro.atmospheres`
 
-`jaxstro.atmospheres` exposes the shared foundation boundary
-`AtmosphereParams -> SpectrumResult`. `AtmosphereLibrary` ranks local catalog
-coverage without hiding provenance or pretending artifact-only data have runtime
-backends. Host-side backends currently open processed NewEra and BOSZ artifacts.
-Sonora and TLUSTY are processed and validated locally, but their runtime backends
-are intentionally separate follow-up work because each needs an explicit
-interpolation and unit policy.
+`AtmosphereParams` names physical grid coordinates. `AtmosphereQuery` combines
+those coordinates with an exact `product_id`, a fixed `SpectralPlan`, and the
+requested parameter plane. `AtmosphereLibrary.from_local(...)` discovers local
+artifacts; `prepare(query)` returns a `PreparationResult` containing either a
+filesystem-free `PreparedAtmosphere` or a structured `SpectrumStatusCode`.
 
-`PreparedSpectralGrid` carries an already-loaded wavelength grid and corner
-spectra for JAX-side bilinear interpolation over `teff` and `logg` at one exact
-abundance plane. Coverage reporting, source-preserving Sonora/TLUSTY converters,
-and overlap diagnostics stay host-side. The dataset matrix is in
-[](../20-architecture/atmosphere-capabilities.md); the runtime and downstream
-ownership boundary is in [](../20-architecture/spectra-data-architecture.md).
+`AtmosphereAdapterRegistry` routes exact products to `NewEraBackend`,
+`BoszBackend`, `SonoraBackend`, or `TlustyBackend`. `ProductDescriptor` records
+the topology and evidence-selected interpolation policy; `ArtifactReport`
+records artifact validity and identity. Sonora and BSTAR adapters are present
+but fail closed with `POLICY_NOT_VALIDATED` through the registry. OSTAR product
+IDs are composition-scoped, as are the six BSTAR `vturb=2` and eleven BSTAR
+`vturb=10` standard/CN products.
+
+### `jaxstro.spectra`
+
+`SpectralAxis` records coordinate, unit, point/bin sampling, optional edges, and
+resolving power. `Spectrum` pairs an axis with explicit `SpectralSemantic` and
+mandatory `SpectrumProvenance`. `SpectralPlan` declares the fixed output axis
+and resampling method. `SpectrumResult`, `SpectrumStatus`, and
+`SpectrumStatusCode` keep expected scientific gaps array-compatible.
+
+`convert_spectrum(...)`, `resample_spectrum(...)`, and the wavelength/frequency
+transforms preserve explicit density semantics. `PreparedRectilinearStencil`
+and `PreparedSimplexStencil` evaluate fixed host-selected topologies with an
+evidence-selected `FluxInterpolation` policy. There is no
+`jaxstro.atmospheres.spectra` compatibility alias.
+
+The dataset matrix is in
+[](../20-architecture/atmosphere-capabilities.md), the ownership and physical
+semantics are in [](../20-architecture/spectra-data-architecture.md), and the
+request recipe is in [](../50-howto/query-atmosphere-spectra.md).
 
 ### `jaxstro.testing`
 

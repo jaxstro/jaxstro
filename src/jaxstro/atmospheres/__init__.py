@@ -48,16 +48,6 @@ from .overlap import OverlapDiagnostic, validate_spectrum_overlap
 from .params import AtmosphereParams, AtmosphereQuery
 from .products import ArtifactReport, ProductDescriptor
 from .sonora import Sonora2024Metadata, SonoraBackend, parse_sonora_2024_filename
-from .spectra import (
-    STATUS_MISSING_ABUNDANCE,
-    STATUS_OK,
-    STATUS_OUT_OF_GRID,
-    AtmosphereBackend,
-    PreparedSpectralGrid,
-    Spectrum,
-    SpectrumResult,
-    SpectrumStatus,
-)
 from .tlusty import (
     TlustyBackend,
     TlustyFluxMetadata,
@@ -217,10 +207,6 @@ __all__ = [
     "BOSZ_2025_RECOMPUTED_NOTE",
     "DEFAULT_BOSZ_CATALOG",
     "DEFAULT_BOSZ_ZARR",
-    "STATUS_MISSING_ABUNDANCE",
-    "STATUS_OK",
-    "STATUS_OUT_OF_GRID",
-    "AtmosphereBackend",
     "AtmosphereAdapter",
     "AtmosphereAdapterRegistry",
     "AtmosphereCatalogCoverage",
@@ -243,11 +229,7 @@ __all__ = [
     "OverlapDiagnostic",
     "PreparationResult",
     "PreparedAtmosphere",
-    "PreparedSpectralGrid",
     "ProductDescriptor",
-    "Spectrum",
-    "SpectrumResult",
-    "SpectrumStatus",
     "Sonora2024Metadata",
     "SonoraBackend",
     "TlustyFluxMetadata",

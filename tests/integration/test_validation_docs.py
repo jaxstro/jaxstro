@@ -40,7 +40,7 @@ def test_validation_page_covers_current_cross_cutting_contracts() -> None:
         "exact fixed-radius pairs",
         "implemented quantity layer",
         "provenance-card registry",
-        "Atmospheres remain in progress",
+        "Sonora and BSTAR remain `POLICY_NOT_VALIDATED`",
     )
     for claim in required_claims:
         assert claim in text

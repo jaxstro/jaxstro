@@ -204,13 +204,13 @@ def test_spectra_runtime_figure_is_registered_and_uses_public_results() -> None:
 
     from laboratory.jaxtroviz.spectra import spectra_runtime_results
 
-    midpoint_flux, midpoint_code, outside_code, wrong_plane_code, local_slope = (
+    midpoint_flux, midpoint_code, outside_code, batch_shape, local_slope = (
         spectra_runtime_results()
     )
     np.testing.assert_allclose(midpoint_flux, [2.5, 3.5, 4.5], atol=1e-12)
     assert midpoint_code == 0
-    assert outside_code == 1
-    assert wrong_plane_code == 2
+    assert outside_code == 4
+    assert batch_shape == (2, 3)
     assert local_slope == pytest.approx(0.002)
 
     labels = {
@@ -219,8 +219,8 @@ def test_spectra_runtime_figure_is_registered_and_uses_public_results() -> None:
     }
     assert {
         "Host preparation",
-        "Prepared JAX grid",
-        "Downstream package",
+        "Prepared JAX stencil",
+        "Fluxax + domain package",
         "local files → arrays",
         "arrays → raw spectrum",
         "spectrum → observable",

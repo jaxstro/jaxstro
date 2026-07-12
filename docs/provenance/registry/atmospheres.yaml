@@ -29,7 +29,7 @@
     - "tests/validation/provenance_cards/test_atmosphere_spectra_sources.py::test_newera_and_bosz_canonical_flux_conversions_are_explicit"
   status: verified
   deviations:
-    - "The current backend preserves source values; the canonical 1e3 conversion is enforced by the spectra-v1 implementation gate before runtime enablement."
+    - "The runtime adapter applies the canonical 1e3 conversion before parameter interpolation."
 
 - id: bosz-2025-recomputed
   title: BOSZ 2025-recomputed 2024-format spectra
@@ -89,7 +89,7 @@
       locator: "Morley et al. (2024), model grid and published spectra description"
       supports: "the Diamondback family and parameter-domain identity"
   code_refs:
-    - "src/jaxstro/atmospheres/sonora.py::parse_sonora_2024_filename"
+    - "src/jaxstro/atmospheres/sonora.py::SonoraBackend"
   validation:
     - "tests/validation/provenance_cards/test_atmosphere_spectra_sources.py::test_sonora_source_inconsistency_and_conversion_are_explicit"
   status: verified
@@ -119,12 +119,12 @@
       locator: "Lanz & Hubeny (2003), Sect. 6 and footnote 6: stellar-surface flux F_nu=4*pi*H_nu"
       supports: "the Eddington-to-surface-flux conversion"
   code_refs:
-    - "src/jaxstro/atmospheres/tlusty.py::parse_tlusty_flux_filename"
+    - "src/jaxstro/atmospheres/tlusty.py::TlustyBackend"
   validation:
     - "tests/validation/provenance_cards/test_atmosphere_spectra_sources.py::test_tlusty_eddington_flux_conversion_is_explicit"
   status: verified
   deviations:
-    - "The processed artifact preserves H_nu; the spectra-v1 adapter owns the 4*pi and density-coordinate conversions."
+    - "The processed artifact preserves H_nu; the runtime adapter mean-coalesces duplicate published frequencies, then owns the 4*pi and density-coordinate conversions."
 
 - id: tlusty-bstar2006
   title: TLUSTY BSTAR2006 spectral energy distributions
@@ -149,9 +149,9 @@
       locator: "Lanz & Hubeny (2007), grid description and footnote 6: stellar-surface flux F_nu=4*pi*H_nu"
       supports: "the Eddington-to-surface-flux conversion and C/N product meaning"
   code_refs:
-    - "src/jaxstro/atmospheres/tlusty.py::parse_tlusty_flux_filename"
+    - "src/jaxstro/atmospheres/tlusty.py::TlustyBackend"
   validation:
     - "tests/validation/provenance_cards/test_atmosphere_spectra_sources.py::test_tlusty_eddington_flux_conversion_is_explicit"
   status: verified
   deviations:
-    - "The processed artifact preserves H_nu; the spectra-v1 adapter owns the 4*pi and density-coordinate conversions."
+    - "The processed artifact preserves H_nu; the runtime adapter mean-coalesces duplicate published frequencies, then owns the 4*pi and density-coordinate conversions."

@@ -7,7 +7,7 @@ from typing import Any
 
 import numpy as np
 
-from .spectra import Spectrum
+from jaxstro.spectra import SpectralCoordinate, Spectrum
 
 
 @dataclass(frozen=True)
@@ -38,10 +38,15 @@ def validate_spectrum_overlap(
     This is intentionally not a strict physical-equality test across atmosphere
     model families.
     """
-    left_wave_nm = _wavelength_to_nm(left.wavelength, left.wavelength_unit)
-    right_wave_nm = _wavelength_to_nm(right.wavelength, right.wavelength_unit)
-    left_flux = np.asarray(left.flux_lambda, dtype=np.float64)
-    right_flux = np.asarray(right.flux_lambda, dtype=np.float64)
+    if (
+        left.axis.coordinate is not SpectralCoordinate.WAVELENGTH
+        or right.axis.coordinate is not SpectralCoordinate.WAVELENGTH
+    ):
+        raise ValueError("overlap diagnostics require wavelength-domain spectra")
+    left_wave_nm = _wavelength_to_nm(left.axis.values, left.axis.unit)
+    right_wave_nm = _wavelength_to_nm(right.axis.values, right.axis.unit)
+    left_flux = np.asarray(left.values, dtype=np.float64)
+    right_flux = np.asarray(right.values, dtype=np.float64)
 
     finite_left = bool(
         np.all(np.isfinite(left_wave_nm)) and np.all(np.isfinite(left_flux))

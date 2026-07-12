@@ -1,17 +1,18 @@
 # jaxstro — status
 
-next: Execute spectra-v1 Task 12 directly on main: add deterministic holdout metrics and a
-versioned accepted interpolation-policy manifest without inventing thresholds.
+next: Return to the public-hardening program from the now-current spectra-v1 code and 60-page
+website state; keep release publication, Pages, and the package-name decision separately gated.
 
-previous: Spectra-v1 Task 11 completed on local main (2026-07-12). AtmosphereLibrary now prepares
-exact product queries through an adapter registry and evaluates prepared objects without backend
-conditionals. Local discovery builds installed NewEra, product-scoped BOSZ, product-plane Sonora,
-and distinct TLUSTY adapters while retaining aggregate coverage rows for reports. Expected gaps
-return NaN spectra plus structured status rather than RuntimeError. Focused plus local-artifact gate:
-10 tests in 3.59 s (4.17 s wall); Ruff, format, mypy, and diff checks clean. Nothing has been pushed.
+previous: Spectra-v1 completed on local main (2026-07-12). Real-artifact holdouts accept
+positive-log interpolation for NewEra and linear interpolation for representative BOSZ/OSTAR;
+Sonora and BSTAR remain POLICY_NOT_VALIDATED under the strict no-secondary-regression rule. The
+real-artifact/AD/interoperability gate passes, and cached NewEra artifact validation reduced measured
+host preparation from 10.303 s to 1.031 s under tracemalloc. The hard cutover deleted the old
+jaxstro.atmospheres.spectra owner and updated the 60-page website. The full local release gate passed
+in 259.77 s wall time, including 1,068 core tests, 110 ML-integration tests, and wheel smoke.
 
-blocker: None for spectra-v1 Task 12. Remote publication, tag/release, Pages configuration, and PyPI
-remain outside this local feature branch and require separate authorization.
+blocker: None locally. Remote publication, tag/release, Pages configuration, and PyPI remain outside
+this local implementation slice and require separate authorization.
 due:
 
 ## Phase C — DONE (2026-06-17, branch feature/phase-c-release-hardening, HEAD 40f936e)

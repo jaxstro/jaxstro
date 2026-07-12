@@ -119,7 +119,7 @@ def test_rendered_card_has_stable_myst_and_reference_formatting():
 
     assert rendered.startswith("(card-galactic-icrs)=\n## Galactic / ICRS transform")
     assert "**Status:** `verified`" in rendered
-    assert "[source](https://www.iausofa.org/s/manual_c.pdf)" in rendered
+    assert '<a href="https://www.iausofa.org/s/manual_c.pdf">source</a>' in rendered
     assert "*Locator:* `iauG2icrs`" in rendered
     assert "`src/jaxstro/coords.py::_GALACTIC_TO_ICRS`" in rendered
     assert (
@@ -127,6 +127,22 @@ def test_rendered_card_has_stable_myst_and_reference_formatting():
         in rendered
     )
     assert rendered.endswith("\n")
+
+
+def test_rendered_doi_preserves_the_canonical_resolver():
+    raw = _card(
+        sources=[
+            {
+                "reference": "https://doi.org/10.1234/example",
+                "locator": "Section 1",
+                "supports": "the fixture claim",
+            }
+        ]
+    )
+
+    rendered = provenance_cards.render_card(raw)
+
+    assert 'href="https://doi.org/10.1234/example"' in rendered
 
 
 def test_installed_module_has_no_yaml_import():

@@ -147,8 +147,8 @@ The local atmosphere capability map is in
 which have runtime backends, and why TLUSTY uses ragged frequency-grid subgroups.
 
 The runtime boundary is documented in [](./spectra-data-architecture.md). It
-defines the shared `AtmosphereParams -> SpectrumResult` interface, the split
-between catalog-first host-side selection and JAX-side prepared interpolation,
-and the dataset ownership rule that keeps filters, photometry, bolometric
-corrections, and survey semantics downstream until a genuinely shared lower-level
-abstraction exists.
+defines the host-side `AtmosphereQuery -> PreparationResult` path, the generic
+`jaxstro.spectra` owner, and fixed-topology JAX evaluation. It also explains why
+surface versus observer flux, `F_lambda` versus `F_nu`, and point versus bin
+sampling must remain explicit. Filters, photometry, instruments, images, and
+survey semantics remain downstream in Fluxax.

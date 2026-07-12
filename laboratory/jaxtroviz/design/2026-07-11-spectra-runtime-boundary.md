@@ -8,8 +8,8 @@ Which atmosphere operations touch local files, and which object may safely enter
 ## Evidence source
 
 The three-stage workflow follows the public ownership split among
-`AtmosphereLibrary`, host-side backends, `PreparedSpectralGrid`, and downstream
-packages. The evidence strip calls public `PreparedSpectralGrid.spectrum` on the
+`AtmosphereLibrary`, exact-product adapters, `PreparedRectilinearStencil`, and
+downstream packages. The evidence strip calls public stencil evaluation on the
 same in-memory fixture as the executable page and evaluates one public JAX
 gradient.
 
@@ -33,6 +33,7 @@ portable interpolation fixture.
 ## Acceptance
 
 - The midpoint flux is `[2.5, 3.5, 4.5]`.
-- In-grid, outside-grid, and wrong-plane status codes are `0`, `1`, and `2`.
+- In-grid and outside-convex-hull status codes are `0` and `4`.
+- Mapping the numeric spectrum payload over two points produces shape `(2, 3)`.
 - The local first-flux derivative with respect to temperature is `0.002`.
 - Registry, deterministic-render, page, and rendered-DOM checks pass.

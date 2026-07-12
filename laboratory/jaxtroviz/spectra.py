@@ -1,4 +1,4 @@
-"""Spectra host-to-JAX boundary figure from the public atmosphere API."""
+"""Spectra host-to-JAX boundary figure from the canonical public API."""
 
 from __future__ import annotations
 
@@ -9,48 +9,77 @@ import numpy as np
 from matplotlib.figure import Figure
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
-from jaxstro.atmospheres import AtmosphereParams, PreparedSpectralGrid
+from jaxstro.spectra import (
+    FluxInterpolation,
+    PreparedRectilinearStencil,
+    SpectralAxis,
+    SpectralCoordinate,
+    SpectralSemantic,
+    Spectrum,
+    SpectrumProvenance,
+)
 
 from .style import NEUTRAL, PALETTE, POSITIVE, setup_style
 
 
-def _portable_grid() -> PreparedSpectralGrid:
-    return PreparedSpectralGrid(
-        teff=jnp.array([5000.0, 6000.0]),
-        logg=jnp.array([4.0, 5.0]),
-        wavelength=jnp.array([100.0, 101.0, 102.0]),
-        flux=jnp.array(
+def _portable_stencil() -> PreparedRectilinearStencil:
+    axis = SpectralAxis.points(
+        jnp.array([500.0, 600.0, 700.0]),
+        coordinate=SpectralCoordinate.WAVELENGTH,
+        unit="nm",
+    )
+    template = Spectrum(
+        axis=axis,
+        values=jnp.array([1.0, 2.0, 3.0]),
+        semantic=SpectralSemantic.SURFACE_FLUX_LAMBDA,
+        provenance=SpectrumProvenance(
+            source_id="figure-fixture",
+            product_id="figure-fixture",
+            native_coordinate="wavelength_nm",
+            native_density="F_lambda",
+            native_unit="erg s^-1 cm^-2 nm^-1",
+            canonical_conversion="identity",
+            citations=("fixture:jaxtroviz",),
+        ),
+    )
+    return PreparedRectilinearStencil(
+        parameter_axes=(jnp.array([5000.0, 6000.0]), jnp.array([4.0, 5.0])),
+        vertex_values=jnp.array(
             [
                 [[1.0, 2.0, 3.0], [2.0, 3.0, 4.0]],
                 [[3.0, 4.0, 5.0], [4.0, 5.0, 6.0]],
             ]
         ),
+        template=template,
+        interpolation=FluxInterpolation.LINEAR,
     )
 
 
-def spectra_runtime_results() -> tuple[np.ndarray, int, int, int, float]:
+def spectra_runtime_results() -> tuple[np.ndarray, int, int, tuple[int, ...], float]:
     """Return portable interpolation, status, and derivative evidence."""
-    prepared = _portable_grid()
-    midpoint = prepared.spectrum(AtmosphereParams(teff=5500.0, logg=4.5))
-    outside = prepared.spectrum(AtmosphereParams(teff=4500.0, logg=4.5))
-    wrong_plane = prepared.spectrum(AtmosphereParams(teff=5500.0, logg=4.5, m_h=0.5))
+    prepared = _portable_stencil()
+    midpoint = prepared.evaluate(jnp.array([5500.0, 4.5]))
+    outside = prepared.evaluate(jnp.array([4500.0, 4.5]))
+
+    def values(point):
+        return prepared.evaluate(point).spectrum.values
+
+    batched = jax.vmap(values)(jnp.array([[5250.0, 4.5], [5750.0, 4.5]]))
 
     @jax.jit
     def first_flux(teff):
-        return prepared.spectrum(
-            AtmosphereParams(teff=teff, logg=4.0)
-        ).spectrum.flux_lambda[0]
+        return prepared.evaluate(jnp.array([teff, 4.0])).spectrum.values[0]
 
     result = (
-        np.asarray(midpoint.spectrum.flux_lambda),
+        np.asarray(midpoint.spectrum.values),
         int(midpoint.status.code),
         int(outside.status.code),
-        int(wrong_plane.status.code),
+        tuple(batched.shape),
         float(jax.grad(first_flux)(5500.0)),
     )
     if not np.allclose(result[0], [2.5, 3.5, 4.5]):
         raise RuntimeError("spectra figure midpoint interpolation drifted")
-    if result[1:4] != (0, 1, 2):
+    if result[1:3] != (0, 4) or result[3] != (2, 3):
         raise RuntimeError("spectra figure status contract drifted")
     if not np.isclose(result[4], 0.002):
         raise RuntimeError("spectra figure local derivative drifted")
@@ -85,7 +114,7 @@ def _box(ax, x: float, title: str, subtitle: str, *, fill: str, edge: str) -> No
 def build_spectra_runtime_boundary() -> Figure:
     """Show the filesystem boundary and measured prepared-grid contract."""
     setup_style(font_scale=1.0)
-    midpoint, midpoint_code, outside_code, wrong_plane_code, local_slope = (
+    midpoint, midpoint_code, outside_code, batch_shape, local_slope = (
         spectra_runtime_results()
     )
     figure, ax = plt.subplots(figsize=(10.2, 4.4))
@@ -104,16 +133,16 @@ def build_spectra_runtime_boundary() -> Figure:
     _box(
         ax,
         0.375,
-        "Prepared JAX grid",
-        "array-only PyTree\nbilinear interpolation\nstatus + raw spectrum",
+        "Prepared JAX stencil",
+        "array-only PyTree\nfixed complete cell\nstatus + surface spectrum",
         fill="#EDF6F4",
         edge=POSITIVE,
     )
     _box(
         ax,
         0.71,
-        "Downstream package",
-        "filters + zero points\nmagnitudes + surveys\nphysical interpretation",
+        "Fluxax + domain package",
+        "distance + extinction\nfilters + instruments\nlikelihood observables",
         fill="#F2F0F6",
         edge=PALETTE[1],
     )
@@ -153,7 +182,8 @@ def build_spectra_runtime_boundary() -> Figure:
 
     evidence = (
         f"portable fixture: midpoint flux = {midpoint.tolist()}   •   "
-        f"status codes = {midpoint_code}/{outside_code}/{wrong_plane_code}   •   "
+        f"status codes = {midpoint_code}/{outside_code}   •   "
+        f"vmap shape = {batch_shape}   •   "
         f"local dF0/dT = {local_slope:.3f}"
     )
     ax.text(

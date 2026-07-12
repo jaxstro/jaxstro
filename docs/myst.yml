@@ -106,6 +106,7 @@ project:
         - file: 50-howto/bosz-data-processing.md
         - file: 50-howto/sonora-data-processing.md
         - file: 50-howto/tlusty-data-processing.md
+        - file: 50-howto/query-atmosphere-spectra.md
     - title: Validation
       children:
         - file: 60-validation/index.md

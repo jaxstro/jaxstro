@@ -27,8 +27,8 @@ data/atmospheres/tlusty/
     tlusty_flux.zarr/
 ```
 
-The released coordinate is frequency in Hz and the released flux is
-`F_nu` in `erg s-1 cm-2 Hz-1`. Wavelength ranges in the catalog are diagnostic
+The released coordinate is frequency in Hz and the released column is Eddington
+flux `H_nu` in `erg s-1 cm-2 Hz-1`. Wavelength ranges in the catalog are diagnostic
 coverage metadata derived as `c / nu`; they are not a unit-converted replacement
 for the raw frequency grid.
 
@@ -65,6 +65,12 @@ without resampling in the converter.
 This is a pedagogical example of the atmosphere policy: preserve the released
 scientific coordinate first; add interpolation or spectral-density transforms
 only in a tested runtime backend.
+
+Some released tables contain duplicate printed frequencies. The processed
+artifact preserves them exactly. At runtime, the TLUSTY adapter mean-coalesces
+samples at identical published coordinates, records that operation in
+provenance, converts `H_nu` to `F_nu` with `4 pi`, converts to wavelength-density
+surface flux, and resamples each topology vertex onto the requested axis.
 
 ## Conversion
 
@@ -149,7 +155,11 @@ The TLUSTY portion asserts:
 
 ## Runtime status
 
-TLUSTY is processed and visible to `AtmosphereLibrary.from_local("data")`.
-Runtime backend work must still choose and test the spectral-density policy for
-returning a wavelength-domain `SpectrumResult`. The processed artifact keeps raw
-`frequency_hz` and `F_nu` intact so that policy remains explicit.
+TLUSTY is processed and visible to `AtmosphereLibrary.from_local("data")` through
+27 exact composition-scoped products. OSTAR2002 has an accepted linear
+parameter-interpolation policy. Both BSTAR modes remain
+`POLICY_NOT_VALIDATED` because linear and positive-log holdout metrics trade off;
+the registry refuses those requests until stronger evidence resolves the policy.
+The processed artifact keeps raw `frequency_hz` and `H_nu` intact.
+
+Use [](./query-atmosphere-spectra.md) to build an exact request.

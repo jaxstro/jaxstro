@@ -63,7 +63,8 @@ def test_api_table_has_structured_ownership_boundary_and_evidence_fields() -> No
     assert "`jaxstro.units` is the current ecosystem contract" in text
     assert "`jaxstro.quantity` is implemented" in text
     assert "ecosystem adoption and any replacement cutover remain deferred" in text
-    assert "Atmosphere support is in progress" in text
+    assert "Implemented with explicit policy gaps" in text
+    assert "Sonora and BSTAR adapters are present" in text
     assert "../10-theory/spatial.md" in text
 
 

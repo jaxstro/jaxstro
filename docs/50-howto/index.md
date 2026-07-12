@@ -16,10 +16,11 @@ Current recipes:
 - [](./bosz-data-processing.md)
 - [](./sonora-data-processing.md)
 - [](./tlusty-data-processing.md)
+- [](./query-atmosphere-spectra.md)
 
 For atmosphere work, read [](../20-architecture/atmosphere-capabilities.md) first
 if you need the dataset matrix and backend status. Then use the how-to pages here
-for the exact local conversion and validation commands. Use
+for the exact local conversion, query, and validation commands. Use
 [](../20-architecture/spectra-data-architecture.md) for the runtime spectra
 boundary and backend design.
 

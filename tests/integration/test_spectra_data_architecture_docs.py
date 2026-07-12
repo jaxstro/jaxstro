@@ -8,11 +8,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from jaxstro.atmospheres import (
-    STATUS_MISSING_ABUNDANCE,
-    STATUS_OK,
-    STATUS_OUT_OF_GRID,
-)
+from jaxstro.spectra import SpectrumStatusCode
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PAGE = REPO_ROOT / "docs" / "20-architecture" / "spectra-data-architecture.md"
@@ -45,12 +41,10 @@ def test_portable_prepared_grid_example_executes_without_local_artifacts() -> No
 
     midpoint = namespace["midpoint"]
     outside = namespace["outside"]
-    wrong_plane = namespace["wrong_plane"]
-    np.testing.assert_allclose(midpoint.spectrum.flux_lambda, [2.5, 3.5, 4.5])
-    np.testing.assert_allclose(outside.spectrum.flux_lambda, [1.5, 2.5, 3.5])
-    assert int(midpoint.status.code) == STATUS_OK
-    assert int(outside.status.code) == STATUS_OUT_OF_GRID
-    assert int(wrong_plane.status.code) == STATUS_MISSING_ABUNDANCE
+    np.testing.assert_allclose(midpoint.spectrum.values, [2.5, 3.5, 4.5])
+    assert bool(np.all(np.isnan(outside.spectrum.values)))
+    assert int(midpoint.status.code) == SpectrumStatusCode.OK
+    assert int(outside.status.code) == SpectrumStatusCode.OUTSIDE_CONVEX_HULL
     assert float(namespace["local_slope"]) == pytest.approx(0.002)
 
 
@@ -59,17 +53,17 @@ def test_page_classifies_every_nonportable_fence_and_ownership_boundary() -> Non
 
     assert "```{code-block} text\n:caption: Interface notation, not Python" in text
     assert (
-        text.count("**Execution contract — local processed artifacts required.**") == 2
+        text.count("**Execution contract — local processed artifacts required.**") == 1
     )
     assert "```{list-table} Spectra execution and ownership boundaries" in text
     assert ":label: tbl-spectra-execution-boundaries" in text
     for phrase in (
-        "Catalog discovery and candidate ranking",
-        "Artifact opening and local-cell preparation",
-        "Prepared-grid interpolation",
-        "Synthetic photometry and interpretation",
-        "Atmosphere support remains in progress",
-        "Sonora and TLUSTY do not yet have runtime backends",
+        "Product lookup and topology selection",
+        "Spectral conversion and preparation",
+        "Prepared parameter interpolation",
+        "Observable rendering",
+        "Sonora Diamondback and both BSTAR modes remain `POLICY_NOT_VALIDATED`",
+        "Fluxax keeps ownership",
     ):
         assert phrase in text
 
@@ -84,6 +78,6 @@ def test_page_embeds_registered_figure_and_evidence_routes() -> None:
         "preparation through a JAX-ready local grid to downstream observables"
     ) in text
     assert DESIGN_RECORD.is_file()
-    assert "[](../40-api/index.md#jaxstro-atmospheres)" in text
     assert "[](../60-validation/index.md)" in text
     assert "[](./atmosphere-capabilities.md)" in text
+    assert "[](../50-howto/query-atmosphere-spectra.md)" in text

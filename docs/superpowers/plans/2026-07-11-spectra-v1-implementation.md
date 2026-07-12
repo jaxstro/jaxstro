@@ -740,22 +740,26 @@ mypy, MyST.
 - Canonical imports become `jaxstro.spectra` for generic types and
   `jaxstro.atmospheres` for queries/adapters. No old alias remains.
 
-- [ ] **Step 1: Re-run the downstream import audit**
+- [x] **Step 1: Re-run the downstream import audit**
 
   Search Fluxax, Stellax, Hydrax, Radax, Startrax, Progenax, and Gravax. Migrate
   real imports in writable in-scope repositories before deletion; record planned
   consumer contracts for repositories with no implementation import.
 
-- [ ] **Step 2: Write failing no-legacy and executable-doc tests**, then delete
+  The 2026-07-12 audit found no real legacy imports in the available Fluxax,
+  Stellax, Radax, Startrax, Progenax, or Gravax siblings; Hydrax was not present
+  in the sibling workspace. The generic consumer contract is enforced locally.
+
+- [x] **Step 2: Write failing no-legacy and executable-doc tests**, then delete
   the old module and migrate all local imports.
 
-- [ ] **Step 3: Update learner-facing docs**
+- [x] **Step 3: Update learner-facing docs**
 
   Explain surface versus observer flux, `F_lambda` versus `F_nu`, why factors of
   `4*pi` differ among archives, point versus bin sampling, topology boundaries,
   structured failure statuses, and the Fluxax handoff. All snippets execute.
 
-- [ ] **Step 4: Run focused and full gates with timings**
+- [x] **Step 4: Run focused and full gates with timings**
 
   ```bash
   env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit tests/integration \
@@ -768,7 +772,12 @@ mypy, MyST.
   bash scripts/check.sh
   ```
 
-- [ ] **Step 5: Commit**
+  Completed 2026-07-12: the corrected focused suite passed 1,068 tests; the
+  repository release gate passed in 259.77 s wall time, including the 60-route
+  documentation gate, 110 ML-integration tests in 18.05 s, and clean-wheel
+  installation/import smoke.
+
+- [x] **Step 5: Commit**
 
   ```bash
   git add -A src/jaxstro tests docs STATUS.md
