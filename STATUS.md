@@ -1,16 +1,18 @@
 # jaxstro — status
 
-next: Await Anna's per-slice checkpoint approval, then execute spectra-v1 Task 2: add the canonical
-`jaxstro.spectra` data model, structured statuses, PyTree contracts, and ownership guard via TDD.
+next: Await Anna's per-slice checkpoint approval, then execute spectra-v1 Task 3: add exact
+wavelength/frequency, F_lambda/F_nu, surface-luminosity, and surface-observer transformations with
+analytic and shared AD-vs-FD validation.
 
-previous: Spectra-v1 Task 1 completed on `codex/spectra-v1` at `d81f741` (2026-07-11). Five
-primary-source atmosphere cards now fix the NewEra, BOSZ, Sonora, TLUSTY OSTAR2002, and TLUSTY
-BSTAR2006 native coordinate/density semantics and canonical conversions before runtime changes.
-The TDD RED state was 4 expected failures against the empty registry; GREEN is 11 passing focused
-registry tests in 1.04 s, generated pages fresh, Ruff clean. The reviewed design and 14-task
-executing-plans artifact are at `a53e617`. Nothing has been pushed.
+previous: Spectra-v1 Task 2 completed on `codex/spectra-v1` (2026-07-12). The new canonical owner,
+`jaxstro.spectra`, provides explicit point/bin axes, physical semantics, hashable provenance,
+stable scientific status codes, finite-success/NaN-failure contracts, PyTree behavior, and batched
+status arrays. TDD RED was the missing package; a second RED caught scalar-only status codes under
+`vmap`. GREEN is 55 combined new plus existing-atmosphere tests in 2.09 s (2.74 s wall), Ruff and
+format clean, mypy clean. The old atmosphere spectral module remains unchanged until migration.
+Nothing has been pushed.
 
-blocker: None for spectra-v1 Task 2. Remote publication, tag/release, Pages configuration, and PyPI
+blocker: None for spectra-v1 Task 3. Remote publication, tag/release, Pages configuration, and PyPI
 remain outside this local feature branch and require separate authorization.
 due:
 
