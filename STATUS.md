@@ -1,17 +1,17 @@
 # jaxstro — status
 
-next: Execute spectra-v1 Task 6 directly on main: atmosphere query, product, adapter, and topology
-contracts with structured preparation outcomes.
+next: Execute spectra-v1 Task 7 directly on main: hard-cut NewEra preparation onto complete-cell
+or approved-simplex topology with canonical nm/per-nm output.
 
-previous: Spectra-v1 Task 5 completed on local main (2026-07-12). Prepared rectilinear stencils
-delegate complete-grid interpolation to Jaxstro regular-grid numerics; prepared simplex stencils
-evaluate fixed host-selected topology with barycentric weights. Linear and positive-log flux spaces
-are available; amplitude-shape remains fail-closed. Exact vertices, nonuniform midpoints, missing
-corners, hull failures, JIT, value/status vmap, and AD-vs-FD are covered. The three smooth-path AD/FD
-ratios are 1.00000000001, 0.999999997987, and 1.0, all clean. Focused gate: 12 tests in 4.36 s
-(5.12 s wall); Ruff, format, mypy, and diff checks clean. Nothing has been pushed.
+previous: Spectra-v1 Task 6 completed on local main (2026-07-12). Canonical query/product/artifact
+contracts now separate host preparation from filesystem-free JAX evaluation. Topology selection
+prefers complete rectilinear cells and permits simplex fallback only through an explicit manifest.
+Exact-product registry lookup rejects duplicates and returns structured NO_DATASET,
+UNSUPPORTED_PLANE, POLICY_NOT_VALIDATED, and BACKEND_UNAVAILABLE outcomes before adapter I/O.
+Focused gate: 12 tests in 0.52 s (1.09 s wall); existing atmosphere regression: 51 tests in 2.77 s
+(3.45 s wall). Ruff, format, mypy, and diff checks clean. Nothing has been pushed.
 
-blocker: None for spectra-v1 Task 6. Remote publication, tag/release, Pages configuration, and PyPI
+blocker: None for spectra-v1 Task 7. Remote publication, tag/release, Pages configuration, and PyPI
 remain outside this local feature branch and require separate authorization.
 due:
 

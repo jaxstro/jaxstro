@@ -393,14 +393,14 @@ mypy, MyST.
   `ArtifactReport`, `PreparationResult`, `PreparedAtmosphere`,
   `AtmosphereAdapter`, and `AtmosphereAdapterRegistry`.
 
-- [ ] **Step 1: Write failing registry and topology tests**
+- [x] **Step 1: Write failing registry and topology tests**
 
   Require exact product identity, complete-cell discovery before simplex use,
   deterministic simplex selection from an approved manifest, and structured
   `NO_COMPLETE_CELL`, `OUTSIDE_CONVEX_HULL`, `UNSUPPORTED_PLANE`, and
   `POLICY_NOT_VALIDATED` results.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
   ```bash
   env -u VIRTUAL_ENV uv run --no-sync pytest -q \
@@ -408,14 +408,14 @@ mypy, MyST.
     tests/unit/test_atmospheres_adapters.py
   ```
 
-- [ ] **Step 3: Implement host-side contracts**
+- [x] **Step 3: Implement host-side contracts**
 
   `PreparationResult` contains exactly one of `prepared` or an unsuccessful
   status. `PreparedAtmosphere` contains a prepared stencil, parameter-name
   tuple, fixed spectral plan, and hashable provenance; it owns no paths or open
   stores. The registry rejects duplicate product IDs.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
   ```bash
   env -u VIRTUAL_ENV uv run --no-sync pytest -q \
@@ -423,7 +423,7 @@ mypy, MyST.
     tests/unit/test_atmospheres_adapters.py
   ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
   ```bash
   git add src/jaxstro/atmospheres tests/unit/test_atmospheres_topology.py \

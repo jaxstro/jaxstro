@@ -19,6 +19,12 @@ from .acquisition import (
     acquisition_rows_to_markdown,
     plan_targeted_acquisition,
 )
+from .adapters import (
+    AtmosphereAdapter,
+    AtmosphereAdapterRegistry,
+    PreparationResult,
+    PreparedAtmosphere,
+)
 from .bosz import (
     BOSZ_2025_RECOMPUTED_NOTE,
     DEFAULT_BOSZ_CATALOG,
@@ -39,19 +45,21 @@ from .library import (
 )
 from .newera import DEFAULT_NEWERA_CATALOG, DEFAULT_NEWERA_ZARR, NewEraBackend
 from .overlap import OverlapDiagnostic, validate_spectrum_overlap
+from .params import AtmosphereParams, AtmosphereQuery
+from .products import ArtifactReport, ProductDescriptor
 from .sonora import Sonora2024Metadata, parse_sonora_2024_filename
 from .spectra import (
     STATUS_MISSING_ABUNDANCE,
     STATUS_OK,
     STATUS_OUT_OF_GRID,
     AtmosphereBackend,
-    AtmosphereParams,
     PreparedSpectralGrid,
     Spectrum,
     SpectrumResult,
     SpectrumStatus,
 )
 from .tlusty import TlustyFluxMetadata, parse_tlusty_float, parse_tlusty_flux_filename
+from .topology import GridTopology, TopologyKind, TopologySelection, select_topology
 
 PathLike: TypeAlias = str | os.PathLike[str]
 
@@ -208,10 +216,14 @@ __all__ = [
     "STATUS_OK",
     "STATUS_OUT_OF_GRID",
     "AtmosphereBackend",
+    "AtmosphereAdapter",
+    "AtmosphereAdapterRegistry",
     "AtmosphereCatalogCoverage",
     "AtmosphereLibrary",
     "AtmosphereLibraryCandidate",
     "AtmosphereParams",
+    "AtmosphereQuery",
+    "ArtifactReport",
     "AtmosphereSelection",
     "AcquisitionDecision",
     "BoszBackend",
@@ -224,12 +236,18 @@ __all__ = [
     "NewEraLowResIndex",
     "NewEraLowResMetadata",
     "OverlapDiagnostic",
+    "PreparationResult",
+    "PreparedAtmosphere",
     "PreparedSpectralGrid",
+    "ProductDescriptor",
     "Spectrum",
     "SpectrumResult",
     "SpectrumStatus",
     "Sonora2024Metadata",
     "TlustyFluxMetadata",
+    "GridTopology",
+    "TopologyKind",
+    "TopologySelection",
     "acquisition_rows_to_markdown",
     "build_bosz_index",
     "build_newera_lowres_index",
@@ -243,5 +261,6 @@ __all__ = [
     "plan_targeted_acquisition",
     "read_newera_lowres_header",
     "resolve_data_dir",
+    "select_topology",
     "validate_spectrum_overlap",
 ]
