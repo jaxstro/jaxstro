@@ -21,3 +21,15 @@ def test_rootfinding_docs_describe_actual_interpolation_order():
     assert "inverse-quadratic interpolation when three distinct" in text
     assert "otherwise the endpoint secant" in text
     assert "rejected selected interpolant" in text
+    assert "Selected interpolant rejected" in text
+
+
+def test_numerical_pages_expand_implicit_function_theorem_before_ift() -> None:
+    paths = (
+        ROOTFINDING,
+        REPO_ROOT / "docs" / "40-api" / "index.md",
+        REPO_ROOT / "docs" / "60-validation" / "index.md",
+    )
+    for path in paths:
+        text = path.read_text(encoding="utf-8")
+        assert "implicit function theorem (IFT)" in text, path

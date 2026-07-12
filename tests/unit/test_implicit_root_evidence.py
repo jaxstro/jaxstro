@@ -54,3 +54,27 @@ def test_implicit_root_evidence_records_environment_fields() -> None:
         "python_version",
         "working_tree_dirty",
     }
+    assert payload["provenance_policy"] == (
+        "environment is an emission snapshot; --check gates deterministic "
+        "controls, schema, units, and algorithmic metrics, not current revision"
+    )
+    assert payload["controls"] == {
+        "fd_step": {"value": 1.0e-5, "unit": "parameter units"},
+        "residual_limit": {"value": 1.0e-12, "unit": "function units"},
+        "slope_floor": {
+            "value": 1.0e-8,
+            "unit": "function units per coordinate unit",
+        },
+        "width_limit": {"value": 1.0e-12, "unit": "coordinate units"},
+    }
+
+
+def test_implicit_root_evidence_matcher_rejects_control_and_unit_drift() -> None:
+    stored = json.loads(EVIDENCE.read_text(encoding="utf-8"))
+    current = benchmark_implicit_root.run_benchmark()
+    stored["controls"]["fd_step"]["value"] = 999.0
+    assert not benchmark_implicit_root.algorithmic_metrics_match(stored, current)
+
+    stored = json.loads(EVIDENCE.read_text(encoding="utf-8"))
+    stored["cases"][0]["root"]["unit"] = "wrong units"
+    assert not benchmark_implicit_root.algorithmic_metrics_match(stored, current)

@@ -120,7 +120,7 @@ bracket, history, and status exactly.
   - Secant interpolation passed every guard; `safeguarded=False`
 * - `PROPOSAL_MIDPOINT`
   - `2`
-  - Secant rejected; deterministic midpoint used and `safeguarded=True`
+  - Selected interpolant rejected; deterministic midpoint used and `safeguarded=True`
 * - `PROPOSAL_LO_ENDPOINT`
   - `3`
   - Exact root at the lower endpoint
@@ -193,7 +193,8 @@ implicit-root derivative. No gradient claim is made for parameters captured by
 `f`, even if `jax.grad` returns a finite number for a particular execution. This
 API does not use `lax.custom_root` and does not implement an IFT derivative.
 
-Use the separate `implicit_bracketed_root(f, args, ...)` only when an IFT
+Use the separate `implicit_bracketed_root(f, args, ...)` only when an
+implicit function theorem (IFT)
 derivative is required. It uses `lax.custom_root` and requires caller assertions
 of a unique root and smooth selected branch plus runtime gates for primal
 convergence, finite evidence, residual, final-bracket width, and slope

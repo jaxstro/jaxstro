@@ -129,6 +129,10 @@ def run_benchmark() -> dict[str, Any]:
     return {
         "schema_version": 2,
         "precision": "float64",
+        "provenance_policy": (
+            "environment is an emission snapshot; --check gates deterministic "
+            "controls, schema, units, and algorithmic metrics, not current revision"
+        ),
         "environment": {
             "device": str(jax.devices()[0]),
             "git_revision": git_revision,
@@ -158,6 +162,48 @@ def _validate(payload: dict[str, Any]) -> None:
         "exponential",
     }:
         raise ValueError("implicit-root evidence cases are incomplete")
+    expected_controls = {
+        "fd_step": _metric(FD_STEP, "parameter units"),
+        "residual_limit": _metric(RESIDUAL_LIMIT, "function units"),
+        "width_limit": _metric(WIDTH_LIMIT, "coordinate units"),
+        "slope_floor": _metric(SLOPE_FLOOR, "function units per coordinate unit"),
+    }
+    if payload.get("controls") != expected_controls:
+        raise ValueError("implicit-root evidence controls or units are invalid")
+    expected_environment = {
+        "device",
+        "git_revision",
+        "jax_backend",
+        "jax_version",
+        "measured_at_utc",
+        "platform",
+        "python_version",
+        "working_tree_dirty",
+    }
+    environment = payload.get("environment", {})
+    if set(environment) != expected_environment:
+        raise ValueError("implicit-root environment schema is invalid")
+    if not all(
+        isinstance(environment[key], str)
+        for key in expected_environment - {"working_tree_dirty"}
+    ) or not isinstance(environment["working_tree_dirty"], bool):
+        raise ValueError("implicit-root environment field types are invalid")
+    if payload.get("provenance_policy") != (
+        "environment is an emission snapshot; --check gates deterministic "
+        "controls, schema, units, and algorithmic metrics, not current revision"
+    ):
+        raise ValueError("implicit-root provenance policy is missing")
+    expected_units = {
+        "root": "coordinate units",
+        "absolute_residual": "function units",
+        "bracket_width": "coordinate units",
+        "slope_magnitude": "function units per coordinate unit",
+        "analytic_derivative": "coordinate units per parameter unit",
+        "ad_derivative": "coordinate units per parameter unit",
+        "fd_derivative": "coordinate units per parameter unit",
+        "relative_ad_fd_error": "dimensionless",
+        "relative_ad_analytic_error": "dimensionless",
+    }
     for case in payload["cases"]:
         if not case.get("certified") or case.get("status") != 0:
             raise ValueError(f"implicit-root case is not certified: {case['name']}")
@@ -165,6 +211,9 @@ def _validate(payload: dict[str, Any]) -> None:
             raise ValueError(f"AD/FD evidence failed: {case['name']}")
         if case["relative_ad_analytic_error"]["value"] > 1.0e-9:
             raise ValueError(f"AD/analytic evidence failed: {case['name']}")
+        for metric, unit in expected_units.items():
+            if case.get(metric, {}).get("unit") != unit:
+                raise ValueError(f"implicit-root metric unit is invalid: {metric}")
 
 
 def algorithmic_metrics_match(stored: dict[str, Any], current: dict[str, Any]) -> bool:
@@ -177,6 +226,8 @@ def algorithmic_metrics_match(stored: dict[str, Any], current: dict[str, Any]) -
     stored_cases = {case["name"]: case for case in stored["cases"]}
     current_cases = {case["name"]: case for case in current["cases"]}
     if set(stored_cases) != set(current_cases):
+        return False
+    if stored.get("controls") != current.get("controls"):
         return False
     metrics = (
         "root",
@@ -196,6 +247,8 @@ def algorithmic_metrics_match(stored: dict[str, Any], current: dict[str, Any]) -
         if stored_case.get("certified") != current_case["certified"]:
             return False
         for metric in metrics:
+            if stored_case.get(metric, {}).get("unit") != current_case[metric]["unit"]:
+                return False
             stored_value = stored_case.get(metric, {}).get("value")
             current_value = current_case[metric]["value"]
             if not isinstance(stored_value, (int, float)) or not math.isclose(

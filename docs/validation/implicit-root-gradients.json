@@ -144,14 +144,15 @@
   },
   "environment": {
     "device": "cpu:0",
-    "git_revision": "e5f73b1bd45e7c8db26c9f152765eb204e0f5894",
+    "git_revision": "3dee9413f5352a6a63c5359f486cab2228150f85",
     "jax_backend": "cpu",
     "jax_version": "0.10.1",
-    "measured_at_utc": "2026-07-12T22:15:09.125437+00:00",
+    "measured_at_utc": "2026-07-12T22:20:42.946566+00:00",
     "platform": "macOS-26.1-arm64-arm-64bit-Mach-O",
     "python_version": "3.13.7",
     "working_tree_dirty": true
   },
   "precision": "float64",
+  "provenance_policy": "environment is an emission snapshot; --check gates deterministic controls, schema, units, and algorithmic metrics, not current revision",
   "schema_version": 2
 }

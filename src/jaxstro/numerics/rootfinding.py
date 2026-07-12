@@ -255,13 +255,14 @@ def propose_bracketed(
     *,
     safeguard_fraction: float | Float[Array, ""] = 0.1,
 ) -> BracketProposal:
-    """Propose a safely interior secant point or deterministic midpoint.
+    """Propose safely interior interpolation or a deterministic midpoint.
 
     Proposal kinds are integer constants. Exact endpoint roots take priority,
-    with the lower endpoint winning ties. A non-root secant is accepted only
-    when its denominator and value are finite, it lies strictly in the bracket,
-    and it leaves at least ``safeguard_fraction`` of the current width on both
-    sides. Otherwise the midpoint is returned with ``safeguarded=True``.
+    with the lower endpoint winning ties. Inverse-quadratic interpolation is
+    selected when three distinct finite points are available; otherwise endpoint
+    secant interpolation is selected. The chosen interpolant is accepted only
+    when it is finite, strictly inside the bracket and safeguard band, and meets
+    the progress guard. Otherwise midpoint is returned with ``safeguarded=True``.
     """
     root_state = (
         initialize_bracketed_root_state(state)
@@ -604,7 +605,7 @@ def implicit_bracketed_root(
     derivative_width_rtol: float | Float[Array, ""] = 0.0,
     derivative_slope_floor: float | Float[Array, ""],
 ) -> ImplicitRootResult:
-    """Return an IFT derivative only when explicit runtime gates all pass."""
+    """Return an implicit function theorem (IFT) derivative after certification."""
 
     def root_function(x):
         return f(x, args)
