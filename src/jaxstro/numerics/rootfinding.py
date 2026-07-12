@@ -29,6 +29,39 @@ import jax.lax as lax
 import jax.numpy as jnp
 from jaxtyping import Array, Float
 
+from ._implicit_root import (
+    DERIVATIVE_STATUS_ASSUMPTIONS_REJECTED as DERIVATIVE_STATUS_ASSUMPTIONS_REJECTED,
+)
+from ._implicit_root import (
+    DERIVATIVE_STATUS_BRACKET_TOO_WIDE as DERIVATIVE_STATUS_BRACKET_TOO_WIDE,
+)
+from ._implicit_root import (
+    DERIVATIVE_STATUS_CERTIFIED as DERIVATIVE_STATUS_CERTIFIED,
+)
+from ._implicit_root import (
+    DERIVATIVE_STATUS_NONFINITE as DERIVATIVE_STATUS_NONFINITE,
+)
+from ._implicit_root import (
+    DERIVATIVE_STATUS_PRIMAL_FAILED as DERIVATIVE_STATUS_PRIMAL_FAILED,
+)
+from ._implicit_root import (
+    DERIVATIVE_STATUS_RESIDUAL_TOO_LARGE as DERIVATIVE_STATUS_RESIDUAL_TOO_LARGE,
+)
+from ._implicit_root import (
+    DERIVATIVE_STATUS_SLOPE_ILL_CONDITIONED as DERIVATIVE_STATUS_SLOPE_ILL_CONDITIONED,
+)
+from ._implicit_root import (
+    ImplicitRootAssumptions as ImplicitRootAssumptions,
+)
+from ._implicit_root import (
+    ImplicitRootCertificate as ImplicitRootCertificate,
+)
+from ._implicit_root import (
+    ImplicitRootResult as ImplicitRootResult,
+)
+from ._implicit_root import (
+    _build_implicit_certificate as _build_implicit_certificate,
+)
 from .checks import try_concrete_bool
 from .types import ScalarFn
 

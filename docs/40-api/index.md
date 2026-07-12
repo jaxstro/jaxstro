@@ -211,6 +211,15 @@ checkpointable low-level step surface additionally exports `BracketHistory`,
 failure state but makes no implicit-root derivative claim. Behavior, field
 definitions, and differentiability caveats are in [](../10-theory/rootfinding.md).
 
+The separate derivative-certificate vocabulary exports
+`ImplicitRootAssumptions`, `ImplicitRootCertificate`, `ImplicitRootResult`,
+`DERIVATIVE_STATUS_CERTIFIED`, `DERIVATIVE_STATUS_PRIMAL_FAILED`,
+`DERIVATIVE_STATUS_ASSUMPTIONS_REJECTED`, `DERIVATIVE_STATUS_NONFINITE`,
+`DERIVATIVE_STATUS_RESIDUAL_TOO_LARGE`,
+`DERIVATIVE_STATUS_SLOPE_ILL_CONDITIONED`, and
+`DERIVATIVE_STATUS_BRACKET_TOO_WIDE`. These types do not change the value-first
+semantics of `safeguarded_bracketed_root`.
+
 ```python
 initialize_bracket(lo, hi, f_lo, f_hi) -> BracketState
 update_bracket(state, x, fx, *, valid=True) -> BracketState
