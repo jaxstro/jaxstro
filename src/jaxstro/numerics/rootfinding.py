@@ -585,6 +585,119 @@ def map_safeguarded_bracketed_root(
     return lax.map(solve, operands, batch_size=batch_size)
 
 
+def implicit_bracketed_root(
+    f: Callable[[Float[Array, ""], Any], Float[Array, ""]],
+    args: Any,
+    lo: Union[float, Float[Array, ""]],
+    hi: Union[float, Float[Array, ""]],
+    *,
+    assumptions: ImplicitRootAssumptions,
+    max_steps: int,
+    atol: float | Float[Array, ""] = 0.0,
+    rtol: float | Float[Array, ""] = 1.0e-8,
+    safeguard_fraction: float | Float[Array, ""] = 0.1,
+    derivative_residual_atol: float | Float[Array, ""],
+    derivative_residual_rtol: float | Float[Array, ""] = 0.0,
+    derivative_width_atol: float | Float[Array, ""],
+    derivative_width_rtol: float | Float[Array, ""] = 0.0,
+    derivative_slope_floor: float | Float[Array, ""],
+) -> ImplicitRootResult:
+    """Return an IFT derivative only when explicit runtime gates all pass."""
+
+    def root_function(x):
+        return f(x, args)
+
+    def solve(fn, _initial_guess):
+        primal = safeguarded_bracketed_root(
+            fn,
+            lo,
+            hi,
+            max_steps=max_steps,
+            atol=atol,
+            rtol=rtol,
+            safeguard_fraction=safeguard_fraction,
+        )
+        aux = jax.tree.map(
+            lambda leaf: lax.stop_gradient(jnp.asarray(leaf, dtype=primal.root.dtype)),
+            primal,
+        )
+        return primal.root, aux
+
+    def tangent_solve(g, y):
+        slope = g(jnp.ones_like(y))
+        floor = jnp.asarray(derivative_slope_floor, dtype=slope.dtype)
+        safe_slope = jnp.where(jnp.abs(slope) >= floor, slope, 1.0)
+        return y / safe_slope
+
+    initial_guess = 0.5 * jnp.asarray(lo) + 0.5 * jnp.asarray(hi)
+    implicit_root, primal_aux = lax.custom_root(
+        root_function,
+        initial_guess,
+        solve,
+        tangent_solve,
+        has_aux=True,
+    )
+    trace = RootTrace(
+        primal_aux.trace.proposal,
+        primal_aux.trace.residual,
+        primal_aux.trace.lo,
+        primal_aux.trace.hi,
+        primal_aux.trace.f_lo,
+        primal_aux.trace.f_hi,
+        primal_aux.trace.proposal_kind.astype(jnp.int32),
+        primal_aux.trace.executed.astype(bool),
+        primal_aux.trace.admissible.astype(bool),
+        primal_aux.trace.converged.astype(bool),
+        primal_aux.trace.status.astype(jnp.int32),
+    )
+    final_bracket = BracketState(
+        primal_aux.final_bracket.lo,
+        primal_aux.final_bracket.hi,
+        primal_aux.final_bracket.f_lo,
+        primal_aux.final_bracket.f_hi,
+        primal_aux.final_bracket.bracketed.astype(bool),
+    )
+    primal = BracketedRootResult(
+        primal_aux.root,
+        primal_aux.residual,
+        primal_aux.status.astype(jnp.int32),
+        primal_aux.converged.astype(bool),
+        primal_aux.bracketed.astype(bool),
+        primal_aux.n_evaluations.astype(jnp.int32),
+        primal_aux.residual_scale,
+        final_bracket,
+        trace,
+    )
+    residual = jnp.asarray(f(implicit_root, args))
+    slope = jax.grad(lambda x: f(x, args))(implicit_root)
+    certificate, status = _build_implicit_certificate(
+        primal,
+        slope,
+        assumptions,
+        residual_atol=derivative_residual_atol,
+        residual_rtol=derivative_residual_rtol,
+        width_atol=derivative_width_atol,
+        width_rtol=derivative_width_rtol,
+        slope_floor=derivative_slope_floor,
+    )
+    certified = lax.stop_gradient(certificate.certified)
+    root = lax.cond(
+        certified,
+        lambda x: x,
+        lambda x: x * jnp.asarray(jnp.nan, dtype=x.dtype),
+        implicit_root,
+    )
+    return ImplicitRootResult(
+        root,
+        lax.stop_gradient(residual),
+        lax.stop_gradient(slope),
+        lax.stop_gradient(status),
+        certified,
+        jax.tree.map(lax.stop_gradient, certificate),
+        jax.tree.map(lax.stop_gradient, primal),
+    )
+
+
 def bracket_expand(
     f: ScalarFn,
     x0: Union[float, Float[Array, "..."]],

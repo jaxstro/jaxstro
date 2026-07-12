@@ -1,5 +1,6 @@
 """Contracts for strictly gated implicit scalar roots."""
 
+import jax
 import jax.numpy as jnp
 import pytest
 
@@ -97,3 +98,31 @@ def test_implicit_contract_field_order_is_stable() -> None:
         "certificate",
         "primal",
     )
+
+
+def test_linear_implicit_gradient_matches_analytic_and_fd() -> None:
+    def residual(x, theta):
+        return x - theta
+
+    def solve(theta):
+        return rootfinding.implicit_bracketed_root(
+            residual,
+            theta,
+            0.0,
+            4.0,
+            assumptions=rootfinding.ImplicitRootAssumptions(True, True),
+            max_steps=64,
+            atol=1.0e-14,
+            rtol=1.0e-14,
+            safeguard_fraction=0.1,
+            derivative_residual_atol=1.0e-13,
+            derivative_width_atol=1.0e-13,
+            derivative_slope_floor=1.0e-8,
+        ).root
+
+    theta = jnp.asarray(2.0)
+    ad = jax.grad(solve)(theta)
+    fd = (solve(theta + 1.0e-5) - solve(theta - 1.0e-5)) / 2.0e-5
+
+    assert ad == pytest.approx(1.0, rel=1.0e-10)
+    assert ad == pytest.approx(float(fd), rel=1.0e-8)

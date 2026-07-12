@@ -218,7 +218,10 @@ The separate derivative-certificate vocabulary exports
 `DERIVATIVE_STATUS_RESIDUAL_TOO_LARGE`,
 `DERIVATIVE_STATUS_SLOPE_ILL_CONDITIONED`, and
 `DERIVATIVE_STATUS_BRACKET_TOO_WIDE`. These types do not change the value-first
-semantics of `safeguarded_bracketed_root`.
+semantics of `safeguarded_bracketed_root`. The explicitly gated
+`implicit_bracketed_root` accepts `f(x, args)` and exposes an IFT derivative only
+when every certificate predicate passes; rejected values and attempted
+derivatives are NaN while the nested primal diagnostics remain available.
 
 ```python
 initialize_bracket(lo, hi, f_lo, f_hi) -> BracketState
