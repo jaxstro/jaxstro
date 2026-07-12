@@ -4,13 +4,15 @@ next: Await Anna's per-task checkpoint approval, then execute spectra-v1 Task 5:
 rectilinear and simplex interpolation stencils with fixed-shape JAX evaluation and fail-closed
 outside-domain statuses.
 
-previous: Spectra-v1 Task 4 completed on `codex/spectra-v1` (2026-07-12). The canonical wavelength
-boundary was cleanly corrected from cm/per-cm to nm/per-nm: NewEra, BOSZ, and Sonora source factors
-are now 1e3, 10, and 1e-6, and F_lambda/F_nu uses c in nm/s. Explicit `SpectralPlan` targets now
-provide bit-identical identity values, in-coverage linear point interpolation, conservative
-bin-average remapping, and NaN plus `UNSUPPORTED_SPECTRAL_WINDOW` outside coverage. Coordinate/unit
-changes and point/bin semantic changes are rejected. The combined Tasks 2-4/provenance/ownership
-gate is 47 tests in 1.88 s (2.47 s wall); Ruff and mypy pass. Nothing has been pushed.
+previous: Spectra-v1 Task 4A completed on `codex/spectra-v1` (2026-07-12). `SpectralPlan` now owns a
+static point method: linear remains the honest default and delegates to Jaxstro `interp1d`; opt-in
+monotone cubic delegates to the existing PCHIP implementation. Equal axes remain bit-identical,
+bin averages remain conservative, and unsupported windows remain NaN plus status. Smooth-path
+AD/FD ratios are 0.999999999997 (linear values), 1.00000000002 (linear query), 0.999999999998
+(PCHIP values), and 1.00000000001 (PCHIP query), all clean. Claims exclude knots, interval changes,
+limiter transitions, coverage boundaries, and sampling-policy changes. The focused gate is 23 tests
+in 3.81 s (4.54 s wall); the combined spectra gate is 56 tests in 3.19 s (3.94 s wall), with Ruff,
+format, mypy, and diff checks clean. Nothing has been pushed.
 
 blocker: None for spectra-v1 Task 5. Remote publication, tag/release, Pages configuration, and PyPI
 remain outside this local feature branch and require separate authorization.

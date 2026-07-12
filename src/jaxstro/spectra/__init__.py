@@ -1,6 +1,6 @@
 """Domain-neutral spectral representations and numerical operations."""
 
-from .plan import CoveragePolicy, SpectralPlan
+from .plan import CoveragePolicy, PointResamplingMethod, SpectralPlan
 from .resampling import resample_spectrum
 from .transforms import (
     surface_flux_to_luminosity,
@@ -24,6 +24,7 @@ from .types import (
 
 __all__ = [
     "CoveragePolicy",
+    "PointResamplingMethod",
     "SpectralAxis",
     "SpectralCoordinate",
     "SpectralSampling",

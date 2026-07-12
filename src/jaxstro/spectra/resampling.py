@@ -7,10 +7,10 @@ from typing import Any
 
 import jax.numpy as jnp
 
-from jaxstro.numerics import conservative_remap_1d
+from jaxstro.numerics import conservative_remap_1d, interpolation
 from jaxstro.numerics.checks import try_concrete_bool
 
-from .plan import CoveragePolicy, SpectralPlan
+from .plan import CoveragePolicy, PointResamplingMethod, SpectralPlan
 from .types import (
     SpectralAxis,
     SpectralSampling,
@@ -106,13 +106,28 @@ def resample_spectrum(spectrum: Spectrum, plan: SpectralPlan) -> SpectrumResult:
     )
 
     if source.sampling is SpectralSampling.POINTS:
-        values = jnp.interp(target.values, source.values, spectrum.values)
+        if plan.point_method is PointResamplingMethod.LINEAR:
+            values = interpolation.interp1d(
+                source.values,
+                spectrum.values,
+                target.values,
+                extrapolate=False,
+            )
+            operation = "resample:linear-points"
+        else:
+            values = interpolation.monotone_cubic_interp(
+                source.values,
+                spectrum.values,
+                target.values,
+                extrapolate=False,
+            )
+            operation = "resample:monotone-cubic-points"
         return _result(
             spectrum,
             target,
             values,
             covered,
-            "resample:linear-points",
+            operation,
         )
     if source.sampling is SpectralSampling.BIN_AVERAGES:
         if source.edges is None or target.edges is None:  # protected invariants

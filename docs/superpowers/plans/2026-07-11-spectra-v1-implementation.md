@@ -309,6 +309,23 @@ mypy, MyST.
   git commit -m "feat: add explicit spectral resampling plans"
   ```
 
+### Task 4A: Add explicit point-resampling methods
+
+**Status:** Complete on 2026-07-12. Detailed execution authority:
+`docs/superpowers/plans/2026-07-12-spectral-resampling-methods.md`.
+
+- [x] Add static `PointResamplingMethod.LINEAR` and
+  `PointResamplingMethod.MONOTONE_CUBIC` plan metadata.
+- [x] Route linear point spectra through
+  `jaxstro.numerics.interpolation.interp1d`.
+- [x] Route opt-in PCHIP spectra through
+  `jaxstro.numerics.interpolation.monotone_cubic_interp`.
+- [x] Preserve identity, fail-closed coverage, point/bin rejection, and
+  conservative bin-average behavior.
+- [x] Verify JIT, range preservation, provenance, and four smooth-path AD-vs-FD
+  cases. Focused gate: 23 tests in 3.81 s (4.54 s wall). Combined spectra gate:
+  56 tests in 3.19 s (3.94 s wall).
+
 ### Task 5: Add prepared rectilinear and simplex stencils
 
 **Files:**

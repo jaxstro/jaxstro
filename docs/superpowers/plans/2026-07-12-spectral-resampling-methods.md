@@ -40,7 +40,7 @@
 - Produces: `PointResamplingMethod.LINEAR`, `PointResamplingMethod.MONOTONE_CUBIC`, and `SpectralPlan(..., point_method=PointResamplingMethod.LINEAR)`.
 - Preserves: `resample_spectrum(spectrum, plan) -> SpectrumResult`.
 
-- [ ] **Step 1: Write failing plan and public-API tests**
+- [x] **Step 1: Write failing plan and public-API tests**
 
   Extend `tests/unit/test_spectra_plan.py` to import `PointResamplingMethod` and
   verify that the method is static PyTree metadata:
@@ -78,7 +78,7 @@
           SpectralPlan(axis, point_method=PointResamplingMethod.MONOTONE_CUBIC)
   ```
 
-- [ ] **Step 2: Write failing dispatch, shape, and provenance tests**
+- [x] **Step 2: Write failing dispatch, shape, and provenance tests**
 
   Extend `tests/unit/test_spectra_resampling.py` with a curved positive spectrum
   and compare each public method to its existing Jaxstro primitive:
@@ -128,7 +128,7 @@
   remains `resample:identity` with bit-identical values. Retain all existing
   outside-coverage, point/bin rejection, and conservation tests unchanged.
 
-- [ ] **Step 3: Write failing AD-vs-FD tests at smooth interior points**
+- [x] **Step 3: Write failing AD-vs-FD tests at smooth interior points**
 
   Create `tests/validation/test_spectra_resampling_gradients.py`. Use the shared
   `jaxstro.testing.Case` and `audit_entry_point` machinery for four cases:
@@ -203,7 +203,7 @@
   intervals and choose positive `BASE_VALUES` whose adjacent secant signs do not
   change under the finite-difference perturbations.
 
-- [ ] **Step 4: Run the focused RED gate**
+- [x] **Step 4: Run the focused RED gate**
 
   Run:
 
@@ -218,7 +218,7 @@
   Expected: collection fails because `PointResamplingMethod` is not exported.
   Record pytest and wall time.
 
-- [ ] **Step 5: Implement the static method contract in `plan.py`**
+- [x] **Step 5: Implement the static method contract in `plan.py`**
 
   Add the enum and field:
 
@@ -250,7 +250,7 @@
   auxiliary data and restore both fields in `tree_unflatten()`. Export
   `PointResamplingMethod` from `plan.py` and `jaxstro.spectra`.
 
-- [ ] **Step 6: Replace direct JAX interpolation with Jaxstro dispatch**
+- [x] **Step 6: Replace direct JAX interpolation with Jaxstro dispatch**
 
   In `resampling.py`, import the module rather than copying kernels:
 
@@ -281,7 +281,7 @@
   primitives clamp by default, an unsupported target must still replace the
   complete payload with NaNs and return `UNSUPPORTED_SPECTRAL_WINDOW`.
 
-- [ ] **Step 7: Run focused GREEN, formatting, and typing gates**
+- [x] **Step 7: Run focused GREEN, formatting, and typing gates**
 
   Run:
 
@@ -309,7 +309,7 @@
   Expected: all focused tests pass in seconds; Ruff, format, mypy, and diff
   checks report no errors. Record pytest and wall time.
 
-- [ ] **Step 8: Run the bounded combined spectra regression**
+- [x] **Step 8: Run the bounded combined spectra regression**
 
   Run:
 
@@ -330,7 +330,7 @@
   Expected: all spectra Tasks 2-4A tests pass in seconds. Do not substitute the
   long repository CI workflow for this bounded regression.
 
-- [ ] **Step 9: Update execution records and commit**
+- [x] **Step 9: Update execution records and commit**
 
   Add a completed `Task 4A` entry to
   `docs/superpowers/plans/2026-07-11-spectra-v1-implementation.md`. Update

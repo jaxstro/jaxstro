@@ -7,8 +7,10 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
+from jaxstro.numerics import interpolation
 from jaxstro.spectra import (
     CoveragePolicy,
+    PointResamplingMethod,
     SpectralAxis,
     SpectralCoordinate,
     SpectralPlan,
@@ -44,6 +46,19 @@ def _points() -> Spectrum:
     )
 
 
+def _curved_points() -> Spectrum:
+    return Spectrum(
+        axis=SpectralAxis.points(
+            jnp.array([100.0, 180.0, 280.0, 400.0]),
+            coordinate=SpectralCoordinate.WAVELENGTH,
+            unit="nm",
+        ),
+        values=jnp.array([1.0, 2.0, 1.5, 3.0]),
+        semantic=SpectralSemantic.SURFACE_FLUX_LAMBDA,
+        provenance=PROVENANCE,
+    )
+
+
 def _plan(axis: SpectralAxis) -> SpectralPlan:
     return SpectralPlan(axis, CoveragePolicy.INTERSECTION)
 
@@ -72,6 +87,65 @@ def test_point_samples_use_linear_interpolation_inside_coverage() -> None:
     np.testing.assert_allclose(result.spectrum.values, [3.0, 6.0])
     assert result.spectrum.axis is target
     assert result.spectrum.provenance.operations[-1] == "resample:linear-points"
+
+
+def test_linear_points_delegate_to_jaxstro_interp1d() -> None:
+    source = _points()
+    target = SpectralAxis.points(
+        jnp.array([150.0, 300.0]),
+        coordinate=SpectralCoordinate.WAVELENGTH,
+        unit="nm",
+    )
+
+    result = resample_spectrum(source, SpectralPlan(target))
+    expected = interpolation.interp1d(
+        source.axis.values,
+        source.values,
+        target.values,
+    )
+
+    np.testing.assert_array_equal(result.spectrum.values, expected)
+    assert result.spectrum.provenance.operations[-1] == "resample:linear-points"
+
+
+def test_monotone_cubic_points_delegate_to_jaxstro_pchip() -> None:
+    source = _curved_points()
+    target = SpectralAxis.points(
+        jnp.linspace(100.0, 400.0, 31),
+        coordinate=SpectralCoordinate.WAVELENGTH,
+        unit="nm",
+    )
+    plan = SpectralPlan(
+        target,
+        point_method=PointResamplingMethod.MONOTONE_CUBIC,
+    )
+
+    result = resample_spectrum(source, plan)
+    expected = interpolation.monotone_cubic_interp(
+        source.axis.values,
+        source.values,
+        target.values,
+    )
+
+    np.testing.assert_array_equal(result.spectrum.values, expected)
+    assert bool(jnp.all(result.spectrum.values >= jnp.min(source.values)))
+    assert bool(jnp.all(result.spectrum.values <= jnp.max(source.values)))
+    assert result.spectrum.provenance.operations[-1] == (
+        "resample:monotone-cubic-points"
+    )
+
+
+def test_identical_axis_ignores_selected_point_method() -> None:
+    source = _curved_points()
+    plan = SpectralPlan(
+        source.axis,
+        point_method=PointResamplingMethod.MONOTONE_CUBIC,
+    )
+
+    result = resample_spectrum(source, plan)
+
+    np.testing.assert_array_equal(result.spectrum.values, source.values)
+    assert result.spectrum.provenance.operations[-1] == "resample:identity"
 
 
 def test_target_outside_source_coverage_fails_without_extrapolation() -> None:
