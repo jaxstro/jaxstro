@@ -44,6 +44,7 @@ project:
     - title: Getting started
       children:
         - file: 00-getting-started/index.md
+        - file: 00-getting-started/how-to-learn.md
     - title: Theory — AD-safe numerics
       children:
         - file: 10-theory/index.md

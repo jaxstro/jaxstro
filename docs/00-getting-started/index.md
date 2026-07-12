@@ -10,6 +10,9 @@ installed, float64 enabled, and one small example running that exercises the two
 habits everything else in the package depends on: **guard your arithmetic** and
 **verify solver gradients independently**.
 
+For the reasoning pattern used throughout the site and in course activities,
+continue to [](./how-to-learn.md): **predict → compute → audit**.
+
 ## Prerequisites
 
 You need Python 3.11 or newer and [uv](https://docs.astral.sh/uv/). jaxstro

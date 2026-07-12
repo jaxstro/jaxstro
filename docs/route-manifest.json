@@ -1,5 +1,6 @@
 {
   "00-getting-started/index.md": "/index-1",
+  "00-getting-started/how-to-learn.md": "/how-to-learn",
   "10-theory/autodiff.md": "/autodiff",
   "10-theory/bsplines.md": "/bsplines",
   "10-theory/cumulative-trapz.md": "/cumulative-trapz",

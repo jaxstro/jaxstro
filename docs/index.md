@@ -34,6 +34,9 @@ at once: a **new graduate student** meeting differentiable scientific computing 
 the first time, and **future-you** trying to remember *why* a function rounds the
 way it does. The theory pages teach the methods; the reference pages let you look
 up the call signature; the decision log records every choice and its trade-offs.
+Research students and course learners should begin with
+[](./00-getting-started/how-to-learn.md), which explains the site's recurring
+**predict → compute → audit** reasoning cycle.
 
 (three-doors)=
 ## Three doors in
