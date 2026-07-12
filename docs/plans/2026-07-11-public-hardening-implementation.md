@@ -17,7 +17,10 @@
 - [x] Slice C — documentation currency, page pedagogy, JaxtroViz, and rendered-DOM gate
 - [x] Slice D.1 — local Pages workflow and `/jaxstro` base-path proof
 - [x] Slice D.2 — release checklist, citation/contributor metadata, and sdist hardening
-- [ ] Slice D.3 — remote publication, deliberately stopped pending separate authorization
+- [x] Slice D.3 — authorized push plus GitHub Pages configuration and live verification
+
+Tagging, Zenodo/archive creation, and TestPyPI/PyPI remain separately deferred;
+they were not part of the approved Pages publication action.
 
 ---
 

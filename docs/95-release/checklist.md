@@ -84,8 +84,12 @@ compatible release is published through that later authorized process.
   2026-07-12.
 - [x] GitHub Pages source is set once to **GitHub Actions**, using the reviewed
   repository-settings or API operation.
-- [ ] The deployed site at `https://jaxstro.github.io/jaxstro/` is checked in the
+- [x] The deployed site at `https://jaxstro.github.io/jaxstro/` is checked in the
   rendered DOM for navigation, assets, equations, figures, and internal links.
+
+Deployment evidence: Actions run `29188207759` completed successfully on
+2026-07-12; live checks returned HTTP 200 for the homepage, this checklist, and
+the compiled `/jaxstro/build/` stylesheet.
 
 ## 6. Citation, archive, and contributor surface
 
