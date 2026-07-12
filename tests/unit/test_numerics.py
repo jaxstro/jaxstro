@@ -387,6 +387,127 @@ class TestBracketExpand:
             rootfinding.bracket_expand(lambda x: x, 0.0, growth=1.0)
 
 
+class TestSafeguardedBracketPrimitives:
+    """Contracts for auditable sign-bracket state and proposals."""
+
+    @staticmethod
+    def _assert_state_equal(actual, expected):
+        for actual_leaf, expected_leaf in zip(actual, expected, strict=True):
+            assert jnp.array_equal(actual_leaf, expected_leaf, equal_nan=True)
+
+    def test_initializes_sign_change_and_endpoint_roots(self):
+        bracket = rootfinding.initialize_bracket(0.0, 2.0, -1.0, 1.0)
+        lo_root = rootfinding.initialize_bracket(0.0, 2.0, 0.0, 1.0)
+        hi_root = rootfinding.initialize_bracket(0.0, 2.0, -1.0, 0.0)
+        missing = rootfinding.initialize_bracket(0.0, 2.0, 1.0, 2.0)
+
+        assert bool(bracket.bracketed)
+        assert bool(lo_root.bracketed)
+        assert bool(hi_root.bracketed)
+        assert not bool(missing.bracketed)
+
+    def test_updates_each_side_without_losing_bracket(self):
+        state = rootfinding.initialize_bracket(0.0, 4.0, -2.0, 2.0)
+        replace_lo = rootfinding.update_bracket(state, 1.0, -1.0)
+        replace_hi = rootfinding.update_bracket(state, 3.0, 1.0)
+
+        assert bool(replace_lo.bracketed)
+        assert replace_lo.lo == 1.0
+        assert replace_lo.hi == 4.0
+        assert replace_lo.f_lo == -1.0
+        assert replace_lo.f_hi == 2.0
+        assert bool(replace_hi.bracketed)
+        assert replace_hi.lo == 0.0
+        assert replace_hi.hi == 3.0
+        assert replace_hi.f_lo == -2.0
+        assert replace_hi.f_hi == 1.0
+
+    def test_exact_interior_root_collapses_bracket(self):
+        state = rootfinding.initialize_bracket(0.0, 4.0, -2.0, 2.0)
+        updated = rootfinding.update_bracket(state, 2.0, 0.0)
+
+        assert bool(updated.bracketed)
+        assert updated.lo == 2.0
+        assert updated.hi == 2.0
+        assert updated.f_lo == 0.0
+        assert updated.f_hi == 0.0
+
+    def test_invalid_or_nonfinite_update_is_exact_noop(self):
+        state = rootfinding.initialize_bracket(0.0, 4.0, -2.0, 2.0)
+
+        self._assert_state_equal(
+            rootfinding.update_bracket(state, 2.0, 0.0, valid=False), state
+        )
+        self._assert_state_equal(rootfinding.update_bracket(state, jnp.nan, 0.0), state)
+        self._assert_state_equal(rootfinding.update_bracket(state, 2.0, jnp.inf), state)
+        self._assert_state_equal(rootfinding.update_bracket(state, 5.0, 3.0), state)
+
+    def test_accepts_well_conditioned_safely_interior_secant(self):
+        state = rootfinding.initialize_bracket(0.0, 3.0, -2.0, 1.0)
+        proposal = rootfinding.propose_bracketed(state, safeguard_fraction=0.1)
+
+        assert proposal.x == pytest.approx(2.0)
+        assert proposal.kind == rootfinding.PROPOSAL_SECANT
+        assert not bool(proposal.safeguarded)
+
+    @pytest.mark.parametrize(
+        "state",
+        [
+            pytest.param(
+                lambda: rootfinding.BracketState(0.0, 2.0, 1.0, 1.0, True),
+                id="degenerate-denominator",
+            ),
+            pytest.param(
+                lambda: rootfinding.BracketState(-1.0, 1.0, -1.0e308, 1.0e308, True),
+                id="nonfinite-interpolation",
+            ),
+            pytest.param(
+                lambda: rootfinding.BracketState(0.0, 2.0, 1.0, 2.0, True),
+                id="out-of-bracket-interpolation",
+            ),
+            pytest.param(
+                lambda: rootfinding.initialize_bracket(0.0, 2.0, -1.0e-12, 1.0),
+                id="inadequate-progress",
+            ),
+        ],
+    )
+    def test_rejects_unsafe_secant_with_midpoint_fallback(self, state):
+        proposal = rootfinding.propose_bracketed(state(), safeguard_fraction=0.1)
+
+        assert proposal.x == pytest.approx(1.0 if state().lo == 0.0 else 0.0)
+        assert proposal.kind == rootfinding.PROPOSAL_MIDPOINT
+        assert bool(proposal.safeguarded)
+
+    def test_endpoint_root_tie_breaking_and_missing_kind_are_deterministic(self):
+        both_roots = rootfinding.BracketState(1.0, 2.0, 0.0, 0.0, True)
+        missing = rootfinding.initialize_bracket(0.0, 2.0, 1.0, 2.0)
+
+        root_proposal = rootfinding.propose_bracketed(
+            both_roots, safeguard_fraction=0.1
+        )
+        missing_proposal = rootfinding.propose_bracketed(
+            missing, safeguard_fraction=0.1
+        )
+
+        assert root_proposal.x == 1.0
+        assert root_proposal.kind == rootfinding.PROPOSAL_LO_ENDPOINT
+        assert not bool(root_proposal.safeguarded)
+        assert jnp.isnan(missing_proposal.x)
+        assert missing_proposal.kind == rootfinding.PROPOSAL_NONE
+        assert not bool(missing_proposal.safeguarded)
+
+    def test_primitives_compose_with_jit(self):
+        @jax.jit
+        def refine(lo, hi, f_lo, f_hi, x, fx):
+            state = rootfinding.initialize_bracket(lo, hi, f_lo, f_hi)
+            updated = rootfinding.update_bracket(state, x, fx)
+            return rootfinding.propose_bracketed(updated, safeguard_fraction=0.1)
+
+        proposal = refine(0.0, 4.0, -2.0, 2.0, 1.0, -1.0)
+        assert proposal.x == pytest.approx(2.0)
+        assert proposal.kind == rootfinding.PROPOSAL_SECANT
+
+
 class TestBisectMany:
     """Tests for explicit vectorized independent bisection solves."""
 

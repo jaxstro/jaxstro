@@ -22,7 +22,7 @@ Usage:
     jax.grad(lambda a: solve(a, 2.0))(1.0)
 """
 
-from typing import Callable, Optional, Union
+from typing import Callable, NamedTuple, Optional, Union
 
 import jax
 import jax.lax as lax
@@ -32,12 +32,149 @@ from jaxtyping import Array, Float
 from .checks import try_concrete_bool
 from .types import ScalarFn
 
+PROPOSAL_NONE = 0
+PROPOSAL_SECANT = 1
+PROPOSAL_MIDPOINT = 2
+PROPOSAL_LO_ENDPOINT = 3
+PROPOSAL_HI_ENDPOINT = 4
+
+
+class BracketState(NamedTuple):
+    """True endpoint evidence for a scalar sign-changing bracket."""
+
+    lo: Float[Array, "..."]
+    hi: Float[Array, "..."]
+    f_lo: Float[Array, "..."]
+    f_hi: Float[Array, "..."]
+    bracketed: Array
+
+
+class BracketProposal(NamedTuple):
+    """A deterministic interpolation or safeguarded midpoint proposal."""
+
+    x: Float[Array, "..."]
+    kind: Array
+    safeguarded: Array
+
 
 def _raise_if_concrete_false(predicate, message: str) -> None:
     """Raise eagerly when a validation predicate is concrete and false."""
     result = try_concrete_bool(jnp.asarray(predicate))
     if result is False:
         raise ValueError(message)
+
+
+def initialize_bracket(
+    lo: Union[float, Float[Array, "..."]],
+    hi: Union[float, Float[Array, "..."]],
+    f_lo: Union[float, Float[Array, "..."]],
+    f_hi: Union[float, Float[Array, "..."]],
+) -> BracketState:
+    """Build typed bracket evidence from already-evaluated endpoints."""
+    dtype = jnp.result_type(lo, hi, f_lo, f_hi)
+    lo = jnp.asarray(lo, dtype=dtype)
+    hi = jnp.asarray(hi, dtype=dtype)
+    f_lo = jnp.asarray(f_lo, dtype=dtype)
+    f_hi = jnp.asarray(f_hi, dtype=dtype)
+    finite = jnp.isfinite(lo) & jnp.isfinite(hi)
+    finite &= jnp.isfinite(f_lo) & jnp.isfinite(f_hi)
+    sign_change = (f_lo == 0.0) | (f_hi == 0.0)
+    sign_change |= jnp.signbit(f_lo) != jnp.signbit(f_hi)
+    bracketed = finite & (lo <= hi) & sign_change
+    return BracketState(lo, hi, f_lo, f_hi, bracketed)
+
+
+def update_bracket(
+    state: BracketState,
+    x: Union[float, Float[Array, "..."]],
+    fx: Union[float, Float[Array, "..."]],
+    *,
+    valid: bool | Array = True,
+) -> BracketState:
+    """Update one bracket endpoint, or preserve every field when inadmissible.
+
+    ``valid=False`` is an exact no-op. This lets a caller exclude a trial whose
+    residual is finite but whose external state is inadmissible.
+    """
+    x = jnp.asarray(x, dtype=state.lo.dtype)
+    fx = jnp.asarray(fx, dtype=state.f_lo.dtype)
+    admissible = jnp.asarray(valid, dtype=bool) & state.bracketed
+    admissible &= jnp.isfinite(x) & jnp.isfinite(fx)
+    admissible &= (x >= state.lo) & (x <= state.hi)
+
+    exact = admissible & (fx == 0.0)
+    same_as_lo = jnp.signbit(fx) == jnp.signbit(state.f_lo)
+    replace_lo = admissible & ~exact & same_as_lo
+    replace_hi = admissible & ~exact & ~same_as_lo
+
+    lo = jnp.where(exact | replace_lo, x, state.lo)
+    hi = jnp.where(exact | replace_hi, x, state.hi)
+    f_lo = jnp.where(exact, jnp.zeros_like(fx), state.f_lo)
+    f_lo = jnp.where(replace_lo, fx, f_lo)
+    f_hi = jnp.where(exact, jnp.zeros_like(fx), state.f_hi)
+    f_hi = jnp.where(replace_hi, fx, f_hi)
+    return BracketState(lo, hi, f_lo, f_hi, state.bracketed)
+
+
+def propose_bracketed(
+    state: BracketState,
+    *,
+    safeguard_fraction: float | Float[Array, ""] = 0.1,
+) -> BracketProposal:
+    """Propose a safely interior secant point or deterministic midpoint.
+
+    Proposal kinds are integer constants. Exact endpoint roots take priority,
+    with the lower endpoint winning ties. A non-root secant is accepted only
+    when its denominator and value are finite, it lies strictly in the bracket,
+    and it leaves at least ``safeguard_fraction`` of the current width on both
+    sides. Otherwise the midpoint is returned with ``safeguarded=True``.
+    """
+    dtype = jnp.result_type(state.lo, state.hi, state.f_lo, state.f_hi)
+    state = BracketState(
+        jnp.asarray(state.lo, dtype=dtype),
+        jnp.asarray(state.hi, dtype=dtype),
+        jnp.asarray(state.f_lo, dtype=dtype),
+        jnp.asarray(state.f_hi, dtype=dtype),
+        jnp.asarray(state.bracketed, dtype=bool),
+    )
+    fraction = jnp.asarray(safeguard_fraction, dtype=state.lo.dtype)
+    _raise_if_concrete_false(
+        jnp.all((fraction >= 0.0) & (fraction < 0.5)),
+        "safeguard_fraction must satisfy 0 <= value < 0.5",
+    )
+
+    bracketed = jnp.asarray(state.bracketed, dtype=bool)
+    lo_root = bracketed & (state.f_lo == 0.0)
+    hi_root = bracketed & ~lo_root & (state.f_hi == 0.0)
+    endpoint_root = lo_root | hi_root
+
+    midpoint = 0.5 * state.lo + 0.5 * state.hi
+    denominator = state.f_hi - state.f_lo
+    scale = jnp.maximum(jnp.abs(state.f_lo), jnp.abs(state.f_hi))
+    eps = jnp.finfo(state.lo.dtype).eps
+    denominator_ok = jnp.isfinite(denominator)
+    denominator_ok &= jnp.abs(denominator) > 8.0 * eps * scale
+    denominator_safe = jnp.where(denominator_ok, denominator, 1.0)
+    width = state.hi - state.lo
+    secant = state.lo - (state.f_lo / denominator_safe) * width
+    in_bracket = (secant > state.lo) & (secant < state.hi)
+    progress_lo = state.lo + fraction * width
+    progress_hi = state.hi - fraction * width
+    adequate_progress = (secant >= progress_lo) & (secant <= progress_hi)
+    use_secant = bracketed & ~endpoint_root & denominator_ok
+    use_secant &= jnp.isfinite(secant) & in_bracket & adequate_progress
+
+    candidate = jnp.where(use_secant, secant, midpoint)
+    kind = jnp.where(use_secant, PROPOSAL_SECANT, PROPOSAL_MIDPOINT)
+    safeguarded = bracketed & ~endpoint_root & ~use_secant
+    candidate = jnp.where(lo_root, state.lo, candidate)
+    candidate = jnp.where(hi_root, state.hi, candidate)
+    kind = jnp.where(lo_root, PROPOSAL_LO_ENDPOINT, kind)
+    kind = jnp.where(hi_root, PROPOSAL_HI_ENDPOINT, kind)
+    candidate = jnp.where(bracketed, candidate, jnp.nan)
+    kind = jnp.where(bracketed, kind, PROPOSAL_NONE).astype(jnp.int32)
+    safeguarded = jnp.where(bracketed, safeguarded, False)
+    return BracketProposal(candidate, kind, safeguarded)
 
 
 def bracket_expand(
@@ -442,6 +579,16 @@ def monotone_inverse_interp(
 newton_1d = newton_with_grad
 
 __all__ = [
+    "PROPOSAL_NONE",
+    "PROPOSAL_SECANT",
+    "PROPOSAL_MIDPOINT",
+    "PROPOSAL_LO_ENDPOINT",
+    "PROPOSAL_HI_ENDPOINT",
+    "BracketState",
+    "BracketProposal",
+    "initialize_bracket",
+    "update_bracket",
+    "propose_bracketed",
     "bracket_expand",
     "bisect",
     "bisect_many",
