@@ -290,6 +290,27 @@ def test_value_versus_ift_figure_uses_certified_and_rejected_results() -> None:
     assert np.isclose(results["ad"], results["analytic"], rtol=1.0e-9)
     assert np.isclose(results["ad"], results["fd"], rtol=1.0e-7)
 
+    figure = spec.builder()
+    labels = {
+        text.get_text()
+        for text in figure.findobj(match=lambda item: hasattr(item, "get_text"))
+    }
+    assert "certified=True; assertions + all runtime gates pass" in labels
+
+
+def test_root_trace_figure_uses_noncolor_visual_encodings() -> None:
+    from laboratory.jaxtroviz.rootfinding import PROPOSAL_MARKERS
+
+    figure = FIGURES["rootfinding-safeguards"].builder()
+    bracket_styles = {
+        line.get_linestyle()
+        for line in figure.axes[1].lines
+        if line.get_label() in {"Verified lo", "Verified hi", "Full bracket width"}
+    }
+
+    assert len(set(PROPOSAL_MARKERS.values())) == 3
+    assert len(bracket_styles) == 3
+
 
 def test_old_figure_namespace_is_removed() -> None:
     assert not (Path(__file__).resolve().parents[2] / "laboratory" / "figures").exists()

@@ -1,5 +1,6 @@
 """Executable content contracts for scalar-root documentation."""
 
+import json
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -44,3 +45,21 @@ def test_rootfinding_page_embeds_accessible_evidence_figures_and_activity() -> N
     assert "Predict → compute → audit: which derivative are you asking for?" in text
     assert "Metric identity" in text
     assert "Central-FD root sensitivity" in text
+
+
+def test_rootfinding_metric_table_matches_generated_quadratic_evidence() -> None:
+    text = ROOTFINDING.read_text(encoding="utf-8")
+    payload = json.loads(
+        (REPO_ROOT / "docs" / "validation" / "implicit-root-gradients.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    quadratic = next(case for case in payload["cases"] if case["name"] == "quadratic")
+    for metric in (
+        "root",
+        "absolute_residual",
+        "bracket_width",
+        "ad_derivative",
+        "fd_derivative",
+    ):
+        assert str(quadratic[metric]["value"]) in text

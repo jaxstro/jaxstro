@@ -182,7 +182,7 @@ assert result.converged
 
 :::{figure} ./figures/rootfinding-safeguards.webp
 :name: fig-rootfinding-safeguards
-:alt: Two-panel safeguarded root trace showing colored IQI, secant, and midpoint proposals on a quadratic residual and the verified lower endpoint, upper endpoint, and full bracket width across executed iterations
+:alt: Two-panel safeguarded root trace showing circle IQI, square secant, and triangle midpoint proposals on a quadratic residual and solid lower endpoint, dashed upper endpoint, and dotted bracket width across executed iterations
 
 Both panels are computed from the public solver and its fixed-shape trace. The
 left panel shows which selected proposals were evaluated; the right shows that
@@ -229,7 +229,7 @@ width, finiteness, or conditioning evidence fails.
 
 :::{figure} ./figures/rootfinding-value-versus-ift.webp
 :name: fig-rootfinding-value-versus-ift
-:alt: Two-panel comparison of a branch-selected quadratic root trace with analytic, certified implicit-function AD, and central finite-difference sensitivities, including a rejected flat-root certificate
+:alt: Two-panel comparison of a branch-selected quadratic root trace with analytic, certified implicit-function AD, and central finite-difference sensitivities; certification includes uniqueness and smoothness assertions plus convergence, finiteness, residual, width, and slope gates, while a flat-root certificate is rejected
 
 The value-first trace answers “what numerical map executed?” The derivative
 panel answers the different question “how does the certified root relation move
@@ -266,9 +266,10 @@ rejection, not as a derivative estimate.
   - coordinate units per parameter unit
 ```
 
-These values are generated and freshness-checked by
-`scripts/benchmark_implicit_root.py`; the table is explanatory, while the JSON
-artifact and tests are the executable evidence.
+These values are copied from the JSON artifact generated and freshness-checked
+by `scripts/benchmark_implicit_root.py`. A documentation test requires the table
+to match that artifact; the JSON and numerical tests remain the primary
+executable evidence.
 
 ## `newton` and `newton_with_grad` — smooth iterates, real gradients
 

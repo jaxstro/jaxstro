@@ -32,6 +32,12 @@ from .style import (  # noqa: E402
     setup_style,
 )
 
+PROPOSAL_MARKERS = {
+    PROPOSAL_INVERSE_QUADRATIC: "o",
+    PROPOSAL_SECANT: "s",
+    PROPOSAL_MIDPOINT: "^",
+}
+
 
 def root_trace_results():
     """Return a public-API residual curve and safeguarded solver trace."""
@@ -130,6 +136,7 @@ def build_rootfinding_safeguards() -> Figure:
                 color=color,
                 edgecolor="white",
                 linewidth=0.4,
+                marker=PROPOSAL_MARKERS[kind],
                 label=label,
                 zorder=3,
             )
@@ -143,9 +150,15 @@ def build_rootfinding_safeguards() -> Figure:
     polish_axes(ax, grid_axis="y")
 
     ax = axes[1]
-    ax.plot(iterations, lo, color=PALETTE[0], label="Verified lo")
-    ax.plot(iterations, hi, color=PALETTE[1], label="Verified hi")
-    ax.plot(iterations, hi - lo, color=POSITIVE, label="Full bracket width")
+    ax.plot(iterations, lo, color=PALETTE[0], linestyle="-", label="Verified lo")
+    ax.plot(iterations, hi, color=PALETTE[1], linestyle="--", label="Verified hi")
+    ax.plot(
+        iterations,
+        hi - lo,
+        color=POSITIVE,
+        linestyle=":",
+        label="Full bracket width",
+    )
     ax.set_yscale("log")
     ax.set(
         xlabel="Executed iteration",
@@ -200,10 +213,13 @@ def build_rootfinding_value_versus_ift() -> Figure:
     ax.bar(labels, values, color=[PALETTE[0], POSITIVE, PALETTE[2]], width=0.65)
     ax.axhline(comparison["analytic"], color=NEUTRAL, linewidth=0.8, linestyle="--")
     ax.set_ylim(0.0, 0.43)
+    certificate_label = (
+        f"certified={bool(certified.certified)}; assertions + all runtime gates pass"
+    )
     ax.text(
         0.03,
         0.96,
-        "certified: residual + width + slope gates pass",
+        certificate_label,
         transform=ax.transAxes,
         va="top",
         color=POSITIVE,
