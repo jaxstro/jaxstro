@@ -8,4 +8,176 @@ description: >-
 
 # Atmosphere boundaries
 
-No source-verified cards are registered for this family yet.
+(card-bosz-2025-recomputed)=
+## BOSZ 2025-recomputed 2024-format spectra
+
+**Status:** `verified`
+
+The recomputed BOSZ release distinguishes original-resolution Eddington first moment from lower-resolution files containing resampled flux and continuum values.
+
+### Scope
+
+BOSZ files using the 2024 filename and product layout after the 2025-09-24 recomputation; legacy BOSZ 2017 uses a different normalization convention.
+
+### Conventions
+
+- owner=jaxstro.spectra
+- native_coordinate=wavelength_angstrom
+- native_density=F_lambda_resampled
+- native_unit=erg s^-1 cm^-2 angstrom^-1
+- canonical_factor=1e8
+- original_resolution_conversion=F_lambda=4*pi*H_lambda
+
+### Sources
+
+- [source](https://archive.stsci.edu/hlsp/bosz) — the product identity, native wavelength unit, flux convention, and recomputation status. *Locator:* `2024 Version: original-resolution columns and F=4*pi*H; lower resolutions contain flux and continuum columns; update dated 2025-09-24`
+- [source](https://doi.org/10.1051/0004-6361/202449306) — the original H_lambda and lower-resolution flux-product distinction. *Locator:* `Sect. 3.3, equations and text describing original and resampled spectral products`
+
+### Code & validation
+
+- code: `src/jaxstro/atmospheres/bosz.py::BoszBackend`
+- validation: `tests/validation/provenance_cards/test_atmosphere_spectra_sources.py::test_newera_and_bosz_canonical_flux_conversions_are_explicit`
+
+:::{admonition} Deviations from the source
+:class: caution
+- This card does not apply the BOSZ 2017 F=pi*H_BOSZ convention to the 2024-format products.
+:::
+
+(card-newera-v3-lowres)=
+## PHOENIX NewEra V3 low-resolution spectra
+
+**Status:** `verified`
+
+The NewEra low-resolution release provides wavelength-domain surface flux spectra in Gaia-compatible SI-density units that require an explicit CGS density conversion at the Jaxstro atmosphere boundary.
+
+### Scope
+
+PHOENIX-NewEraV3-LowRes-SPECTRA products only; this card does not describe the HSR/LSR HDF5 arrays or Gaia/JWST products as interchangeable artifacts.
+
+### Conventions
+
+- owner=jaxstro.spectra
+- native_coordinate=wavelength_nm
+- native_density=F_lambda
+- native_unit=W m^-2 nm^-1
+- canonical_factor=1e10
+- canonical_unit=erg s^-1 cm^-2 cm^-1
+
+### Sources
+
+- [source](https://doi.org/10.1051/0004-6361/202554171) — the released coordinate, spectral-density meaning, and native units. *Locator:* `Sect. 6, p. 7: low-resolution archive wavelengths and fluxes are nm and W m^-2 nm^-1; HDF5 fl is log10(F_lambda) in erg s^-1 cm^-2 cm^-1`
+- [source](https://www.fdr.uni-hamburg.de/record/17681) — the exact V3 low-resolution product identity. *Locator:* `Files table: PHOENIX-NewEraV3-LowRes-SPECTRA.tar.gz`
+
+### Code & validation
+
+- code: `src/jaxstro/atmospheres/newera.py::NewEraBackend`
+- validation: `tests/validation/provenance_cards/test_atmosphere_spectra_sources.py::test_newera_and_bosz_canonical_flux_conversions_are_explicit`
+
+:::{admonition} Deviations from the source
+:class: caution
+- The current backend preserves source values; the canonical 1e10 conversion is enforced by the spectra-v1 implementation gate before runtime enablement.
+:::
+
+(card-sonora-diamondback-2024)=
+## Sonora Diamondback 2024 spectra
+
+**Status:** `verified`
+
+Sonora Diamondback spectra provide monochromatic top-of-atmosphere radiation flux on a wavelength axis, with units per metre even though wavelengths are tabulated in microns.
+
+### Scope
+
+The Diamondback spectra archive associated with Morley et al. (2024), not Sonora Bobcat, Cholla, Elf Owl, or reduced third-party copies.
+
+### Conventions
+
+- owner=jaxstro.spectra
+- native_coordinate=wavelength_micron
+- native_density=wavelength-density flux
+- native_unit=W m^-2 m^-1
+- canonical_factor=10
+- source_deviation=printed F_nu subscript conflicts with wavelength axis and per-metre density unit
+- sampling=monochromatic points; source warns against unresolved wavelength interpolation
+
+### Sources
+
+- [source](https://doi.org/10.5281/zenodo.12735103) — the coordinate, dimensional unit, surface-flux meaning, and point-sampling limitation. *Locator:* `SPECTRA section: columns, units, F=4*pi*H statement, top-of-atmosphere meaning, and sampling warning`
+- [source](https://arxiv.org/abs/2402.00758) — the Diamondback family and parameter-domain identity. *Locator:* `Morley et al. (2024), model grid and published spectra description`
+
+### Code & validation
+
+- code: `src/jaxstro/atmospheres/sonora.py::parse_sonora_2024_filename`
+- validation: `tests/validation/provenance_cards/test_atmosphere_spectra_sources.py::test_sonora_source_inconsistency_and_conversion_are_explicit`
+
+:::{admonition} Deviations from the source
+:class: caution
+- Jaxstro follows the wavelength coordinate and per-metre dimensional unit, while recording the archive description's inconsistent nu subscript.
+:::
+
+(card-tlusty-bstar2006)=
+## TLUSTY BSTAR2006 spectral energy distributions
+
+**Status:** `verified`
+
+BSTAR2006 SED files tabulate frequency and surface Eddington flux H_nu; a physical surface flux requires the documented 4*pi factor before conversion from F_nu to canonical F_lambda.
+
+### Scope
+
+BSTAR2006 full SED flux archives for the controlled vturb=2 and vturb=10 C/N products, not detailed UV/optical wavelength-domain spectra.
+
+### Conventions
+
+- owner=jaxstro.spectra
+- native_coordinate=frequency_hz
+- native_density=H_nu
+- native_unit=erg s^-1 cm^-2 Hz^-1
+- canonical_factor=4*pi then F_nu-to-F_lambda
+
+### Sources
+
+- [source](https://tlusty.oca.eu/tlusty/Tlusty2002/BS06-SED.html) — frequency, surface H_nu units, and product identities. *Locator:* `Spectral Energy Distributions: two-column archive format and vturb product table`
+- [source](https://ui.adsabs.harvard.edu/abs/2007ApJS..169...83L/abstract) — the Eddington-to-surface-flux conversion and C/N product meaning. *Locator:* `Lanz & Hubeny (2007), grid description and footnote 6: stellar-surface flux F_nu=4*pi*H_nu`
+
+### Code & validation
+
+- code: `src/jaxstro/atmospheres/tlusty.py::parse_tlusty_flux_filename`
+- validation: `tests/validation/provenance_cards/test_atmosphere_spectra_sources.py::test_tlusty_eddington_flux_conversion_is_explicit`
+
+:::{admonition} Deviations from the source
+:class: caution
+- The processed artifact preserves H_nu; the spectra-v1 adapter owns the 4*pi and density-coordinate conversions.
+:::
+
+(card-tlusty-ostar2002)=
+## TLUSTY OSTAR2002 spectral energy distributions
+
+**Status:** `verified`
+
+OSTAR2002 SED files tabulate frequency and surface Eddington flux H_nu; a physical surface flux requires the documented 4*pi factor before conversion from F_nu to canonical F_lambda.
+
+### Scope
+
+OSTAR2002 full SED flux archives, not the separately published detailed UV or optical wavelength-domain products.
+
+### Conventions
+
+- owner=jaxstro.spectra
+- native_coordinate=frequency_hz
+- native_density=H_nu
+- native_unit=erg s^-1 cm^-2 Hz^-1
+- canonical_factor=4*pi then F_nu-to-F_lambda
+
+### Sources
+
+- [source](https://tlusty.oca.eu/tlusty/Tlusty2002/OS02-SED.html) — frequency and surface H_nu column units. *Locator:* `Spectral Energy Distributions: two-column archive format`
+- [source](https://ui.adsabs.harvard.edu/abs/2003ApJS..146..417L/abstract) — the Eddington-to-surface-flux conversion. *Locator:* `Lanz & Hubeny (2003), Sect. 6 and footnote 6: stellar-surface flux F_nu=4*pi*H_nu`
+
+### Code & validation
+
+- code: `src/jaxstro/atmospheres/tlusty.py::parse_tlusty_flux_filename`
+- validation: `tests/validation/provenance_cards/test_atmosphere_spectra_sources.py::test_tlusty_eddington_flux_conversion_is_explicit`
+
+:::{admonition} Deviations from the source
+:class: caution
+- The processed artifact preserves H_nu; the spectra-v1 adapter owns the 4*pi and density-coordinate conversions.
+:::
