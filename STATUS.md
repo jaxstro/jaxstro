@@ -1,19 +1,20 @@
 # jaxstro — status
 
-next: Present the Slice C11c random-utilities page card for Anna's explicit approval. Do not edit
-`docs/10-theory/random.md` before that approval.
+next: Present the Slice C11d regular-grid page card for Anna's explicit approval. Do not edit
+`docs/10-theory/regular-grid.md` before that approval.
 
-previous: Slice C11b interpolation pedagogy completed locally (2026-07-11). The placeholder
-snippet is now an executable monotone-table example that measures natural-spline undershoot,
-PCHIP bounds/monotonicity, Hermite equivalence, and wrapper parity. The page names five gradient
-boundaries, the eager-versus-traced grid-validation contract, and primary de Boor and
-Fritsch-Butland sources. Its public-API JaxtroViz figure shows the same measured shape tradeoff.
-Five page tests pass in 0.66 s; 24 page/unit/gradient tests pass in 3.86 s; 10 figure-registry
-tests pass in 13.65 s; the WebP is fresh; strict MyST builds 59 pages in 3.81 s wall time.
-Rendered `/interpolation` has the figure, alt text, 6-row table, unique anchors, both DOIs,
-executable code, three evidence routes, and no internal new-tab links. Nothing has been pushed.
+previous: Slice C11c random-stream pedagogy and eager-boundary hardening completed locally
+(2026-07-11). The unchanged public resampler names now validate concrete inputs before private
+jitted kernels; empty/non-1D/negative/non-finite weights and nonpositive sample counts fail
+closed, while valid outer-jit calls and the documented nonempty all-zero fallback remain.
+The former placeholder is an executable key-ownership/resampling example with deterministic
+replay, exact residual counts, explicit `validation_only` boundaries, and primary JAX JEP 263
+and Douc-Cappe-Moulines sources. The focused 36-test gate passes in 1.97 s and the API/validation
+cross-page 46-test gate in 3.20 s; Ruff lint passes in 0.02 s, mypy in 0.49 s, strict MyST builds
+59 pages in 1.77 s, and static HTML renders in 3.91 s. Rendered `/random` has one contract-table
+ID, the executable code, both citations, and all three evidence routes. Nothing has been pushed.
 
-blocker: None for Slice C11c once Anna approves its website page card. Tag/release/PyPI remain
+blocker: None for Slice C11d once Anna approves its website page card. Tag/release/PyPI remain
 held on Anna's permanent package-name decision.
 due:
 

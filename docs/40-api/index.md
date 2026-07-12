@@ -343,7 +343,9 @@ with deterministic shape. The method pages are [](../10-theory/rootfinding.md) a
 `seed_manifest(...)` renders deterministic seed metadata.
 `systematic_resample(...)`, `stratified_resample(...)`, and
 `residual_resample(...)` return shape-stable resampled indices from nonnegative
-weights. The method page is [](../10-theory/random.md).
+weights. Their public wrappers reject invalid concrete eager inputs; traced
+callers own the finite/nonnegative value precondition. The method page is
+[](../10-theory/random.md).
 
 :::{note} Per-symbol reference pages are planned
 A complete, auto-generated per-module symbol reference (signatures, parameters,

@@ -3,6 +3,7 @@
 import jax
 import jax.numpy as jnp
 import jax.random as jrandom
+import pytest
 
 from jaxstro.numerics import random
 
@@ -66,4 +67,57 @@ class TestResampling:
         sample = jax.jit(random.systematic_resample, static_argnames=("num_samples",))
         indices = sample(key, weights, num_samples=8)
         assert indices.shape == (8,)
+        assert jnp.all((indices >= 0) & (indices < weights.shape[0]))
+
+    @pytest.mark.parametrize(
+        "resampler",
+        [
+            random.systematic_resample,
+            random.stratified_resample,
+            random.residual_resample,
+        ],
+    )
+    @pytest.mark.parametrize(
+        ("weights", "message"),
+        [
+            (jnp.array([]), "nonempty"),
+            (jnp.ones((2, 2)), "one-dimensional"),
+            (jnp.array([0.5, -0.1, 0.6]), "nonnegative"),
+            (jnp.array([0.5, jnp.nan, 0.5]), "finite"),
+            (jnp.array([0.5, jnp.inf, 0.5]), "finite"),
+        ],
+    )
+    def test_resamplers_reject_invalid_eager_weights(self, resampler, weights, message):
+        with pytest.raises(ValueError, match=message):
+            resampler(jrandom.PRNGKey(0), weights)
+
+    @pytest.mark.parametrize(
+        "resampler",
+        [
+            random.systematic_resample,
+            random.stratified_resample,
+            random.residual_resample,
+        ],
+    )
+    @pytest.mark.parametrize("num_samples", [0, -1])
+    def test_resamplers_reject_nonpositive_sample_count(self, resampler, num_samples):
+        with pytest.raises(ValueError, match="positive"):
+            resampler(
+                jrandom.PRNGKey(0),
+                jnp.array([0.25, 0.75]),
+                num_samples=num_samples,
+            )
+
+    @pytest.mark.parametrize(
+        "resampler",
+        [
+            random.systematic_resample,
+            random.stratified_resample,
+            random.residual_resample,
+        ],
+    )
+    def test_resamplers_keep_documented_uniform_zero_total_fallback(self, resampler):
+        weights = jnp.zeros(3)
+        indices = resampler(jrandom.PRNGKey(9), weights, num_samples=12)
+        assert indices.shape == (12,)
         assert jnp.all((indices >= 0) & (indices < weights.shape[0]))

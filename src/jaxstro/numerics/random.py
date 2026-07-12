@@ -7,6 +7,8 @@ import jax.numpy as jnp
 import jax.random as jrandom
 from jaxtyping import Array, Float, Int, UInt32
 
+from .checks import try_concrete_bool
+
 KeyArray = UInt32[Array, "2"]
 
 
@@ -37,10 +39,30 @@ def seed_manifest(
 
 
 def _normalize_weights(weights: Float[Array, "n"]) -> Float[Array, "n"]:
-    weights = jnp.asarray(weights)
     total = jnp.sum(weights)
     n = weights.shape[0]
     return jnp.where(total > 0.0, weights / total, jnp.ones_like(weights) / n)
+
+
+def _validate_resampling_inputs(
+    weights: Float[Array, "n"], num_samples: int | None
+) -> Float[Array, "n"]:
+    """Validate the eager boundary while preserving transformed execution."""
+    weights = jnp.asarray(weights)
+    if weights.ndim != 1:
+        raise ValueError("weights must be one-dimensional")
+    if weights.shape[0] == 0:
+        raise ValueError("weights must be nonempty")
+    if num_samples is not None and num_samples <= 0:
+        raise ValueError("num_samples must be positive")
+
+    is_finite = try_concrete_bool(jnp.all(jnp.isfinite(weights)))
+    if is_finite is False:
+        raise ValueError("weights must be finite")
+    is_nonnegative = try_concrete_bool(jnp.all(weights >= 0.0))
+    if is_nonnegative is False:
+        raise ValueError("weights must be nonnegative")
+    return weights
 
 
 def _inverse_cdf_indices(
@@ -52,13 +74,12 @@ def _inverse_cdf_indices(
 
 
 @partial(jax.jit, static_argnames=("num_samples",))
-def systematic_resample(
+def _systematic_resample_core(
     key: KeyArray,
     weights: Float[Array, "n"],
     *,
     num_samples: int | None = None,
 ) -> Int[Array, "m"]:
-    """Systematic resampling from nonnegative weights."""
     probabilities = _normalize_weights(weights)
     n = weights.shape[0] if num_samples is None else num_samples
     offset = jrandom.uniform(key, ()) / n
@@ -66,14 +87,28 @@ def systematic_resample(
     return _inverse_cdf_indices(positions, probabilities)
 
 
-@partial(jax.jit, static_argnames=("num_samples",))
-def stratified_resample(
+def systematic_resample(
     key: KeyArray,
     weights: Float[Array, "n"],
     *,
     num_samples: int | None = None,
 ) -> Int[Array, "m"]:
-    """Stratified resampling from nonnegative weights."""
+    """Systematic resampling from finite, nonnegative weights.
+
+    Concrete eager inputs are validated. Value-dependent validation is skipped
+    when ``weights`` are traced, so transformed callers own that precondition.
+    """
+    weights = _validate_resampling_inputs(weights, num_samples)
+    return _systematic_resample_core(key, weights, num_samples=num_samples)
+
+
+@partial(jax.jit, static_argnames=("num_samples",))
+def _stratified_resample_core(
+    key: KeyArray,
+    weights: Float[Array, "n"],
+    *,
+    num_samples: int | None = None,
+) -> Int[Array, "m"]:
     probabilities = _normalize_weights(weights)
     n = weights.shape[0] if num_samples is None else num_samples
     uniforms = jrandom.uniform(key, (n,))
@@ -81,14 +116,28 @@ def stratified_resample(
     return _inverse_cdf_indices(positions, probabilities)
 
 
-@partial(jax.jit, static_argnames=("num_samples",))
-def residual_resample(
+def stratified_resample(
     key: KeyArray,
     weights: Float[Array, "n"],
     *,
     num_samples: int | None = None,
 ) -> Int[Array, "m"]:
-    """Residual resampling with deterministic floor counts plus systematic tail."""
+    """Stratified resampling from finite, nonnegative weights.
+
+    Concrete eager inputs are validated. Value-dependent validation is skipped
+    when ``weights`` are traced, so transformed callers own that precondition.
+    """
+    weights = _validate_resampling_inputs(weights, num_samples)
+    return _stratified_resample_core(key, weights, num_samples=num_samples)
+
+
+@partial(jax.jit, static_argnames=("num_samples",))
+def _residual_resample_core(
+    key: KeyArray,
+    weights: Float[Array, "n"],
+    *,
+    num_samples: int | None = None,
+) -> Int[Array, "m"]:
     probabilities = _normalize_weights(weights)
     n = weights.shape[0] if num_samples is None else num_samples
     expected = n * probabilities
@@ -115,6 +164,21 @@ def residual_resample(
     return jnp.where(
         slots < deterministic_total, deterministic_indices, residual_indices
     )
+
+
+def residual_resample(
+    key: KeyArray,
+    weights: Float[Array, "n"],
+    *,
+    num_samples: int | None = None,
+) -> Int[Array, "m"]:
+    """Residual resampling with deterministic floor counts and a random tail.
+
+    Concrete eager inputs are validated. Value-dependent validation is skipped
+    when ``weights`` are traced, so transformed callers own that precondition.
+    """
+    weights = _validate_resampling_inputs(weights, num_samples)
+    return _residual_resample_core(key, weights, num_samples=num_samples)
 
 
 __all__ = [
