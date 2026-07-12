@@ -558,8 +558,8 @@ def map_safeguarded_bracketed_root(
     """Map independent scalar solves with physical per-lane control flow."""
     lo = jnp.asarray(lo)
     hi = jnp.asarray(hi)
-    if lo.ndim < 1 or hi.ndim < 1:
-        raise ValueError("lo and hi must have a leading batch dimension")
+    if lo.ndim != 1 or hi.ndim != 1:
+        raise ValueError("lo and hi must be one-dimensional batch vectors")
     batch_length = lo.shape[0]
     if hi.shape[0] != batch_length:
         raise ValueError("lo and hi must have matching leading dimensions")

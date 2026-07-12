@@ -209,3 +209,22 @@ def test_lax_map_batch_matches_scalar_solves_and_preserves_shapes() -> None:
     )
     assert all(bool(value) for value in jax.tree.leaves(comparisons))
     assert mapped.trace.proposal.shape == (3, 64)
+
+
+@pytest.mark.parametrize(
+    ("lo", "hi"),
+    [
+        (jnp.asarray(0.0), jnp.asarray(4.0)),
+        (jnp.zeros((2, 1)), jnp.ones((2, 1))),
+        (jnp.zeros(2), jnp.ones((2, 1))),
+    ],
+)
+def test_lax_map_rejects_nonvector_endpoint_arrays(lo, hi) -> None:
+    with pytest.raises(ValueError, match="one-dimensional batch vectors"):
+        rootfinding.map_safeguarded_bracketed_root(
+            lambda x, target: x * x - target,
+            jnp.asarray([1.0, 2.0]),
+            lo,
+            hi,
+            max_steps=8,
+        )
