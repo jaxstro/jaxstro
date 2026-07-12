@@ -1,23 +1,22 @@
 # jaxstro — status
 
-next: Present the Slice C11f spectra-data-architecture page card for Anna's explicit approval.
-Do not edit `docs/20-architecture/spectra-data-architecture.md` before that approval.
+next: Present the Slice C2 reusable documentation-gate card for Anna's explicit approval. The
+remaining site-level defect is C0-014, the duplicate rendered bibliography `references` ID; the
+gate must catch duplicate IDs/root-flat slugs rather than merely accepting a successful build.
 
-previous: Slice C11e linear-algebra pedagogy and boundary hardening completed locally
-(2026-07-11). Weighted least squares/covariance now reject non-finite weights; covariance rejects
-nonpositive normalization denominators; and covariance-to-correlation uses an eager-validating
-public wrapper over a private jitted kernel for square, finite, nonnegative-diagonal inputs. The
-former return-shape pseudocode is an executable fit/solve/covariance/jitter lesson with six
-gradient contracts and verified Golub-Van Loan and Cheng-Higham sources. Its public-API
-JaxtroViz figure compares weighted/unweighted fits and measured eigenvalues before/after the
-first successful tested jitter. Fifty-seven runtime/page/gradient tests pass in 3.83 s; 60
-API/validation cross-page tests pass in 4.13 s; all 12 figure tests pass in 18.05 s; Ruff and
-mypy pass; strict MyST builds 59 pages in 1.73 s and static HTML renders in 3.90 s. Rendered
-`/linear-algebra` has unique figure/table IDs, exact alt text, both sources, executable code,
-and three evidence routes. Nothing has been pushed.
+previous: Slice C11f spectra-data architecture pedagogy completed locally (2026-07-11). The
+page now distinguishes interface notation, one artifact-free executable `PreparedSpectralGrid`
+fixture, and two explicitly local-artifact recipes. A four-row table assigns catalog ranking and
+artifact preparation to the host, interpolation to the prepared JAX PyTree, and observables to
+downstream packages. The JaxtroViz figure measures midpoint flux, all three status codes, and a
+local JAX gradient through public APIs without implying atmosphere completion. Twenty-eight
+atmosphere/docs tests pass in 3.22 s; all 13 figure tests pass in 19.94 s; Ruff passes; strict
+MyST builds 59 pages in 1.64 s and static HTML renders in 4.09 s. Rendered
+`/spectra-data-architecture` has unique figure/table IDs, exact alt text, the hashed WebP, and
+three resolved evidence routes. No atmosphere runtime code changed. Nothing has been pushed.
 
-blocker: None for Slice C11f once Anna approves its website page card. Tag/release/PyPI remain
-held on Anna's permanent package-name decision.
+blocker: None for Slice C2 once Anna approves its docs-gate card. Tag/release/PyPI remain held
+on Anna's permanent package-name decision.
 due:
 
 ## Phase C — DONE (2026-06-17, branch feature/phase-c-release-hardening, HEAD 40f936e)

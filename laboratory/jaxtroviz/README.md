@@ -32,6 +32,7 @@ uv run --extra viz python -m laboratory.jaxtroviz --only bspline-local-support
 uv run --extra viz python -m laboratory.jaxtroviz --only interpolation-shape-contracts
 uv run --extra viz python -m laboratory.jaxtroviz --only regular-grid-contracts
 uv run --extra viz python -m laboratory.jaxtroviz --only linear-algebra-contracts
+uv run --extra viz python -m laboratory.jaxtroviz --only spectra-runtime-boundary
 uv run --extra viz python -m laboratory.jaxtroviz --check
 ```
 

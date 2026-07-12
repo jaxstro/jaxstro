@@ -193,6 +193,40 @@ def test_linear_algebra_figure_is_registered_and_uses_public_results() -> None:
     assert {"Weight changes the fit", "Jitter crosses the PD boundary"} <= labels
 
 
+def test_spectra_runtime_figure_is_registered_and_uses_public_results() -> None:
+    spec = FIGURES["spectra-runtime-boundary"]
+
+    assert spec.page == "20-architecture/spectra-data-architecture.md"
+    assert spec.seed == 0
+    assert spec.site_path == (
+        "docs/20-architecture/figures/spectra-runtime-boundary.webp"
+    )
+
+    from laboratory.jaxtroviz.spectra import spectra_runtime_results
+
+    midpoint_flux, midpoint_code, outside_code, wrong_plane_code, local_slope = (
+        spectra_runtime_results()
+    )
+    np.testing.assert_allclose(midpoint_flux, [2.5, 3.5, 4.5], atol=1e-12)
+    assert midpoint_code == 0
+    assert outside_code == 1
+    assert wrong_plane_code == 2
+    assert local_slope == pytest.approx(0.002)
+
+    labels = {
+        text.get_text()
+        for text in spec.builder().findobj(match=lambda item: hasattr(item, "get_text"))
+    }
+    assert {
+        "Host preparation",
+        "Prepared JAX grid",
+        "Downstream package",
+        "local files → arrays",
+        "arrays → raw spectrum",
+        "spectrum → observable",
+    } <= labels
+
+
 def test_architecture_webp_render_is_deterministic_and_committed() -> None:
     spec = FIGURES["jaxstro-foundation"]
     first = render_webp_bytes(spec.builder())
@@ -222,6 +256,7 @@ def test_cli_lists_and_checks_registered_figures(
     assert "interpolation-shape-contracts" in listed
     assert "regular-grid-contracts" in listed
     assert "linear-algebra-contracts" in listed
+    assert "spectra-runtime-boundary" in listed
 
     assert main(["--check"]) == 0
 

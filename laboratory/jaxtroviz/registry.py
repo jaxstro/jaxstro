@@ -9,6 +9,7 @@ from .linear_algebra import build_linear_algebra_contracts
 from .regular_grid import build_regular_grid_contracts
 from .spatial import build_spatial_neighbor_contracts
 from .specs import ExportSpec, FigureSpec
+from .spectra import build_spectra_runtime_boundary
 
 FIGURES: dict[str, FigureSpec] = {
     spec.name: spec
@@ -96,6 +97,20 @@ FIGURES: dict[str, FigureSpec] = {
             ),
             tags=("linear-algebra", "least-squares", "positive-definite"),
             export=ExportSpec(width=9.4, height=4.3),
+        ),
+        FigureSpec(
+            name="spectra-runtime-boundary",
+            builder=build_spectra_runtime_boundary,
+            stem="spectra-runtime-boundary",
+            page="20-architecture/spectra-data-architecture.md",
+            site_path=("docs/20-architecture/figures/spectra-runtime-boundary.webp"),
+            seed=0,
+            caption=(
+                "The host-to-JAX spectra boundary with portable measured "
+                "interpolation, status, and derivative evidence."
+            ),
+            tags=("atmospheres", "architecture", "ownership"),
+            export=ExportSpec(width=10.2, height=4.4),
         ),
     ]
 }
