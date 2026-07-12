@@ -85,6 +85,7 @@ uv run pytest tests/unit/test_splines.py tests/validation/test_grad_checks.py
 uv run pytest tests/unit/test_quadrature.py tests/unit/test_numerics.py tests/validation/test_grad_checks.py
 uv run --no-sync pytest tests/unit/test_numerics.py tests/validation/test_grad_checks.py
 uv run --no-sync python scripts/benchmark_rootfinding.py --check
+uv run --no-sync python scripts/benchmark_implicit_root.py --check
 uv run --no-sync pytest tests/unit/test_implicit_root.py tests/validation/test_implicit_root_gradients.py
 uv run pytest tests/unit/test_linear_algebra.py tests/validation/test_grad_checks.py
 uv run pytest tests/unit/test_autodiff.py tests/validation/test_grad_checks.py

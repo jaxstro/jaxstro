@@ -1,49 +1,157 @@
 {
-  "schema_version": 1,
-  "precision": "float64",
+  "cases": [
+    {
+      "absolute_residual": {
+        "unit": "function units",
+        "value": 0.0
+      },
+      "ad_derivative": {
+        "unit": "coordinate units per parameter unit",
+        "value": 1.0
+      },
+      "analytic_derivative": {
+        "unit": "coordinate units per parameter unit",
+        "value": 1.0
+      },
+      "bracket_width": {
+        "unit": "coordinate units",
+        "value": 0.0
+      },
+      "certified": true,
+      "fd_derivative": {
+        "unit": "coordinate units per parameter unit",
+        "value": 1.0000000000065512
+      },
+      "name": "linear",
+      "relative_ad_analytic_error": {
+        "unit": "dimensionless",
+        "value": 0.0
+      },
+      "relative_ad_fd_error": {
+        "unit": "dimensionless",
+        "value": 6.551204023665206e-12
+      },
+      "root": {
+        "unit": "coordinate units",
+        "value": 2.0
+      },
+      "slope_magnitude": {
+        "unit": "function units per coordinate unit",
+        "value": 1.0
+      },
+      "status": 0
+    },
+    {
+      "absolute_residual": {
+        "unit": "function units",
+        "value": 4.440892098500626e-16
+      },
+      "ad_derivative": {
+        "unit": "coordinate units per parameter unit",
+        "value": 0.3535533905932738
+      },
+      "analytic_derivative": {
+        "unit": "coordinate units per parameter unit",
+        "value": 0.35355339059327373
+      },
+      "bracket_width": {
+        "unit": "coordinate units",
+        "value": 1.7763568394002505e-14
+      },
+      "certified": true,
+      "fd_derivative": {
+        "unit": "coordinate units per parameter unit",
+        "value": 0.35355339059739416
+      },
+      "name": "quadratic",
+      "relative_ad_analytic_error": {
+        "unit": "dimensionless",
+        "value": 1.5700924586837752e-16
+      },
+      "relative_ad_fd_error": {
+        "unit": "dimensionless",
+        "value": 1.1654168283690369e-11
+      },
+      "root": {
+        "unit": "coordinate units",
+        "value": 1.414213562373095
+      },
+      "slope_magnitude": {
+        "unit": "function units per coordinate unit",
+        "value": 2.82842712474619
+      },
+      "status": 0
+    },
+    {
+      "absolute_residual": {
+        "unit": "function units",
+        "value": 0.0
+      },
+      "ad_derivative": {
+        "unit": "coordinate units per parameter unit",
+        "value": 0.5
+      },
+      "analytic_derivative": {
+        "unit": "coordinate units per parameter unit",
+        "value": 0.5
+      },
+      "bracket_width": {
+        "unit": "coordinate units",
+        "value": 0.0
+      },
+      "certified": true,
+      "fd_derivative": {
+        "unit": "coordinate units per parameter unit",
+        "value": 0.5000000000088267
+      },
+      "name": "exponential",
+      "relative_ad_analytic_error": {
+        "unit": "dimensionless",
+        "value": 0.0
+      },
+      "relative_ad_fd_error": {
+        "unit": "dimensionless",
+        "value": 1.7653434269648046e-11
+      },
+      "root": {
+        "unit": "coordinate units",
+        "value": 0.6931471805599453
+      },
+      "slope_magnitude": {
+        "unit": "function units per coordinate unit",
+        "value": 2.0
+      },
+      "status": 0
+    }
+  ],
+  "controls": {
+    "fd_step": {
+      "unit": "parameter units",
+      "value": 1e-05
+    },
+    "residual_limit": {
+      "unit": "function units",
+      "value": 1e-12
+    },
+    "slope_floor": {
+      "unit": "function units per coordinate unit",
+      "value": 1e-08
+    },
+    "width_limit": {
+      "unit": "coordinate units",
+      "value": 1e-12
+    }
+  },
   "environment": {
     "device": "cpu:0",
-    "git_revision": "1c990c03458503833eb062e7a3090ea2af78b97d",
+    "git_revision": "e5f73b1bd45e7c8db26c9f152765eb204e0f5894",
+    "jax_backend": "cpu",
     "jax_version": "0.10.1",
+    "measured_at_utc": "2026-07-12T22:15:09.125437+00:00",
+    "platform": "macOS-26.1-arm64-arm-64bit-Mach-O",
     "python_version": "3.13.7",
     "working_tree_dirty": true
   },
-  "controls": {
-    "fd_step": {"value": 1e-5, "unit": "parameter units"},
-    "residual_limit": {"value": 1e-12, "unit": "function units"},
-    "width_limit": {"value": 1e-12, "unit": "coordinate units"},
-    "slope_floor": {"value": 1e-8, "unit": "function units per coordinate unit"}
-  },
-  "cases": [
-    {
-      "name": "linear",
-      "root": {"value": 2.0, "unit": "coordinate units"},
-      "absolute_residual": {"value": 0.0, "unit": "function units"},
-      "bracket_width": {"value": 0.0, "unit": "coordinate units"},
-      "slope_magnitude": {"value": 1.0, "unit": "function units per coordinate unit"},
-      "ad_derivative": {"value": 1.0, "unit": "coordinate units per parameter unit"},
-      "fd_derivative": {"value": 1.0000000000065512, "unit": "coordinate units per parameter unit"},
-      "relative_ad_fd_error": {"value": 6.551204023665206e-12, "unit": "dimensionless"}
-    },
-    {
-      "name": "quadratic",
-      "root": {"value": 1.414213562373095, "unit": "coordinate units"},
-      "absolute_residual": {"value": 4.440892098500626e-16, "unit": "function units"},
-      "bracket_width": {"value": 1.7763568394002505e-14, "unit": "coordinate units"},
-      "slope_magnitude": {"value": 2.82842712474619, "unit": "function units per coordinate unit"},
-      "ad_derivative": {"value": 0.3535533905932738, "unit": "coordinate units per parameter unit"},
-      "fd_derivative": {"value": 0.35355339059739416, "unit": "coordinate units per parameter unit"},
-      "relative_ad_fd_error": {"value": 1.1654168283690369e-11, "unit": "dimensionless"}
-    },
-    {
-      "name": "exponential",
-      "root": {"value": 0.6931471805599453, "unit": "coordinate units"},
-      "absolute_residual": {"value": 0.0, "unit": "function units"},
-      "bracket_width": {"value": 0.0, "unit": "coordinate units"},
-      "slope_magnitude": {"value": 2.0, "unit": "function units per coordinate unit"},
-      "ad_derivative": {"value": 0.5, "unit": "coordinate units per parameter unit"},
-      "fd_derivative": {"value": 0.5000000000088267, "unit": "coordinate units per parameter unit"},
-      "relative_ad_fd_error": {"value": 1.7653434269648046e-11, "unit": "dimensionless"}
-    }
-  ]
+  "precision": "float64",
+  "schema_version": 2
 }
