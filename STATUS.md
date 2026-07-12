@@ -1,16 +1,19 @@
 # jaxstro — status
 
-next: Hand the committed safeguarded rootfinding API to Gravax for P²MSM endpoint-clock integration.
+next: Hand the committed safeguarded value API to Gravax; downstream projects may opt into the separate certified implicit-root API only where its assumptions hold.
 The Pages Node-action maintenance remains queued behind this numerics handoff.
 
 previous: Safeguarded scalar rootfinding and the separate finite power-law alpha=-1 correctness slice
 completed on local main (2026-07-12). Jaxstro now owns typed sign-bracket evidence, deterministic
-guarded secant/midpoint proposals, fixed-shape trace/result types, and a value-first fixed-scan
+guarded IQI/secant/midpoint proposals, fixed-shape trace/result types, and a value-first fixed-scan
 wrapper. Scalar execution stops residual evaluations after convergence or nonfinite exhaustion; VMAP
 preserves values/shapes but not a physical per-lane cost mask, so expensive batched callers should
 use lax.map. The finite power-law normalization/logpdf/CDF/PPF now share smooth expm1(x)/x and
 log1p(x)/x removable-singularity kernels through alpha=-1, with analytic and central-FD derivative
-gates. No IFT/custom-root derivative was added.
+gates. A separate `implicit_bracketed_root(f, args, ...)` now provides a fail-closed
+`lax.custom_root` IFT derivative behind uniqueness, smooth-branch, convergence,
+finiteness, residual, bracket-width, and slope-conditioning certificates. No
+while-loop or domain-specific runtime logic was added.
 
 public-hardening: Slices A, D0, B, and C are complete. Local Slice D now has a least-privilege
 Pages workflow, a `/jaxstro` base-path gate that validates 61 rendered routes, public citation and

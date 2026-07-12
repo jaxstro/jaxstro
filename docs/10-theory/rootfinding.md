@@ -97,11 +97,13 @@ unchanged, so a downstream solver can exclude an externally inadmissible trial
 without corrupting root evidence or moving its own expensive trial state into
 Jaxstro.
 
-`propose_bracketed(state, safeguard_fraction=0.1)` tries the secant interpolant.
-It accepts that point only when the denominator and candidate are finite, the
-point is strictly inside the bracket, and at least the requested fraction of the
-current width remains on both sides. Otherwise it returns the deterministic
-midpoint. Exact endpoints take priority, with the lower endpoint winning a tie.
+`BracketedRootState` pairs true `BracketState` endpoint evidence with
+`BracketHistory` used only for interpolation. `propose_bracketed` tries inverse-
+quadratic interpolation when three distinct residual points exist, then the
+endpoint secant, subject to finite-denominator, strict-bracket, safeguard-band,
+and previous-step progress guards. Rejected interpolation uses the overflow-safe
+midpoint. `advance_bracketed_root` consumes one evaluation; `valid=False`
+preserves bracket, history, and status exactly.
 
 ```{list-table} Proposal-kind telemetry
 :header-rows: 1
@@ -124,6 +126,9 @@ midpoint. Exact endpoints take priority, with the lower endpoint winning a tie.
 * - `PROPOSAL_HI_ENDPOINT`
   - `4`
   - Exact root at the upper endpoint
+* - `PROPOSAL_INVERSE_QUADRATIC`
+  - `5`
+  - Three-point inverse-quadratic interpolation passed every guard
 ```
 
 ## `safeguarded_bracketed_root` — fixed trace, guarded evaluations
@@ -148,17 +153,16 @@ calls at the same proposal. A missing bracket returns `root=NaN`,
 
 `RootTrace` records fixed-length arrays for proposal and signed residual, the
 post-update `lo`, `hi`, `f_lo`, and `f_hi`, proposal kind, and `executed`,
-`admissible`, and per-slot `converged` masks. Unused floating slots are NaN,
+`admissible`, per-slot `converged`, and terminal `status`. Unused floating slots are NaN,
 unused kinds are `PROPOSAL_NONE`, and unused masks are false.
-`BracketedRootResult` returns root evidence, signed residual, convergence and
-bracket flags, function-evaluation count, and trace.
+`BracketedRootResult` also returns terminal status, initial residual scale, the
+final true bracket, function-evaluation count, and trace.
 
 The no-extra-evaluation guarantee and `n_evaluations` count describe scalar
 execution. `vmap` preserves values and fixed shapes, but JAX may batch scalar
 `lax.cond` into select-style execution that computes both branches. When a batch
-contains expensive residuals and physical per-lane skipping matters, map the
-scalar solver with `lax.map` rather than relying on `vmap` to preserve the cost
-mask.
+contains expensive residuals and physical per-lane skipping matters, use
+`map_safeguarded_bracketed_root`, which owns an explicit `lax.map` boundary.
 
 ```python
 from jaxstro.numerics import safeguarded_bracketed_root
@@ -178,21 +182,22 @@ assert result.converged
 The reproducible evaluation-count and warm-timing comparison with fixed-count
 bisection is stored in [](../validation/rootfinding-performance.json). The
 benchmark treats function-evaluation count as the primary algorithmic cost and
-does not impose a hardware-dependent wall-time threshold. The kinked case is an
-important counterexample: the safeguarded hybrid is robust but can require more
-evaluations than fixed-count bisection when secant interpolation is repeatedly
-rejected for inadequate progress.
+does not impose a hardware-dependent wall-time threshold. The ratified gate
+requires the hybrid not to exceed bisection evaluations on any of five cases and
+to reduce evaluations by at least 25% on three.
 
 :::{warning} Value-first means no implicit-root derivative claim
-The executed secant/midpoint branch history is a numerical map, not an
+The executed IQI/secant/midpoint branch history is a numerical map, not an
 implicit-root derivative. No gradient claim is made for parameters captured by
 `f`, even if `jax.grad` returns a finite number for a particular execution. This
 API does not use `lax.custom_root` and does not implement an IFT derivative.
 
-A future implicit API needs separate gates for a unique root, a smooth selected
-branch, acceptable conditioning, tighter residuals, and finite-difference
-agreement. Those gates matter especially when an application accepts a finite-
-residual approximate root rather than the ideal mathematical root.
+Use the separate `implicit_bracketed_root(f, args, ...)` only when an IFT
+derivative is required. It uses `lax.custom_root` and requires caller assertions
+of a unique root and smooth selected branch plus runtime gates for primal
+convergence, finite evidence, residual, final-bracket width, and slope
+conditioning. Rejection returns NaN for both the derivative-facing value and an
+attempted gradient while retaining the nested primal diagnostics.
 :::
 
 ## `newton` and `newton_with_grad` — smooth iterates, real gradients
