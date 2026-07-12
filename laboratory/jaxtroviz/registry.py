@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .architecture import build_jaxstro_foundation
+from .bsplines import build_bspline_local_support
 from .spatial import build_spatial_neighbor_contracts
 from .specs import ExportSpec, FigureSpec
 
@@ -36,6 +37,20 @@ FIGURES: dict[str, FigureSpec] = {
             ),
             tags=("spatial", "neighbors", "contracts"),
             export=ExportSpec(width=9.4, height=4.5),
+        ),
+        FigureSpec(
+            name="bspline-local-support",
+            builder=build_bspline_local_support,
+            stem="bspline-local-support",
+            page="10-theory/bsplines.md",
+            site_path="docs/10-theory/figures/bspline-local-support.webp",
+            seed=0,
+            caption=(
+                "Six cubic basis functions computed by the public API and their "
+                "measured partition-of-unity sum."
+            ),
+            tags=("bsplines", "basis", "pedagogy"),
+            export=ExportSpec(width=9.4, height=4.1),
         ),
     ]
 }

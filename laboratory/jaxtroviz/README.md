@@ -27,6 +27,7 @@ the opposite direction.
 uv run --extra viz python -m laboratory.jaxtroviz --list
 uv run --extra viz python -m laboratory.jaxtroviz --only jaxstro-foundation
 uv run --extra viz python -m laboratory.jaxtroviz --only spatial-neighbor-contracts
+uv run --extra viz python -m laboratory.jaxtroviz --only bspline-local-support
 uv run --extra viz python -m laboratory.jaxtroviz --check
 ```
 

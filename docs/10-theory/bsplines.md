@@ -1,8 +1,8 @@
 ---
 title: B-splines
 description: >-
-  Local, smooth, AD-friendly basis functions for representing 1D tabulated
-  functions without global-polynomial pathologies.
+  Fixed-knot local basis functions with explicit evaluation, clamping, and
+  gradient contracts for one-dimensional tabulated functions.
 ---
 
 B-splines are a way to represent a smooth function as a local weighted sum:
@@ -22,31 +22,50 @@ table-like functions: atmosphere-grid interpolation, microphysics tables,
 stellar tracks, calibration curves, or any other place where global polynomials
 would be too eager to oscillate.
 
+:::{figure} ./figures/bspline-local-support.webp
+:name: fig-bspline-local-support
+:alt: Six cubic B-spline basis curves with local support and their sum equal to one across the active domain
+
+Each colored curve is one column returned by `bspline_basis(...)` for a fixed
+six-function cubic basis. The right panel sums those same returned columns. It
+visualizes one executable open-uniform configuration; it is not evidence about
+adaptive-knot quality or smoothing-model selection.
+:::
+
 ## The current boundary
 
 jaxstro's spline surface is deliberately fixed-knot first:
 
 ```python
+from jaxstro.jaxconfig import enable_high_precision
+
+enable_high_precision()  # before creating JAX arrays
+
+import jax.numpy as jnp
+
 from jaxstro.numerics import (
     BSpline1D,
-    bspline_antiderivative,
+    bspline_basis,
     bspline_derivative,
     bspline_eval,
-    bspline_eval_deboor,
-    bspline_integral,
-    bspline_roughness_penalty,
-    fit_bspline_lstsq,
     open_uniform_knots,
-    tensor_product_design_matrix,
 )
 
 knots = open_uniform_knots(0.0, 1.0, n_basis=6, degree=3)
-coeffs = ...
-y = bspline_eval(knots, coeffs, x, degree=3)
-dy_dx = bspline_derivative(knots, coeffs, x, degree=3)
+coeffs = jnp.array([0.0, 0.25, 0.9, 0.7, 0.2, 0.1])
+x = jnp.linspace(0.0, 1.0, 9)
 
-coeffs_fit = fit_bspline_lstsq(knots, x_samples, y_samples, degree=3)
+basis = bspline_basis(knots, x, degree=3)
+values = bspline_eval(knots, coeffs, x, degree=3)
+derivative = bspline_derivative(knots, coeffs, x, degree=3)
+
 spline = BSpline1D(knots, coeffs, degree=3)
+wrapped_values = spline(x)
+
+assert basis.shape == (9, 6)
+assert jnp.allclose(basis.sum(axis=-1), 1.0)
+assert jnp.allclose(values, wrapped_values)
+assert jnp.all(jnp.isfinite(derivative))
 ```
 
 It evaluates supplied coefficients by basis contraction or de Boor recursion,
@@ -79,6 +98,10 @@ constraint explicitly rather than relying on spline extrapolation.
 
 ## Cox-de Boor recurrence
 
+{cite:t}`deBoor1972` gives the normalized-basis recurrence and derivative
+coefficient relations in equations (10)--(15). The notation here uses degree
+$p$, where that paper uses order $k=p+1$.
+
 The degree-zero basis is an interval indicator:
 
 ```{math}
@@ -104,6 +127,42 @@ the AD-safe convention. The denominator is sanitized before division, so a dead
 zero-width term does not leak `NaN` into the backward pass.
 
 ## Differentiability
+
+The derivative claim depends on which input is changing. The fixed-knot surface
+has these explicit contracts:
+
+```{list-table} B-spline gradient contracts
+:header-rows: 1
+:label: tbl-bspline-gradient-contracts
+
+* - Operation
+  - Contract
+  - Supported claim
+  - Boundary
+* - Coefficients at fixed knots
+  - `smooth_pathwise`
+  - Evaluation is linear in the coefficients; AD returns the active basis
+    vector and is checked independently.
+  - The knot vector and degree remain fixed.
+* - Interior query coordinate
+  - `smooth_pathwise`
+  - AD agrees with finite differences inside a smooth knot span.
+  - The query is away from repeated knots and the clamped domain boundary.
+* - Clamped exterior coordinate
+  - `known_zero`
+  - The public evaluator and analytic derivative are constant outside the
+    active domain.
+  - This zero is a saturation contract, not an inference direction.
+* - Knot boundaries
+  - `validation_only`
+  - Values and the derivatives guaranteed by the local knot multiplicity can
+    be checked at a named boundary.
+  - Smoothness is multiplicity-dependent; no universal knot gradient is claimed.
+* - Quantile knot construction
+  - `validation_only`
+  - Deterministic quantile placement is checked as a construction result.
+  - Sorting and quantile selection are not presented as a smooth inference path.
+```
 
 For fixed knots, spline evaluation is linear in the coefficients:
 
@@ -164,3 +223,9 @@ domain-specific grid policy.
 `adaptive_open_uniform_knots(...)` is intentionally modest: it places interior
 knots at sample quantiles and clamps the endpoints. It is deterministic knot
 construction, not a knot-optimization algorithm.
+
+## From explanation to evidence
+
+Use the [](../40-api/index.md#jaxstro-numerics-splines) for signatures and
+ownership, the [](../60-validation/index.md) for measured spline anchors, and
+the [](./index.md#gradient-contracts) for the package-wide contract taxonomy.

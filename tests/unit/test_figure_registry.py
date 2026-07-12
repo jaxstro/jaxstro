@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import subprocess
+import sys
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 pytest.importorskip("matplotlib")
@@ -62,6 +65,49 @@ def test_spatial_figure_is_registered_for_the_theory_page() -> None:
     assert any("did_overflow = False" in label for label in labels)
 
 
+def test_bspline_figure_is_registered_and_computed_from_public_basis() -> None:
+    spec = FIGURES["bspline-local-support"]
+
+    assert spec.page == "10-theory/bsplines.md"
+    assert spec.seed == 0
+    assert spec.site_path == "docs/10-theory/figures/bspline-local-support.webp"
+
+    from laboratory.jaxtroviz.bsplines import basis_results
+
+    x, basis, basis_sum = basis_results()
+    assert x.shape == (401,)
+    assert basis.shape == (401, 6)
+    assert basis_sum.shape == (401,)
+    assert np.all(basis >= 0.0)
+    np.testing.assert_allclose(basis_sum, 1.0, atol=1e-6)
+
+    labels = {
+        text.get_text()
+        for text in spec.builder().findobj(match=lambda item: hasattr(item, "get_text"))
+    }
+    assert {"Local cubic basis functions", "Partition of unity"} <= labels
+
+
+def test_bspline_figure_enables_x64_before_knot_allocation() -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "from laboratory.jaxtroviz.bsplines import basis_results; "
+                "print(basis_results()[0].dtype)"
+            ),
+        ],
+        cwd=Path(__file__).resolve().parents[2],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.stdout.strip() == "float64"
+    assert "will be truncated to dtype float32" not in result.stderr
+
+
 def test_architecture_webp_render_is_deterministic_and_committed() -> None:
     spec = FIGURES["jaxstro-foundation"]
     first = render_webp_bytes(spec.builder())
@@ -87,6 +133,7 @@ def test_cli_lists_and_checks_registered_figures(
     listed = capsys.readouterr().out
     assert "jaxstro-foundation" in listed
     assert "spatial-neighbor-contracts" in listed
+    assert "bspline-local-support" in listed
 
     assert main(["--check"]) == 0
 
