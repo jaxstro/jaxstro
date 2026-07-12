@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use jaxstro in your research, please cite the archived release."
+title: "jaxstro: JAX-native infrastructure for differentiable science"
+type: software
+authors:
+  - family-names: Rosen
+    given-names: Anna
+    email: alrosen@sdsu.edu
+version: 0.1.0
+license: "Apache-2.0"
+repository-code: https://github.com/jaxstro/jaxstro
+url: https://jaxstro.github.io/jaxstro/
+keywords:
+  - JAX
+  - automatic differentiation
+  - astrophysics
+  - scientific computing

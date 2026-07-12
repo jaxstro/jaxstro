@@ -5,6 +5,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_PORT="${DOCS_APP_PORT:-4311}"
 SERVER_PORT="${DOCS_SERVER_PORT:-4312}"
+BASE_PATH="${BASE_URL:-}"
 LOG_PATH="${TMPDIR:-/tmp}/jaxstro-myst-start-$$.log"
 SERVER_PID=""
 
@@ -33,7 +34,8 @@ SERVER_PID=$!
 if ! python3 "$ROOT_DIR/scripts/check_docs_site.py" \
   --site "$ROOT_DIR/docs/_build/site" \
   --manifest "$ROOT_DIR/docs/route-manifest.json" \
-  --base-url "http://localhost:$APP_PORT"; then
+  --base-url "http://localhost:$APP_PORT" \
+  --base-path "$BASE_PATH"; then
   echo "== MyST server log ==" >&2
   tail -n 120 "$LOG_PATH" >&2
   exit 1

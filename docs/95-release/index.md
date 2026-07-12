@@ -5,10 +5,10 @@ description: >-
   dx-outside cumulative_trapz reconciliation and the A_RAD correction.
 ---
 
-This section will hold the changelog, the semantic-versioning scheme, and the
-deprecation policy that downstream packages pin against (`jaxstro>=X,<Y`). The
-canonical changelog lives in the repository's `CHANGELOG.md`; this page will render
-and annotate it for the docs site.
+This section summarizes the numerical changes that downstream packages must
+understand. The canonical keep-a-changelog record remains in the repository's
+`CHANGELOG.md`; the [](./checklist.md) turns publication into explicit,
+evidence-carrying local and remote gates.
 
 Two reconciliations from the 0.1.0 line are worth flagging here because they can
 shift downstream numbers:
@@ -26,16 +26,13 @@ Before a release or downstream migration, record the exact commands and results
 used to qualify the branch. The normal local gate is:
 
 ```bash
-uv run pytest
-uv run ruff check src tests
-uv run ruff format --check src tests
-uv run mypy src
+bash scripts/check.sh
 ```
 
-For the full Phase-C style gate, use the repository script:
+For a Pages candidate, also verify the production base path and rendered DOM:
 
 ```bash
-bash scripts/check.sh
+BASE_URL=/jaxstro bash scripts/check_docs.sh
 ```
 
 The release note should name any intentionally skipped gate, the reason it was
@@ -49,4 +46,5 @@ or cache directories. Tests should use tiny synthetic fixtures or compact
 metadata manifests unless a small redistributable upstream product is explicitly
 approved and documented.
 
-The full keep-a-changelog record remains in the repository's `CHANGELOG.md`.
+No checklist row authorizes a remote action. Pushes, Pages configuration,
+deployment, tags, archives, and package-index uploads remain separate approvals.

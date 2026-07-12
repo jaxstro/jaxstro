@@ -1,0 +1,65 @@
+# Build and deploy the MyST site at https://jaxstro.github.io/jaxstro/.
+# Repository Settings -> Pages -> Source must be "GitHub Actions" before the
+# first deployment. The workflow deliberately reuses the local documentation
+# gate; it never publishes a build that bypassed route and rendered-DOM checks.
+
+name: Deploy docs site to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "scripts/check_docs.sh"
+      - "scripts/check_docs_site.py"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+env:
+  BASE_URL: /${{ github.event.repository.name }}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build MyST site (gate + HTML)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install pinned MyST
+        run: npm install --global mystmd@1.10.1
+
+      - name: Gate and build documentation
+        run: bash scripts/check_docs.sh
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/_build/site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy Pages artifact
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -65,6 +65,22 @@ Issues = "https://github.com/jaxstro/jaxstro/issues"
 [tool.hatch.build.targets.wheel]
 packages = ["src/jaxstro"]
 
+[tool.hatch.build.targets.sdist]
+# Keep the source archive focused on redistributable package, metadata, public
+# documentation, and tooling. Internal agent state, plans, test/lab workspaces,
+# and CI configuration are public-repository material but not release payload.
+exclude = [
+  "/.github",
+  "/AGENTS.md",
+  "/CLAUDE.md",
+  "/STATUS.md",
+  "/docs/audits",
+  "/docs/plans",
+  "/docs/superpowers",
+  "/laboratory",
+  "/tests",
+]
+
 # -----------------------
 # uv configuration
 # -----------------------

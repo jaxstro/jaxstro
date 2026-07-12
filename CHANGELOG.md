@@ -39,9 +39,13 @@ Phase B consolidation/hardening arc and the `jaxstro.params` selective-gradient 
   marker, trove classifiers, equinox promoted to a core dependency (ADR-0002), PEP 735
   dependency groups, and a checked-in `uv.lock`.
 - **Rendered documentation gate** — a reusable strict MyST build and standard-library
-  DOM/xref checker now ratchets all 59 authored routes, rejects duplicate page URLs and
+  DOM/xref checker now ratchets all 61 authored routes, rejects duplicate page URLs and
   HTML IDs, validates internal links and image alt text, and runs in the local release
   gate plus a parallel scheduled/manual CI job.
+- **Release-readiness surface** — a least-privilege GitHub Pages workflow reuses the
+  rendered documentation gate with the `/jaxstro` production base path; the public
+  release checklist, `CITATION.cff`, and `CONTRIBUTING.md` separate repeatable local
+  evidence from push, Pages, tag, archive, and package-index authorization.
 
 ### Changed
 

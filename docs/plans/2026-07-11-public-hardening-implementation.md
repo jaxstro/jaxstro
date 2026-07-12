@@ -8,6 +8,17 @@
 
 **Tech Stack:** Python 3.11–3.13, JAX, pytest, Ruff, mypy, uv, GitHub Actions, MyST, YAML/PyYAML in dev/docs tooling only, GitHub Pages.
 
+## Execution status — 2026-07-12
+
+- [x] Slice A0 — verified baseline restoration
+- [x] Slice A — source-backed audit and hardening
+- [x] Slice D0 — efficient public CI
+- [x] Slice B — provenance registry hoist
+- [x] Slice C — documentation currency, page pedagogy, JaxtroViz, and rendered-DOM gate
+- [x] Slice D.1 — local Pages workflow and `/jaxstro` base-path proof
+- [x] Slice D.2 — release checklist, citation/contributor metadata, and sdist hardening
+- [ ] Slice D.3 — remote publication, deliberately stopped pending separate authorization
+
 ---
 
 ## Program rules

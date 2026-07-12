@@ -28,10 +28,11 @@ def test_committed_route_manifest_matches_all_authored_pages() -> None:
     assert manifest_path.is_file()
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 
-    assert len(manifest) == 60
+    assert len(manifest) == 61
     assert manifest["index.md"] == "/"
     assert manifest["20-architecture/spectra-data-architecture.md"] == (
         "/spectra-data-architecture"
     )
+    assert manifest["95-release/checklist.md"] == "/checklist"
     assert manifest["99-bibliography/index.md"] == "/index-11"
     assert len(manifest.values()) == len(set(manifest.values()))

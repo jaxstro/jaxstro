@@ -1,7 +1,7 @@
 # jaxstro — status
 
-next: Return to the public-hardening program from the now-current spectra-v1 code and 60-page
-website state; keep release publication, Pages, and the package-name decision separately gated.
+next: Stop for separate authorization before push, Pages configuration/deployment, tagging,
+archives, or package-index publication. Settle the permanent distribution name before PyPI.
 
 previous: Spectra-v1 completed on local main (2026-07-12). Real-artifact holdouts accept
 positive-log interpolation for NewEra and linear interpolation for representative BOSZ/OSTAR;
@@ -10,6 +10,13 @@ real-artifact/AD/interoperability gate passes, and cached NewEra artifact valida
 host preparation from 10.303 s to 1.031 s under tracemalloc. The hard cutover deleted the old
 jaxstro.atmospheres.spectra owner and updated the 60-page website. The full local release gate passed
 in 259.77 s wall time, including 1,068 core tests, 110 ML-integration tests, and wheel smoke.
+
+public-hardening: Slices A, D0, B, and C are complete. Local Slice D now has a least-privilege
+Pages workflow, a `/jaxstro` base-path gate that validates 61 rendered routes, public citation and
+contributor metadata, an authorization-gated release checklist, and sdist exclusions for tests,
+laboratory/agent state, internal audits, and plans. The final base-path DOM gate passed in 10.97 s.
+The full local release gate passed in 225.68 s: 1,138 core tests passed with 23 expected optional-
+dependency skips, 114 ML-integration tests passed, and the clean-wheel import smoke passed.
 
 blocker: None locally. Remote publication, tag/release, Pages configuration, and PyPI remain outside
 this local implementation slice and require separate authorization.
