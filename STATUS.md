@@ -1,19 +1,18 @@
 # jaxstro — status
 
-next: Present the Slice C9 validation-page card for Anna's explicit approval. Do not edit
-`docs/60-validation/index.md` before that approval.
+next: Present the Slice C10 provenance-architecture page card for Anna's explicit approval. Do
+not edit `docs/20-architecture/provenance.md` before that approval.
 
-previous: Slice C8 theory-index hardening completed locally (2026-07-11). The overview now
-teaches the five live `GradContract` classes and reserves inference-ready wording for clean,
-finite, nonzero `smooth_pathwise` AD that agrees with central finite differences. It distinguishes
-fixed-iteration Newton conditions from branch-selected bisection and scopes hard branches,
-spatial preprocessing, and inactive-branch hazards. Four focused tests pass in 0.67 s; strict
-MyST builds all 59 pages in 9.12 s wall time; rendered `/index-2` has the exact five-row registry
-table, required routes, stable table anchor, and no internal new-tab links. The site-wide DOM
-scan also recorded the pre-existing bibliography `references` ID collision as C0-014. Nothing
-has been pushed.
+previous: Slice C9 validation-page hardening completed locally (2026-07-11). The current-tense
+40-row evidence table now covers astrometry/coordinates, singular gradient contracts, spatial
+candidates versus exact pairs and overflow, implemented-but-not-adopted quantities, provenance
+card registry integrity, and the in-progress atmosphere boundary. Five focused page tests pass
+in 0.79 s; 33 bounded cross-cutting tests pass in 17.99 s; strict MyST builds all 59 pages in
+3.69 s wall time. Rendered `/index-8` has four cells per row, the unique validation anchor, four
+resolved pedagogy routes, both registry node IDs, and no internal new-tab links. Nothing has
+been pushed.
 
-blocker: None for Slice C9 once Anna approves its website page card. Tag/release/PyPI remain
+blocker: None for Slice C10 once Anna approves its website page card. Tag/release/PyPI remain
 held on Anna's permanent package-name decision.
 due:
 
