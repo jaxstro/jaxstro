@@ -261,5 +261,35 @@ def test_cli_lists_and_checks_registered_figures(
     assert main(["--check"]) == 0
 
 
+def test_root_trace_figure_is_registered_and_uses_public_telemetry() -> None:
+    from laboratory.jaxtroviz.rootfinding import root_trace_results
+
+    spec = FIGURES["rootfinding-safeguards"]
+    x, residual, result = root_trace_results()
+
+    assert spec.page == "10-theory/rootfinding.md"
+    assert spec.site_path == "docs/10-theory/figures/rootfinding-safeguards.webp"
+    assert x.shape == residual.shape == (801,)
+    assert bool(result.converged)
+    assert int(result.n_evaluations) == 42
+    executed = np.asarray(result.trace.executed)
+    assert np.all(
+        np.asarray(result.trace.lo)[executed] <= np.asarray(result.trace.hi)[executed]
+    )
+
+
+def test_value_versus_ift_figure_uses_certified_and_rejected_results() -> None:
+    from laboratory.jaxtroviz.rootfinding import implicit_comparison_results
+
+    spec = FIGURES["rootfinding-value-versus-ift"]
+    results = implicit_comparison_results()
+
+    assert spec.page == "10-theory/rootfinding.md"
+    assert results["certified"].certified
+    assert not results["rejected"].certified
+    assert np.isclose(results["ad"], results["analytic"], rtol=1.0e-9)
+    assert np.isclose(results["ad"], results["fd"], rtol=1.0e-7)
+
+
 def test_old_figure_namespace_is_removed() -> None:
     assert not (Path(__file__).resolve().parents[2] / "laboratory" / "figures").exists()

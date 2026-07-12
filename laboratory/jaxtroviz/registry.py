@@ -7,6 +7,10 @@ from .bsplines import build_bspline_local_support
 from .interpolation import build_interpolation_shape_contracts
 from .linear_algebra import build_linear_algebra_contracts
 from .regular_grid import build_regular_grid_contracts
+from .rootfinding import (
+    build_rootfinding_safeguards,
+    build_rootfinding_value_versus_ift,
+)
 from .spatial import build_spatial_neighbor_contracts
 from .specs import ExportSpec, FigureSpec
 from .spectra import build_spectra_runtime_boundary
@@ -68,6 +72,34 @@ FIGURES: dict[str, FigureSpec] = {
                 "samples, with stepwise monotonicity measured from public APIs."
             ),
             tags=("interpolation", "pchip", "pedagogy"),
+            export=ExportSpec(width=9.4, height=4.3),
+        ),
+        FigureSpec(
+            name="rootfinding-safeguards",
+            builder=build_rootfinding_safeguards,
+            stem="rootfinding-safeguards",
+            page="10-theory/rootfinding.md",
+            site_path="docs/10-theory/figures/rootfinding-safeguards.webp",
+            seed=0,
+            caption=(
+                "Public solver telemetry showing proposal selection and verified "
+                "sign-bracket contraction for one quadratic residual."
+            ),
+            tags=("rootfinding", "telemetry", "pedagogy"),
+            export=ExportSpec(width=9.4, height=4.3),
+        ),
+        FigureSpec(
+            name="rootfinding-value-versus-ift",
+            builder=build_rootfinding_value_versus_ift,
+            stem="rootfinding-value-versus-ift",
+            page="10-theory/rootfinding.md",
+            site_path="docs/10-theory/figures/rootfinding-value-versus-ift.webp",
+            seed=0,
+            caption=(
+                "The branch-selected value map and the separately certified "
+                "implicit-function derivative answer different questions."
+            ),
+            tags=("rootfinding", "autodiff", "pedagogy"),
             export=ExportSpec(width=9.4, height=4.3),
         ),
         FigureSpec(

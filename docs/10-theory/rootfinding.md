@@ -180,6 +180,17 @@ result = safeguarded_bracketed_root(
 assert result.converged
 ```
 
+:::{figure} ./figures/rootfinding-safeguards.webp
+:name: fig-rootfinding-safeguards
+:alt: Two-panel safeguarded root trace showing colored IQI, secant, and midpoint proposals on a quadratic residual and the verified lower endpoint, upper endpoint, and full bracket width across executed iterations
+
+Both panels are computed from the public solver and its fixed-shape trace. The
+left panel shows which selected proposals were evaluated; the right shows that
+the true sign bracket contracts without being discarded. This fixture
+demonstrates bracket preservation and auditable telemetry, not universal speed
+for every residual.
+:::
+
 The reproducible evaluation-count and warm-timing comparison with fixed-count
 bisection is stored in [](../validation/rootfinding-performance.json). The
 benchmark treats function-evaluation count as the primary algorithmic cost and
@@ -201,6 +212,63 @@ convergence, finite evidence, residual, final-bracket width, and slope
 conditioning. Rejection returns NaN for both the derivative-facing value and an
 attempted gradient while retaining the nested primal diagnostics.
 :::
+
+### Predict → compute → audit: which derivative are you asking for?
+
+**Predict.** Decide whether the desired quantity is the sensitivity of the
+finite executed algorithm or of a unique, smooth mathematical root. Write down
+the expected derivative and the conditions under which it exists.
+
+**Compute.** Run the value solver and, separately, the certified implicit API.
+Keep the branch trace, signed residual, final bracket, local slope, and every
+certificate predicate.
+
+**Audit.** Compare AD, the analytic derivative, and an independent central
+finite difference. Reject the claim when uniqueness, smoothness, residual,
+width, finiteness, or conditioning evidence fails.
+
+:::{figure} ./figures/rootfinding-value-versus-ift.webp
+:name: fig-rootfinding-value-versus-ift
+:alt: Two-panel comparison of a branch-selected quadratic root trace with analytic, certified implicit-function AD, and central finite-difference sensitivities, including a rejected flat-root certificate
+
+The value-first trace answers “what numerical map executed?” The derivative
+panel answers the different question “how does the certified root relation move
+with its parameter?” The flat-root annotation is deliberately shown as a
+rejection, not as a derivative estimate.
+:::
+
+```{list-table} Measured quadratic implicit-root evidence
+:header-rows: 1
+
+* - Metric identity
+  - Symbol
+  - Value
+  - Units
+* - Certified root
+  - $x^\star$
+  - `1.414213562373095`
+  - coordinate units
+* - Final absolute residual
+  - $|G(x^\star)|$
+  - `4.440892098500626e-16`
+  - function units
+* - Final bracket width
+  - $\Delta x$
+  - `1.7763568394002505e-14`
+  - coordinate units
+* - Implicit-function AD sensitivity
+  - $dx^\star/d\theta|_{\mathrm{AD}}$
+  - `0.3535533905932738`
+  - coordinate units per parameter unit
+* - Central-FD root sensitivity
+  - $dx^\star/d\theta|_{\mathrm{FD}}$
+  - `0.35355339059739416`
+  - coordinate units per parameter unit
+```
+
+These values are generated and freshness-checked by
+`scripts/benchmark_implicit_root.py`; the table is explanatory, while the JSON
+artifact and tests are the executable evidence.
 
 ## `newton` and `newton_with_grad` — smooth iterates, real gradients
 
