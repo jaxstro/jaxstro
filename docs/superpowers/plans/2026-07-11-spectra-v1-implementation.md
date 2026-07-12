@@ -54,7 +54,7 @@ mypy, MyST.
 - Produces: source records named `newera-v3-lowres`, `bosz-2025-recomputed`,
   `sonora-diamondback-2024`, `tlusty-ostar2002`, and `tlusty-bstar2006`.
 
-- [ ] **Step 1: Write failing provenance tests**
+- [x] **Step 1: Write failing provenance tests**
 
   Require each product card's conventions to contain an exact
   `native_coordinate=...`, `native_density=...`, `native_unit=...`,
@@ -74,7 +74,7 @@ mypy, MyST.
   )
   ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
   Run:
 
@@ -85,7 +85,7 @@ mypy, MyST.
 
   Expected: FAIL because the atmosphere registry is empty.
 
-- [ ] **Step 3: Add the five source records**
+- [x] **Step 3: Add the five source records**
 
   Encode these verified conversions:
 
@@ -104,7 +104,7 @@ mypy, MyST.
   printed nu subscript next
   to its wavelength coordinate and per-metre dimensional unit.
 
-- [ ] **Step 4: Verify GREEN and registry freshness**
+- [x] **Step 4: Verify GREEN and registry freshness**
 
   ```bash
   env -u VIRTUAL_ENV uv run --no-sync pytest -q \
@@ -113,7 +113,7 @@ mypy, MyST.
   env -u VIRTUAL_ENV uv run --no-sync python scripts/build_provenance_registry.py --check
   ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
   ```bash
   git add docs/provenance docs/40-api/provenance/atmospheres.md \
@@ -136,7 +136,7 @@ mypy, MyST.
   `SpectrumStatusCode`, `SpectrumProvenance`, `SpectralAxis`, `Spectrum`,
   `SpectrumStatus`, and `SpectrumResult`.
 
-- [ ] **Step 1: Write failing invariant and PyTree tests**
+- [x] **Step 1: Write failing invariant and PyTree tests**
 
   ```python
   axis = SpectralAxis.points(
@@ -166,7 +166,7 @@ mypy, MyST.
   `jaxstro.spectra` as the new owner and rejects new imports from
   `jaxstro.atmospheres.spectra` outside the explicit migration allowlist.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
   ```bash
   env -u VIRTUAL_ENV uv run --no-sync pytest -q \
@@ -175,14 +175,14 @@ mypy, MyST.
 
   Expected: import failure for `jaxstro.spectra`.
 
-- [ ] **Step 3: Implement frozen validated PyTrees**
+- [x] **Step 3: Implement frozen validated PyTrees**
 
   Use string enums for static semantic metadata and an integer enum with the
   ratified codes. Dynamic leaves are axis coordinates/edges and spectrum values;
   provenance is a frozen, hashable tuple-based static record. Provide explicit
   `points` and `bins` constructors so point and bin semantics cannot be confused.
 
-- [ ] **Step 4: Verify GREEN, JIT round-trip, Ruff, and mypy**
+- [x] **Step 4: Verify GREEN, JIT round-trip, Ruff, and mypy**
 
   ```bash
   env -u VIRTUAL_ENV uv run --no-sync pytest -q \
@@ -191,7 +191,7 @@ mypy, MyST.
   env -u VIRTUAL_ENV uv run --no-sync mypy src/jaxstro/spectra
   ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
   ```bash
   git add src/jaxstro/spectra src/jaxstro/__init__.py \
@@ -215,13 +215,13 @@ mypy, MyST.
   `surface_flux_to_luminosity(spectrum, radius_cm)`, and
   `surface_flux_to_observer_flux(spectrum, radius_cm, distance_cm)`.
 
-- [ ] **Step 1: Write failing analytic tests**
+- [x] **Step 1: Write failing analytic tests**
 
   Require `nu=c/lambda`, `F_nu=F_lambda*lambda**2/c`, reversed output ordering,
   exact round trips, `L_lambda=4*pi*R**2*F_lambda`, and
   `f_lambda=(R/d)**2*F_lambda`. Require incompatible semantic inputs to raise.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
   ```bash
   env -u VIRTUAL_ENV uv run --no-sync pytest -q \
@@ -229,7 +229,7 @@ mypy, MyST.
     tests/validation/test_spectra_transform_gradients.py
   ```
 
-- [ ] **Step 3: Implement pure JAX transforms**
+- [x] **Step 3: Implement pure JAX transforms**
 
   Coordinate transforms operate only on `SpectralAxis`; density transforms
   change the axis, values, and semantic together and reverse samples so axes
@@ -238,7 +238,7 @@ mypy, MyST.
   conservative path. Geometry functions require positive CGS radii/distances
   and matching surface-flux semantics.
 
-- [ ] **Step 4: Verify GREEN and AD-vs-FD**
+- [x] **Step 4: Verify GREEN and AD-vs-FD**
 
   Use the shared `jaxstro.testing.grad_audit` engine for wavelength, flux,
   radius, and distance derivatives away from zero.
@@ -249,7 +249,7 @@ mypy, MyST.
     tests/validation/test_spectra_transform_gradients.py
   ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
   ```bash
   git add src/jaxstro/spectra tests/unit/test_spectra_transforms.py \
@@ -271,14 +271,14 @@ mypy, MyST.
 - Produces: `CoveragePolicy`, `SpectralPlan(target_axis, coverage_policy)`, and
   `resample_spectrum(spectrum, plan) -> SpectrumResult`.
 
-- [ ] **Step 1: Write failing identity, coverage, and conservation tests**
+- [x] **Step 1: Write failing identity, coverage, and conservation tests**
 
   Point samples use linear interpolation only inside source coverage. Bin
   averages reuse `jaxstro.numerics.conservative_remap_1d`. Identical axes return
   bit-identical values. Plans outside source coverage return
   `UNSUPPORTED_SPECTRAL_WINDOW`; they do not zero-fill or extrapolate.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
   ```bash
   env -u VIRTUAL_ENV uv run --no-sync pytest -q \
@@ -286,13 +286,13 @@ mypy, MyST.
     tests/validation/test_spectra_remap_conservation.py
   ```
 
-- [ ] **Step 3: Implement plan validation and resampling**
+- [x] **Step 3: Implement plan validation and resampling**
 
   Reject point-to-bin and bin-to-point conversions unless the input carries the
   information required by the requested operation. Preserve provenance with an
   explicit `identity`, `linear-points`, or `conservative-bin-average` operation.
 
-- [ ] **Step 4: Verify GREEN under JIT and AD**
+- [x] **Step 4: Verify GREEN under JIT and AD**
 
   ```bash
   env -u VIRTUAL_ENV uv run --no-sync pytest -q \
@@ -300,7 +300,7 @@ mypy, MyST.
     tests/validation/test_spectra_remap_conservation.py
   ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
   ```bash
   git add src/jaxstro/spectra tests/unit/test_spectra_plan.py \

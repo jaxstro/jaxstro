@@ -1,18 +1,18 @@
 # jaxstro — status
 
-next: Await Anna's per-slice checkpoint approval, then execute spectra-v1 Task 4: add explicit
-fixed-shape `SpectralPlan` targets, identity and point interpolation, conservative bin remapping,
-and fail-closed spectral-window coverage.
+next: Await Anna's per-task checkpoint approval, then execute spectra-v1 Task 5: prepared
+rectilinear and simplex interpolation stencils with fixed-shape JAX evaluation and fail-closed
+outside-domain statuses.
 
-previous: Spectra-v1 Task 3 completed on `codex/spectra-v1` (2026-07-12). Pure JAX transforms now
-couple axis and density semantics: wavelength/frequency axes remain increasing; point F_lambda/F_nu
-uses the exact Jacobian; spherical luminosity uses 4*pi*R^2; observer dilution uses (R/d)^2; binned
-density conversion fails closed until conservative remapping. On a synthetic three-point CGS stack,
-round-trip max relative error is 1.78e-16; all four dimensionlessly scaled AD/FD ratios are within
-1.95e-10 of unity and classified clean. The combined gate is 68 tests in 7.84 s (9.91 s wall), with
-Ruff, format, mypy, and diff checks clean. Nothing has been pushed.
+previous: Spectra-v1 Task 4 completed on `codex/spectra-v1` (2026-07-12). The canonical wavelength
+boundary was cleanly corrected from cm/per-cm to nm/per-nm: NewEra, BOSZ, and Sonora source factors
+are now 1e3, 10, and 1e-6, and F_lambda/F_nu uses c in nm/s. Explicit `SpectralPlan` targets now
+provide bit-identical identity values, in-coverage linear point interpolation, conservative
+bin-average remapping, and NaN plus `UNSUPPORTED_SPECTRAL_WINDOW` outside coverage. Coordinate/unit
+changes and point/bin semantic changes are rejected. The combined Tasks 2-4/provenance/ownership
+gate is 47 tests in 1.88 s (2.47 s wall); Ruff and mypy pass. Nothing has been pushed.
 
-blocker: None for spectra-v1 Task 4. Remote publication, tag/release, Pages configuration, and PyPI
+blocker: None for spectra-v1 Task 5. Remote publication, tag/release, Pages configuration, and PyPI
 remain outside this local feature branch and require separate authorization.
 due:
 
