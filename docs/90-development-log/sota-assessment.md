@@ -23,14 +23,14 @@ no numeric score is assigned without an observable rubric.
 | JAX transform coverage | validated | Selected `jit`, `vmap`, `lax.map`, `grad`, JVP/VJP, scan, and PyTree behavior is tested with named exceptions. |
 | Dimensional safety | implemented | `jaxstro.units` is canonical; `jaxstro.quantity` implements exact dimensions and transforms without claiming ecosystem adoption. |
 | API cohesion | validated | Exports, reference docs, typed results, and focused tests give downstream packages stable contracts. |
-| Serialization | validated | Quantity, root telemetry, provenance, and status surfaces support replay and deterministic records. |
+| Serialization | implemented | Scalar quantities have explicit round trips and array rejection; provenance records render deterministically; root telemetry uses fixed-shape NamedTuples suitable for transport, but no public root round-trip/replay serializer is yet validated. |
 | Performance and compilation evidence | implemented | Rootfinding and spectra have evidence, but compile/runtime/memory coverage is not uniform. |
 | Evidence freshness | validated | Root artifacts, provenance pages, and figures have emit/check or deterministic freshness gates. |
 | Provenance | validated | Runtime manifests and source-backed cards separate computational reproduction from scientific-source claims. |
 | Curriculum quality | implemented | Predict → compute → audit, science-pattern routing, objectives, activities, and evidence-bearing figures now form a learning spine. |
 | Accessibility | implemented | The docs gate checks alt text; new figures also use marker and line-style encodings beyond color. |
 | Discoverability | implemented | Diátaxis, three entry doors, science patterns, modules, API reference, and validation serve distinct questions. |
-| Downstream reuse | validated | Sibling packages consume shared primitives, although adoption evidence is not yet presented in one generated view. |
+| Downstream reuse | implemented | Local parity fixtures and known sibling use motivate shared primitives, but pinned adoption and compatibility evidence is not yet generated or validated. |
 
 ## High-confidence gaps
 
@@ -127,7 +127,9 @@ and central FD; color is not the only encoding.
 **Impact.** Make smooth, blocked, value-first, validation-only, and certified
 implicit claims distinguishable at a glance.
 
-**Evidence gate.** Every visual class maps to the live contract registry and an executable example.
+**Evidence gate.** First deliver the planned transform-contract or maturity
+registry; then require every visual class to map to that registry and an
+executable example.
 
 ### 3. Add validation-triangle figures
 
@@ -171,7 +173,9 @@ implicit claims distinguishable at a glance.
 
 **Impact.** Error-controlled workflows could extend fixed-step coverage.
 
-**Evidence gate.** Show why specialized libraries cannot own the solver and identify the genuinely foundational primitive.
+**Evidence gate.** Demonstrate cross-project demand for a narrowly defined
+primitive, compare against established specialized solvers as the default
+owner, and show that the proposed boundary avoids duplicating their stack.
 
 ### 3. Evaluate sparse iterative operators
 

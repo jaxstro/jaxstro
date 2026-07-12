@@ -59,3 +59,15 @@ def test_sota_assessment_is_navigable() -> None:
 
     assert myst.count("90-development-log/sota-assessment.md") == 1
     assert manifest["90-development-log/sota-assessment.md"] == "/sota-assessment"
+
+
+def test_sota_assessment_calibrates_unfinished_infrastructure() -> None:
+    text = PAGE.read_text(encoding="utf-8")
+
+    assert "| Serialization | implemented |" in text
+    assert "no public root round-trip/replay serializer is yet validated" in text
+    assert "| Downstream reuse | implemented |" in text
+    assert "pinned adoption and compatibility evidence is not yet" in text
+    assert "First deliver the planned transform-contract or maturity\nregistry" in text
+    assert "established specialized solvers as the default\nowner" in text
+    assert "specialized libraries cannot own the solver" not in text

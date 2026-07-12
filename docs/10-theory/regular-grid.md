@@ -81,9 +81,11 @@ preparation steps remain discrete under JAX transformations.
 
 ### Concept check: outside the table
 
-Predict the value and coordinate gradient just outside a grid for clamp, fill,
-and reject policies. Compute each policy, then audit whether the observed
-gradient follows the documented policy rather than an imagined extrapolation.
+Predict the value and coordinate gradient just outside a grid for clamp and
+fill policies. Separately predict the eager failure for `reject` and name the
+traced caller precondition: rejection is host validation, not a differentiable boundary rule.
+Compute the supported paths, then audit them against those
+distinct contracts rather than imagining an extrapolation or reject gradient.
 
 ## Boundary policy
 

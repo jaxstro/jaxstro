@@ -38,3 +38,13 @@ def test_homepage_names_scientific_capabilities_without_removing_entry_doors() -
         "## Three doors in",
     ):
         assert phrase in text
+
+
+def test_regular_grid_activity_separates_reject_from_gradient_policies() -> None:
+    text = (REPO_ROOT / "docs" / "10-theory" / "regular-grid.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "eager failure for `reject`" in text
+    assert "not a differentiable boundary rule" in text
+    assert "gradient just outside a grid for clamp, fill,\nand reject" not in text
