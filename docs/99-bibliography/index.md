@@ -32,8 +32,6 @@ Short per-paper notes — *why this reference matters*, not just that it exists 
 planned. The full reference list renders below.
 :::
 
-## References
-
 ```{bibliography}
 :filter: docname in docnames
 ```

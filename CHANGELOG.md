@@ -38,6 +38,10 @@ Phase B consolidation/hardening arc and the `jaxstro.params` selective-gradient 
 - **Release baseline** — hatchling build backend, Apache-2.0 license, `py.typed`
   marker, trove classifiers, equinox promoted to a core dependency (ADR-0002), PEP 735
   dependency groups, and a checked-in `uv.lock`.
+- **Rendered documentation gate** — a reusable strict MyST build and standard-library
+  DOM/xref checker now ratchets all 59 authored routes, rejects duplicate page URLs and
+  HTML IDs, validates internal links and image alt text, and runs in the local release
+  gate plus a parallel scheduled/manual CI job.
 
 ### Changed
 
@@ -48,6 +52,9 @@ Phase B consolidation/hardening arc and the `jaxstro.params` selective-gradient 
   (matching `numpy.linalg.cond`) instead of a misleading `0.0`.
 
 ### Fixed
+
+- **Duplicate bibliography anchor** — removed the authored `References` heading that
+  collided with MyST's generated bibliography heading in rendered HTML.
 
 - **`A_RAD` `7.565767e-15 → 7.565733250e-15`** — the radiation constant is now `4σ/c`
   exactly (derived from the CODATA-2018 Stefan–Boltzmann constant and the exact speed of

@@ -1,22 +1,19 @@
 # jaxstro — status
 
-next: Present the Slice C2 reusable documentation-gate card for Anna's explicit approval. The
-remaining site-level defect is C0-014, the duplicate rendered bibliography `references` ID; the
-gate must catch duplicate IDs/root-flat slugs rather than merely accepting a successful build.
+next: Present the local Slice D Pages-workflow and release-checklist card for Anna's explicit
+approval. Remote push, Pages-source configuration, deployment, and PyPI remain separately held.
 
-previous: Slice C11f spectra-data architecture pedagogy completed locally (2026-07-11). The
-page now distinguishes interface notation, one artifact-free executable `PreparedSpectralGrid`
-fixture, and two explicitly local-artifact recipes. A four-row table assigns catalog ranking and
-artifact preparation to the host, interpolation to the prepared JAX PyTree, and observables to
-downstream packages. The JaxtroViz figure measures midpoint flux, all three status codes, and a
-local JAX gradient through public APIs without implying atmosphere completion. Twenty-eight
-atmosphere/docs tests pass in 3.22 s; all 13 figure tests pass in 19.94 s; Ruff passes; strict
-MyST builds 59 pages in 1.64 s and static HTML renders in 4.09 s. Rendered
-`/spectra-data-architecture` has unique figure/table IDs, exact alt text, the hashed WebP, and
-three resolved evidence routes. No atmosphere runtime code changed. Nothing has been pushed.
+previous: Slice C2 reusable documentation gate completed locally (2026-07-11). A committed
+59-page source-to-route manifest now catches silent root-flat slug reassignment; a standard-library
+checker rejects duplicate page URLs/HTML IDs, unresolved internal links, internal new-tab behavior,
+and missing image alt text against every rendered route. The authored bibliography heading that
+collided with MyST's generated `references` anchor is removed. Twelve checker/wiring tests pass;
+the complete rendered gate passes in 7.39 s and closes both temporary ports. The same script is
+called by `scripts/check.sh` and a new parallel scheduled/manual full-gate job pinned to MyST
+1.10.1. The existing fast PR workflow is unchanged. Nothing has been pushed.
 
-blocker: None for Slice C2 once Anna approves its docs-gate card. Tag/release/PyPI remain held
-on Anna's permanent package-name decision.
+blocker: None for local Slice D once Anna approves its card. Remote publication requires a
+separate explicit authorization; tag/release/PyPI remain held on the permanent package name.
 due:
 
 ## Phase C — DONE (2026-06-17, branch feature/phase-c-release-hardening, HEAD 40f936e)

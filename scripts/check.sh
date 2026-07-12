@@ -18,6 +18,9 @@ $RUN mypy src/jaxstro
 echo "== provenance registry freshness =="
 $RUN python scripts/build_provenance_registry.py --check
 
+echo "== documentation gate =="
+bash scripts/check_docs.sh
+
 echo "== test-matrix (current interpreter; CI does 3.11/3.12/3.13) =="
 $RUN pytest -m "not slow" -q
 

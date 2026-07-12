@@ -19,6 +19,20 @@ env:
   OMP_NUM_THREADS: "1"
 
 jobs:
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: npm install --global mystmd@1.10.1
+      - run: bash scripts/check_docs.sh
+
   test-matrix:
     strategy:
       fail-fast: false
