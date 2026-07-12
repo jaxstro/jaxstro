@@ -117,6 +117,12 @@ def test_local_tlusty_processed_artifacts_are_validated():
         row.dataset: row
         for row in AtmosphereLibrary.from_local(REPO_ROOT / "data").coverage()
     }
+    exact_products = {
+        row.product_id
+        for row in coverage.values()
+        if row.product_id is not None and row.product_id.startswith("tlusty-")
+    }
+    assert len(exact_products) == 27
 
     for dataset, expected in expectations.items():
         rows = catalog.filter(pl.col("dataset") == dataset)

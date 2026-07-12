@@ -36,12 +36,6 @@ from .topology import GridTopology, TopologyKind, select_topology
 DEFAULT_TLUSTY_ZARR = "tlusty_flux.zarr"
 DEFAULT_TLUSTY_CATALOG = "catalog.parquet"
 _C_NM_S = C_CGS * 1.0e7
-_PRODUCT_DATASETS = {
-    "tlusty-ostar2002": "tlusty_ostar_2002",
-    "tlusty-bstar2006-vturb2": "tlusty_bstar_2007_vturb_2",
-    "tlusty-bstar2006-vturb10-cn": "tlusty_bstar_2007_vturb_10_cn",
-}
-
 _TLUSTY_FLUX_PATTERN = re.compile(
     r"^(?P<prefix>[A-Z]+)"
     r"(?P<teff>\d+)"
@@ -68,6 +62,77 @@ class TlustyFluxMetadata:
 
 
 @dataclass(frozen=True)
+class TlustyProductSpec:
+    """Identity of one composition-scoped TLUSTY spectral product."""
+
+    product_id: str
+    dataset: str
+    prefix: str
+    cn_altered: bool
+    z_over_z_sun: float
+    vturb_km_s: float
+
+
+_OSTAR_COMPOSITIONS = (
+    ("z2", "C", 2.0),
+    ("z1", "G", 1.0),
+    ("z0p5", "L", 0.5),
+    ("z0p2", "S", 0.2),
+    ("z0p1", "T", 0.1),
+    ("z1over30", "V", 1.0 / 30.0),
+    ("z0p02", "W", 0.02),
+    ("z0p01", "X", 0.01),
+    ("z0p001", "Y", 0.001),
+    ("z0", "Z", 0.0),
+)
+_BSTAR_COMPOSITIONS = (
+    ("z2", "BC", 2.0),
+    ("z1", "BG", 1.0),
+    ("z0p5", "BL", 0.5),
+    ("z0p2", "BS", 0.2),
+    ("z0p1", "BT", 0.1),
+    ("z0", "BZ", 0.0),
+)
+_TLUSTY_PRODUCT_SPECS = (
+    *(
+        TlustyProductSpec(
+            product_id=f"tlusty-ostar2002:{token}",
+            dataset="tlusty_ostar_2002",
+            prefix=prefix,
+            cn_altered=False,
+            z_over_z_sun=metallicity,
+            vturb_km_s=10.0,
+        )
+        for token, prefix, metallicity in _OSTAR_COMPOSITIONS
+    ),
+    *(
+        TlustyProductSpec(
+            product_id=f"tlusty-bstar2006:vturb2:{token}",
+            dataset="tlusty_bstar_2007_vturb_2",
+            prefix=prefix,
+            cn_altered=False,
+            z_over_z_sun=metallicity,
+            vturb_km_s=2.0,
+        )
+        for token, prefix, metallicity in _BSTAR_COMPOSITIONS
+    ),
+    *(
+        TlustyProductSpec(
+            product_id=f"tlusty-bstar2006:vturb10:{token}:{variant}",
+            dataset="tlusty_bstar_2007_vturb_10_cn",
+            prefix=prefix,
+            cn_altered=variant == "cn",
+            z_over_z_sun=metallicity,
+            vturb_km_s=10.0,
+        )
+        for token, prefix, metallicity in _BSTAR_COMPOSITIONS
+        for variant in (("standard", "cn") if prefix != "BZ" else ("standard",))
+    ),
+)
+_TLUSTY_PRODUCT_BY_ID = {spec.product_id: spec for spec in _TLUSTY_PRODUCT_SPECS}
+
+
+@dataclass(frozen=True)
 class TlustyBackend:
     """Exact-product adapter for processed TLUSTY H_nu spectra."""
 
@@ -75,7 +140,7 @@ class TlustyBackend:
     catalog_rows: tuple[dict[str, Any], ...]
     zarr_path: Path
     _store: Any = field(repr=False, compare=False)
-    product_id: str = "tlusty-ostar2002"
+    product_id: str = "tlusty-ostar2002:z1"
     approved_simplices: tuple[tuple[int, ...], ...] = ()
 
     @classmethod
@@ -112,18 +177,28 @@ class TlustyBackend:
         )
 
     @staticmethod
-    def dataset_for_product(product_id: str) -> str:
+    def product_specs() -> tuple[TlustyProductSpec, ...]:
+        """Return all exact TLUSTY products in deterministic order."""
+        return _TLUSTY_PRODUCT_SPECS
+
+    @staticmethod
+    def spec_for_product(product_id: str) -> TlustyProductSpec:
         try:
-            return _PRODUCT_DATASETS[product_id]
+            return _TLUSTY_PRODUCT_BY_ID[product_id]
         except KeyError as exc:
             raise ValueError(f"unknown TLUSTY product: {product_id}") from exc
 
     @staticmethod
+    def dataset_for_product(product_id: str) -> str:
+        return TlustyBackend.spec_for_product(product_id).dataset
+
+    @staticmethod
     def product_descriptor(product_id: str) -> ProductDescriptor:
         TlustyBackend.dataset_for_product(product_id)
+        spec = TlustyBackend.spec_for_product(product_id)
         provenance_id = (
             "tlusty-ostar2002"
-            if product_id == "tlusty-ostar2002"
+            if spec.dataset == "tlusty_ostar_2002"
             else "tlusty-bstar2006"
         )
         return ProductDescriptor(
@@ -156,8 +231,14 @@ class TlustyBackend:
                 SpectrumStatusCode.NO_DATASET,
                 "TLUSTY query product does not match the opened dataset",
             )
-        dataset = self.dataset_for_product(self.product_id)
-        rows = [row for row in self.catalog_rows if str(row["dataset"]) == dataset]
+        spec = self.spec_for_product(self.product_id)
+        rows = [
+            row
+            for row in self.catalog_rows
+            if str(row["dataset"]) == spec.dataset
+            and str(row["prefix"]) == spec.prefix
+            and bool(row["cn_altered"]) is spec.cn_altered
+        ]
         if not rows:
             return PreparationResult.failure(
                 SpectrumStatusCode.NO_DATASET,
@@ -296,6 +377,7 @@ __all__ = [
     "DEFAULT_TLUSTY_ZARR",
     "TlustyBackend",
     "TlustyFluxMetadata",
+    "TlustyProductSpec",
     "parse_tlusty_float",
     "parse_tlusty_flux_filename",
 ]

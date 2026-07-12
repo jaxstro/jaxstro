@@ -51,7 +51,7 @@ def summarize_catalog_rows(
         catalog_path=str(catalog_path) if catalog_path is not None else None,
         zarr_path=str(zarr_path) if zarr_path is not None else None,
         backend_name=backend_name,
-        backend_available=backend_name in {"newera", "bosz"},
+        backend_available=backend_name in {"newera", "bosz", "sonora", "tlusty"},
     )
 
 

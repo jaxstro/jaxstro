@@ -28,6 +28,8 @@ def _write_processed_artifact(
     processed_dir: Path,
     *,
     dataset: str = "tlusty_ostar_2002",
+    prefix: str = "G",
+    cn_altered: bool = False,
 ) -> None:
     pl = pytest.importorskip("polars")
     zarr = pytest.importorskip("zarr")
@@ -52,11 +54,11 @@ def _write_processed_artifact(
         rows.append(
             {
                 "filename": f"synthetic-{row}",
-                "prefix": "O",
+                "prefix": prefix,
                 "teff": teff,
                 "logg": logg,
                 "vturb_km_s": 10.0 if "10" in dataset else 2.0,
-                "cn_altered": "cn" in dataset,
+                "cn_altered": cn_altered,
                 "dataset": dataset,
                 "frequency_unit": "Hz",
                 "flux_unit": "erg s-1 cm-2 Hz-1",
@@ -68,7 +70,7 @@ def _write_processed_artifact(
     pl.DataFrame(rows).write_parquet(processed_dir / "catalog.parquet")
 
 
-def _query(product_id: str = "tlusty-ostar2002") -> AtmosphereQuery:
+def _query(product_id: str = "tlusty-ostar2002:z1") -> AtmosphereQuery:
     return AtmosphereQuery(
         params=AtmosphereParams(teff=35000.0, logg=3.5),
         product_id=product_id,
@@ -106,7 +108,7 @@ def test_parse_tlusty_float_accepts_fortran_and_bare_exponents():
 
 def test_tlusty_backend_reads_subgroup_grids_and_converts_h_nu(tmp_path):
     _write_processed_artifact(tmp_path)
-    backend = TlustyBackend.open(tmp_path, product_id="tlusty-ostar2002")
+    backend = TlustyBackend.open(tmp_path, product_id="tlusty-ostar2002:z1")
 
     prepared = backend.prepare(_query())
     assert prepared.prepared is not None
@@ -120,26 +122,51 @@ def test_tlusty_backend_reads_subgroup_grids_and_converts_h_nu(tmp_path):
     assert int(result.status.code) == SpectrumStatusCode.OK
 
 
-@pytest.mark.parametrize(
-    ("product_id", "dataset"),
-    [
-        ("tlusty-ostar2002", "tlusty_ostar_2002"),
-        ("tlusty-bstar2006-vturb2", "tlusty_bstar_2007_vturb_2"),
-        ("tlusty-bstar2006-vturb10-cn", "tlusty_bstar_2007_vturb_10_cn"),
-    ],
-)
-def test_tlusty_products_remain_distinct(product_id: str, dataset: str) -> None:
-    descriptor = TlustyBackend.product_descriptor(product_id)
+def test_tlusty_exposes_all_27_exact_composition_products() -> None:
+    specs = TlustyBackend.product_specs()
 
-    assert descriptor.product_id == product_id
-    assert TlustyBackend.dataset_for_product(product_id) == dataset
+    assert len(specs) == 27
+    assert len({spec.product_id for spec in specs}) == 27
+    assert {spec.prefix for spec in specs if spec.dataset == "tlusty_ostar_2002"} == {
+        "C",
+        "G",
+        "L",
+        "S",
+        "T",
+        "V",
+        "W",
+        "X",
+        "Y",
+        "Z",
+    }
+    assert sum(spec.cn_altered for spec in specs) == 5
+
+
+def test_tlusty_product_specs_preserve_composition_identity() -> None:
+    solar = TlustyBackend.spec_for_product("tlusty-ostar2002:z1")
+    metal_free = TlustyBackend.spec_for_product("tlusty-ostar2002:z0")
+
+    assert solar.dataset == metal_free.dataset == "tlusty_ostar_2002"
+    assert solar.prefix == "G"
+    assert metal_free.prefix == "Z"
+    assert solar.z_over_z_sun == 1.0
+    assert metal_free.z_over_z_sun == 0.0
+
+
+def test_tlusty_backend_filters_shared_dataset_by_exact_composition(tmp_path) -> None:
+    _write_processed_artifact(tmp_path, prefix="G")
+    backend = TlustyBackend.open(tmp_path, product_id="tlusty-ostar2002:z0")
+
+    prepared = backend.prepare(_query("tlusty-ostar2002:z0"))
+
+    assert prepared.status is SpectrumStatusCode.NO_DATASET
 
 
 def test_tlusty_rejects_product_mismatch_and_noncommon_coverage(tmp_path):
     _write_processed_artifact(tmp_path)
-    backend = TlustyBackend.open(tmp_path, product_id="tlusty-ostar2002")
+    backend = TlustyBackend.open(tmp_path, product_id="tlusty-ostar2002:z1")
 
-    mismatch = backend.prepare(_query("tlusty-bstar2006-vturb2"))
+    mismatch = backend.prepare(_query("tlusty-bstar2006:vturb2:z1"))
     outside_query = _query()
     outside_query = AtmosphereQuery(
         params=outside_query.params,

@@ -276,31 +276,44 @@ class AtmosphereLibrary:
                 dataset_rows = [
                     row for row in rows if str(row.get("dataset", "tlusty")) == dataset
                 ]
-                product_by_dataset = {
-                    "tlusty_ostar_2002": "tlusty-ostar2002",
-                    "tlusty_bstar_2007_vturb_2": "tlusty-bstar2006-vturb2",
-                    "tlusty_bstar_2007_vturb_10_cn": "tlusty-bstar2006-vturb10-cn",
-                }
-                tlusty_product_id = product_by_dataset.get(dataset)
                 coverages.append(
                     summarize_catalog_rows(
                         dataset=dataset,
-                        product_id=tlusty_product_id,
                         rows=dataset_rows,
                         state="processed",
                         catalog_path=tlusty_catalog,
                         zarr_path=tlusty_catalog.parent / "tlusty_flux.zarr",
                     )
                 )
-                if tlusty_product_id is not None:
-                    from .tlusty import TlustyBackend
+            from .tlusty import TlustyBackend
 
-                    adapters.append(
-                        TlustyBackend.open(
-                            tlusty_catalog.parent,
-                            product_id=tlusty_product_id,
-                        )
+            for spec in TlustyBackend.product_specs():
+                product_rows = tuple(
+                    row
+                    for row in rows
+                    if str(row["dataset"]) == spec.dataset
+                    and str(row["prefix"]) == spec.prefix
+                    and bool(row["cn_altered"]) is spec.cn_altered
+                )
+                if not product_rows:
+                    continue
+                coverages.append(
+                    summarize_catalog_rows(
+                        dataset=spec.product_id,
+                        product_id=spec.product_id,
+                        rows=product_rows,
+                        state="processed",
+                        backend_name="tlusty",
+                        catalog_path=tlusty_catalog,
+                        zarr_path=tlusty_catalog.parent / "tlusty_flux.zarr",
                     )
+                )
+                adapters.append(
+                    TlustyBackend.open(
+                        tlusty_catalog.parent,
+                        product_id=spec.product_id,
+                    )
+                )
 
         staging_manifest = atmospheres_root / "local-staging-manifest.json"
         if staging_manifest.exists():

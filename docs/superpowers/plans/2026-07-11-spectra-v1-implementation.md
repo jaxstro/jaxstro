@@ -554,8 +554,9 @@ mypy, MyST.
 - Create: `tests/validation/test_tlusty_interpolation_policy.py`
 
 **Interfaces:**
-- Produces three product IDs for OSTAR2002, BSTAR2006 `vturb=2`, and BSTAR2006
-  `vturb=10` C/N variants.
+- Produces 27 exact composition-scoped product IDs: ten OSTAR2002 abundance
+  grids, six BSTAR2006 `vturb=2` grids, and eleven BSTAR2006 `vturb=10`
+  standard/CN grids. No dataset-level compatibility aliases are retained.
 - Converts `H_nu` to canonical `F_lambda` with
   `F_nu=4*pi*H_nu`, `lambda=c/nu`, and
   `F_lambda=F_nu*c/lambda**2`.
@@ -566,8 +567,10 @@ mypy, MyST.
   subgroups, resample each vertex to one explicit plan before parameter
   interpolation, and reject requests without common spectral coverage.
 
-- [x] **Step 2: Verify RED**, implement dataset-specific adapters, and preserve
-  product identity and C/N flags.
+- [x] **Step 2: Verify RED**, implement composition-scoped adapters, and preserve
+  dataset, abundance-prefix, microturbulence, and C/N identity. The original
+  three-product model was rejected against the real catalog because multiple
+  abundance grids share `(Teff, logg)` coordinates inside each artifact.
 
 - [x] **Step 3: Verify GREEN**
 
