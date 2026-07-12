@@ -114,8 +114,8 @@ differentiation, and repeated evaluation.
 ## Canonical data model
 
 The canonical **atmosphere-output boundary** is monotonically increasing
-wavelength in cm plus surface `F_lambda` in
-`erg s^-1 cm^-2 cm^-1`, with mandatory physical semantics and retained native
+wavelength in nm plus surface `F_lambda` in
+`erg s^-1 cm^-2 nm^-1`, with mandatory physical semantics and retained native
 provenance.  This is an explicit spectral convention, not a quantity-system
 migration.  A generic `Spectrum` may also hold an explicitly transformed
 frequency/`F_nu`, luminosity-density, or observer-flux-density representation;
@@ -141,8 +141,8 @@ Spectrum(
 - optional bin edges and resolution metadata;
 - a stable shape suitable for JAX transformations.
 
-Atmosphere adapters return emergent surface `F_lambda` in those canonical CGS
-units.
+Atmosphere adapters return emergent surface `F_lambda` in those canonical
+CGS-compatible units.
 The native archive convention and every conversion factor, including any
 required pi or 4-pi factor, must be verified from primary documentation.  If
 that verification is unavailable, the product is unavailable; Jaxstro does not
@@ -436,8 +436,8 @@ The preflight review found and repaired three ambiguities before code work:
 1. "Canonical" now refers specifically to the atmosphere-output boundary;
    explicitly transformed spectra remain valid without pretending to be adapter
    outputs.
-2. Canonical units are exact (`cm` and
-   `erg s^-1 cm^-2 cm^-1`), and the geometric assumptions behind luminosity and
+2. Canonical units are exact (`nm` and
+   `erg s^-1 cm^-2 nm^-1`), and the geometric assumptions behind luminosity and
    observer-flux transforms are stated.
 3. `SpectralPlan` now owns an explicit fixed-shape target axis instead of an
    underspecified `sampling` placeholder, and consumer migration precedes
@@ -447,8 +447,8 @@ Primary product documentation resolves the native semantic gates for planning:
 
 - NewEra low-resolution products are wavelength in nm and `F_lambda` in
   `W m^-2 nm^-1`; the HDF5 products document `F_lambda` in
-  `erg s^-1 cm^-2 cm^-1`.  The low-resolution canonical conversion factor is
-  `1e10`.
+  `erg s^-1 cm^-2 cm^-1`.  The low-resolution conversion to Jaxstro's
+  canonical per-nm density is `1e3`.
 - BOSZ 2024 original spectra provide Eddington first moment `H_lambda`; surface
   flux is `4*pi*H_lambda`, while the lower-resolution products contain the
   already resampled flux and continuum columns.
@@ -456,7 +456,7 @@ Primary product documentation resolves the native semantic gates for planning:
   `F = 4*pi*H` in `W m^-2 m^-1` on a wavelength axis.  The archive description
   prints a nu subscript despite the per-metre unit; Jaxstro records this source
   inconsistency and follows the dimensional unit and wavelength coordinate.
-  The canonical conversion factor is `10`.
+  The canonical per-nm conversion factor is `1e-6`.
 - TLUSTY OSTAR2002 and BSTAR2006 SEDs provide surface Eddington flux `H_nu` in
   `erg s^-1 cm^-2 Hz^-1`; surface flux is `4*pi*H_nu`.
 

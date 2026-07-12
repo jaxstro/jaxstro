@@ -24,22 +24,22 @@ from jaxstro.testing import Case, audit_entry_point  # noqa: E402
 PROVENANCE = SpectrumProvenance(
     source_id="synthetic",
     product_id="gradient-audit",
-    native_coordinate="wavelength_cm",
+    native_coordinate="wavelength_nm",
     native_density="F_lambda",
-    native_unit="erg s^-1 cm^-2 cm^-1",
+    native_unit="erg s^-1 cm^-2 nm^-1",
     canonical_conversion="identity",
     citations=("synthetic:test",),
 )
-BASE_WAVELENGTH_CM = jnp.array([1.0e-5, 2.0e-5, 4.0e-5])
+BASE_WAVELENGTH_NM = jnp.array([100.0, 200.0, 400.0])
 BASE_FLUX = jnp.array([2.0, 3.0, 5.0])
 
 
 def _spectrum(wavelength_scale: object = 1.0, flux_scale: object = 1.0) -> Spectrum:
     return Spectrum(
         axis=SpectralAxis.points(
-            wavelength_scale * BASE_WAVELENGTH_CM,
+            wavelength_scale * BASE_WAVELENGTH_NM,
             coordinate=SpectralCoordinate.WAVELENGTH,
-            unit="cm",
+            unit="nm",
         ),
         values=flux_scale * BASE_FLUX,
         semantic=SpectralSemantic.SURFACE_FLUX_LAMBDA,
@@ -54,7 +54,7 @@ CASES = (
         fn=lambda scale: to_flux_nu(_spectrum(wavelength_scale=scale)).values,
         param="wavelength_scale",
         theta0=1.0,
-        reduce=lambda values: jnp.sum(values / 1.0e-19),
+        reduce=lambda values: jnp.sum(values / 1.0e-12),
         tol=2.0e-5,
         h_rel=1.0e-5,
         allowed_claim="smooth point-density wavelength Jacobian",
@@ -66,7 +66,7 @@ CASES = (
         fn=lambda scale: to_flux_nu(_spectrum(flux_scale=scale)).values,
         param="flux_scale",
         theta0=1.0,
-        reduce=lambda values: jnp.sum(values / 1.0e-19),
+        reduce=lambda values: jnp.sum(values / 1.0e-12),
         tol=2.0e-5,
         h_rel=1.0e-5,
         allowed_claim="smooth point-density flux sensitivity",

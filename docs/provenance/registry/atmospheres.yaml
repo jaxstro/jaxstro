@@ -14,8 +14,8 @@
     - "native_coordinate=wavelength_nm"
     - "native_density=F_lambda"
     - "native_unit=W m^-2 nm^-1"
-    - "canonical_factor=1e10"
-    - "canonical_unit=erg s^-1 cm^-2 cm^-1"
+    - "canonical_factor=1e3"
+    - "canonical_unit=erg s^-1 cm^-2 nm^-1"
   sources:
     - reference: https://doi.org/10.1051/0004-6361/202554171
       locator: "Sect. 6, p. 7: low-resolution archive wavelengths and fluxes are nm and W m^-2 nm^-1; HDF5 fl is log10(F_lambda) in erg s^-1 cm^-2 cm^-1"
@@ -29,7 +29,7 @@
     - "tests/validation/provenance_cards/test_atmosphere_spectra_sources.py::test_newera_and_bosz_canonical_flux_conversions_are_explicit"
   status: verified
   deviations:
-    - "The current backend preserves source values; the canonical 1e10 conversion is enforced by the spectra-v1 implementation gate before runtime enablement."
+    - "The current backend preserves source values; the canonical 1e3 conversion is enforced by the spectra-v1 implementation gate before runtime enablement."
 
 - id: bosz-2025-recomputed
   title: BOSZ 2025-recomputed 2024-format spectra
@@ -45,7 +45,8 @@
     - "native_coordinate=wavelength_angstrom"
     - "native_density=F_lambda_resampled"
     - "native_unit=erg s^-1 cm^-2 angstrom^-1"
-    - "canonical_factor=1e8"
+    - "canonical_factor=10"
+    - "canonical_unit=erg s^-1 cm^-2 nm^-1"
     - "original_resolution_conversion=F_lambda=4*pi*H_lambda"
   sources:
     - reference: https://archive.stsci.edu/hlsp/bosz
@@ -76,7 +77,8 @@
     - "native_coordinate=wavelength_micron"
     - "native_density=wavelength-density flux"
     - "native_unit=W m^-2 m^-1"
-    - "canonical_factor=10"
+    - "canonical_factor=1e-6"
+    - "canonical_unit=erg s^-1 cm^-2 nm^-1"
     - "source_deviation=printed F_nu subscript conflicts with wavelength axis and per-metre density unit"
     - "sampling=monochromatic points; source warns against unresolved wavelength interpolation"
   sources:

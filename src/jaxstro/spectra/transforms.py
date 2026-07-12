@@ -34,6 +34,9 @@ _SURFACE_TO_OBSERVER = {
     SpectralSemantic.SURFACE_FLUX_NU: SpectralSemantic.OBSERVER_FLUX_NU,
 }
 
+# Exact conversion of the canonical CGS speed of light from cm/s to nm/s.
+_C_NM_S = C_CGS * 1.0e7
+
 
 def _with_operation(
     provenance: SpectrumProvenance, operation: str
@@ -52,16 +55,16 @@ def _require_scalar_positive(value: Any, name: str):
 
 
 def to_frequency(axis: SpectralAxis) -> SpectralAxis:
-    """Convert a canonical wavelength axis in cm to increasing frequency in Hz."""
+    """Convert a canonical wavelength axis in nm to increasing frequency in Hz."""
     if axis.coordinate is SpectralCoordinate.FREQUENCY:
         if axis.unit != "Hz":
             raise ValueError("frequency axes must use Hz for canonical transforms")
         return axis
-    if axis.unit != "cm":
-        raise ValueError("wavelength axes must use cm for canonical transforms")
+    if axis.unit != "nm":
+        raise ValueError("wavelength axes must use nm for canonical transforms")
     if axis.sampling is SpectralSampling.POINTS:
         return SpectralAxis.points(
-            C_CGS / axis.values[::-1],
+            _C_NM_S / axis.values[::-1],
             coordinate=SpectralCoordinate.FREQUENCY,
             unit="Hz",
             resolving_power=axis.resolving_power,
@@ -69,7 +72,7 @@ def to_frequency(axis: SpectralAxis) -> SpectralAxis:
     if axis.edges is None:  # protected by SpectralAxis invariants
         raise ValueError("binned wavelength axes require edges")
     return SpectralAxis.bins(
-        C_CGS / axis.edges[::-1],
+        _C_NM_S / axis.edges[::-1],
         coordinate=SpectralCoordinate.FREQUENCY,
         unit="Hz",
         sampling=axis.sampling,
@@ -78,26 +81,26 @@ def to_frequency(axis: SpectralAxis) -> SpectralAxis:
 
 
 def to_wavelength(axis: SpectralAxis) -> SpectralAxis:
-    """Convert a canonical frequency axis in Hz to increasing wavelength in cm."""
+    """Convert a canonical frequency axis in Hz to increasing wavelength in nm."""
     if axis.coordinate is SpectralCoordinate.WAVELENGTH:
-        if axis.unit != "cm":
-            raise ValueError("wavelength axes must use cm for canonical transforms")
+        if axis.unit != "nm":
+            raise ValueError("wavelength axes must use nm for canonical transforms")
         return axis
     if axis.unit != "Hz":
         raise ValueError("frequency axes must use Hz for canonical transforms")
     if axis.sampling is SpectralSampling.POINTS:
         return SpectralAxis.points(
-            C_CGS / axis.values[::-1],
+            _C_NM_S / axis.values[::-1],
             coordinate=SpectralCoordinate.WAVELENGTH,
-            unit="cm",
+            unit="nm",
             resolving_power=axis.resolving_power,
         )
     if axis.edges is None:  # protected by SpectralAxis invariants
         raise ValueError("binned frequency axes require edges")
     return SpectralAxis.bins(
-        C_CGS / axis.edges[::-1],
+        _C_NM_S / axis.edges[::-1],
         coordinate=SpectralCoordinate.WAVELENGTH,
-        unit="cm",
+        unit="nm",
         sampling=axis.sampling,
         resolving_power=axis.resolving_power,
     )
@@ -113,7 +116,7 @@ def to_flux_nu(spectrum: Spectrum) -> Spectrum:
     if spectrum.axis.sampling is not SpectralSampling.POINTS:
         raise ValueError("F_lambda/F_nu conversion requires point-sampled spectra")
     wavelength = spectrum.axis.values
-    values = (spectrum.values * wavelength**2 / C_CGS)[::-1]
+    values = (spectrum.values * wavelength**2 / _C_NM_S)[::-1]
     return Spectrum(
         axis=to_frequency(spectrum.axis),
         values=values,
@@ -132,7 +135,7 @@ def to_flux_lambda(spectrum: Spectrum) -> Spectrum:
     if spectrum.axis.sampling is not SpectralSampling.POINTS:
         raise ValueError("F_nu/F_lambda conversion requires point-sampled spectra")
     wavelength_axis = to_wavelength(spectrum.axis)
-    values = spectrum.values[::-1] * C_CGS / wavelength_axis.values**2
+    values = spectrum.values[::-1] * _C_NM_S / wavelength_axis.values**2
     return Spectrum(
         axis=wavelength_axis,
         values=values,

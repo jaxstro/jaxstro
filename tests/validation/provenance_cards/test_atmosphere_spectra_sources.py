@@ -42,11 +42,13 @@ def test_newera_and_bosz_canonical_flux_conversions_are_explicit() -> None:
     assert "native_coordinate=wavelength_nm" in newera
     assert "native_density=F_lambda" in newera
     assert "native_unit=W m^-2 nm^-1" in newera
-    assert "canonical_factor=1e10" in newera
+    assert "canonical_factor=1e3" in newera
+    assert "canonical_unit=erg s^-1 cm^-2 nm^-1" in newera
     assert "native_coordinate=wavelength_angstrom" in bosz
     assert "native_density=F_lambda_resampled" in bosz
     assert "native_unit=erg s^-1 cm^-2 angstrom^-1" in bosz
-    assert "canonical_factor=1e8" in bosz
+    assert "canonical_factor=10" in bosz
+    assert "canonical_unit=erg s^-1 cm^-2 nm^-1" in bosz
 
 
 def test_sonora_source_inconsistency_and_conversion_are_explicit() -> None:
@@ -55,7 +57,8 @@ def test_sonora_source_inconsistency_and_conversion_are_explicit() -> None:
     assert "native_coordinate=wavelength_micron" in sonora
     assert "native_density=wavelength-density flux" in sonora
     assert "native_unit=W m^-2 m^-1" in sonora
-    assert "canonical_factor=10" in sonora
+    assert "canonical_factor=1e-6" in sonora
+    assert "canonical_unit=erg s^-1 cm^-2 nm^-1" in sonora
     assert (
         "source_deviation=printed F_nu subscript conflicts with wavelength axis and per-metre density unit"
         in sonora

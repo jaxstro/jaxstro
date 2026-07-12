@@ -24,9 +24,9 @@ def _provenance() -> SpectrumProvenance:
     return SpectrumProvenance(
         source_id="synthetic",
         product_id="synthetic-grid",
-        native_coordinate="wavelength_cm",
+        native_coordinate="wavelength_nm",
         native_density="F_lambda",
-        native_unit="erg s^-1 cm^-2 cm^-1",
+        native_unit="erg s^-1 cm^-2 nm^-1",
         canonical_conversion="identity",
         citations=("synthetic:test",),
     )
@@ -34,9 +34,9 @@ def _provenance() -> SpectrumProvenance:
 
 def _surface_spectrum(values: object = (2.0, 3.0)) -> Spectrum:
     axis = SpectralAxis.points(
-        jnp.array([1.0e-5, 2.0e-5]),
+        jnp.array([100.0, 200.0]),
         coordinate=SpectralCoordinate.WAVELENGTH,
-        unit="cm",
+        unit="nm",
     )
     return Spectrum(
         axis=axis,
@@ -64,7 +64,7 @@ def test_binned_axis_computes_centers_and_preserves_edges() -> None:
     axis = SpectralAxis.bins(
         jnp.array([1.0, 2.0, 4.0]),
         coordinate=SpectralCoordinate.WAVELENGTH,
-        unit="cm",
+        unit="nm",
         sampling=SpectralSampling.BIN_AVERAGES,
     )
 
@@ -88,7 +88,7 @@ def test_point_axis_rejects_invalid_coordinates(values: object, message: str) ->
         SpectralAxis.points(
             values,
             coordinate=SpectralCoordinate.WAVELENGTH,
-            unit="cm",
+            unit="nm",
         )
 
 
@@ -97,7 +97,7 @@ def test_binned_axis_rejects_too_few_edges() -> None:
         SpectralAxis.bins(
             jnp.array([1.0]),
             coordinate=SpectralCoordinate.WAVELENGTH,
-            unit="cm",
+            unit="nm",
         )
 
 
@@ -105,7 +105,7 @@ def test_spectrum_rejects_wrong_value_shape_and_coordinate_semantic() -> None:
     wavelength = SpectralAxis.points(
         jnp.array([1.0, 2.0]),
         coordinate=SpectralCoordinate.WAVELENGTH,
-        unit="cm",
+        unit="nm",
     )
 
     with pytest.raises(ValueError, match="match the spectral axis"):

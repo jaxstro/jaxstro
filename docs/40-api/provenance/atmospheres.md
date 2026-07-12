@@ -25,7 +25,8 @@ BOSZ files using the 2024 filename and product layout after the 2025-09-24 recom
 - native_coordinate=wavelength_angstrom
 - native_density=F_lambda_resampled
 - native_unit=erg s^-1 cm^-2 angstrom^-1
-- canonical_factor=1e8
+- canonical_factor=10
+- canonical_unit=erg s^-1 cm^-2 nm^-1
 - original_resolution_conversion=F_lambda=4*pi*H_lambda
 
 ### Sources
@@ -60,8 +61,8 @@ PHOENIX-NewEraV3-LowRes-SPECTRA products only; this card does not describe the H
 - native_coordinate=wavelength_nm
 - native_density=F_lambda
 - native_unit=W m^-2 nm^-1
-- canonical_factor=1e10
-- canonical_unit=erg s^-1 cm^-2 cm^-1
+- canonical_factor=1e3
+- canonical_unit=erg s^-1 cm^-2 nm^-1
 
 ### Sources
 
@@ -75,7 +76,7 @@ PHOENIX-NewEraV3-LowRes-SPECTRA products only; this card does not describe the H
 
 :::{admonition} Deviations from the source
 :class: caution
-- The current backend preserves source values; the canonical 1e10 conversion is enforced by the spectra-v1 implementation gate before runtime enablement.
+- The current backend preserves source values; the canonical 1e3 conversion is enforced by the spectra-v1 implementation gate before runtime enablement.
 :::
 
 (card-sonora-diamondback-2024)=
@@ -95,7 +96,8 @@ The Diamondback spectra archive associated with Morley et al. (2024), not Sonora
 - native_coordinate=wavelength_micron
 - native_density=wavelength-density flux
 - native_unit=W m^-2 m^-1
-- canonical_factor=10
+- canonical_factor=1e-6
+- canonical_unit=erg s^-1 cm^-2 nm^-1
 - source_deviation=printed F_nu subscript conflicts with wavelength axis and per-metre density unit
 - sampling=monochromatic points; source warns against unresolved wavelength interpolation
 

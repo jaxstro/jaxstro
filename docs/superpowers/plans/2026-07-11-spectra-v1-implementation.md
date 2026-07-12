@@ -21,8 +21,8 @@ mypy, MyST.
 
 ## Global Constraints
 
-- Canonical atmosphere output is increasing wavelength in `cm` and surface
-  `F_lambda` in `erg s^-1 cm^-2 cm^-1`.
+- Canonical atmosphere output is increasing wavelength in `nm` and surface
+  `F_lambda` in `erg s^-1 cm^-2 nm^-1`.
 - Generic transformed spectra may use frequency/`F_nu`, luminosity density, or
   observer flux density when their semantics are explicit.
 - No quantity-layer migration, new runtime dependency, compatibility alias,
@@ -67,7 +67,7 @@ mypy, MyST.
   assert "native_density=H_nu" in ostar
   assert "canonical_factor=4*pi then F_nu-to-F_lambda" in ostar
   assert "native_density=wavelength-density flux" in sonora
-  assert "canonical_factor=10" in sonora
+  assert "canonical_factor=1e-6" in sonora
   assert all(
       "owner=jaxstro.spectra" in set(record["conventions"])
       for record in records.values()
@@ -90,16 +90,18 @@ mypy, MyST.
   Encode these verified conversions:
 
   ```text
-  NewEra: nm, F_lambda [W m^-2 nm^-1] -> multiply by 1e10
-  BOSZ resam: angstrom, F_lambda [erg s^-1 cm^-2 angstrom^-1] -> multiply by 1e8
-  Sonora: micron, wavelength-density flux [W m^-2 m^-1] -> multiply by 10
+  NewEra: nm, F_lambda [W m^-2 nm^-1] -> multiply by 1e3
+  BOSZ resam: angstrom, F_lambda [erg s^-1 cm^-2 angstrom^-1] -> multiply by 10
+  Sonora: micron, wavelength-density flux [W m^-2 m^-1] -> multiply by 1e-6
   TLUSTY: Hz, H_nu [erg s^-1 cm^-2 Hz^-1] -> multiply by 4*pi, then F_nu -> F_lambda
   ```
 
-  The NewEra and BOSZ factors convert a per-nm or per-angstrom density to
-  per-cm. Sonora first converts `W m^-2` to `erg s^-1 cm^-2` by `1e3`, then
-  converts a per-metre density to a per-cm density by `1e-2`; the combined
-  factor is `10`. Record the archive's inconsistent printed nu subscript next
+  NewEra's density is already per nm, so only the `W m^-2` to
+  `erg s^-1 cm^-2` factor of `1e3` applies. BOSZ converts a per-angstrom
+  density to per nm by `10`. Sonora first converts `W m^-2` to
+  `erg s^-1 cm^-2` by `1e3`, then converts a per-metre density to per nm by
+  `1e-9`; the combined factor is `1e-6`. Record the archive's inconsistent
+  printed nu subscript next
   to its wavelength coordinate and per-metre dimensional unit.
 
 - [ ] **Step 4: Verify GREEN and registry freshness**
@@ -138,9 +140,9 @@ mypy, MyST.
 
   ```python
   axis = SpectralAxis.points(
-      jnp.array([1.0e-5, 2.0e-5]),
+      jnp.array([100.0, 200.0]),
       coordinate=SpectralCoordinate.WAVELENGTH,
-      unit="cm",
+      unit="nm",
   )
   spectrum = Spectrum(
       axis=axis,
@@ -206,7 +208,8 @@ mypy, MyST.
 - Create: `tests/validation/test_spectra_transform_gradients.py`
 
 **Interfaces:**
-- Consumes: Task 2 types and `jaxstro.constants.C_CGS`.
+- Consumes: Task 2 types and `jaxstro.constants.C_CGS`, converted exactly from
+  cm/s to nm/s for the canonical wavelength coordinate.
 - Produces: `to_frequency(axis)`, `to_wavelength(axis)`,
   `to_flux_nu(spectrum)`, `to_flux_lambda(spectrum)`,
   `surface_flux_to_luminosity(spectrum, radius_cm)`, and
@@ -421,7 +424,7 @@ mypy, MyST.
 **Interfaces:**
 - Consumes: NewEra product record, `AtmosphereQuery`, `SpectralPlan`, topology
   discovery, and prepared stencils.
-- Produces: product `newera-v3-lowres` with canonical factor `1e10`.
+- Produces: product `newera-v3-lowres` with canonical factor `1e3`.
 
 - [ ] **Step 1: Write failing sparse-cell and canonical-unit tests**
 
@@ -464,8 +467,8 @@ mypy, MyST.
 - [ ] **Step 1: Write failing product-identity and conversion tests**
 
   Require library coverage, adapter selection, opened artifact, and provenance
-  to agree on `ap`, `mp`, or `ms`. Verify resampled `F_lambda` gains the `1e8`
-  per-angstrom-to-per-cm factor exactly once. Reject an original-resolution
+  to agree on `ap`, `mp`, or `ms`. Verify resampled `F_lambda` gains the `10`
+  per-angstrom-to-per-nm factor exactly once. Reject an original-resolution
   `H_lambda` artifact unless the `4*pi` conversion path is explicitly selected.
 
 - [ ] **Step 2: Verify RED**, implement product-scoped preparation, and verify
@@ -496,8 +499,8 @@ mypy, MyST.
 
 **Interfaces:**
 - Produces product IDs separating cloud label, metallicity, and C/O planes.
-- Uses canonical factor `10` from `W m^-2 m^-1` to
-  `erg s^-1 cm^-2 cm^-1`.
+- Uses canonical factor `1e-6` from `W m^-2 m^-1` to
+  `erg s^-1 cm^-2 nm^-1`.
 
 - [ ] **Step 1: Write failing artifact, product-plane, and conversion tests**
 

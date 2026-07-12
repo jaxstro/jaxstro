@@ -220,11 +220,11 @@ _FREQUENCY_SEMANTICS = {
     SpectralSemantic.OBSERVER_FLUX_NU,
 }
 _CANONICAL_VALUE_UNITS = {
-    SpectralSemantic.SURFACE_FLUX_LAMBDA: "erg s^-1 cm^-2 cm^-1",
+    SpectralSemantic.SURFACE_FLUX_LAMBDA: "erg s^-1 cm^-2 nm^-1",
     SpectralSemantic.SURFACE_FLUX_NU: "erg s^-1 cm^-2 Hz^-1",
-    SpectralSemantic.LUMINOSITY_LAMBDA: "erg s^-1 cm^-1",
+    SpectralSemantic.LUMINOSITY_LAMBDA: "erg s^-1 nm^-1",
     SpectralSemantic.LUMINOSITY_NU: "erg s^-1 Hz^-1",
-    SpectralSemantic.OBSERVER_FLUX_LAMBDA: "erg s^-1 cm^-2 cm^-1",
+    SpectralSemantic.OBSERVER_FLUX_LAMBDA: "erg s^-1 cm^-2 nm^-1",
     SpectralSemantic.OBSERVER_FLUX_NU: "erg s^-1 cm^-2 Hz^-1",
 }
 
