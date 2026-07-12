@@ -1,16 +1,16 @@
 # jaxstro — status
 
-next: Execute spectra-v1 Task 8 directly on main: make BOSZ atmosphere/resolution/product identity
-explicit and apply the verified per-angstrom to per-nm conversion exactly once.
+next: Execute spectra-v1 Task 9 directly on main: implement the Sonora Diamondback adapter with
+explicit cloud/metallicity/C-O planes and canonical per-nm output.
 
-previous: Spectra-v1 Task 7 completed on local main (2026-07-12). NewEra now prepares from valid
-topology rather than independent axis brackets: complete cells win, sparse cells fail with
-NO_COMPLETE_CELL unless a containing simplex appears in the explicit approved manifest. Vertex
-spectra convert W m^-2 nm^-1 to canonical erg s^-1 cm^-2 nm^-1 by 1e3, remap to the fixed spectral
-plan before parameter interpolation, and evaluate without filesystem access. Focused gate: 5 tests
-in 1.14 s (1.74 s wall); Ruff, format, mypy, and diff checks clean. Nothing has been pushed.
+previous: Spectra-v1 Task 8 completed on local main (2026-07-12). BOSZ product IDs now encode the
+atmosphere, resolution, and spectral product; query, catalog, artifact, and provenance must agree.
+Resampled F_lambda converts angstrom to nm and per-angstrom to per-nm exactly once (500 A -> 50 nm;
+[2.5,3.5,4.5] -> [25,35,45]). Original noresam H_lambda remains POLICY_NOT_VALIDATED without an
+explicit 4*pi path. Focused gate: 8 tests in 0.75 s (1.33 s wall); Ruff, format, mypy, and diff
+checks clean. Nothing has been pushed.
 
-blocker: None for spectra-v1 Task 8. Remote publication, tag/release, Pages configuration, and PyPI
+blocker: None for spectra-v1 Task 9. Remote publication, tag/release, Pages configuration, and PyPI
 remain outside this local feature branch and require separate authorization.
 due:
 

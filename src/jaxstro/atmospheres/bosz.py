@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import math
 import os
 import re
@@ -13,7 +15,23 @@ from typing import Any
 import jax.numpy as jnp
 import numpy as np
 
-from .spectra import AtmosphereParams, PreparedSpectralGrid, SpectrumResult
+from jaxstro.spectra import (
+    FluxInterpolation,
+    PreparedRectilinearStencil,
+    PreparedSimplexStencil,
+    SpectralAxis,
+    SpectralCoordinate,
+    SpectralSemantic,
+    Spectrum,
+    SpectrumProvenance,
+    SpectrumStatusCode,
+    resample_spectrum,
+)
+
+from .adapters import PreparationResult, PreparedAtmosphere
+from .params import AtmosphereQuery
+from .products import ArtifactReport, ProductDescriptor
+from .topology import GridTopology, TopologyKind, select_topology
 
 DEFAULT_BOSZ_ZARR = "bosz_2025_recomputed.zarr"
 DEFAULT_BOSZ_CATALOG = "catalog.parquet"
@@ -90,6 +108,7 @@ class BoszBackend:
     resolution: str = "r10000"
     atmosphere: str = "ap"
     product: str = "resam"
+    approved_simplices: tuple[tuple[int, ...], ...] = ()
 
     @classmethod
     def open(
@@ -101,6 +120,7 @@ class BoszBackend:
         resolution: str = "r10000",
         atmosphere: str = "ap",
         product: str = "resam",
+        approved_simplices: tuple[tuple[int, ...], ...] = (),
     ) -> "BoszBackend":
         """Open a processed BOSZ artifact directory.
 
@@ -137,11 +157,54 @@ class BoszBackend:
             resolution=resolution,
             atmosphere=atmosphere,
             product=product,
+            approved_simplices=approved_simplices,
             _store=store,
         )
 
-    def prepare(self, params: AtmosphereParams) -> PreparedSpectralGrid:
-        """Load the local BOSZ interpolation cell enclosing ``params``."""
+    @staticmethod
+    def product_descriptor(
+        atmosphere: str,
+        resolution: str,
+        product: str,
+    ) -> ProductDescriptor:
+        """Return one exact BOSZ atmosphere/resolution/product contract."""
+        return ProductDescriptor(
+            product_id=f"bosz-2025-recomputed:{atmosphere}:{resolution}:{product}",
+            family="bosz",
+            parameter_names=("teff", "logg"),
+            topology_policy="complete-cell-or-approved-simplex",
+            flux_interpolation_policy="linear" if product == "resam" else None,
+            provenance_id="bosz-2025-recomputed",
+        )
+
+    def describe_product(self) -> ProductDescriptor:
+        return self.product_descriptor(self.atmosphere, self.resolution, self.product)
+
+    def validate_artifact(self) -> ArtifactReport:
+        valid = self.zarr_path.exists() and bool(self.catalog_rows)
+        payload = json.dumps(self.catalog_rows, sort_keys=True, default=str).encode()
+        digest = f"sha256:{hashlib.sha256(payload).hexdigest()}" if valid else None
+        return ArtifactReport(
+            valid=valid,
+            digest=digest,
+            schema="bosz-2025-recomputed" if valid else None,
+            message="" if valid else "BOSZ artifact is unavailable or empty",
+        )
+
+    def prepare(self, query: AtmosphereQuery) -> PreparationResult:
+        """Prepare one exact BOSZ product on the requested canonical axis."""
+        descriptor = self.describe_product()
+        if query.product_id != descriptor.product_id:
+            return PreparationResult.failure(
+                SpectrumStatusCode.NO_DATASET,
+                "BOSZ query product does not match the opened artifact scope",
+            )
+        if descriptor.flux_interpolation_policy is None:
+            return PreparationResult.failure(
+                SpectrumStatusCode.POLICY_NOT_VALIDATED,
+                "original-resolution BOSZ H_lambda requires an explicit 4*pi path",
+            )
+        params = query.params
         teff = _as_host_float(params.teff, "teff")
         logg = _as_host_float(params.logg, "logg")
         m_h = _as_host_float(params.m_h, "m_h")
@@ -161,55 +224,91 @@ class BoszBackend:
             and math.isclose(float(row["vturb_km_s"]), vturb_km_s)
         ]
         if not rows:
-            raise ValueError(
+            return PreparationResult.failure(
+                SpectrumStatusCode.NO_DATASET,
                 "No BOSZ plane for "
                 f"resolution={self.resolution}, atmosphere={self.atmosphere}, "
                 f"product={self.product}, m_h={m_h}, alpha_m={alpha_m}, "
-                f"c_m={c_m}, vturb_km_s={vturb_km_s}"
+                f"c_m={c_m}, vturb_km_s={vturb_km_s}",
             )
-
-        teff_pair = _bounding_pair([float(row["teff"]) for row in rows], teff)
-        logg_pair = _bounding_pair([float(row["logg"]) for row in rows], logg)
-        records = {
-            (float(row["teff"]), float(row["logg"])): row
-            for row in rows
-            if float(row["teff"]) in teff_pair and float(row["logg"]) in logg_pair
-        }
-
-        first_record = records.get((teff_pair[0], logg_pair[0]))
-        if first_record is None:
-            raise ValueError("BOSZ local interpolation cell is incomplete")
-        wavelength = self._read_wavelength(first_record)
-
-        flux_rows = []
-        for teff_value in teff_pair:
-            logg_flux = []
-            for logg_value in logg_pair:
-                record = records.get((teff_value, logg_value))
-                if record is None:
-                    raise ValueError(
-                        "BOSZ local interpolation cell is incomplete for "
-                        f"teff={teff_value}, logg={logg_value}"
-                    )
-                logg_flux.append(self._read_flux(record))
-            flux_rows.append(logg_flux)
-
-        return PreparedSpectralGrid(
-            teff=jnp.asarray(teff_pair, dtype=jnp.float64),
-            logg=jnp.asarray(logg_pair, dtype=jnp.float64),
-            wavelength=jnp.asarray(wavelength, dtype=jnp.float64),
-            flux=jnp.asarray(np.asarray(flux_rows), dtype=jnp.float64),
-            m_h=m_h,
-            alpha_m=alpha_m,
-            c_m=c_m,
-            vturb_km_s=vturb_km_s,
-            wavelength_unit="angstrom",
-            flux_unit=str(first_record.get("flux_unit", "bosz_resampled_column0")),
+        topology = GridTopology(
+            parameter_names=descriptor.parameter_names,
+            points=tuple((float(row["teff"]), float(row["logg"])) for row in rows),
+            approved_simplices=self.approved_simplices,
         )
-
-    def spectrum(self, params: AtmosphereParams) -> SpectrumResult:
-        """Convenience path: prepare a local cell, then interpolate a spectrum."""
-        return self.prepare(params).spectrum(params)
+        selection = select_topology(topology, (teff, logg))
+        if selection.status is not SpectrumStatusCode.OK:
+            return PreparationResult.failure(
+                selection.status,
+                "BOSZ query has no valid prepared topology",
+            )
+        vertex_rows = [rows[index] for index in selection.vertex_indices]
+        vertex_values = []
+        template = None
+        artifact = self.validate_artifact()
+        for record in vertex_rows:
+            wavelength_nm = self._read_wavelength(record) / 10.0
+            provenance = SpectrumProvenance(
+                source_id="bosz-2025-recomputed",
+                product_id=descriptor.product_id,
+                native_coordinate="wavelength_angstrom",
+                native_density="F_lambda_resampled",
+                native_unit="erg s^-1 cm^-2 angstrom^-1",
+                canonical_conversion="multiply by 10",
+                citations=("https://archive.stsci.edu/hlsp/bosz",),
+                artifact_digest=artifact.digest,
+            )
+            native = Spectrum(
+                axis=SpectralAxis.points(
+                    jnp.asarray(wavelength_nm, dtype=jnp.float64),
+                    coordinate=SpectralCoordinate.WAVELENGTH,
+                    unit="nm",
+                ),
+                values=jnp.asarray(self._read_flux(record) * 10.0, dtype=jnp.float64),
+                semantic=SpectralSemantic.SURFACE_FLUX_LAMBDA,
+                provenance=provenance,
+            )
+            remapped = resample_spectrum(native, query.spectral_plan)
+            if int(remapped.status.code) != SpectrumStatusCode.OK:
+                return PreparationResult.failure(
+                    SpectrumStatusCode.UNSUPPORTED_SPECTRAL_WINDOW,
+                    "BOSZ vertex does not cover the requested spectral plan",
+                )
+            template = remapped.spectrum
+            vertex_values.append(template.values)
+        if template is None:
+            raise ValueError("BOSZ topology selected no vertices")
+        stacked = jnp.stack(vertex_values)
+        stencil: PreparedRectilinearStencil | PreparedSimplexStencil
+        if selection.kind is TopologyKind.RECTILINEAR:
+            selected_points = [topology.points[i] for i in selection.vertex_indices]
+            teff_axis = jnp.asarray(sorted({point[0] for point in selected_points}))
+            logg_axis = jnp.asarray(sorted({point[1] for point in selected_points}))
+            stencil = PreparedRectilinearStencil(
+                parameter_axes=(teff_axis, logg_axis),
+                vertex_values=stacked.reshape(
+                    (teff_axis.shape[0], logg_axis.shape[0], stacked.shape[-1])
+                ),
+                template=template,
+                interpolation=FluxInterpolation.LINEAR,
+            )
+        else:
+            stencil = PreparedSimplexStencil(
+                vertices=jnp.asarray(
+                    [topology.points[index] for index in selection.vertex_indices]
+                ),
+                vertex_values=stacked,
+                template=template,
+                interpolation=FluxInterpolation.LINEAR,
+            )
+        return PreparationResult.success(
+            PreparedAtmosphere(
+                stencil=stencil,
+                parameter_names=descriptor.parameter_names,
+                spectral_plan=query.spectral_plan,
+                provenance=template.provenance,
+            )
+        )
 
     def _read_wavelength(self, record: dict[str, Any]) -> np.ndarray:
         if "wavelength" in self._store:

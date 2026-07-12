@@ -481,17 +481,17 @@ mypy, MyST.
 - Produces explicit product IDs combining atmosphere, resolution, and product,
   including `bosz-2025-recomputed:ap:r10000:resam`.
 
-- [ ] **Step 1: Write failing product-identity and conversion tests**
+- [x] **Step 1: Write failing product-identity and conversion tests**
 
   Require library coverage, adapter selection, opened artifact, and provenance
   to agree on `ap`, `mp`, or `ms`. Verify resampled `F_lambda` gains the `10`
   per-angstrom-to-per-nm factor exactly once. Reject an original-resolution
   `H_lambda` artifact unless the `4*pi` conversion path is explicitly selected.
 
-- [ ] **Step 2: Verify RED**, implement product-scoped preparation, and verify
+- [x] **Step 2: Verify RED**, implement product-scoped preparation, and verify
   complete-cell/simplex selection.
 
-- [ ] **Step 3: Verify GREEN**
+- [x] **Step 3: Verify GREEN**
 
   ```bash
   env -u VIRTUAL_ENV uv run --no-sync --extra data pytest -q \
@@ -499,7 +499,7 @@ mypy, MyST.
     tests/validation/test_bosz_interpolation_policy.py
   ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
   ```bash
   git add src/jaxstro/atmospheres/bosz.py tests/unit/test_atmospheres_bosz.py \

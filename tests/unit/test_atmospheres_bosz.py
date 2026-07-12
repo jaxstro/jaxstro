@@ -9,10 +9,17 @@ import pytest
 
 from jaxstro.atmospheres import (
     AtmosphereParams,
+    AtmosphereQuery,
     BoszBackend,
     build_bosz_index,
     discover_bosz_files,
     parse_bosz_filename,
+)
+from jaxstro.spectra import (
+    SpectralAxis,
+    SpectralCoordinate,
+    SpectralPlan,
+    SpectrumStatusCode,
 )
 
 
@@ -22,7 +29,12 @@ def _bosz_name(teff: int, logg: float) -> str:
     )
 
 
-def _write_processed_artifact(processed_dir: Path) -> None:
+def _write_processed_artifact(
+    processed_dir: Path,
+    *,
+    atmosphere: str = "ap",
+    product: str = "resam",
+) -> None:
     pl = pytest.importorskip("polars")
     zarr = pytest.importorskip("zarr")
 
@@ -66,7 +78,7 @@ def _write_processed_artifact(processed_dir: Path) -> None:
                 "source_path": _bosz_name(int(teff), logg),
                 "source_size_bytes": 1,
                 "source_sha256": "synthetic",
-                "atmosphere": "ap",
+                "atmosphere": atmosphere,
                 "teff": teff,
                 "logg": logg,
                 "m_h": 0.0,
@@ -74,7 +86,7 @@ def _write_processed_artifact(processed_dir: Path) -> None:
                 "c_m": 0.0,
                 "vturb_km_s": 2.0,
                 "resolution": "r10000",
-                "product": "resam",
+                "product": product,
                 "n_wave": 3,
                 "wavelength_min": 500.0,
                 "wavelength_max": 502.0,
@@ -86,6 +98,22 @@ def _write_processed_artifact(processed_dir: Path) -> None:
             }
         )
     pl.DataFrame(rows).write_parquet(processed_dir / "catalog.parquet")
+
+
+def _query(product_id: str = "bosz-2025-recomputed:ap:r10000:resam") -> AtmosphereQuery:
+    return AtmosphereQuery(
+        params=AtmosphereParams(teff=12500.0, logg=3.5),
+        product_id=product_id,
+        family="bosz",
+        spectral_plan=SpectralPlan(
+            SpectralAxis.points(
+                np.array([50.0, 50.1, 50.2]),
+                coordinate=SpectralCoordinate.WAVELENGTH,
+                unit="nm",
+            )
+        ),
+        requested_parameter_names=("teff", "logg"),
+    )
 
 
 def test_parse_bosz_filename_extracts_recomputed_grid_metadata():
@@ -132,18 +160,50 @@ def test_bosz_backend_opens_processed_artifact_and_interpolates(tmp_path):
     _write_processed_artifact(tmp_path)
     backend = BoszBackend.open(tmp_path)
 
-    result = backend.spectrum(AtmosphereParams(teff=12500.0, logg=3.5))
+    prepared = backend.prepare(_query())
+    assert prepared.prepared is not None
+    result = prepared.prepared.evaluate(_query().params)
 
-    np.testing.assert_allclose(result.spectrum.wavelength, [500.0, 501.0, 502.0])
-    np.testing.assert_allclose(result.spectrum.flux_lambda, [2.5, 3.5, 4.5])
-    assert result.spectrum.wavelength_unit == "angstrom"
-    assert result.spectrum.flux_unit == "bosz_resampled_column0"
-    assert bool(result.status.in_grid)
+    np.testing.assert_allclose(result.spectrum.axis.values, [50.0, 50.1, 50.2])
+    np.testing.assert_allclose(result.spectrum.values, [25.0, 35.0, 45.0])
+    assert result.spectrum.provenance.product_id == (
+        "bosz-2025-recomputed:ap:r10000:resam"
+    )
+    assert int(result.status.code) == SpectrumStatusCode.OK
 
 
 def test_bosz_backend_prepare_rejects_missing_carbon_plane(tmp_path):
     _write_processed_artifact(tmp_path)
     backend = BoszBackend.open(tmp_path)
 
-    with pytest.raises(ValueError, match="No BOSZ plane"):
-        backend.prepare(AtmosphereParams(teff=12500.0, logg=3.5, c_m=0.25))
+    query = _query()
+    result = backend.prepare(
+        AtmosphereQuery(
+            params=AtmosphereParams(teff=12500.0, logg=3.5, c_m=0.25),
+            product_id=query.product_id,
+            family=query.family,
+            spectral_plan=query.spectral_plan,
+            requested_parameter_names=query.requested_parameter_names,
+        )
+    )
+
+    assert result.status is SpectrumStatusCode.NO_DATASET
+
+
+def test_bosz_query_product_must_match_opened_artifact_scope(tmp_path):
+    _write_processed_artifact(tmp_path)
+    backend = BoszBackend.open(tmp_path, atmosphere="ap")
+
+    result = backend.prepare(_query("bosz-2025-recomputed:mp:r10000:resam"))
+
+    assert result.status is SpectrumStatusCode.NO_DATASET
+
+
+def test_bosz_original_h_lambda_requires_explicit_conversion_path(tmp_path):
+    _write_processed_artifact(tmp_path, product="noresam")
+    backend = BoszBackend.open(tmp_path, product="noresam")
+    query = _query("bosz-2025-recomputed:ap:r10000:noresam")
+
+    result = backend.prepare(query)
+
+    assert result.status is SpectrumStatusCode.POLICY_NOT_VALIDATED
