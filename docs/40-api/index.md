@@ -100,8 +100,8 @@ schedule.
     fixed-radius pairs.
   - Index construction, sorting, capacity, and overflow policy are host-side or
     discrete preprocessing rather than differentiable kernels.
-  - **Implemented and evolving.** Validation exists; a dedicated conceptual
-    chapter is the next approved page slice.
+  - **Implemented and evolving.** See [](../10-theory/spatial.md) and
+    [](../60-validation/index.md).
 * - `jaxstro.params`
   - Equinox PyTree↔vector `Parameterization` and Identity, Exp, Softplus, and
     Sigmoid bijectors.

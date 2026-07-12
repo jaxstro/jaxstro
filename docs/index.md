@@ -99,8 +99,9 @@ evidence.
   an implemented evaluation surface, not an approved ecosystem migration.
 - **Evaluating spatial operations?** Start with [](./40-api/index.md) for the
   import surface and [](./60-validation/index.md) for evidence around neighbor
-  gathering and exact-pair behavior. A dedicated conceptual chapter follows in
-  this page-by-page documentation pass.
+  gathering and exact-pair behavior. The
+  [spatial theory chapter](./10-theory/spatial.md) explains candidate recall,
+  capacity, overflow, and exact fixed-radius contracts.
 - **Checking provenance?** The
   [generated provenance cards](./40-api/provenance/index.md) connect registered
   constants and transforms to their sources, reference values, and validation

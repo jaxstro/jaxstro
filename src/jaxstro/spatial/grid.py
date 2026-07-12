@@ -71,7 +71,9 @@ def assign_particles_to_bins(
         pos: Particle positions [N, 3]
         L_box: Box size (cube side length)
         Nbins_per_dim: Bins per dimension (total bins = Nbins^3).
-            Must be <= 1024 (10-bit Morton encoding limit).
+            Must be a positive power of two no larger than 1024. Power-of-two
+            axes make the Morton IDs dense in ``[0, Nbins**3)``; use
+            ``assign_to_cells_linear`` for arbitrary dense dimensions.
         box_center: Center of the box. Scalar or [3] array. Default: 0.0
         symmetric: If True, box spans [center - L/2, center + L/2].
             Currently only symmetric=True is supported.
@@ -80,7 +82,7 @@ def assign_particles_to_bins(
         bin_of: Morton bin ID per particle [N], in range [0, Nbins^3 - 1]
 
     Raises:
-        AssertionError: If Nbins_per_dim > 1024
+        ValueError: If Nbins_per_dim is not a supported positive power of two.
         NotImplementedError: If symmetric=False
 
     Example:
@@ -94,11 +96,14 @@ def assign_particles_to_bins(
         The Morton encoding preserves spatial locality: particles in nearby
         3D bins will have nearby 1D bin IDs, improving cache performance.
     """
-    # Validate Nbins_per_dim against Morton encoding limit
-    assert Nbins_per_dim <= 2**MAX_BITS_3D, (
-        f"Morton encoder uses {MAX_BITS_3D} bits/dim "
-        f"(max {2**MAX_BITS_3D}), got {Nbins_per_dim}"
-    )
+    max_bins_per_dim = 2**MAX_BITS_3D
+    is_power_of_two = Nbins_per_dim > 0 and not (Nbins_per_dim & (Nbins_per_dim - 1))
+    if not is_power_of_two or Nbins_per_dim > max_bins_per_dim:
+        raise ValueError(
+            "Nbins_per_dim must be a positive power of two no larger than "
+            f"{max_bins_per_dim}; got {Nbins_per_dim}. Use "
+            "assign_to_cells_linear for arbitrary dense dimensions."
+        )
 
     if not symmetric:
         raise NotImplementedError(

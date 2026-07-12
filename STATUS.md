@@ -1,17 +1,19 @@
 # jaxstro — status
 
-next: Present the Slice C7 spatial-theory page card for Anna's explicit approval. Do not create
-`docs/10-theory/spatial.md`, change navigation, or add its deterministic example before approval.
+next: Present the Slice C8 theory-index page card for Anna's explicit approval. Do not edit
+`docs/10-theory/index.md` before that approval.
 
-previous: Slice C6 API-reference hardening completed locally (2026-07-11). Approved additive
-ownership makes `spatial` an eager top-level attribute and `__all__` member. The API page now
-has a 13-row structured module map with ownership, runtime/preprocessing boundary, and evidence
-status; current units/deferred quantity, in-progress atmospheres, method-scoped transforms, and
-card-versus-runtime provenance are explicit. Five focused tests pass in 1.19 s; strict MyST
-builds 58 pages in 4.30 s; rendered `/index-5` has 4 fields per row, 7 evidence routes, and a
-registered table xref. Nothing has been pushed.
+previous: Slice C7 spatial-theory hardening completed locally (2026-07-11). Morton bin counts
+must now be positive powers of two so IDs fit the documented dense allocation; arbitrary dense
+dimensions remain owned by linear cells. The new spatial chapter separates fixed capacity,
+approximate candidates, exact `0 < r <= cutoff` pairs, overflow, and host/discrete boundaries.
+The StarViz-derived figure system moved cleanly to `laboratory/jaxtroviz`; its new spatial figure
+is computed from public APIs and the old namespace is removed. Twenty focused tests pass in
+14.10 s after formatting; both figure freshness checks pass in 7.01 s; strict MyST builds 59
+pages in 4.14 s; rendered `/spatial` has the figure, alt/asset, Morton citation, decision table,
+and registered xrefs. Nothing has been pushed.
 
-blocker: None for Slice C7 once Anna approves its website page card. Tag/release/PyPI remain
+blocker: None for Slice C8 once Anna approves its website page card. Tag/release/PyPI remain
 held on Anna's permanent package-name decision.
 due:
 

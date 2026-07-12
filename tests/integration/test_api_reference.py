@@ -64,6 +64,7 @@ def test_api_table_has_structured_ownership_boundary_and_evidence_fields() -> No
     assert "`jaxstro.quantity` is implemented" in text
     assert "ecosystem adoption and any replacement cutover remain deferred" in text
     assert "Atmosphere support is in progress" in text
+    assert "../10-theory/spatial.md" in text
 
 
 def test_api_reference_exposes_provenance_card_tooling_and_routes() -> None:

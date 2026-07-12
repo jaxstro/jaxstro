@@ -1,4 +1,4 @@
-"""Render or check registered jaxstro documentation figures."""
+"""List, render, or freshness-check registered JaxtroViz figures."""
 
 from __future__ import annotations
 
@@ -46,13 +46,15 @@ def main(argv: list[str] | None = None) -> int:
     for name in names:
         spec = FIGURES[name]
         if args.check:
-            expected = render_webp_bytes(spec.builder())
+            expected = render_webp_bytes(spec.builder(), spec=spec.export)
             if not spec.site_webp.is_file() or spec.site_webp.read_bytes() != expected:
                 print(f"stale {spec.site_webp}")
                 return 1
             print(f"fresh {spec.site_webp}")
             continue
-        for path in save_figure_formats(spec.builder(), spec.output_stem):
+        for path in save_figure_formats(
+            spec.builder(), spec.output_stem, spec=spec.export
+        ):
             print(f"wrote {path}")
         spec.site_webp.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(spec.output_stem.with_suffix(".webp"), spec.site_webp)

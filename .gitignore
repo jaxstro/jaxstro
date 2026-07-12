@@ -218,8 +218,10 @@ __marimo__/
 /PHOENIX-NewEra*/
 
 # Repository-local figure laboratory: masters stay local; the site WebP is tracked.
-laboratory/figures/plots/
+laboratory/jaxtroviz/plots/
 docs/20-architecture/figures/*.pdf
 docs/20-architecture/figures/*.png
+docs/10-theory/figures/*.pdf
+docs/10-theory/figures/*.png
 
 .adr/
