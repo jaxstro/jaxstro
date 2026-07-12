@@ -22,9 +22,9 @@ def test_substantial_chapters_state_objectives_and_active_learning_prompt() -> N
     for relative_path in CHAPTERS:
         text = (REPO_ROOT / relative_path).read_text(encoding="utf-8")
         assert "## Learning objectives" in text, relative_path
-        assert ("Predict → compute → audit" in text) or (
-            "Concept check" in text
-        ), relative_path
+        assert ("Predict → compute → audit" in text) or ("Concept check" in text), (
+            relative_path
+        )
 
 
 def test_homepage_names_scientific_capabilities_without_removing_entry_doors() -> None:

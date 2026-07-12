@@ -11,7 +11,9 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 def test_docs_gate_is_reused_by_local_and_full_ci_gates() -> None:
     script = REPO_ROOT / "scripts" / "check_docs.sh"
     assert script.is_file()
-    assert "myst build --html --ci --strict" in script.read_text(encoding="utf-8")
+    script_text = script.read_text(encoding="utf-8")
+    assert "myst build --html --ci --strict" in script_text
+    assert 'uv run --no-sync python "$ROOT_DIR/scripts/check_docs_site.py"' in script_text
 
     local_gate = (REPO_ROOT / "scripts" / "check.sh").read_text(encoding="utf-8")
     full_gate = (REPO_ROOT / ".github" / "workflows" / "full-gate.yml").read_text(
