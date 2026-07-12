@@ -2,6 +2,7 @@
 
 import jax
 import jax.numpy as jnp
+import pytest
 
 from jaxstro.numerics import distributions
 from jaxstro.numerics.integration import trapz
@@ -68,6 +69,71 @@ class TestPowerLaw:
         assert jnp.isneginf(logpdf[0])
         assert jnp.isfinite(logpdf[1])
         assert jnp.isneginf(logpdf[2])
+
+    def test_powerlaw_exact_log_uniform_values_and_boundaries(self):
+        xmin, xmax = 2.0, 5.0
+        x = jnp.array([xmin, 3.0, xmax], dtype=jnp.float64)
+        expected_logpdf = -jnp.log(x) - jnp.log(jnp.log(xmax / xmin))
+        expected_cdf = jnp.log(x / xmin) / jnp.log(xmax / xmin)
+
+        assert jnp.allclose(
+            distributions.powerlaw_logpdf(x, alpha=-1.0, xmin=xmin, xmax=xmax),
+            expected_logpdf,
+            rtol=1.0e-13,
+        )
+        assert jnp.allclose(
+            distributions.powerlaw_cdf(x, alpha=-1.0, xmin=xmin, xmax=xmax),
+            expected_cdf,
+            rtol=1.0e-13,
+        )
+        assert distributions.powerlaw_cdf(
+            jnp.array(1.0), alpha=-1.0, xmin=xmin, xmax=xmax
+        ) == pytest.approx(0.0)
+        assert distributions.powerlaw_cdf(
+            jnp.array(6.0), alpha=-1.0, xmin=xmin, xmax=xmax
+        ) == pytest.approx(1.0)
+        assert distributions.powerlaw_ppf(
+            jnp.array(0.0), alpha=-1.0, xmin=xmin, xmax=xmax
+        ) == pytest.approx(xmin)
+        assert distributions.powerlaw_ppf(
+            jnp.array(1.0), alpha=-1.0, xmin=xmin, xmax=xmax
+        ) == pytest.approx(xmax)
+
+    @pytest.mark.parametrize("alpha", [-1.0 - 1.0e-8, -1.0, -1.0 + 1.0e-8])
+    def test_powerlaw_normalizes_and_round_trips_through_alpha_minus_one(self, alpha):
+        xmin, xmax = 2.0, 5.0
+        x = jnp.linspace(xmin, xmax, 32769, dtype=jnp.float64)
+        density = jnp.exp(
+            distributions.powerlaw_logpdf(x, alpha=alpha, xmin=xmin, xmax=xmax)
+        )
+        u = jnp.array([0.0, 0.1, 0.5, 0.9, 1.0], dtype=jnp.float64)
+        quantiles = distributions.powerlaw_ppf(u, alpha=alpha, xmin=xmin, xmax=xmax)
+
+        assert jnp.allclose(trapz(density, x=x), 1.0, rtol=2.0e-9)
+        assert jnp.allclose(
+            distributions.powerlaw_cdf(quantiles, alpha=alpha, xmin=xmin, xmax=xmax),
+            u,
+            atol=2.0e-12,
+            rtol=2.0e-12,
+        )
+
+    def test_powerlaw_alpha_limit_composes_with_jit_vmap_and_float64(self):
+        evaluate = jax.jit(
+            jax.vmap(
+                lambda alpha: distributions.powerlaw_ppf(
+                    jnp.array(0.3, dtype=jnp.float64),
+                    alpha=alpha,
+                    xmin=2.0,
+                    xmax=5.0,
+                )
+            )
+        )
+        alphas = jnp.array([-1.0 - 1.0e-8, -1.0, -1.0 + 1.0e-8])
+        values = evaluate(alphas)
+
+        assert values.dtype == jnp.float64
+        assert jnp.all(jnp.isfinite(values))
+        assert jnp.max(values) - jnp.min(values) < 1.0e-7
 
 
 class TestTruncatedNormal:

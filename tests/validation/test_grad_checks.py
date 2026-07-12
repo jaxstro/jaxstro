@@ -345,6 +345,72 @@ class TestDistributionGradChecks:
             x0,
         )
 
+    def test_powerlaw_alpha_minus_one_limiting_derivatives_are_analytic(self):
+        xmin, xmax, x, u = 2.0, 5.0, 3.0, 0.3
+        log_xmin = jnp.log(xmin)
+        log_xmax = jnp.log(xmax)
+        log_width = log_xmax - log_xmin
+        log_position = jnp.log(x / xmin)
+        quantile = xmin * jnp.exp(u * log_width)
+
+        def normalization(alpha):
+            return jnp.exp(
+                distributions.powerlaw_logpdf(
+                    jnp.asarray(x), alpha=alpha, xmin=xmin, xmax=xmax
+                )
+            ) * x ** (-alpha)
+
+        def logpdf(alpha):
+            return distributions.powerlaw_logpdf(
+                jnp.asarray(x), alpha=alpha, xmin=xmin, xmax=xmax
+            )
+
+        def cdf(alpha):
+            return distributions.powerlaw_cdf(
+                jnp.asarray(x), alpha=alpha, xmin=xmin, xmax=xmax
+            )
+
+        def ppf(alpha):
+            return distributions.powerlaw_ppf(
+                jnp.asarray(u), alpha=alpha, xmin=xmin, xmax=xmax
+            )
+
+        expected_normalization = -(log_xmin + log_xmax) / (2.0 * log_width)
+        expected_logpdf = jnp.log(x) - 0.5 * (log_xmin + log_xmax)
+        expected_cdf = log_position * (log_position - log_width) / (2.0 * log_width)
+        expected_ppf = quantile * log_width**2 * u * (1.0 - u) / 2.0
+
+        assert jnp.allclose(
+            jax.grad(normalization)(-1.0), expected_normalization, rtol=1.0e-10
+        )
+        assert jnp.allclose(jax.grad(logpdf)(-1.0), expected_logpdf, rtol=1.0e-10)
+        assert jnp.allclose(jax.grad(cdf)(-1.0), expected_cdf, rtol=1.0e-10)
+        assert jnp.allclose(jax.grad(ppf)(-1.0), expected_ppf, rtol=1.0e-10)
+
+    @pytest.mark.parametrize("alpha0", [-1.0 - 1.0e-8, -1.0, -1.0 + 1.0e-8])
+    def test_powerlaw_alpha_derivatives_match_central_fd_through_limit(self, alpha0):
+        xmin, xmax, x, u = 2.0, 5.0, 3.0, 0.3
+        functions = (
+            lambda alpha: distributions.powerlaw_logpdf(
+                jnp.asarray(x), alpha=alpha, xmin=xmin, xmax=xmax
+            ),
+            lambda alpha: distributions.powerlaw_cdf(
+                jnp.asarray(x), alpha=alpha, xmin=xmin, xmax=xmax
+            ),
+            lambda alpha: distributions.powerlaw_ppf(
+                jnp.asarray(u), alpha=alpha, xmin=xmin, xmax=xmax
+            ),
+        )
+
+        for function in functions:
+            assert_grad_matches(
+                function,
+                jnp.asarray(alpha0),
+                eps=1.0e-5,
+                atol=1.0e-8,
+                rtol=1.0e-6,
+            )
+
 
 # =============================================================================
 # geometry helpers

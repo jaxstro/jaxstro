@@ -5,6 +5,7 @@ from jax.scipy import special as jsp_special
 from jaxtyping import Array, Float
 
 _LOG_SQRT_2PI = 0.5 * jnp.log(2.0 * jnp.pi)
+_TAYLOR_THRESHOLD = 1.0e-6
 
 
 def normal_logpdf(
@@ -78,15 +79,37 @@ def lognormal_ppf(
     return jnp.exp(normal_ppf(u, loc=loc, scale=scale))
 
 
+def _expm1_over_x(x):
+    """Evaluate ``expm1(x) / x`` smoothly through zero."""
+    small = jnp.abs(x) < _TAYLOR_THRESHOLD
+    x_safe = jnp.where(small, 1.0, x)
+    taylor = 1.0 + x / 2.0 + x * x / 6.0
+    return jnp.where(small, taylor, jnp.expm1(x_safe) / x_safe)
+
+
+def _log1p_over_x(x):
+    """Evaluate ``log1p(x) / x`` smoothly through zero."""
+    small = jnp.abs(x) < _TAYLOR_THRESHOLD
+    x_safe = jnp.where(small, 1.0, x)
+    taylor = 1.0 - x / 2.0 + x * x / 3.0
+    return jnp.where(small, taylor, jnp.log1p(x_safe) / x_safe)
+
+
+def _powerlaw_integral(lo, hi, exponent):
+    """Evaluate ``(hi**exponent - lo**exponent) / exponent`` smoothly."""
+    log_width = jnp.log(hi) - jnp.log(lo)
+    return lo**exponent * log_width * _expm1_over_x(exponent * log_width)
+
+
+def _powerlaw_inverse(lo, integral, exponent):
+    """Invert ``_powerlaw_integral(lo, x, exponent)`` smoothly."""
+    scaled = integral * lo ** (-exponent)
+    return jnp.exp(jnp.log(lo) + scaled * _log1p_over_x(exponent * scaled))
+
+
 def _powerlaw_log_norm(alpha, xmin, xmax):
     exponent = alpha + 1.0
-    near_log = jnp.isclose(exponent, 0.0)
-    exponent_safe = jnp.where(near_log, 1.0, exponent)
-    ordinary = jnp.log(jnp.abs(exponent_safe)) - jnp.log(
-        jnp.abs(xmax**exponent_safe - xmin**exponent_safe)
-    )
-    log_case = -jnp.log(jnp.log(xmax) - jnp.log(xmin))
-    return jnp.where(near_log, log_case, ordinary)
+    return -jnp.log(_powerlaw_integral(xmin, xmax, exponent))
 
 
 def powerlaw_logpdf(
@@ -115,13 +138,9 @@ def powerlaw_cdf(
     x = jnp.asarray(x)
     x_clamped = jnp.clip(x, xmin, xmax)
     exponent = alpha + 1.0
-    near_log = jnp.isclose(exponent, 0.0)
-    exponent_safe = jnp.where(near_log, 1.0, exponent)
-    ordinary = (x_clamped**exponent_safe - xmin**exponent_safe) / (
-        xmax**exponent_safe - xmin**exponent_safe
-    )
-    log_case = (jnp.log(x_clamped) - jnp.log(xmin)) / (jnp.log(xmax) - jnp.log(xmin))
-    return jnp.where(near_log, log_case, ordinary)
+    numerator = _powerlaw_integral(xmin, x_clamped, exponent)
+    denominator = _powerlaw_integral(xmin, xmax, exponent)
+    return numerator / denominator
 
 
 def powerlaw_ppf(
@@ -134,13 +153,8 @@ def powerlaw_ppf(
     """Inverse CDF for a finite-support power-law distribution."""
     u = jnp.asarray(u)
     exponent = alpha + 1.0
-    near_log = jnp.isclose(exponent, 0.0)
-    exponent_safe = jnp.where(near_log, 1.0, exponent)
-    ordinary = (
-        xmin**exponent_safe + u * (xmax**exponent_safe - xmin**exponent_safe)
-    ) ** (1.0 / exponent_safe)
-    log_case = xmin * jnp.exp(u * (jnp.log(xmax) - jnp.log(xmin)))
-    return jnp.where(near_log, log_case, ordinary)
+    total = _powerlaw_integral(xmin, xmax, exponent)
+    return _powerlaw_inverse(xmin, u * total, exponent)
 
 
 def truncated_normal_logpdf(

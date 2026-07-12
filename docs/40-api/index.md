@@ -315,7 +315,9 @@ traced. The method page is [](../10-theory/linear-algebra.md).
 `normal_logpdf(...)`, `normal_cdf(...)`, and `normal_ppf(...)` cover normal
 kernels. `lognormal_*`, `powerlaw_*`, and `truncated_normal_*` provide logpdf,
 CDF, and inverse-CDF helpers for positive lognormal, finite-support power-law,
-and truncated-normal families. The method page is
+and truncated-normal families. The power-law signatures are unchanged, while
+normalization, logpdf, CDF, and PPF now share a smooth removable-singularity
+formulation through `alpha=-1`, including the alpha derivative. The method page is
 [](../10-theory/distributions.md).
 
 ### `jaxstro.numerics.autodiff`
