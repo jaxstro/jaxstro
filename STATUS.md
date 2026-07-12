@@ -1,17 +1,16 @@
 # jaxstro — status
 
-next: Execute spectra-v1 Task 7 directly on main: hard-cut NewEra preparation onto complete-cell
-or approved-simplex topology with canonical nm/per-nm output.
+next: Execute spectra-v1 Task 8 directly on main: make BOSZ atmosphere/resolution/product identity
+explicit and apply the verified per-angstrom to per-nm conversion exactly once.
 
-previous: Spectra-v1 Task 6 completed on local main (2026-07-12). Canonical query/product/artifact
-contracts now separate host preparation from filesystem-free JAX evaluation. Topology selection
-prefers complete rectilinear cells and permits simplex fallback only through an explicit manifest.
-Exact-product registry lookup rejects duplicates and returns structured NO_DATASET,
-UNSUPPORTED_PLANE, POLICY_NOT_VALIDATED, and BACKEND_UNAVAILABLE outcomes before adapter I/O.
-Focused gate: 12 tests in 0.52 s (1.09 s wall); existing atmosphere regression: 51 tests in 2.77 s
-(3.45 s wall). Ruff, format, mypy, and diff checks clean. Nothing has been pushed.
+previous: Spectra-v1 Task 7 completed on local main (2026-07-12). NewEra now prepares from valid
+topology rather than independent axis brackets: complete cells win, sparse cells fail with
+NO_COMPLETE_CELL unless a containing simplex appears in the explicit approved manifest. Vertex
+spectra convert W m^-2 nm^-1 to canonical erg s^-1 cm^-2 nm^-1 by 1e3, remap to the fixed spectral
+plan before parameter interpolation, and evaluate without filesystem access. Focused gate: 5 tests
+in 1.14 s (1.74 s wall); Ruff, format, mypy, and diff checks clean. Nothing has been pushed.
 
-blocker: None for spectra-v1 Task 7. Remote publication, tag/release, Pages configuration, and PyPI
+blocker: None for spectra-v1 Task 8. Remote publication, tag/release, Pages configuration, and PyPI
 remain outside this local feature branch and require separate authorization.
 due:
 

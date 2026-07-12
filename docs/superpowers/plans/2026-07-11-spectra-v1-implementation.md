@@ -443,17 +443,17 @@ mypy, MyST.
   discovery, and prepared stencils.
 - Produces: product `newera-v3-lowres` with canonical factor `1e3`.
 
-- [ ] **Step 1: Write failing sparse-cell and canonical-unit tests**
+- [x] **Step 1: Write failing sparse-cell and canonical-unit tests**
 
   Add the observed sparse-cell geometry where independent `teff`/`logg`
   bracketing fails. Require preparation to choose a complete rectangle or an
   approved simplex, never return a false `ok`, and convert nm plus
   `W m^-2 nm^-1` to canonical values.
 
-- [ ] **Step 2: Verify RED**, then implement topology-first preparation and
+- [x] **Step 2: Verify RED**, then implement topology-first preparation and
   filesystem-free evaluation.
 
-- [ ] **Step 3: Verify GREEN**
+- [x] **Step 3: Verify GREEN**
 
   ```bash
   env -u VIRTUAL_ENV uv run --no-sync --extra data pytest -q \
@@ -461,7 +461,7 @@ mypy, MyST.
     tests/validation/test_newera_interpolation_policy.py
   ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
   ```bash
   git add src/jaxstro/atmospheres/newera.py \

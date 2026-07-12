@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import math
 import os
 from dataclasses import dataclass, field
@@ -12,7 +14,23 @@ from typing import Any
 import jax.numpy as jnp
 import numpy as np
 
-from .spectra import AtmosphereParams, PreparedSpectralGrid, SpectrumResult
+from jaxstro.spectra import (
+    FluxInterpolation,
+    PreparedRectilinearStencil,
+    PreparedSimplexStencil,
+    SpectralAxis,
+    SpectralCoordinate,
+    SpectralSemantic,
+    Spectrum,
+    SpectrumProvenance,
+    SpectrumStatusCode,
+    resample_spectrum,
+)
+
+from .adapters import PreparationResult, PreparedAtmosphere
+from .params import AtmosphereQuery
+from .products import ArtifactReport, ProductDescriptor
+from .topology import GridTopology, TopologyKind, select_topology
 
 DEFAULT_NEWERA_ZARR = "newera_lowres_v3.zarr"
 DEFAULT_NEWERA_CATALOG = "catalog.parquet"
@@ -26,6 +44,7 @@ class NewEraBackend:
     catalog_rows: tuple[dict[str, Any], ...]
     zarr_path: Path
     _store: Any = field(repr=False, compare=False)
+    approved_simplices: tuple[tuple[int, ...], ...] = ()
 
     @classmethod
     def open(
@@ -34,6 +53,7 @@ class NewEraBackend:
         *,
         catalog_name: str = DEFAULT_NEWERA_CATALOG,
         zarr_name: str = DEFAULT_NEWERA_ZARR,
+        approved_simplices: tuple[tuple[int, ...], ...] = (),
     ) -> "NewEraBackend":
         """Open a processed NewEra artifact directory.
 
@@ -62,10 +82,45 @@ class NewEraBackend:
             catalog_rows=catalog_rows,
             zarr_path=zarr_path,
             _store=store,
+            approved_simplices=approved_simplices,
         )
 
-    def prepare(self, params: AtmosphereParams) -> PreparedSpectralGrid:
-        """Load the local NewEra interpolation cell enclosing ``params``."""
+    @staticmethod
+    def product_descriptor() -> ProductDescriptor:
+        """Return the exact NewEra low-resolution product contract."""
+        return ProductDescriptor(
+            product_id="newera-v3-lowres",
+            family="newera",
+            parameter_names=("teff", "logg"),
+            topology_policy="complete-cell-or-approved-simplex",
+            flux_interpolation_policy="linear",
+            provenance_id="newera-v3-lowres",
+        )
+
+    def describe_product(self) -> ProductDescriptor:
+        return self.product_descriptor()
+
+    def validate_artifact(self) -> ArtifactReport:
+        """Return deterministic schema and catalog evidence for this artifact."""
+        valid = self.zarr_path.exists() and bool(self.catalog_rows)
+        payload = json.dumps(self.catalog_rows, sort_keys=True, default=str).encode()
+        digest = f"sha256:{hashlib.sha256(payload).hexdigest()}" if valid else None
+        return ArtifactReport(
+            valid=valid,
+            digest=digest,
+            schema="newera-lowres-v3" if valid else None,
+            message="" if valid else "NewEra artifact is unavailable or empty",
+        )
+
+    def prepare(self, query: AtmosphereQuery) -> PreparationResult:
+        """Prepare a complete cell or approved simplex on the requested axis."""
+        descriptor = self.product_descriptor()
+        if query.product_id != descriptor.product_id:
+            return PreparationResult.failure(
+                SpectrumStatusCode.NO_DATASET,
+                "NewEra adapter requires product newera-v3-lowres",
+            )
+        params = query.params
         teff = _as_host_float(params.teff, "teff")
         logg = _as_host_float(params.logg, "logg")
         m_h = _as_host_float(params.m_h, "m_h")
@@ -78,50 +133,104 @@ class NewEraBackend:
             and math.isclose(float(row["alpha_m"]), alpha_m)
         ]
         if not rows:
-            raise ValueError(
-                f"No NewEra abundance plane for m_h={m_h}, alpha_m={alpha_m}"
+            return PreparationResult.failure(
+                SpectrumStatusCode.NO_DATASET,
+                f"No NewEra abundance plane for m_h={m_h}, alpha_m={alpha_m}",
+            )
+        topology = GridTopology(
+            parameter_names=descriptor.parameter_names,
+            points=tuple((float(row["teff"]), float(row["logg"])) for row in rows),
+            approved_simplices=self.approved_simplices,
+        )
+        selection = select_topology(topology, (teff, logg))
+        if selection.status is not SpectrumStatusCode.OK:
+            return PreparationResult.failure(
+                selection.status,
+                "NewEra query has no valid prepared topology",
             )
 
-        teff_pair = _bounding_pair([float(row["teff"]) for row in rows], teff)
-        logg_pair = _bounding_pair([float(row["logg"]) for row in rows], logg)
-        records = {
-            (float(row["teff"]), float(row["logg"])): row
-            for row in rows
-            if float(row["teff"]) in teff_pair and float(row["logg"]) in logg_pair
-        }
-
-        first_record = records.get((teff_pair[0], logg_pair[0]))
-        if first_record is None:
-            raise ValueError("NewEra local interpolation cell is incomplete")
-        wavelength = _wavelength_grid(first_record)
-
-        flux_rows = []
-        for teff_value in teff_pair:
-            logg_flux = []
-            for logg_value in logg_pair:
-                record = records.get((teff_value, logg_value))
-                if record is None:
-                    raise ValueError(
-                        "NewEra local interpolation cell is incomplete for "
-                        f"teff={teff_value}, logg={logg_value}"
-                    )
-                logg_flux.append(self._read_flux(record))
-            flux_rows.append(logg_flux)
-
-        return PreparedSpectralGrid(
-            teff=jnp.asarray(teff_pair, dtype=jnp.float64),
-            logg=jnp.asarray(logg_pair, dtype=jnp.float64),
-            wavelength=jnp.asarray(wavelength, dtype=jnp.float64),
-            flux=jnp.asarray(np.asarray(flux_rows), dtype=jnp.float64),
-            m_h=m_h,
-            alpha_m=alpha_m,
-            wavelength_unit="nm",
-            flux_unit="source_flux_lambda",
+        vertex_rows = [rows[index] for index in selection.vertex_indices]
+        vertex_values = []
+        template = None
+        for record in vertex_rows:
+            wavelength = _wavelength_grid(record)
+            provenance = SpectrumProvenance(
+                source_id="phoenix-newera-v3",
+                product_id=descriptor.product_id,
+                native_coordinate="wavelength_nm",
+                native_density="F_lambda",
+                native_unit="W m^-2 nm^-1",
+                canonical_conversion="multiply by 1e3",
+                citations=("https://doi.org/10.1051/0004-6361/202554171",),
+                artifact_digest=self.validate_artifact().digest,
+            )
+            native = Spectrum(
+                axis=SpectralAxis.points(
+                    jnp.asarray(wavelength, dtype=jnp.float64),
+                    coordinate=SpectralCoordinate.WAVELENGTH,
+                    unit="nm",
+                ),
+                values=jnp.asarray(self._read_flux(record) * 1.0e3, dtype=jnp.float64),
+                semantic=SpectralSemantic.SURFACE_FLUX_LAMBDA,
+                provenance=provenance,
+            )
+            remapped = resample_spectrum(native, query.spectral_plan)
+            if int(remapped.status.code) != SpectrumStatusCode.OK:
+                return PreparationResult.failure(
+                    SpectrumStatusCode.UNSUPPORTED_SPECTRAL_WINDOW,
+                    "NewEra vertex does not cover the requested spectral plan",
+                )
+            template = remapped.spectrum
+            vertex_values.append(remapped.spectrum.values)
+        if template is None:  # protected by successful topology selection
+            raise ValueError("NewEra topology selected no vertices")
+        stacked = jnp.stack(vertex_values)
+        stencil: PreparedRectilinearStencil | PreparedSimplexStencil
+        if selection.kind is TopologyKind.RECTILINEAR:
+            teff_axis = jnp.asarray(
+                sorted(
+                    {
+                        point[0]
+                        for point in topology.points
+                        if point[0]
+                        in {topology.points[i][0] for i in selection.vertex_indices}
+                    }
+                )
+            )
+            logg_axis = jnp.asarray(
+                sorted(
+                    {
+                        point[1]
+                        for point in topology.points
+                        if point[1]
+                        in {topology.points[i][1] for i in selection.vertex_indices}
+                    }
+                )
+            )
+            stencil = PreparedRectilinearStencil(
+                parameter_axes=(teff_axis, logg_axis),
+                vertex_values=stacked.reshape(
+                    (teff_axis.shape[0], logg_axis.shape[0], stacked.shape[-1])
+                ),
+                template=template,
+                interpolation=FluxInterpolation.LINEAR,
+            )
+        else:
+            stencil = PreparedSimplexStencil(
+                vertices=jnp.asarray(
+                    [topology.points[index] for index in selection.vertex_indices]
+                ),
+                vertex_values=stacked,
+                template=template,
+                interpolation=FluxInterpolation.LINEAR,
+            )
+        prepared = PreparedAtmosphere(
+            stencil=stencil,
+            parameter_names=descriptor.parameter_names,
+            spectral_plan=query.spectral_plan,
+            provenance=template.provenance,
         )
-
-    def spectrum(self, params: AtmosphereParams) -> SpectrumResult:
-        """Convenience path: prepare a local cell, then interpolate a spectrum."""
-        return self.prepare(params).spectrum(params)
+        return PreparationResult.success(prepared)
 
     def _read_flux(self, record: dict[str, Any]) -> np.ndarray:
         group = self._store
