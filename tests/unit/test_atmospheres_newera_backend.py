@@ -121,6 +121,15 @@ def test_newera_backend_opens_processed_artifact_and_interpolates(tmp_path):
     assert result.spectrum.provenance.product_id == "newera-v3-lowres"
 
 
+def test_newera_artifact_validation_is_cached_at_open_time(tmp_path) -> None:
+    _write_processed_artifact(tmp_path)
+    backend = NewEraBackend.open(tmp_path)
+
+    first = backend.validate_artifact()
+
+    assert backend.validate_artifact() is first
+
+
 def test_newera_backend_prepare_rejects_missing_abundance_plane(tmp_path):
     _write_processed_artifact(tmp_path)
     backend = NewEraBackend.open(tmp_path)

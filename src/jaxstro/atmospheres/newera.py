@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import json
 import math
 import os
 from dataclasses import dataclass, field
@@ -44,6 +43,7 @@ class NewEraBackend:
     catalog_rows: tuple[dict[str, Any], ...]
     zarr_path: Path
     _store: Any = field(repr=False, compare=False)
+    _artifact_report: ArtifactReport = field(repr=False)
     approved_simplices: tuple[tuple[int, ...], ...] = ()
 
     @classmethod
@@ -77,11 +77,20 @@ class NewEraBackend:
 
         catalog_rows = tuple(pl.read_parquet(catalog_path).to_dicts())
         store = zarr.open_group(zarr_path, mode="r")
+        with catalog_path.open("rb") as handle:
+            catalog_digest = hashlib.file_digest(handle, "sha256").hexdigest()
+        artifact_report = ArtifactReport(
+            valid=bool(catalog_rows),
+            digest=f"sha256:{catalog_digest}" if catalog_rows else None,
+            schema="newera-lowres-v3" if catalog_rows else None,
+            message="" if catalog_rows else "NewEra artifact is empty",
+        )
         return cls(
             processed_dir=root,
             catalog_rows=catalog_rows,
             zarr_path=zarr_path,
             _store=store,
+            _artifact_report=artifact_report,
             approved_simplices=approved_simplices,
         )
 
@@ -102,15 +111,7 @@ class NewEraBackend:
 
     def validate_artifact(self) -> ArtifactReport:
         """Return deterministic schema and catalog evidence for this artifact."""
-        valid = self.zarr_path.exists() and bool(self.catalog_rows)
-        payload = json.dumps(self.catalog_rows, sort_keys=True, default=str).encode()
-        digest = f"sha256:{hashlib.sha256(payload).hexdigest()}" if valid else None
-        return ArtifactReport(
-            valid=valid,
-            digest=digest,
-            schema="newera-lowres-v3" if valid else None,
-            message="" if valid else "NewEra artifact is unavailable or empty",
-        )
+        return self._artifact_report
 
     def prepare(self, query: AtmosphereQuery) -> PreparationResult:
         """Prepare a complete cell or approved simplex on the requested axis."""

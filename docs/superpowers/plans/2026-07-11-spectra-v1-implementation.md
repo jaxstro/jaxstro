@@ -688,15 +688,15 @@ mypy, MyST.
 - Produces bounded acceptance and benchmark artifacts with separate preparation,
   first-JIT, cached evaluation, batched evaluation, and peak-memory fields.
 
-- [ ] **Step 1: Write failing acceptance and benchmark-schema tests**
+- [x] **Step 1: Write failing acceptance and benchmark-schema tests**
 
   Cover one supported and one intentionally unsupported request per product,
   finite canonical values, fixed shapes, no filesystem reads after preparation,
   `jit`, `vmap`, AD-vs-FD away from boundaries, and generic consumer imports.
 
-- [ ] **Step 2: Verify RED**, implement the benchmark CLI, and run bounded cases.
+- [x] **Step 2: Verify RED**, implement the benchmark CLI, and run bounded cases.
 
-- [ ] **Step 3: Verify GREEN with exact timing output**
+- [x] **Step 3: Verify GREEN with exact timing output**
 
   ```bash
   env -u VIRTUAL_ENV uv run --no-sync --extra data pytest -q \
@@ -708,7 +708,7 @@ mypy, MyST.
     scripts/benchmark_spectra.py --check
   ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
   ```bash
   git add tests/validation tests/integration/test_spectra_consumer_contract.py \
