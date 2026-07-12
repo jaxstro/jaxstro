@@ -16,10 +16,10 @@ spectra are tabulated on uneven grids, and downstream packages need gradients
 that are not merely available but trustworthy. A primitive that works under those
 constraints is usually useful outside astronomy too.
 
-## Full vision
+## Delivered vision
 
-jaxstro should become the package you reach for when you need **JAX-native
-scientific building blocks with proof-carrying behavior**:
+jaxstro provides **JAX-native scientific building blocks with proof-carrying
+behavior**:
 
 - **Numerical kernels** that are small, composable, and documented in terms of
   their gradient and boundary contracts.
@@ -31,11 +31,16 @@ scientific building blocks with proof-carrying behavior**:
 - **Evidence artifacts** that connect API claims to tests, finite-difference
   checks, generated reports, source hashes, and known limitations.
 
-That makes jaxstro useful inside astronomy as the shared base for Gravax,
-Progenax, Fluxax, Startrax, Stellax, and atmosphere tooling. It also makes it
-useful outside astronomy for teams building differentiable models in physics,
-geoscience, engineering, remote sensing, instrumentation, simulation calibration,
-and scientific machine learning.
+Within astronomy, Gravax, Progenax, Fluxax, and Startrax build on the shared
+foundation. Startrax is active; Stellax remains planned. Outside astronomy, the
+same primitives may be useful in differentiable physics, geoscience,
+instrumentation, simulation calibration, and scientific machine learning when
+their documented unit, shape, and transform contracts fit the application.
+
+The [foundation ownership figure](./index.md#fig-jaxstro-foundation) shows the
+one-way package boundary. It is an ownership map, not a claim that every function
+is differentiable: kernels compose with `jit`, `vmap`, or `grad` only where each
+method documents that transform.
 
 ## Product boundary
 
@@ -53,74 +58,87 @@ The boundary is:
 - Put **evidence and provenance hooks** close to the primitive whose behavior
   they support.
 
-## Future core modules
+## Delivered foundation map
 
-The following modules are natural extensions of the current foundation. They are
-listed as a product checklist, not a promise that every item should land in one
-pull request.
+The modules formerly described here as candidates are installed today. This
+table records their deliberately bounded first release rather than presenting
+delivered work as a future roadmap.
 
-```{list-table} Candidate science-general modules
+```{list-table} Delivered science-general modules
 :header-rows: 1
 :label: tbl-science-general-modules
 
 * - Module
-  - Why it belongs
-  - First-slice scope
+  - Delivered scope
+  - Deliberate boundary
 * - `jaxstro.numerics.optimization`
-  - Many scientific models need differentiable objective helpers before they
-    need a full optimizer stack.
-  - Robust losses, objective summaries, line-search utilities, convergence
-    diagnostics, and evidence tests; no replacement for Optax.
+  - Robust losses, objective and convergence summaries, gradient/step norms, and
+    fixed-iteration Armijo backtracking.
+  - Objective helpers, not an optimizer stack or replacement for Optax. See
+    [](../10-theory/optimization.md).
 * - `jaxstro.numerics.ode`
-  - Fixed-step integration is a common scientific primitive and a good fit for
-    explicit gradient contracts.
-  - Euler, RK2/RK4, leapfrog or velocity-Verlet, fixed-step scan APIs, and
-    energy/convergence validation; no adaptive solver in the first slice.
+  - Euler, midpoint/RK2, RK4, fixed-step scan integration, and velocity-Verlet.
+  - Fixed-step methods only; adaptive solver policy stays outside the
+    foundation. See [](../10-theory/ode.md).
 * - `jaxstro.numerics.operators`
-  - Scientific code often needs matrix-free linear algebra without committing to
-    a large sparse framework.
-  - A small LinearOperator PyTree protocol with dense, diagonal, scaled, sum,
-    product, and block operators plus `matvec`/`rmatvec` tests.
+  - A PyTree operator protocol with dense, diagonal, scaled, sum, product,
+    transpose, and block-diagonal implementations.
+  - Small matrix-free composition helpers, not a sparse storage or iterative
+    solver framework. See [](../10-theory/operators.md).
 * - `jaxstro.numerics.distributions`
-  - Inference-adjacent packages need stable probability kernels, but full
-    probabilistic programming belongs elsewhere.
-  - Logpdf, CDF, inverse-CDF, truncated distributions, stable normalization, and
-    sampling hooks for common generic families.
+  - Log-density, CDF, and inverse-CDF kernels for normal, lognormal, power-law,
+    and truncated-normal families.
+  - Explicit-support kernels, not distributions-as-objects or probabilistic
+    programming. See [](../10-theory/distributions.md).
 * - `jaxstro.geometry`
-  - Coordinates already exist; reusable vector geometry and rigid transforms are
-    the next generic layer.
-  - Rotations, quaternions, angular distances, projection helpers, and transform
-    composition with clear conventions.
+  - Vector normalization, angular distance, axis-angle rotation, quaternions,
+    and rigid-transform composition/inversion.
+  - Generic geometry without domain coordinate interpretation. See
+    [](../10-theory/geometry.md).
 * - `jaxstro.numerics.autodiff`
-  - Downstream packages repeatedly need gradient diagnostics and curvature
-    products that are not model-specific.
-  - JVP/VJP/HVP helpers, Gauss-Newton products, Fisher-style products, and
-    finite-difference cross-checks.
+  - JVP, VJP, HVP, Gauss–Newton, and empirical-Fisher products.
+  - Thin products over JAX primitives, not a differentiation framework or a
+    promise that arbitrary caller functions are smooth. See
+    [](../10-theory/autodiff.md).
 * - `jaxstro.provenance`
-  - The package already treats evidence as part of the API; provenance deserves a
-    shared runtime representation.
   - Artifact hashes, environment snapshots, method manifests, and deterministic
-    JSON/Markdown rendering for validation reports.
+    JSON/Markdown rendering.
+  - Runtime reproducibility records; scientific source claims belong to the
+    separate provenance-card registry. See [](./provenance.md).
 * - `jaxstro.numerics.random`
-  - Scientific simulations need reproducible random streams and resampling
-    methods without hiding PRNG-key flow.
-  - Key-stream helpers, stratified/systematic/residual resampling, seed
-    manifests, and shape-stable APIs.
+  - Explicit key streams, seed manifests, and systematic, stratified, and
+    residual resampling.
+  - Key flow stays visible; the module does not own a simulation runtime. See
+    [](../10-theory/random.md).
 * - `jaxstro.numerics.meshes`
-  - Many scientific workflows discretize domains before they simulate,
-    interpolate, or conserve quantities.
-  - Structured mesh helpers, cell/face geometry, finite-volume stencils, and
-    conservative remapping in one dimension before higher-rank extensions.
+  - Structured 1D edges, cell/face geometry, neighbors, divergence, face
+    averaging, and conservative remapping.
+  - One-dimensional structured meshes only. See [](../10-theory/meshes.md).
 ```
 
-## Deferred deliberately
+## Units and quantity status
 
-`jaxstro.units.quantity` is the most important missing user-facing abstraction,
-but it should not be implemented casually. A quantity layer changes how units
-flow through almost every public API, so it needs separate design work around
-tracing behavior, PyTree semantics, runtime overhead, error messages, and
-interoperability with the existing `UnitSystem` policy.
+`jaxstro.units` remains the current ecosystem contract. `jaxstro.quantity` is implemented
+and available for evaluation, but ecosystem adoption and any replacement cutover remain deferred.
+The quantity architecture therefore documents a real implementation without
+instructing sibling packages to migrate. See [](./quantity-system.md).
 
-Until that design is settled, jaxstro should continue to expose explicit unit
-systems and documented unit conventions rather than introduce a partial quantity
-object.
+## Admission criteria for future work
+
+A possible addition belongs in jaxstro only when evidence supports all four
+conditions:
+
+1. **It is domain-general.** The primitive remains useful without importing
+   stars, galaxies, instruments, surveys, or a particular simulator.
+2. **Its ownership lowers duplication.** At least two consumers need the same
+   lower-level contract, or one consumer supplies unusually strong evidence that
+   the abstraction is genuinely foundational.
+3. **Its transform boundary is explicit.** Supported JAX transforms, static
+   arguments, valid domains, and discrete preprocessing are named and tested.
+4. **Its evidence can live beside it.** Tests, validation anchors, provenance,
+   and known limitations can be maintained without pulling domain workflows into
+   the core.
+
+Passing these checks admits a proposal for design and evidence work; it is not a
+promise that the feature will be accepted. The thin-foundation posture remains
+the controlling decision.
