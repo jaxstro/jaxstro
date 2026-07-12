@@ -119,7 +119,7 @@ class SonoraBackend:
             family="sonora",
             parameter_names=("teff", "logg"),
             topology_policy="complete-cell-or-approved-simplex",
-            flux_interpolation_policy="linear",
+            flux_interpolation_policy=None,
             provenance_id="sonora-diamondback-2024",
         )
 

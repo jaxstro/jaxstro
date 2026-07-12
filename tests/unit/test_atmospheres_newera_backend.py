@@ -100,7 +100,22 @@ def test_newera_backend_opens_processed_artifact_and_interpolates(tmp_path):
     result = prepared.prepared.evaluate(_query().params)
 
     np.testing.assert_allclose(result.spectrum.axis.values, [100.0, 101.0, 102.0])
-    np.testing.assert_allclose(result.spectrum.values, [2500.0, 3500.0, 4500.0])
+    expected = np.exp(
+        np.mean(
+            np.log(
+                np.array(
+                    [
+                        [1000.0, 2000.0, 3000.0],
+                        [2000.0, 3000.0, 4000.0],
+                        [3000.0, 4000.0, 5000.0],
+                        [4000.0, 5000.0, 6000.0],
+                    ]
+                )
+            ),
+            axis=0,
+        )
+    )
+    np.testing.assert_allclose(result.spectrum.values, expected)
     assert result.spectrum.value_unit == "erg s^-1 cm^-2 nm^-1"
     assert int(result.status.code) == SpectrumStatusCode.OK
     assert result.spectrum.provenance.product_id == "newera-v3-lowres"
@@ -150,4 +165,15 @@ def test_newera_sparse_cell_uses_only_explicitly_approved_simplex(tmp_path):
     assert prepared.status is SpectrumStatusCode.OK
     assert prepared.prepared is not None
     result = prepared.prepared.evaluate(_query(teff=5250.0, logg=4.25).params)
-    np.testing.assert_allclose(result.spectrum.values, [1750.0, 2750.0, 3750.0])
+    weights = np.array([0.5, 0.25, 0.25])
+    vertices = np.array(
+        [
+            [1000.0, 2000.0, 3000.0],
+            [2000.0, 3000.0, 4000.0],
+            [3000.0, 4000.0, 5000.0],
+        ]
+    )
+    np.testing.assert_allclose(
+        result.spectrum.values,
+        np.exp(weights @ np.log(vertices)),
+    )

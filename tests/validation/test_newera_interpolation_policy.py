@@ -11,5 +11,5 @@ def test_newera_descriptor_freezes_source_and_interpolation_policy() -> None:
     assert descriptor.product_id == "newera-v3-lowres"
     assert descriptor.parameter_names == ("teff", "logg")
     assert descriptor.topology_policy == "complete-cell-or-approved-simplex"
-    assert descriptor.flux_interpolation_policy == "linear"
+    assert descriptor.flux_interpolation_policy == "positive_log"
     assert descriptor.provenance_id == "newera-v3-lowres"

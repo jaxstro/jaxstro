@@ -10,4 +10,4 @@ def test_sonora_descriptor_separates_cloud_metallicity_and_c_o() -> None:
 
     assert descriptor.product_id == "sonora-diamondback-2024:f1:m+0:co1"
     assert descriptor.parameter_names == ("teff", "logg")
-    assert descriptor.flux_interpolation_policy == "linear"
+    assert descriptor.flux_interpolation_policy is None

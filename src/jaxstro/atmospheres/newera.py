@@ -93,7 +93,7 @@ class NewEraBackend:
             family="newera",
             parameter_names=("teff", "logg"),
             topology_policy="complete-cell-or-approved-simplex",
-            flux_interpolation_policy="linear",
+            flux_interpolation_policy="positive_log",
             provenance_id="newera-v3-lowres",
         )
 
@@ -213,7 +213,7 @@ class NewEraBackend:
                     (teff_axis.shape[0], logg_axis.shape[0], stacked.shape[-1])
                 ),
                 template=template,
-                interpolation=FluxInterpolation.LINEAR,
+                interpolation=FluxInterpolation.POSITIVE_LOG,
             )
         else:
             stencil = PreparedSimplexStencil(
@@ -222,7 +222,7 @@ class NewEraBackend:
                 ),
                 vertex_values=stacked,
                 template=template,
-                interpolation=FluxInterpolation.LINEAR,
+                interpolation=FluxInterpolation.POSITIVE_LOG,
             )
         prepared = PreparedAtmosphere(
             stencil=stencil,

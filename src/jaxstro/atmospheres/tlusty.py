@@ -206,7 +206,9 @@ class TlustyBackend:
             family="tlusty",
             parameter_names=("teff", "logg"),
             topology_policy="complete-cell-or-approved-simplex",
-            flux_interpolation_policy="linear",
+            flux_interpolation_policy=(
+                "linear" if spec.dataset == "tlusty_ostar_2002" else None
+            ),
             provenance_id=provenance_id,
         )
 
@@ -268,10 +270,11 @@ class TlustyBackend:
             h_nu = np.asarray(
                 subgroup["flux_fnu"][int(record["zarr_row"]), :], dtype=float
             )
-            wavelength_nm = _C_NM_S / frequency
-            order = np.argsort(wavelength_nm)
-            wavelength_nm = wavelength_nm[order]
-            f_nu = 4.0 * np.pi * h_nu[order]
+            try:
+                wavelength_nm, h_nu = _canonicalize_frequency_samples(frequency, h_nu)
+            except ValueError as exc:
+                raise ValueError(f"{record['filename']}: {exc}") from exc
+            f_nu = 4.0 * np.pi * h_nu
             f_lambda = f_nu * _C_NM_S / wavelength_nm**2
             provenance = SpectrumProvenance(
                 source_id=descriptor.provenance_id,
@@ -280,7 +283,8 @@ class TlustyBackend:
                 native_density="H_nu",
                 native_unit="erg s^-1 cm^-2 Hz^-1",
                 canonical_conversion=(
-                    "F_nu=4*pi*H_nu; F_lambda=F_nu*c_nm_s/lambda_nm^2"
+                    "mean duplicate-frequency samples; F_nu=4*pi*H_nu; "
+                    "F_lambda=F_nu*c_nm_s/lambda_nm^2"
                 ),
                 citations=("https://tlusty.oca.eu/tlusty/Tlusty2002/",),
                 artifact_digest=artifact.digest,
@@ -335,6 +339,32 @@ class TlustyBackend:
                 provenance=template.provenance,
             )
         )
+
+
+def _canonicalize_frequency_samples(
+    frequency_hz: np.ndarray,
+    h_nu: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Sort TLUSTY samples and safely coalesce exact duplicate coordinates."""
+    if frequency_hz.ndim != 1 or h_nu.shape != frequency_hz.shape:
+        raise ValueError("TLUSTY frequency and H_nu arrays must be matching vectors")
+    if not np.all(np.isfinite(frequency_hz)) or np.any(frequency_hz <= 0.0):
+        raise ValueError("TLUSTY frequencies must be finite and positive")
+    if not np.all(np.isfinite(h_nu)):
+        raise ValueError("TLUSTY H_nu samples must be finite")
+    wavelength_nm = _C_NM_S / frequency_hz
+    order = np.argsort(wavelength_nm, kind="stable")
+    wavelength_nm = wavelength_nm[order]
+    sorted_h_nu = h_nu[order]
+    unique_wavelength, first_index, counts = np.unique(
+        wavelength_nm,
+        return_index=True,
+        return_counts=True,
+    )
+    if np.any(counts > 1):
+        sorted_h_nu = np.add.reduceat(sorted_h_nu, first_index) / counts
+        wavelength_nm = unique_wavelength
+    return wavelength_nm, sorted_h_nu
 
 
 def _load_optional_backend_deps():

@@ -30,12 +30,16 @@ def _write_processed_artifact(
     dataset: str = "tlusty_ostar_2002",
     prefix: str = "G",
     cn_altered: bool = False,
+    duplicate_coordinate: bool = False,
+    conflicting_duplicate: bool = False,
 ) -> None:
     pl = pytest.importorskip("polars")
     zarr = pytest.importorskip("zarr")
     root = zarr.open_group(processed_dir / "tlusty_flux.zarr", mode="w", zarr_format=2)
     dataset_group = root.create_group(dataset.removeprefix("tlusty_"))
-    wavelength_nm = np.array([100.0, 200.0, 400.0])
+    wavelength_nm = np.array(
+        [100.0, 200.0, 200.0, 400.0] if duplicate_coordinate else [100.0, 200.0, 400.0]
+    )
     frequency_hz = C_NM_S / wavelength_nm
     rows = []
     for row, (teff, logg) in enumerate(
@@ -43,13 +47,19 @@ def _write_processed_artifact(
     ):
         subgroup_name = f"grid{row:03d}"
         subgroup = dataset_group.create_group(subgroup_name)
-        subgroup.create_array("frequency_hz", data=frequency_hz, chunks=(3,))
-        desired_flambda = np.array([1.0, 2.0, 3.0]) + row
+        subgroup.create_array(
+            "frequency_hz", data=frequency_hz, chunks=(wavelength_nm.size,)
+        )
+        desired_flambda = (
+            np.array([1.0, 2.0, 2.5 if conflicting_duplicate else 2.0, 3.0])
+            if duplicate_coordinate
+            else np.array([1.0, 2.0, 3.0])
+        ) + row
         h_nu = desired_flambda * wavelength_nm**2 / (4.0 * np.pi * C_NM_S)
         subgroup.create_array(
             "flux_fnu",
             data=h_nu[None, :].astype(np.float32),
-            chunks=(1, 3),
+            chunks=(1, wavelength_nm.size),
         )
         rows.append(
             {
@@ -117,9 +127,36 @@ def test_tlusty_backend_reads_subgroup_grids_and_converts_h_nu(tmp_path):
     np.testing.assert_allclose(result.spectrum.axis.values, [100.0, 200.0, 400.0])
     np.testing.assert_allclose(result.spectrum.values, [2.5, 3.5, 4.5], rtol=2e-7)
     assert result.spectrum.provenance.canonical_conversion == (
-        "F_nu=4*pi*H_nu; F_lambda=F_nu*c_nm_s/lambda_nm^2"
+        "mean duplicate-frequency samples; F_nu=4*pi*H_nu; "
+        "F_lambda=F_nu*c_nm_s/lambda_nm^2"
     )
     assert int(result.status.code) == SpectrumStatusCode.OK
+
+
+def test_tlusty_coalesces_identical_duplicate_frequency_samples(tmp_path) -> None:
+    _write_processed_artifact(tmp_path, duplicate_coordinate=True)
+    backend = TlustyBackend.open(tmp_path, product_id="tlusty-ostar2002:z1")
+
+    prepared = backend.prepare(_query())
+
+    assert prepared.prepared is not None
+    result = prepared.prepared.evaluate(_query().params)
+    np.testing.assert_allclose(result.spectrum.values, [2.5, 3.5, 4.5], rtol=2e-7)
+
+
+def test_tlusty_means_conflicting_duplicate_frequency_samples(tmp_path) -> None:
+    _write_processed_artifact(
+        tmp_path,
+        duplicate_coordinate=True,
+        conflicting_duplicate=True,
+    )
+    backend = TlustyBackend.open(tmp_path, product_id="tlusty-ostar2002:z1")
+
+    prepared = backend.prepare(_query())
+
+    assert prepared.prepared is not None
+    result = prepared.prepared.evaluate(_query().params)
+    np.testing.assert_allclose(result.spectrum.values, [2.5, 3.75, 4.5], rtol=2e-7)
 
 
 def test_tlusty_exposes_all_27_exact_composition_products() -> None:

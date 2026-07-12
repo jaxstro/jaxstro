@@ -1,0 +1,189 @@
+{
+  "primary_metric": "p95_relative_error",
+  "products": {
+    "bosz-2025-recomputed:ap:r10000:resam": {
+      "accepted_policy": "linear",
+      "holdout": {
+        "logg": 3.5,
+        "teff": 7750.0
+      },
+      "holdout_method": "leave-one-teff-slice-out",
+      "metrics": {
+        "linear": {
+          "integrated_flux_relative_error": 0.00018968423421950042,
+          "maximum_log_flux_error": 0.0011684161192899722,
+          "median_relative_error": 0.0001669652975228031,
+          "p95_relative_error": 0.00024443970244478745
+        },
+        "positive_log": {
+          "integrated_flux_relative_error": 0.004663017296563043,
+          "maximum_log_flux_error": 0.006085406972633933,
+          "median_relative_error": 0.0005424462236912619,
+          "p95_relative_error": 0.0005951276766223201
+        }
+      },
+      "positive_support": {
+        "bins": 63,
+        "wavelength_max_nm": 31998.621999999996,
+        "wavelength_min_nm": 557.120984126984
+      },
+      "product_id": "bosz-2025-recomputed:ap:r10000:resam",
+      "status": "accepted"
+    },
+    "newera-v3-lowres": {
+      "accepted_policy": "positive_log",
+      "holdout": {
+        "logg": 3.0,
+        "teff": 2400.0
+      },
+      "holdout_method": "leave-one-teff-slice-out",
+      "metrics": {
+        "linear": {
+          "integrated_flux_relative_error": 0.015568605414405523,
+          "maximum_log_flux_error": 2.444550287713145,
+          "median_relative_error": 0.013361547243793348,
+          "p95_relative_error": 0.45454405350141674
+        },
+        "positive_log": {
+          "integrated_flux_relative_error": 0.0038766747169300952,
+          "maximum_log_flux_error": 0.321104351385725,
+          "median_relative_error": 0.006628058381013935,
+          "p95_relative_error": 0.16255918722048304
+        }
+      },
+      "positive_support": {
+        "bins": 64,
+        "wavelength_max_nm": 2500.0,
+        "wavelength_min_nm": 250.0
+      },
+      "product_id": "newera-v3-lowres",
+      "status": "accepted"
+    },
+    "sonora-diamondback-2024:f1:m-0.5:co1": {
+      "accepted_policy": null,
+      "holdout": {
+        "logg": 4.4996870826184034,
+        "teff": 1000.0
+      },
+      "holdout_method": "leave-one-teff-slice-out",
+      "metrics": {
+        "linear": {
+          "integrated_flux_relative_error": 0.002726815368040203,
+          "maximum_log_flux_error": 0.07801882332172028,
+          "median_relative_error": 0.04785510160280837,
+          "p95_relative_error": 0.07737400429855136
+        },
+        "positive_log": {
+          "integrated_flux_relative_error": 0.03140091477630591,
+          "maximum_log_flux_error": 0.07417848457690823,
+          "median_relative_error": 0.041230404035445645,
+          "p95_relative_error": 0.0650053604779823
+        }
+      },
+      "positive_support": {
+        "bins": 63,
+        "wavelength_max_nm": 250000.0,
+        "wavelength_min_nm": 4263.492063492064
+      },
+      "product_id": "sonora-diamondback-2024:f1:m-0.5:co1",
+      "status": "POLICY_NOT_VALIDATED"
+    },
+    "tlusty-bstar2006:vturb10:z1:standard": {
+      "accepted_policy": null,
+      "holdout": {
+        "logg": 2.5,
+        "teff": 16000.0
+      },
+      "holdout_method": "leave-one-teff-slice-out",
+      "metrics": {
+        "linear": {
+          "integrated_flux_relative_error": 0.0030140565624503513,
+          "maximum_log_flux_error": 0.00324076666713502,
+          "median_relative_error": 0.0009650897818618276,
+          "p95_relative_error": 0.0014842809470112072
+        },
+        "positive_log": {
+          "integrated_flux_relative_error": 0.00048598675851097006,
+          "maximum_log_flux_error": 0.0028200209034876522,
+          "median_relative_error": 0.0019355348153949903,
+          "p95_relative_error": 0.002716326039239858
+        }
+      },
+      "positive_support": {
+        "bins": 63,
+        "wavelength_max_nm": 299792.458,
+        "wavelength_min_nm": 4763.966961329886
+      },
+      "product_id": "tlusty-bstar2006:vturb10:z1:standard",
+      "status": "POLICY_NOT_VALIDATED"
+    },
+    "tlusty-bstar2006:vturb2:z1": {
+      "accepted_policy": null,
+      "holdout": {
+        "logg": 3.25,
+        "teff": 16000.0
+      },
+      "holdout_method": "leave-one-teff-slice-out",
+      "metrics": {
+        "linear": {
+          "integrated_flux_relative_error": 0.0014376157400926015,
+          "maximum_log_flux_error": 0.0014643936594946894,
+          "median_relative_error": 0.0002323467867083595,
+          "p95_relative_error": 0.0010684683578002117
+        },
+        "positive_log": {
+          "integrated_flux_relative_error": 0.00031716276394755383,
+          "maximum_log_flux_error": 0.0014150637504855013,
+          "median_relative_error": 0.001071771967548374,
+          "p95_relative_error": 0.0013069736837309164
+        }
+      },
+      "positive_support": {
+        "bins": 63,
+        "wavelength_max_nm": 299792.458,
+        "wavelength_min_nm": 4763.966961329886
+      },
+      "product_id": "tlusty-bstar2006:vturb2:z1",
+      "status": "POLICY_NOT_VALIDATED"
+    },
+    "tlusty-ostar2002:z1": {
+      "accepted_policy": "linear",
+      "holdout": {
+        "logg": 4.0,
+        "teff": 30000.0
+      },
+      "holdout_method": "leave-one-teff-slice-out",
+      "metrics": {
+        "linear": {
+          "integrated_flux_relative_error": 0.0030152297720420496,
+          "maximum_log_flux_error": 0.018749214569597328,
+          "median_relative_error": 0.01303465394601333,
+          "p95_relative_error": 0.01823190465593394
+        },
+        "positive_log": {
+          "integrated_flux_relative_error": 0.0034861872481188882,
+          "maximum_log_flux_error": 0.019995277776811538,
+          "median_relative_error": 0.014991506510108388,
+          "p95_relative_error": 0.019509378688160283
+        }
+      },
+      "positive_support": {
+        "bins": 63,
+        "wavelength_max_nm": 299792.458,
+        "wavelength_min_nm": 4763.027491123764
+      },
+      "product_id": "tlusty-ostar2002:z1",
+      "status": "accepted"
+    }
+  },
+  "representative_products": [
+    "newera-v3-lowres",
+    "bosz-2025-recomputed:ap:r10000:resam",
+    "sonora-diamondback-2024:f1:m-0.5:co1",
+    "tlusty-ostar2002:z1",
+    "tlusty-bstar2006:vturb2:z1",
+    "tlusty-bstar2006:vturb10:z1:standard"
+  ],
+  "schema_version": 1,
+  "selection_rule": "primary win plus no secondary regression"
+}

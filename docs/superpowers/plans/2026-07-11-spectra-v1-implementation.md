@@ -638,21 +638,23 @@ mypy, MyST.
 - Produces deterministic metrics for linear and positive-log policies and a
   versioned accepted-policy manifest consumed by adapters.
 
-- [ ] **Step 1: Write failing synthetic holdout tests**
+- [x] **Step 1: Write failing synthetic holdout tests**
 
   Metrics are finite-bin median relative error, 95th percentile relative error,
   maximum log-flux error on positive support, and integrated-flux relative
   error. The winner must beat the alternative on the declared primary metric
   without exceeding secondary error ceilings.
 
-- [ ] **Step 2: Verify RED**, implement deterministic evaluator and CLI, then run
+- [x] **Step 2: Verify RED**, implement deterministic evaluator and CLI, then run
   bounded real-artifact holdouts for each enabled product.
 
-- [ ] **Step 3: Record measured policies and exclusions**, never invented
+- [x] **Step 3: Record measured policies and exclusions**, never invented
   thresholds. If neither policy meets its declared ceiling, mark the product
-  `POLICY_NOT_VALIDATED`.
+  `POLICY_NOT_VALIDATED`. The representative evidence accepts positive-log for
+  NewEra and linear for BOSZ/OSTAR; Sonora and both BSTAR modes remain
+  fail-closed because their primary and secondary metrics trade off.
 
-- [ ] **Step 4: Verify GREEN**
+- [x] **Step 4: Verify GREEN**
 
   ```bash
   env -u VIRTUAL_ENV uv run --no-sync --extra data pytest -q \
@@ -662,7 +664,7 @@ mypy, MyST.
     scripts/validate_atmosphere_interpolation.py --check
   ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
   ```bash
   git add src/jaxstro/testing/spectral_validation.py \
