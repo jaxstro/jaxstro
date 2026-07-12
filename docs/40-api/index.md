@@ -2,13 +2,15 @@
 title: API reference
 description: >-
   The public module surface of jaxstro 0.1.0 — units, quantity, constants,
-  astrometry, coords, numerics, spatial, params, atmospheres, provenance,
-  testing, jaxconfig — and what each provides.
+  astrometry, coordinates, geometry, numerics, spatial, parameters,
+  atmospheres, provenance, testing, and JAX configuration — with ownership,
+  execution boundaries, and evidence routes.
 ---
 
-This is the lookup door. It enumerates the public modules of jaxstro 0.1.0 and the
-symbols each exports, with a pointer back to the theory that justifies them. Import
-the top-level package and reach modules as attributes:
+This is the lookup door. It enumerates the public modules of jaxstro 0.1.0, what
+each owns, where traced runtime ends, and where to audit the claim. Public
+subpackages are eager top-level attributes; `jaxconfig` remains a direct module
+because configuration is an explicit action.
 
 The API is astro-first but intentionally science-general. A public symbol belongs
 here when it is reusable below domain packages, has explicit unit or boundary
@@ -17,76 +19,123 @@ claims.
 
 ```python
 import jaxstro
-from jaxstro import atmospheres, constants, units, quantity, numerics, coords, geometry, spatial, params, provenance, testing
+from jaxstro import (
+    astrometry,
+    atmospheres,
+    constants,
+    coords,
+    geometry,
+    numerics,
+    params,
+    provenance,
+    quantity,
+    spatial,
+    testing,
+    units,
+)
 from jaxstro.jaxconfig import enable_high_precision
 ```
 
-The committed surface for 0.1.0 is below. `units`, `constants`, `astrometry`,
-`coords`, and `jaxconfig` are **stable**; `numerics`, `spatial`, `params`, and
-`atmospheres` are **stable-but-evolving**; `testing` is a **public, semi-stable**
-utility. There is no private or experimental tier at release.
-
-`jaxstro.quantity` is the concrete unit/quantity namespace: dimensional
-arithmetic, exact unit-string parsing, serialization, role-aware astrophysical
-bases, versioned constants, explicit equivalencies, and dimension-aware math
-wrappers. It is additive; existing `jaxstro.units` remains the
-backwards-compatible `UnitSystem` API during downstream migration.
+`jaxstro.units` is the current ecosystem contract. `jaxstro.quantity` is implemented
+and available for evaluation, but ecosystem adoption and any replacement cutover remain deferred.
+The statuses below describe current evidence boundaries, not a hidden migration
+schedule.
 
 ```{list-table} Public modules
 :header-rows: 1
 :label: tbl-modules
 
 * - Module
-  - Provides
+  - Ownership
+  - Runtime / preprocessing boundary
+  - Evidence and status
 * - `jaxstro.units`
-  - `UnitSystem` dataclass with a `.G` property; named systems (`CGS`,
-    `ASTRO_STELLAR`/`solar`, `ASTRO_DYNAMICAL`/`stellar`, `ASTRO_PLANETARY`/`binary`)
-    and aliases; `DEFAULT` (= CGS) re-exported as `jaxstro.DEFAULT_UNITS`;
-    `PhotometricUnits`.
+  - `UnitSystem`, `PhotometricUnits`, named systems, aliases, and
+    `DEFAULT_UNITS` (= CGS).
+  - Static unit-scale metadata; core APIs require explicit units or constants,
+    while convenience wrappers may resolve `units=None`.
+  - **Current ecosystem contract.** See [](../20-architecture/index.md#units-policy)
+    and [](../30-decisions/0007-cgs-as-default-units.md).
 * - `jaxstro.quantity`
-  - `Quantity` and `Unit` layer with ergonomic concrete units (`cm`, `erg`,
-    `Msun`, `micron`), exact dimensions, conversions, parser and serialization,
-    role-aware bases, versioned constants, explicit equivalencies, and
-    dimension-aware math wrappers. See [](../10-theory/quantities.md) and
-    [](../20-architecture/quantity-system.md).
+  - `Quantity`, `Unit`, concrete units, dimensions, conversions, serialization,
+    bases, constants, and equivalencies.
+  - Values are JAX-compatible; unit objects and dimensional checks remain static
+    metadata at traced boundaries.
+  - **Implemented; ecosystem adoption deferred.** See
+    [](../10-theory/quantities.md) and [](../20-architecture/quantity-system.md).
 * - `jaxstro.constants`
-  - CGS physical constants from CODATA 2018 and IAU 2015, each with a provenance
-    comment, plus photometric constants (Oke & Gunn 1983).
+  - CGS physical, nominal-conversion, and photometric constants.
+  - Frozen scalar values; no runtime source lookup.
+  - **Source-verified.** See the
+    [constants cards](./provenance/constants.md) and
+    [](../60-validation/index.md).
 * - `jaxstro.astrometry`
-  - Astrometric constants (e.g. `K_PROPER_MOTION`, mas/radian conversions).
+  - Astrometric constants and proper-motion/parallax transformations.
+  - Array kernels are differentiable only on the smooth domains documented for
+    each transform.
+  - **Implemented and audited.** See the
+    [transform cards](./provenance/transforms.md).
 * - `jaxstro.coords`
-  - Coordinate transforms — sky-tangent, galactic/equatorial, spherical, parallax.
+  - Sky-tangent, galactic/equatorial, spherical, and parallax transforms.
+  - Frames, axes, poles, origins, and coincident geometries have explicit
+    conventions or singular boundaries.
+  - **Implemented and audited.** See the
+    [transform cards](./provenance/transforms.md) and
+    [](../60-validation/index.md).
 * - `jaxstro.geometry`
-  - Generic vector geometry — normalization, angular distances, rotations,
-    quaternions, and rigid transforms with explicit composition order.
+  - Normalization, angular distance, rotations, quaternions, and rigid
+    transforms.
+  - Smooth away from named zero-vector, coincident, and branch boundaries.
+  - **Implemented.** See [](../10-theory/geometry.md).
 * - `jaxstro.numerics`
-  - Differentiable numerical utilities: stats, interpolation, root-finding,
-    integration (incl. `cumulative_trapz` + quadrature factory + `newton_ppf`),
-    B-spline basis/evaluation, checks, compensated summation, linear algebra,
-    autodiff products, distribution kernels, optimization helpers, fixed-step
-    ODE helpers, linear operators, structured meshes, RNG/key-stream helpers,
-    sampling.
+  - Kernels for interpolation, roots, integration, splines, linear algebra,
+    autodiff products, distributions, optimization, ODEs, operators, meshes,
+    random streams, and sampling.
+  - JAX-transform support is method-specific; host-generated nodes, discrete
+    choices, clamps, and branches remain explicit.
+  - **Implemented and evolving.** Start with [](../10-theory/index.md) and
+    [](../60-validation/index.md).
 * - `jaxstro.spatial`
-  - Morton (Z-order) encoding/decoding, grid binning, neighbor-candidate gathering.
+  - Morton coding, grid binning, approximate neighbor candidates, and exact
+    fixed-radius pairs.
+  - Index construction, sorting, capacity, and overflow policy are host-side or
+    discrete preprocessing rather than differentiable kernels.
+  - **Implemented and evolving.** Validation exists; a dedicated conceptual
+    chapter is the next approved page slice.
 * - `jaxstro.params`
-  - Equinox-only PyTree↔flat-vector bridge (`Parameterization`) plus a bijector
-    registry (Identity/Exp/Softplus/Sigmoid) for unconstrained-space inference.
+  - Equinox PyTree↔vector `Parameterization` and Identity, Exp, Softplus, and
+    Sigmoid bijectors.
+  - Static leaf-selection metadata surrounds JAX array transforms.
+  - **Implemented.** See
+    [](../30-decisions/0009-jaxstro-params-selective-inference.md).
 * - `jaxstro.atmospheres`
-  - Catalog-first local atmosphere coverage; host-side processed-artifact
-    loading; JAX-ready spectra types (`AtmosphereParams`, `Spectrum`,
-    `SpectrumResult`, `SpectrumStatus`, `PreparedSpectralGrid`); implemented
-    `NewEraBackend` and `BoszBackend`; source-preserving Sonora/TLUSTY metadata
-    and conversion support.
+  - Catalog discovery, prepared spectra, NewEra/BOSZ runtime backends, and
+    source-preserving Sonora/TLUSTY conversion metadata.
+  - Catalog selection and artifact loading are host-side; prepared interpolation
+    is JAX-side only where a runtime backend exists.
+  - **Atmosphere support is in progress.** See
+    [](../20-architecture/atmosphere-capabilities.md) and the
+    [atmosphere cards](./provenance/atmospheres.md).
 * - `jaxstro.testing`
-  - The grad-audit engine (`audit_entry_point`, `Case`, `AuditResult`, `EdgeConfig`)
-    plus public finite-difference diagnostics (`finite_difference_grad`,
-    `finite_difference_jacobian`, `compare_gradients`, `compare_jacobians`,
-    `check_directional_derivative`).
+  - Gradient audits, finite-difference diagnostics, evidence reports, numeric
+    ratchets, and provenance-card validation/rendering.
+  - Test and documentation tooling; no pytest dependency or file-format policy
+    at installed-package import time.
+  - **Public tooling.** See the
+    [source-backed provenance cards](./provenance/index.md) and the detailed
+    testing section below.
 * - `jaxstro.provenance`
-  - Runtime provenance records: artifact hashes, environment snapshots, method
-    manifests, and deterministic JSON/Markdown rendering.
+  - Artifact hashes, environment snapshots, method manifests, and deterministic
+    JSON/Markdown rendering.
+  - Runtime manifests record a computation; they do not replace scientific
+    source cards.
+  - **Implemented.** See [](../20-architecture/provenance.md).
 * - `jaxstro.jaxconfig`
-  - `enable_high_precision()` — turns on float64 and highest matmul precision.
+  - `enable_high_precision()` for float64 and highest matmul precision.
+  - Call before constructing arrays or compiling functions whose precision
+    contract requires x64.
+  - **Implemented direct module.** Configuration remains an explicit caller
+    action rather than import-time global state.
 ```
 
 ## Selected modules
@@ -119,7 +168,7 @@ CGS constants with sourced values. A few that downstream packages rely on:
   - CODATA 2018 (Thomson cross-section)
 * - `MSUN_G`
   - $1.9884\times10^{33}\ \mathrm{g}$
-  - Legacy CGS compatibility scale derived from IAU 2015 B3 $(GM)_\odot^\mathrm{N}$
+  - Rounded CGS compatibility scale derived from IAU 2015 B3 $(GM)_\odot^\mathrm{N}$
 * - `AB_ZEROPOINT_JY`
   - $3631\ \mathrm{Jy}$
   - Oke & Gunn 1983
@@ -332,11 +381,19 @@ method-level evidence, and `trust_report_to_json(...)`,
 deterministic trust summaries. These helpers are intended for test suites and
 validation scripts.
 
+The provenance-card surface is also public: `ProvenanceCard`,
+`validate_card(...)`, `render_card(...)`, and `render_registry(...)` validate
+already-parsed mappings and deterministically render MyST pages. YAML/JSON
+parsing and repository file policy stay with caller tooling, keeping the
+installed module dependency-light. The generated
+[source-backed provenance cards](./provenance/index.md) demonstrate this API.
+
 ### `jaxstro.provenance`
 
 `hash_artifact(...)` records SHA-256 file digests and sizes.
 `environment_snapshot(...)` captures a small explicit Python/platform/package
 snapshot. `MethodManifest`, `manifest_to_json(...)`, and
 `manifest_to_markdown(...)` provide deterministic method-run records for
-validation reports and downstream workflow logs. The architecture page is
-[](../20-architecture/provenance.md).
+validation reports and downstream workflow logs. These runtime manifests answer
+what a run consumed; they do not establish the source behind a scientific claim.
+The architecture page is [](../20-architecture/provenance.md).

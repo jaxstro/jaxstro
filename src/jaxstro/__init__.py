@@ -21,6 +21,7 @@ from . import (
     params,
     provenance,
     quantity,
+    spatial,
     testing,
     units,
 )
@@ -38,6 +39,7 @@ __all__ = [
     "params",
     "provenance",
     "quantity",
+    "spatial",
     "testing",
 ]
 __version__ = "0.1.0"

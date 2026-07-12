@@ -1,19 +1,17 @@
 # jaxstro — status
 
-next: Present the Slice C6 API-reference page card for Anna's explicit approval, including the
-eager top-level `spatial` ownership decision. Do not edit code or `docs/40-api/index.md` before
-that approval.
+next: Present the Slice C7 spatial-theory page card for Anna's explicit approval. Do not create
+`docs/10-theory/spatial.md`, change navigation, or add its deterministic example before approval.
 
-previous: Slice C5 science-general-vision hardening completed locally (2026-07-11). The stale
-future-module table is now an import-backed delivered map for nine existing modules; genuine
-future additions must pass domain, ownership, transform-boundary, and evidence criteria. The
-page keeps current units, deferred quantity adoption, active Startrax, and planned Stellax
-explicit, and reuses rather than duplicates the C4 figure. Four focused tests pass in 0.62 s;
-strict MyST builds 58 pages in 4.00 s; rendered `/science-general-vision` has 9 delivered rows,
-11 resolved routes, and registered table/figure xrefs. Nothing has been pushed.
+previous: Slice C6 API-reference hardening completed locally (2026-07-11). Approved additive
+ownership makes `spatial` an eager top-level attribute and `__all__` member. The API page now
+has a 13-row structured module map with ownership, runtime/preprocessing boundary, and evidence
+status; current units/deferred quantity, in-progress atmospheres, method-scoped transforms, and
+card-versus-runtime provenance are explicit. Five focused tests pass in 1.19 s; strict MyST
+builds 58 pages in 4.30 s; rendered `/index-5` has 4 fields per row, 7 evidence routes, and a
+registered table xref. Nothing has been pushed.
 
-blocker: None for Slice C6 once Anna approves its website page card and the spatial ownership
-decision. Tag/release/PyPI remain
+blocker: None for Slice C7 once Anna approves its website page card. Tag/release/PyPI remain
 held on Anna's permanent package-name decision.
 due:
 
