@@ -450,6 +450,14 @@ class TestSafeguardedBracketPrimitives:
         assert proposal.kind == rootfinding.PROPOSAL_SECANT
         assert not bool(proposal.safeguarded)
 
+    def test_integer_endpoint_evidence_promotes_to_inexact_dtype(self):
+        state = rootfinding.initialize_bracket(0, 3, -2, 1)
+        proposal = rootfinding.propose_bracketed(state, safeguard_fraction=0.1)
+
+        assert jnp.issubdtype(state.lo.dtype, jnp.inexact)
+        assert proposal.x == pytest.approx(2.0)
+        assert proposal.kind == rootfinding.PROPOSAL_SECANT
+
     @pytest.mark.parametrize(
         "state",
         [
@@ -600,6 +608,44 @@ class TestSafeguardedBracketedRoot:
         assert bool(result.trace.executed[0])
         assert not bool(result.trace.converged[0])
 
+    def test_width_convergence_returns_evaluated_point_inside_final_bracket(self):
+        def residual(x):
+            scale = 0.05 + 25.0 * jnp.exp(-(((x - 0.25) / 0.1) ** 2))
+            scale += 0.95 / (1.0 + jnp.exp(-20.0 * (x - 0.5)))
+            return (x - 1.3) * scale
+
+        result = self._solve(
+            residual,
+            lo=0.0,
+            hi=2.0,
+            max_steps=16,
+            atol=0.5,
+            rtol=0.0,
+        )
+        executed = result.trace.executed
+        final_lo = result.trace.lo[executed][-1]
+        final_hi = result.trace.hi[executed][-1]
+
+        assert bool(result.converged)
+        assert final_lo <= result.root <= final_hi
+        assert abs(float(result.root) - 1.3) <= 0.5
+        assert result.residual == pytest.approx(float(residual(result.root)))
+
+    def test_initially_tolerance_certified_bracket_executes_no_scan_evaluation(self):
+        result = self._solve(
+            lambda x: x - 1.0,
+            lo=0.9999999,
+            hi=1.0000001,
+            max_steps=8,
+            atol=1.0e-6,
+            rtol=0.0,
+        )
+
+        assert bool(result.converged)
+        assert int(result.n_evaluations) == 2
+        assert not bool(jnp.any(result.trace.executed))
+        assert 0.9999999 <= result.root <= 1.0000001
+
     def test_exact_interior_root_and_post_update_bracket_are_recorded(self):
         result = self._solve(lambda x: x - 2.0, max_steps=4)
 
@@ -660,7 +706,7 @@ class TestSafeguardedBracketedRoot:
             residual,
             lo=0.0,
             hi=2.0,
-            max_steps=1,
+            max_steps=8,
             atol=0.0,
             rtol=0.0,
             safeguard_fraction=0.49,
@@ -668,7 +714,16 @@ class TestSafeguardedBracketedRoot:
 
         assert bool(result.trace.executed[0])
         assert not bool(result.trace.admissible[0])
+        assert int(jnp.sum(result.trace.executed)) == 1
+        assert int(result.n_evaluations) == 3
         assert not bool(result.converged)
+
+    def test_integer_endpoints_return_typed_float_failure_or_root_evidence(self):
+        result = self._solve(lambda x: x**2 - 2, lo=0, hi=2, max_steps=64)
+
+        assert jnp.issubdtype(result.root.dtype, jnp.inexact)
+        assert bool(result.converged)
+        assert result.root == pytest.approx(float(jnp.sqrt(2.0)), abs=2.0e-10)
 
     def test_no_function_evaluations_occur_after_convergence(self):
         calls = []

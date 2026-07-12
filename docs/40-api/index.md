@@ -194,8 +194,38 @@ are B3 conversion constants, not measurements of the time-varying Sun.
 ### `jaxstro.numerics.rootfinding`
 
 `bracket_expand`, `bisect`, `bisect_many`, `newton`, `newton_with_grad`,
-`newton_ppf`, and `monotone_inverse_interp`. Behavior, the differentiability
-caveats, and when to use each are in [](../10-theory/rootfinding.md).
+`newton_ppf`, and `monotone_inverse_interp`. The value-first safeguarded surface
+exports `BracketState`, `BracketProposal`, `RootTrace`, `BracketedRootResult`,
+`initialize_bracket`, `update_bracket`, `propose_bracketed`, and
+`safeguarded_bracketed_root`, with deterministic `PROPOSAL_NONE`,
+`PROPOSAL_SECANT`, `PROPOSAL_MIDPOINT`, `PROPOSAL_LO_ENDPOINT`, and
+`PROPOSAL_HI_ENDPOINT` identifiers. It exposes fixed-shape evidence and typed
+failure state but makes no implicit-root derivative claim. Behavior, field
+definitions, and differentiability caveats are in [](../10-theory/rootfinding.md).
+
+```python
+initialize_bracket(lo, hi, f_lo, f_hi) -> BracketState
+update_bracket(state, x, fx, *, valid=True) -> BracketState
+propose_bracketed(state, *, safeguard_fraction=0.1) -> BracketProposal
+safeguarded_bracketed_root(
+    f,
+    lo,
+    hi,
+    *,
+    max_steps,
+    atol=0.0,
+    rtol=1.0e-8,
+    safeguard_fraction=0.1,
+) -> BracketedRootResult
+```
+
+`BracketState` fields are `lo`, `hi`, `f_lo`, `f_hi`, and `bracketed`.
+`BracketProposal` fields are `x`, `kind`, and `safeguarded`; the last field is
+true exactly when midpoint fallback replaced a rejected secant. `RootTrace`
+fields are `proposal`, `residual`, `lo`, `hi`, `f_lo`, `f_hi`,
+`proposal_kind`, `executed`, `admissible`, and `converged`.
+`BracketedRootResult` fields are `root`, `residual`, `converged`, `bracketed`,
+`n_evaluations`, and `trace`.
 
 ### `jaxstro.numerics.interpolation`
 

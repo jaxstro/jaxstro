@@ -7,8 +7,9 @@ functions (bisection) or well-behaved functions with good initial
 guesses (Newton). For large systems or more sophisticated solves,
 prefer optimistix / lineax.
 
-All functions use lax.scan internally with fixed iteration counts,
-making them fully compatible with jit, vmap, and grad.
+Iterative functions use fixed-length ``lax.scan`` and compose with ``jit`` and
+``vmap``. Differentiability is solver-specific: branch-selected bracketing
+methods are value-first and do not provide implicit-root derivatives.
 
 Usage:
     @jax.jit
@@ -18,8 +19,7 @@ Usage:
     # Works with vmap
     jax.vmap(solve)(a_arr, b_arr)
 
-    # Works with grad (differentiating through the solver)
-    jax.grad(lambda a: solve(a, 2.0))(1.0)
+    # Use Newton when a validated smooth iterative derivative is required.
 """
 
 from typing import Callable, NamedTuple, Optional, Union
@@ -50,7 +50,7 @@ class BracketState(NamedTuple):
 
 
 class BracketProposal(NamedTuple):
-    """A deterministic interpolation or safeguarded midpoint proposal."""
+    """A proposal whose ``safeguarded`` flag means midpoint fallback was used."""
 
     x: Float[Array, "..."]
     kind: Array
@@ -88,6 +88,7 @@ class _RootCarry(NamedTuple):
     best_x: Float[Array, ""]
     best_fx: Float[Array, ""]
     converged: Array
+    exhausted: Array
 
 
 def _raise_if_concrete_false(predicate, message: str) -> None:
@@ -97,6 +98,18 @@ def _raise_if_concrete_false(predicate, message: str) -> None:
         raise ValueError(message)
 
 
+def _normalize_bracket_state(state: BracketState) -> BracketState:
+    """Convert direct NamedTuple construction to inexact JAX evidence arrays."""
+    dtype = jnp.result_type(state.lo, state.hi, state.f_lo, state.f_hi, 0.0)
+    return BracketState(
+        jnp.asarray(state.lo, dtype=dtype),
+        jnp.asarray(state.hi, dtype=dtype),
+        jnp.asarray(state.f_lo, dtype=dtype),
+        jnp.asarray(state.f_hi, dtype=dtype),
+        jnp.asarray(state.bracketed, dtype=bool),
+    )
+
+
 def initialize_bracket(
     lo: Union[float, Float[Array, "..."]],
     hi: Union[float, Float[Array, "..."]],
@@ -104,7 +117,7 @@ def initialize_bracket(
     f_hi: Union[float, Float[Array, "..."]],
 ) -> BracketState:
     """Build typed bracket evidence from already-evaluated endpoints."""
-    dtype = jnp.result_type(lo, hi, f_lo, f_hi)
+    dtype = jnp.result_type(lo, hi, f_lo, f_hi, 0.0)
     lo = jnp.asarray(lo, dtype=dtype)
     hi = jnp.asarray(hi, dtype=dtype)
     f_lo = jnp.asarray(f_lo, dtype=dtype)
@@ -129,6 +142,7 @@ def update_bracket(
     ``valid=False`` is an exact no-op. This lets a caller exclude a trial whose
     residual is finite but whose external state is inadmissible.
     """
+    state = _normalize_bracket_state(state)
     x = jnp.asarray(x, dtype=state.lo.dtype)
     fx = jnp.asarray(fx, dtype=state.f_lo.dtype)
     admissible = jnp.asarray(valid, dtype=bool) & state.bracketed
@@ -162,14 +176,7 @@ def propose_bracketed(
     and it leaves at least ``safeguard_fraction`` of the current width on both
     sides. Otherwise the midpoint is returned with ``safeguarded=True``.
     """
-    dtype = jnp.result_type(state.lo, state.hi, state.f_lo, state.f_hi)
-    state = BracketState(
-        jnp.asarray(state.lo, dtype=dtype),
-        jnp.asarray(state.hi, dtype=dtype),
-        jnp.asarray(state.f_lo, dtype=dtype),
-        jnp.asarray(state.f_hi, dtype=dtype),
-        jnp.asarray(state.bracketed, dtype=bool),
-    )
+    state = _normalize_bracket_state(state)
     fraction = jnp.asarray(safeguard_fraction, dtype=state.lo.dtype)
     _raise_if_concrete_false(
         jnp.all((fraction >= 0.0) & (fraction < 0.5)),
@@ -224,10 +231,12 @@ def safeguarded_bracketed_root(
 
     The scan length is static, but ``f`` is evaluated inside ``lax.cond`` only
     while a verified bracket remains unconverged. Convergence means an exact
-    zero residual or a bracket half-width no larger than
-    ``atol + rtol * abs(best_x)``. Exhaustion returns the best finite evaluated
-    point with ``converged=False``. A missing initial bracket returns NaN root
-    evidence, never a fabricated solution.
+    zero residual or a bracket width no larger than
+    ``atol + rtol * abs(best_x)``. Exhaustion returns the evaluated final-bracket
+    endpoint with smaller absolute residual and ``converged=False``. A nonfinite
+    interior evaluation exhausts the lane immediately instead of repeating the
+    same expensive trial. A missing initial bracket returns NaN root evidence,
+    never a fabricated solution.
 
     This is a value-first branch-selected numerical map. It does not implement
     implicit differentiation and makes no derivative claim for parameters
@@ -236,8 +245,9 @@ def safeguarded_bracketed_root(
     if max_steps < 1:
         raise ValueError("max_steps must be at least 1")
 
-    lo = jnp.asarray(lo)
-    hi = jnp.asarray(hi)
+    endpoint_dtype = jnp.result_type(lo, hi, 0.0)
+    lo = jnp.asarray(lo, dtype=endpoint_dtype)
+    hi = jnp.asarray(hi, dtype=endpoint_dtype)
     f_lo = jnp.asarray(f(lo))
     f_hi = jnp.asarray(f(hi))
     bracket = initialize_bracket(lo, hi, f_lo, f_hi)
@@ -250,11 +260,19 @@ def safeguarded_bracketed_root(
     best_x = jnp.where(hi_is_better, bracket.hi, bracket.lo)
     best_fx = jnp.where(hi_is_better, bracket.f_hi, bracket.f_lo)
     endpoint_root = bracket.bracketed & (best_fx == 0.0)
-    initial = _RootCarry(bracket, best_x, best_fx, endpoint_root)
+    initial_tolerance = atol + rtol * jnp.abs(best_x)
+    width_certified = bracket.bracketed & (bracket.hi - bracket.lo <= initial_tolerance)
+    initial = _RootCarry(
+        bracket,
+        best_x,
+        best_fx,
+        endpoint_root | width_certified,
+        jnp.asarray(False, dtype=bool),
+    )
     nan = jnp.asarray(jnp.nan, dtype=bracket.lo.dtype)
 
     def scan_step(carry: _RootCarry, _):
-        active = carry.bracket.bracketed & ~carry.converged
+        active = carry.bracket.bracketed & ~carry.converged & ~carry.exhausted
         proposal = propose_bracketed(
             carry.bracket, safeguard_fraction=safeguard_fraction
         )
@@ -267,17 +285,18 @@ def safeguarded_bracketed_root(
         admissible = executed & jnp.isfinite(fx)
         updated = update_bracket(carry.bracket, proposal.x, fx, valid=admissible)
 
-        better = admissible & (jnp.abs(fx) < jnp.abs(carry.best_fx))
-        best_x_new = jnp.where(better, proposal.x, carry.best_x)
-        best_fx_new = jnp.where(better, fx, carry.best_fx)
+        hi_is_better = jnp.abs(updated.f_hi) < jnp.abs(updated.f_lo)
+        best_x_new = jnp.where(hi_is_better, updated.hi, updated.lo)
+        best_fx_new = jnp.where(hi_is_better, updated.f_hi, updated.f_lo)
         tolerance = atol + rtol * jnp.abs(best_x_new)
-        width_converged = admissible & (updated.hi - updated.lo <= 2.0 * tolerance)
+        width_converged = admissible & (updated.hi - updated.lo <= tolerance)
         converged_now = active & ((admissible & (fx == 0.0)) | width_converged)
         next_carry = _RootCarry(
             updated,
             best_x_new,
             best_fx_new,
             carry.converged | converged_now,
+            carry.exhausted | (executed & ~admissible),
         )
 
         proposal_x = jnp.where(executed, proposal.x, nan)

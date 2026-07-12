@@ -86,3 +86,30 @@ def test_interpolation_reference_does_not_duplicate_symbol_descriptions() -> Non
 
     assert text.count("`pchip_slopes(...)`") == 1
     assert text.count("`monotone_cubic_interp(...)`") == 1
+
+
+def test_safeguarded_rootfinding_public_surface_is_documented_and_executable() -> None:
+    symbols = (
+        "PROPOSAL_NONE",
+        "PROPOSAL_SECANT",
+        "PROPOSAL_MIDPOINT",
+        "PROPOSAL_LO_ENDPOINT",
+        "PROPOSAL_HI_ENDPOINT",
+        "BracketState",
+        "BracketProposal",
+        "RootTrace",
+        "BracketedRootResult",
+        "initialize_bracket",
+        "update_bracket",
+        "propose_bracketed",
+        "safeguarded_bracketed_root",
+    )
+    text = _api_text()
+
+    for symbol in symbols:
+        assert getattr(jaxstro.numerics, symbol) is not None
+        assert symbol in jaxstro.numerics.__all__
+        assert f"`{symbol}" in text
+
+    assert "value-first" in text
+    assert "implicit-root derivative" in text

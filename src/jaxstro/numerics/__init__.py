@@ -188,10 +188,23 @@ from .random import (
 )
 from .regular_grid import bilinear_interp, regular_grid_interp, trilinear_interp
 from .rootfinding import (
+    PROPOSAL_HI_ENDPOINT,
+    PROPOSAL_LO_ENDPOINT,
+    PROPOSAL_MIDPOINT,
+    PROPOSAL_NONE,
+    PROPOSAL_SECANT,
+    BracketedRootResult,
+    BracketProposal,
+    BracketState,
+    RootTrace,
     bisect_many,
     bracket_expand,
+    initialize_bracket,
     monotone_inverse_interp,
     newton_ppf,
+    propose_bracketed,
+    safeguarded_bracketed_root,
+    update_bracket,
 )
 from .sampling import inverse_cdf_draw, stratified_uniform
 from .special import (
@@ -234,6 +247,19 @@ __all__ = [
     "eval_cubic_spline",
     "NaturalCubicSpline1D",
     "rootfinding",
+    "PROPOSAL_NONE",
+    "PROPOSAL_SECANT",
+    "PROPOSAL_MIDPOINT",
+    "PROPOSAL_LO_ENDPOINT",
+    "PROPOSAL_HI_ENDPOINT",
+    "BracketState",
+    "BracketProposal",
+    "RootTrace",
+    "BracketedRootResult",
+    "initialize_bracket",
+    "update_bracket",
+    "propose_bracketed",
+    "safeguarded_bracketed_root",
     "bracket_expand",
     "bisect_many",
     "newton_ppf",

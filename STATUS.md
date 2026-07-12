@@ -1,16 +1,14 @@
 # jaxstro — status
 
-next: In the next session, review current upstream GitHub action releases and remove the Node 20
-deprecation warning without weakening the Pages gate. Then preserve the live public-hardening
-baseline; tagging, archives, and package-index publication remain deferred for Anna to do later.
+next: Complete the separate finite power-law alpha=-1 smooth-derivative TDD slice, then hand the
+committed safeguarded rootfinding API to Gravax for P²MSM endpoint-clock integration. The Pages
+Node-action maintenance remains queued behind this numerics work.
 
-previous: Spectra-v1 completed on local main (2026-07-12). Real-artifact holdouts accept
-positive-log interpolation for NewEra and linear interpolation for representative BOSZ/OSTAR;
-Sonora and BSTAR remain POLICY_NOT_VALIDATED under the strict no-secondary-regression rule. The
-real-artifact/AD/interoperability gate passes, and cached NewEra artifact validation reduced measured
-host preparation from 10.303 s to 1.031 s under tracemalloc. The hard cutover deleted the old
-jaxstro.atmospheres.spectra owner and updated the 60-page website. The full local release gate passed
-in 259.77 s wall time, including 1,068 core tests, 110 ML-integration tests, and wheel smoke.
+previous: Safeguarded scalar rootfinding completed on local main (2026-07-12). Jaxstro now owns
+typed sign-bracket evidence, deterministic guarded secant/midpoint proposals, fixed-shape trace and
+result types, and a value-first fixed-scan wrapper. Scalar execution stops residual evaluations after
+convergence or nonfinite exhaustion; VMAP preserves values/shapes but not a physical per-lane cost
+mask, so expensive batched callers should use lax.map. No IFT/custom-root derivative was added.
 
 public-hardening: Slices A, D0, B, and C are complete. Local Slice D now has a least-privilege
 Pages workflow, a `/jaxstro` base-path gate that validates 61 rendered routes, public citation and
@@ -26,7 +24,8 @@ CSS. The first run's 404 exposed and permanently ratcheted the `_build/site` ver
 artifact boundary.
 
 blocker: None. The website is live. Maintenance debt: GitHub notes that older action tags are being
-forced from Node 20 to Node 24; review upstream action majors next session. Tag/PyPI work is deferred.
+forced from Node 20 to Node 24; review upstream action majors after the numerics handoff. Tag/PyPI
+work is deferred.
 due:
 
 ## Phase C — DONE (2026-06-17, branch feature/phase-c-release-hardening, HEAD 40f936e)

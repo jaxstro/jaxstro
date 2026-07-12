@@ -200,6 +200,17 @@ from jaxstro.numerics import rootfinding
 # Find √2 via bisection
 root = rootfinding.bisect(lambda x: x**2 - 2.0, a=1.0, b=2.0)
 
+# Auditable value-first solve with typed failure state and a fixed trace
+result = rootfinding.safeguarded_bracketed_root(
+    lambda x: x**2 - 2.0,
+    1.0,
+    2.0,
+    max_steps=64,
+    atol=1e-12,
+    rtol=1e-12,
+    safeguard_fraction=0.1,
+)
+
 # Newton's method (auto-differentiated)
 root = rootfinding.newton(lambda x: x**2 - 2.0, x0=1.5)
 ```
@@ -372,7 +383,8 @@ from jaxstro.params import (
 <summary><b>jaxstro.numerics</b> — Numerical utilities</summary>
 
 - `stats` — `safe_log`, `safe_exp`, `safe_div`, `logsumexp`
-- `rootfinding` — `bisect`, `newton`, `newton_with_grad`
+- `rootfinding` — `bisect`, safeguarded bracket primitives,
+  `safeguarded_bracketed_root`, `newton`, `newton_with_grad`
 - `interpolation` — `interp1d`, `TabulatedFunction1D`
 - `integration` — `trapz`, `cumulative_trapz`, `simpson`
 - `checks` — `all_finite`, `is_monotonic`, `in_range`

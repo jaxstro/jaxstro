@@ -23,9 +23,11 @@ hatchling build, `uv.lock` pinned.
 **Design principles:**
 
 - **Infrastructure only** — no domain-specific physics simulations.
-- **JAX-native** — every public function must work under `jit`, `vmap`, `grad`.
-- **AD-safe** — primitives are written so gradients are finite and correct, not just
-  the forward value (see "AD-safe numerics" below).
+- **JAX-native** — public numerical kernels state their `jit`, `vmap`, and AD
+  contracts explicitly; transformability is not treated as a derivative claim.
+- **AD-safe where claimed** — smooth primitives have finite, correct gradients;
+  branch-selected value-first solvers document that they do not provide an
+  implicit-root derivative (see "AD-safe numerics" below).
 - **Minimal core deps** — `jax`, `jaxlib`, `equinox`, `jaxtyping` (equinox is a core
   dep per ADR-0002; optax/numpyro live behind the `[ml]` extra).
 - **Provenance** — every physical constant cites its authority (CODATA / IAU / a paper).
@@ -86,7 +88,7 @@ src/jaxstro/
 │   ├── types.py         # Type aliases (Array, ScalarFn)
 │   ├── stats.py         # safe_log/exp/div, logsumexp, convergence
 │   ├── interpolation.py # interp1d, TabulatedFunction1D (pytree)
-│   ├── rootfinding.py   # bisect, newton, newton_with_grad, newton_ppf (lax.scan)
+│   ├── rootfinding.py   # fixed-scan bisection, safeguarded hybrid, Newton, PPF
 │   ├── integration.py   # trapz, cumulative_trapz, simpson
 │   ├── quadrature.py    # Gauss-Legendre / Gauss-Hermite (probabilists') + Hermite-e
 │   ├── sampling.py      # inverse_cdf_draw and reparameterized sampling helpers
@@ -139,7 +141,7 @@ G = us.G  # G in this unit system
 from jaxstro.coords import sky_tangent, galactic_to_equatorial
 ra_dec = sky_tangent(positions_pc, distance_pc=1000.0)
 
-# Differentiable root-finding (fixed-iteration lax.scan; jit/vmap/grad-safe)
+# Root-finding (fixed-scan; see each solver's explicit AD contract)
 from jaxstro.numerics import rootfinding
 root = rootfinding.newton(lambda x: x**2 - 2.0, x0=1.5)
 
@@ -179,10 +181,13 @@ additive `pdf_floor`.)
 ### 2. Fixed-iteration `lax.scan`, never `while_loop`
 
 Convergence loops (`lax.while_loop`) are **not differentiable**. Every iterative solver
-here (`bisect`, `newton`, `newton_with_grad`, `newton_ppf`) runs a **fixed** number of
-`lax.scan` steps and does not terminate early — so `jax.grad` flows through every
-iteration and the iteration count is a static compile-time constant. When adding a new
-iterative primitive, use `lax.scan` with a fixed `length`, not a convergence test.
+here uses a **fixed** number of `lax.scan` slots, so the iteration count and trace shape
+remain static. Smooth Newton paths execute every slot; the value-first safeguarded root
+solver masks converged slots with `lax.cond`, so its expensive residual is not evaluated
+again in scalar execution. Under `vmap`, JAX may lower batched `cond` to select-style
+execution; use `lax.map` when physical per-lane skipping matters. When adding a new
+iterative primitive, use `lax.scan` with fixed `length`, not a `while_loop` convergence
+test.
 
 ### 3. Saturation is a silent gradient killer
 
@@ -295,7 +300,8 @@ Exported from `jaxstro.__init__` and submodules:
   `cartesian_to_spherical`, `spherical_to_cartesian`, `compute_parallax`,
   `compute_proper_motions`.
 - **numerics.stats** — `safe_log`, `safe_exp`, `safe_div`, `logsumexp`.
-- **numerics.rootfinding** — `bisect`, `newton`, `newton_with_grad`, `newton_ppf`.
+- **numerics.rootfinding** — `bisect`, safeguarded bracket state/proposal/trace types,
+  `safeguarded_bracketed_root`, `newton`, `newton_with_grad`, `newton_ppf`.
 - **numerics.integration** — `trapz`, `cumulative_trapz`, `simpson`.
 - **numerics.quadrature** — `gauss_legendre_nodes`, `gauss_hermite_nodes`,
   `hermite_e_basis`, `hermite_coefficients`.

@@ -1,0 +1,290 @@
+{
+  "cases": [
+    {
+      "bracket": [
+        0.0,
+        4.0
+      ],
+      "methods": {
+        "bisection": {
+          "executed_iterations": {
+            "unit": "iterations",
+            "value": 48
+          },
+          "final_absolute_residual": {
+            "unit": "function units",
+            "value": 7.105427357601002e-15
+          },
+          "final_relative_residual": {
+            "unit": "dimensionless",
+            "value": 3.552713678800501e-15
+          },
+          "function_evaluations": {
+            "unit": "evaluations",
+            "value": 50
+          },
+          "warm_wall": {
+            "unit": "s",
+            "value": 7.125083357095718e-06
+          }
+        },
+        "safeguarded_hybrid": {
+          "executed_iterations": {
+            "unit": "iterations",
+            "value": 1
+          },
+          "final_absolute_residual": {
+            "unit": "function units",
+            "value": 0.0
+          },
+          "final_relative_residual": {
+            "unit": "dimensionless",
+            "value": 0.0
+          },
+          "function_evaluations": {
+            "unit": "evaluations",
+            "value": 3
+          },
+          "warm_wall": {
+            "unit": "s",
+            "value": 2.895807847380638e-05
+          }
+        }
+      },
+      "name": "linear"
+    },
+    {
+      "bracket": [
+        0.0,
+        2.0
+      ],
+      "methods": {
+        "bisection": {
+          "executed_iterations": {
+            "unit": "iterations",
+            "value": 48
+          },
+          "final_absolute_residual": {
+            "unit": "function units",
+            "value": 2.220446049250313e-15
+          },
+          "final_relative_residual": {
+            "unit": "dimensionless",
+            "value": 1.1102230246251565e-15
+          },
+          "function_evaluations": {
+            "unit": "evaluations",
+            "value": 50
+          },
+          "warm_wall": {
+            "unit": "s",
+            "value": 7.00005330145359e-06
+          }
+        },
+        "safeguarded_hybrid": {
+          "executed_iterations": {
+            "unit": "iterations",
+            "value": 44
+          },
+          "final_absolute_residual": {
+            "unit": "function units",
+            "value": 2.390086583570937e-13
+          },
+          "final_relative_residual": {
+            "unit": "dimensionless",
+            "value": 1.1950432917854686e-13
+          },
+          "function_evaluations": {
+            "unit": "evaluations",
+            "value": 46
+          },
+          "warm_wall": {
+            "unit": "s",
+            "value": 5.070888437330723e-05
+          }
+        }
+      },
+      "name": "quadratic"
+    },
+    {
+      "bracket": [
+        0.0,
+        3.0
+      ],
+      "methods": {
+        "bisection": {
+          "executed_iterations": {
+            "unit": "iterations",
+            "value": 48
+          },
+          "final_absolute_residual": {
+            "unit": "function units",
+            "value": 5.605193857299268e-45
+          },
+          "final_relative_residual": {
+            "unit": "dimensionless",
+            "value": 7.006492321624085e-46
+          },
+          "function_evaluations": {
+            "unit": "evaluations",
+            "value": 50
+          },
+          "warm_wall": {
+            "unit": "s",
+            "value": 7.125083357095718e-06
+          }
+        },
+        "safeguarded_hybrid": {
+          "executed_iterations": {
+            "unit": "iterations",
+            "value": 3
+          },
+          "final_absolute_residual": {
+            "unit": "function units",
+            "value": 0.0
+          },
+          "final_relative_residual": {
+            "unit": "dimensionless",
+            "value": 0.0
+          },
+          "function_evaluations": {
+            "unit": "evaluations",
+            "value": 5
+          },
+          "warm_wall": {
+            "unit": "s",
+            "value": 2.8708018362522125e-05
+          }
+        }
+      },
+      "name": "flat_slope"
+    },
+    {
+      "bracket": [
+        0.0,
+        1.0
+      ],
+      "methods": {
+        "bisection": {
+          "executed_iterations": {
+            "unit": "iterations",
+            "value": 48
+          },
+          "final_absolute_residual": {
+            "unit": "function units",
+            "value": 2.1094237467877974e-15
+          },
+          "final_relative_residual": {
+            "unit": "dimensionless",
+            "value": 3.515706244646329e-15
+          },
+          "function_evaluations": {
+            "unit": "evaluations",
+            "value": 50
+          },
+          "warm_wall": {
+            "unit": "s",
+            "value": 7.082941010594368e-06
+          }
+        },
+        "safeguarded_hybrid": {
+          "executed_iterations": {
+            "unit": "iterations",
+            "value": 81
+          },
+          "final_absolute_residual": {
+            "unit": "function units",
+            "value": 1.956490525145682e-13
+          },
+          "final_relative_residual": {
+            "unit": "dimensionless",
+            "value": 3.2608175419094704e-13
+          },
+          "function_evaluations": {
+            "unit": "evaluations",
+            "value": 83
+          },
+          "warm_wall": {
+            "unit": "s",
+            "value": 2.9166927561163902e-05
+          }
+        }
+      },
+      "name": "monotone_kink"
+    },
+    {
+      "bracket": [
+        0.0,
+        1.0
+      ],
+      "methods": {
+        "bisection": {
+          "executed_iterations": {
+            "unit": "iterations",
+            "value": 48
+          },
+          "final_absolute_residual": {
+            "unit": "function units",
+            "value": 6.661338147750939e-16
+          },
+          "final_relative_residual": {
+            "unit": "dimensionless",
+            "value": 5.124106267500722e-16
+          },
+          "function_evaluations": {
+            "unit": "evaluations",
+            "value": 50
+          },
+          "warm_wall": {
+            "unit": "s",
+            "value": 7.2498805820941925e-06
+          }
+        },
+        "safeguarded_hybrid": {
+          "executed_iterations": {
+            "unit": "iterations",
+            "value": 1
+          },
+          "final_absolute_residual": {
+            "unit": "function units",
+            "value": 0.0
+          },
+          "final_relative_residual": {
+            "unit": "dimensionless",
+            "value": 0.0
+          },
+          "function_evaluations": {
+            "unit": "evaluations",
+            "value": 3
+          },
+          "warm_wall": {
+            "unit": "s",
+            "value": 2.8749927878379822e-05
+          }
+        }
+      },
+      "name": "oscillatory_fixed_point_residual"
+    }
+  ],
+  "controls": {
+    "atol": 1e-12,
+    "bisection_steps": 48,
+    "hybrid_max_steps": 96,
+    "rtol": 1e-12,
+    "safeguard_fraction": 0.1
+  },
+  "environment": {
+    "device": "cpu:0",
+    "git_revision": "9e0f74e7076a1dd8d1330511ec274d6315711253",
+    "jax_backend": "cpu",
+    "jax_version": "0.10.1",
+    "measured_at_utc": "2026-07-12T10:28:30.525698+00:00",
+    "platform": "macOS-26.1-arm64-arm-64bit-Mach-O",
+    "python_version": "3.13.7",
+    "working_tree_dirty": true
+  },
+  "precision": "float64",
+  "relative_residual_definition": "abs(f(root)) / max(abs(f(lo)), abs(f(hi)))",
+  "schema_version": 1,
+  "warm_repeats": 21
+}

@@ -20,11 +20,14 @@ runs a **fixed** number of steps under `lax.scan`.
 A convergence loop asks "are we close enough yet?" and stops when the answer is
 yes. The trip count then depends on the input values, which JAX cannot trace
 through for differentiation, and `lax.while_loop` is not reverse-mode
-differentiable at all. The alternative is to pick a step count that
-**over-converges** and run exactly that many `lax.scan` iterations every time.
+differentiable at all. The alternative is to pick a static maximum and run
+exactly that many `lax.scan` slots. A solver may still mask inactive slots with
+`lax.cond`, so a fixed trace shape does not require repeated expensive function
+evaluations after convergence.
 
-You pay for the wasted iterations and you buy a computation that is `jit`-, `vmap`-,
-and `grad`-safe. The numbers are forgiving. Bisection halves the bracket each step,
+You pay for the static trace and buy a computation that composes with `jit` and
+`vmap`. That transformability is not itself a gradient claim; each solver's AD
+contract below remains authoritative. The numbers are forgiving. Bisection halves the bracket each step,
 so 50 steps reach $2^{-50} \approx 8.9\times10^{-16}$ — full float64 precision.
 Newton converges quadratically near a smooth root, so 20–30 steps over-converge
 from a reasonable guess.
@@ -77,6 +80,119 @@ If you need $\partial x^\star/\partial\theta$ for a parameter $\theta$ inside $f
 their iterates are smooth functions of the residual and its derivative, so the
 gradient flows. Reserve `bracket_expand` and `bisect` for forward solve
 reliability, initialization, and validation masks.
+:::
+
+## Safeguarded bracket primitives — the downstream integration surface
+
+`initialize_bracket(lo, hi, f_lo, f_hi)` constructs a `BracketState` from
+already-evaluated endpoint evidence. A bracket is verified only when its
+endpoints and residuals are finite, `lo <= hi`, and the residuals have opposite
+sign bits or an endpoint is exactly zero. Sign products are deliberately
+avoided because they can overflow or underflow even for finite residuals.
+
+`update_bracket(state, x, fx, valid=True)` replaces exactly one endpoint when
+`x` is finite and inside the verified bracket and `fx` is finite. An exact
+interior root collapses both endpoints to `x`. `valid=False` returns every field
+unchanged, so a downstream solver can exclude an externally inadmissible trial
+without corrupting root evidence or moving its own expensive trial state into
+Jaxstro.
+
+`propose_bracketed(state, safeguard_fraction=0.1)` tries the secant interpolant.
+It accepts that point only when the denominator and candidate are finite, the
+point is strictly inside the bracket, and at least the requested fraction of the
+current width remains on both sides. Otherwise it returns the deterministic
+midpoint. Exact endpoints take priority, with the lower endpoint winning a tie.
+
+```{list-table} Proposal-kind telemetry
+:header-rows: 1
+
+* - Identifier
+  - Value
+  - Meaning
+* - `PROPOSAL_NONE`
+  - `0`
+  - Masked slot or missing bracket
+* - `PROPOSAL_SECANT`
+  - `1`
+  - Secant interpolation passed every guard; `safeguarded=False`
+* - `PROPOSAL_MIDPOINT`
+  - `2`
+  - Secant rejected; deterministic midpoint used and `safeguarded=True`
+* - `PROPOSAL_LO_ENDPOINT`
+  - `3`
+  - Exact root at the lower endpoint
+* - `PROPOSAL_HI_ENDPOINT`
+  - `4`
+  - Exact root at the upper endpoint
+```
+
+## `safeguarded_bracketed_root` — fixed trace, guarded evaluations
+
+The high-level wrapper evaluates both endpoints, verifies the bracket, and runs
+a fixed-length scan. Each active slot evaluates `f` inside `lax.cond`; missing-
+bracket, converged, and later masked slots do not execute `f`. Convergence means
+an exact residual or a full bracket width no larger than
+
+```{math}
+\mathrm{atol} + \mathrm{rtol}\,|x_{\mathrm{best}}|.
+```
+
+This is a root-coordinate tolerance: `atol` has the units of `x`, and `rtol` is
+dimensionless. The returned point is always an evaluated endpoint in the final
+verified bracket, so the full-width test certifies its coordinate error for a
+continuous sign-changing residual. Exhaustion returns the endpoint with smaller
+absolute residual but keeps `converged=False`. A nonfinite interior evaluation is recorded as executed but
+inadmissible and exhausts that lane immediately, avoiding repeated expensive
+calls at the same proposal. A missing bracket returns `root=NaN`,
+`residual=NaN`, and `bracketed=False`; it never fabricates a root.
+
+`RootTrace` records fixed-length arrays for proposal and signed residual, the
+post-update `lo`, `hi`, `f_lo`, and `f_hi`, proposal kind, and `executed`,
+`admissible`, and per-slot `converged` masks. Unused floating slots are NaN,
+unused kinds are `PROPOSAL_NONE`, and unused masks are false.
+`BracketedRootResult` returns root evidence, signed residual, convergence and
+bracket flags, function-evaluation count, and trace.
+
+The no-extra-evaluation guarantee and `n_evaluations` count describe scalar
+execution. `vmap` preserves values and fixed shapes, but JAX may batch scalar
+`lax.cond` into select-style execution that computes both branches. When a batch
+contains expensive residuals and physical per-lane skipping matters, map the
+scalar solver with `lax.map` rather than relying on `vmap` to preserve the cost
+mask.
+
+```python
+from jaxstro.numerics import safeguarded_bracketed_root
+
+result = safeguarded_bracketed_root(
+    lambda x: x**2 - 2.0,
+    0.0,
+    2.0,
+    max_steps=64,
+    atol=1.0e-12,
+    rtol=1.0e-12,
+    safeguard_fraction=0.1,
+)
+assert result.converged
+```
+
+The reproducible evaluation-count and warm-timing comparison with fixed-count
+bisection is stored in [](../validation/rootfinding-performance.json). The
+benchmark treats function-evaluation count as the primary algorithmic cost and
+does not impose a hardware-dependent wall-time threshold. The kinked case is an
+important counterexample: the safeguarded hybrid is robust but can require more
+evaluations than fixed-count bisection when secant interpolation is repeatedly
+rejected for inadequate progress.
+
+:::{warning} Value-first means no implicit-root derivative claim
+The executed secant/midpoint branch history is a numerical map, not an
+implicit-root derivative. No gradient claim is made for parameters captured by
+`f`, even if `jax.grad` returns a finite number for a particular execution. This
+API does not use `lax.custom_root` and does not implement an IFT derivative.
+
+A future implicit API needs separate gates for a unique root, a smooth selected
+branch, acceptable conditioning, tighter residuals, and finite-difference
+agreement. Those gates matter especially when an application accepts a finite-
+residual approximate root rather than the ideal mathematical root.
 :::
 
 ## `newton` and `newton_with_grad` — smooth iterates, real gradients
@@ -151,14 +267,6 @@ The function validates concrete tables eagerly. Under `jit`, value-dependent
 validation cannot raise on tracers, so production callers should build tables
 once and keep the monotonicity contract explicit.
 
-## Brent-like solvers: deferred until the AD policy is honest
-
-Hybrid Brent-style methods mix interpolation, bisection, and convergence-driven
-branching. They are excellent forward solvers, but their branch history is not a
-smooth mathematical map. jaxstro does not ship a Brent wrapper in this slice. If
-one is added later, it should be documented as value-first unless it carries a
-specific implicit-differentiation or custom-VJP policy.
-
 ## What to reach for
 
 ```{list-table} Choosing a 1-D solver
@@ -174,6 +282,12 @@ specific implicit-differentiation or custom-VJP policy.
 * - a sign-bracketed root, robustness matters
   - `bisect`
   - No w.r.t. function parameters
+* - an expensive sign-bracketed root with auditable failure state
+  - `safeguarded_bracketed_root`
+  - No implicit-root derivative claim; value-first
+* - a downstream solver that owns trial admissibility and expensive state
+  - `initialize_bracket` + `propose_bracketed` + `update_bracket`
+  - No implicit-root derivative claim; value-first
 * - many independent sign-bracketed roots
   - `bisect_many`
   - No w.r.t. function parameters
