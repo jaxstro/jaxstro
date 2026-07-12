@@ -199,7 +199,10 @@ exports `BracketState`, `BracketProposal`, `RootTrace`, `BracketedRootResult`,
 `initialize_bracket`, `update_bracket`, `propose_bracketed`, and
 `safeguarded_bracketed_root`, with deterministic `PROPOSAL_NONE`,
 `PROPOSAL_SECANT`, `PROPOSAL_MIDPOINT`, `PROPOSAL_LO_ENDPOINT`, and
-`PROPOSAL_HI_ENDPOINT` identifiers. Terminal status identifiers are
+`PROPOSAL_HI_ENDPOINT`, and `PROPOSAL_INVERSE_QUADRATIC` identifiers. The
+checkpointable low-level step surface additionally exports `BracketHistory`,
+`BracketedRootState`, `initialize_bracketed_root_state`, and
+`advance_bracketed_root`. Terminal status identifiers are
 `ROOT_STATUS_RUNNING`, `ROOT_STATUS_EXACT_LO`, `ROOT_STATUS_EXACT_HI`,
 `ROOT_STATUS_EXACT_INTERIOR`, `ROOT_STATUS_WIDTH_CONVERGED`,
 `ROOT_STATUS_MISSING_BRACKET`, `ROOT_STATUS_NONFINITE_EVALUATION`, and
