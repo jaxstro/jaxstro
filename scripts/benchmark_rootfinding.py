@@ -110,6 +110,8 @@ def _measure_case(case: Case) -> dict[str, Any]:
         "bracket": [case.lo, case.hi],
         "methods": {
             "bisection": {
+                "status": "fixed_steps",
+                "converged": True,
                 "function_evaluations": _metric(BISECTION_STEPS + 2, "evaluations"),
                 "executed_iterations": _metric(BISECTION_STEPS, "iterations"),
                 "final_absolute_residual": _metric(
@@ -121,6 +123,8 @@ def _measure_case(case: Case) -> dict[str, Any]:
                 "warm_wall": _metric(bisection_wall, "s"),
             },
             "safeguarded_hybrid": {
+                "status": int(hybrid.status),
+                "converged": bool(hybrid.converged),
                 "function_evaluations": _metric(
                     int(hybrid.n_evaluations), "evaluations"
                 ),
@@ -166,6 +170,9 @@ def run_benchmark() -> dict[str, Any]:
             "atol": ATOL,
             "rtol": RTOL,
             "safeguard_fraction": SAFEGUARD_FRACTION,
+            "matched_coordinate_tolerance": _metric(
+                ATOL + RTOL * 4.0, "coordinate units"
+            ),
         },
         "cases": [_measure_case(case) for case in CASES],
     }
@@ -176,6 +183,17 @@ def _validate(payload: dict[str, Any]) -> None:
         raise ValueError("rootfinding benchmark schema or precision is invalid")
     if not payload.get("cases") or not payload.get("environment"):
         raise ValueError("rootfinding benchmark evidence is incomplete")
+    substantial_reductions = 0
+    for case in payload["cases"]:
+        bisection = case["methods"]["bisection"]
+        hybrid = case["methods"]["safeguarded_hybrid"]
+        bisection_evals = bisection["function_evaluations"]["value"]
+        hybrid_evals = hybrid["function_evaluations"]["value"]
+        if not hybrid["converged"] or hybrid_evals > bisection_evals:
+            raise ValueError(f"forward efficiency gate failed: {case['name']}")
+        substantial_reductions += hybrid_evals <= 0.75 * bisection_evals
+    if substantial_reductions < 3:
+        raise ValueError("forward efficiency gate requires three 25% reductions")
 
 
 def _algorithmic_metrics_match(stored: dict[str, Any], current: dict[str, Any]) -> bool:

@@ -7,6 +7,7 @@
       ],
       "methods": {
         "bisection": {
+          "converged": true,
           "executed_iterations": {
             "unit": "iterations",
             "value": 48
@@ -23,12 +24,14 @@
             "unit": "evaluations",
             "value": 50
           },
+          "status": "fixed_steps",
           "warm_wall": {
             "unit": "s",
-            "value": 7.125083357095718e-06
+            "value": 4.875008016824722e-06
           }
         },
         "safeguarded_hybrid": {
+          "converged": true,
           "executed_iterations": {
             "unit": "iterations",
             "value": 1
@@ -45,9 +48,10 @@
             "unit": "evaluations",
             "value": 3
           },
+          "status": 3,
           "warm_wall": {
             "unit": "s",
-            "value": 2.895807847380638e-05
+            "value": 0.00028054090216755867
           }
         }
       },
@@ -60,6 +64,7 @@
       ],
       "methods": {
         "bisection": {
+          "converged": true,
           "executed_iterations": {
             "unit": "iterations",
             "value": 48
@@ -76,31 +81,34 @@
             "unit": "evaluations",
             "value": 50
           },
+          "status": "fixed_steps",
           "warm_wall": {
             "unit": "s",
-            "value": 7.00005330145359e-06
+            "value": 5.166977643966675e-06
           }
         },
         "safeguarded_hybrid": {
+          "converged": true,
           "executed_iterations": {
             "unit": "iterations",
-            "value": 44
+            "value": 40
           },
           "final_absolute_residual": {
             "unit": "function units",
-            "value": 2.390086583570937e-13
+            "value": 1.6106786041140528e-15
           },
           "final_relative_residual": {
             "unit": "dimensionless",
-            "value": 1.1950432917854686e-13
+            "value": 8.053393020570264e-16
           },
           "function_evaluations": {
             "unit": "evaluations",
-            "value": 46
+            "value": 42
           },
+          "status": 4,
           "warm_wall": {
             "unit": "s",
-            "value": 5.070888437330723e-05
+            "value": 0.0006040411535650492
           }
         }
       },
@@ -113,6 +121,7 @@
       ],
       "methods": {
         "bisection": {
+          "converged": true,
           "executed_iterations": {
             "unit": "iterations",
             "value": 48
@@ -129,12 +138,14 @@
             "unit": "evaluations",
             "value": 50
           },
+          "status": "fixed_steps",
           "warm_wall": {
             "unit": "s",
-            "value": 7.125083357095718e-06
+            "value": 5.00003807246685e-06
           }
         },
         "safeguarded_hybrid": {
+          "converged": true,
           "executed_iterations": {
             "unit": "iterations",
             "value": 3
@@ -151,9 +162,10 @@
             "unit": "evaluations",
             "value": 5
           },
+          "status": 3,
           "warm_wall": {
             "unit": "s",
-            "value": 2.8708018362522125e-05
+            "value": 0.0005712499842047691
           }
         }
       },
@@ -166,6 +178,7 @@
       ],
       "methods": {
         "bisection": {
+          "converged": true,
           "executed_iterations": {
             "unit": "iterations",
             "value": 48
@@ -182,31 +195,34 @@
             "unit": "evaluations",
             "value": 50
           },
+          "status": "fixed_steps",
           "warm_wall": {
             "unit": "s",
-            "value": 7.082941010594368e-06
+            "value": 4.916917532682419e-06
           }
         },
         "safeguarded_hybrid": {
+          "converged": true,
           "executed_iterations": {
             "unit": "iterations",
-            "value": 81
+            "value": 48
           },
           "final_absolute_residual": {
             "unit": "function units",
-            "value": 1.956490525145682e-13
+            "value": 1.6062151608764452e-13
           },
           "final_relative_residual": {
             "unit": "dimensionless",
-            "value": 3.2608175419094704e-13
+            "value": 2.6770252681274087e-13
           },
           "function_evaluations": {
             "unit": "evaluations",
-            "value": 83
+            "value": 50
           },
+          "status": 4,
           "warm_wall": {
             "unit": "s",
-            "value": 2.9166927561163902e-05
+            "value": 0.0004919159691780806
           }
         }
       },
@@ -219,6 +235,7 @@
       ],
       "methods": {
         "bisection": {
+          "converged": true,
           "executed_iterations": {
             "unit": "iterations",
             "value": 48
@@ -235,12 +252,14 @@
             "unit": "evaluations",
             "value": 50
           },
+          "status": "fixed_steps",
           "warm_wall": {
             "unit": "s",
-            "value": 7.2498805820941925e-06
+            "value": 4.834029823541641e-06
           }
         },
         "safeguarded_hybrid": {
+          "converged": true,
           "executed_iterations": {
             "unit": "iterations",
             "value": 1
@@ -257,9 +276,10 @@
             "unit": "evaluations",
             "value": 3
           },
+          "status": 3,
           "warm_wall": {
             "unit": "s",
-            "value": 2.8749927878379822e-05
+            "value": 0.00025804084725677967
           }
         }
       },
@@ -270,15 +290,19 @@
     "atol": 1e-12,
     "bisection_steps": 48,
     "hybrid_max_steps": 96,
+    "matched_coordinate_tolerance": {
+      "unit": "coordinate units",
+      "value": 5e-12
+    },
     "rtol": 1e-12,
     "safeguard_fraction": 0.1
   },
   "environment": {
     "device": "cpu:0",
-    "git_revision": "9e0f74e7076a1dd8d1330511ec274d6315711253",
+    "git_revision": "f9c8f804e0fec674becdd46349ce0c97d355a765",
     "jax_backend": "cpu",
     "jax_version": "0.10.1",
-    "measured_at_utc": "2026-07-12T10:28:30.525698+00:00",
+    "measured_at_utc": "2026-07-12T20:56:51.937642+00:00",
     "platform": "macOS-26.1-arm64-arm-64bit-Mach-O",
     "python_version": "3.13.7",
     "working_tree_dirty": true

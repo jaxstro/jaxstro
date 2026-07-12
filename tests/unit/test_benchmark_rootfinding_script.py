@@ -30,10 +30,16 @@ def test_rootfinding_benchmark_manifest_has_required_metrics_and_units() -> None
     assert payload["relative_residual_definition"] == (
         "abs(f(root)) / max(abs(f(lo)), abs(f(hi)))"
     )
+    assert (
+        payload["controls"]["matched_coordinate_tolerance"]["unit"]
+        == "coordinate units"
+    )
     assert payload["cases"]
     for case in payload["cases"]:
         assert set(case["methods"]) == {"bisection", "safeguarded_hybrid"}
         for metrics in case["methods"].values():
+            assert isinstance(metrics["status"], (int, str))
+            assert isinstance(metrics["converged"], bool)
             assert metrics["function_evaluations"]["unit"] == "evaluations"
             assert metrics["executed_iterations"]["unit"] == "iterations"
             assert metrics["final_absolute_residual"]["unit"] == "function units"

@@ -15,6 +15,7 @@ def test_brent_state_separates_bracket_from_interpolation_history() -> None:
     assert jnp.isnan(state.history.previous_x)
     assert jnp.isnan(state.history.previous_fx)
     assert jnp.isnan(state.history.previous_previous_x)
+    assert jnp.isnan(state.history.previous_step_size)
     assert not bool(state.history.initialized)
     assert state.status == rootfinding.ROOT_STATUS_RUNNING
 
@@ -55,7 +56,7 @@ def test_nonfinite_advance_preserves_evidence_and_sets_status() -> None:
 
 def test_three_distinct_points_enable_inverse_quadratic_proposal() -> None:
     bracket = rootfinding.initialize_bracket(0.0, 1.5, -2.0, 0.25)
-    history = rootfinding.BracketHistory(2.0, 2.0, 1.0, False, True)
+    history = rootfinding.BracketHistory(2.0, 2.0, 1.0, False, True, 1.0)
     state = rootfinding.BracketedRootState(
         bracket, history, rootfinding.ROOT_STATUS_RUNNING
     )
@@ -69,7 +70,7 @@ def test_three_distinct_points_enable_inverse_quadratic_proposal() -> None:
 @pytest.mark.parametrize("valid", [False, jnp.asarray(False)])
 def test_invalid_advance_does_not_change_initialized_history(valid) -> None:
     bracket = rootfinding.initialize_bracket(0.0, 2.0, -2.0, 2.0)
-    history = rootfinding.BracketHistory(1.0, -1.0, 0.0, False, True)
+    history = rootfinding.BracketHistory(1.0, -1.0, 0.0, False, True, 1.0)
     state = rootfinding.BracketedRootState(
         bracket, history, rootfinding.ROOT_STATUS_RUNNING
     )

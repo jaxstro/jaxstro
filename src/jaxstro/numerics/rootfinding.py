@@ -75,6 +75,7 @@ class BracketHistory(NamedTuple):
     previous_previous_x: Float[Array, "..."]
     previous_step_was_midpoint: Array
     initialized: Array
+    previous_step_size: Float[Array, "..."]
 
 
 class BracketedRootState(NamedTuple):
@@ -205,6 +206,7 @@ def initialize_bracketed_root_state(bracket: BracketState) -> BracketedRootState
         nan,
         jnp.asarray(False, dtype=bool),
         jnp.asarray(False, dtype=bool),
+        nan,
     )
     lo_root = bracket.bracketed & (bracket.f_lo == 0.0)
     hi_root = bracket.bracketed & ~lo_root & (bracket.f_hi == 0.0)
@@ -240,6 +242,7 @@ def propose_bracketed(
         jnp.asarray(root_state.history.previous_previous_x, dtype=bracket.lo.dtype),
         jnp.asarray(root_state.history.previous_step_was_midpoint, dtype=bool),
         jnp.asarray(root_state.history.initialized, dtype=bool),
+        jnp.asarray(root_state.history.previous_step_size, dtype=bracket.lo.dtype),
     )
     fraction = jnp.asarray(safeguard_fraction, dtype=bracket.lo.dtype)
     _raise_if_concrete_false(
@@ -282,19 +285,13 @@ def propose_bracketed(
     interpolation_kind = jnp.where(
         attempt_iqi, PROPOSAL_INVERSE_QUADRATIC, PROPOSAL_SECANT
     )
-
     in_bracket = (interpolation > bracket.lo) & (interpolation < bracket.hi)
     progress_lo = bracket.lo + fraction * width
     progress_hi = bracket.hi - fraction * width
     in_safeguard = (interpolation >= progress_lo) & (interpolation <= progress_hi)
     hi_is_better = jnp.abs(bracket.f_hi) < jnp.abs(bracket.f_lo)
     best_x = jnp.where(hi_is_better, bracket.hi, bracket.lo)
-    reference_x = jnp.where(
-        jnp.isfinite(history.previous_previous_x),
-        history.previous_previous_x,
-        best_x,
-    )
-    previous_displacement = jnp.abs(history.previous_x - reference_x)
+    previous_displacement = history.previous_step_size
     adequate_progress = jnp.abs(interpolation - best_x) < 0.5 * previous_displacement
     adequate_progress = ~history.initialized | adequate_progress
     interpolation_ok = jnp.where(attempt_iqi, True, denominator_ok)
@@ -330,19 +327,28 @@ def advance_bracketed_root(
     finite = jnp.isfinite(proposal.x) & jnp.isfinite(fx)
     in_bracket = (proposal.x >= bracket.lo) & (proposal.x <= bracket.hi)
     admissible = requested & bracket.bracketed & finite & in_bracket
+    exact = admissible & (fx == 0.0)
+    same_as_lo = jnp.signbit(fx) == jnp.signbit(bracket.f_lo)
+    discarded_x = jnp.where(same_as_lo, bracket.lo, bracket.hi)
+    discarded_fx = jnp.where(same_as_lo, bracket.f_lo, bracket.f_hi)
+    hi_is_better = jnp.abs(bracket.f_hi) < jnp.abs(bracket.f_lo)
+    best_x = jnp.where(hi_is_better, bracket.hi, bracket.lo)
     updated_bracket = update_bracket(bracket, proposal.x, fx, valid=admissible)
     history = BracketHistory(
-        jnp.where(admissible, proposal.x, state.history.previous_x),
-        jnp.where(admissible, fx, state.history.previous_fx),
-        jnp.where(
-            admissible, state.history.previous_x, state.history.previous_previous_x
-        ),
+        jnp.where(admissible & ~exact, discarded_x, state.history.previous_x),
+        jnp.where(admissible & ~exact, discarded_fx, state.history.previous_fx),
+        jnp.where(admissible, proposal.x, state.history.previous_previous_x),
         jnp.where(
             admissible,
             proposal.kind == PROPOSAL_MIDPOINT,
             state.history.previous_step_was_midpoint,
         ),
-        jnp.where(admissible, True, state.history.initialized),
+        jnp.where(admissible & ~exact, True, state.history.initialized),
+        jnp.where(
+            admissible,
+            jnp.abs(proposal.x - best_x),
+            state.history.previous_step_size,
+        ),
     )
     status = jnp.where(
         requested & ~jnp.isfinite(fx),
