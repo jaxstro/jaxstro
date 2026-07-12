@@ -15,6 +15,13 @@ This is principle [2](./index.md#p2-fixed-iteration) made concrete: a solver tha
 loops "until converged" cannot be cleanly differentiated, so every solver here
 runs a **fixed** number of steps under `lax.scan`.
 
+## Learning objectives
+
+After this chapter, you should be able to distinguish a sign-bracket guarantee
+from a plausible root estimate, interpret fixed-shape solver telemetry, and
+decide when a branch-selected value map or certified implicit derivative answers
+the scientific question.
+
 ## `lax.scan` with a fixed count, never `while_loop`
 
 A convergence loop asks "are we close enough yet?" and stops when the answer is

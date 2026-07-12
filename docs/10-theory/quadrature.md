@@ -16,6 +16,18 @@ the host, but the differentiable part is the same JAX expression every time:
 evaluate the integrand at fixed nodes and sum weighted values. This is why
 gradients flow through `f(x_i)` and not through node construction.
 
+## Learning objectives
+
+After this chapter, you should be able to match a quadrature rule to its weight
+function, state its polynomial exactness, and distinguish exactness evidence
+from convergence evidence on a non-polynomial integrand.
+
+### Concept check: count moments, not nodes alone
+
+Predict the highest polynomial degree integrated exactly by a Gaussian rule.
+Compute its moments, then audit the first degree where the exactness guarantee
+no longer applies.
+
 ## Gaussian Rules
 
 The Gaussian rules are exact for polynomials through degree `2n - 1` when using

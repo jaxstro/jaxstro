@@ -83,6 +83,18 @@ the smallest eigenvalue from `-0.03` to `0.07`. This fixed example demonstrates
 API policy; it is not a robust-regression or nearest-matrix benchmark.
 :::
 
+## Learning objectives
+
+After this chapter, you should be able to state the objective solved by weighted
+least squares, recognize conditioning evidence, and interpret diagonal jitter
+as an explicit numerical intervention rather than hidden model physics.
+
+### Concept check: what did the weights change?
+
+Predict which observations dominate a weighted fit. Compute weighted and
+unweighted solutions, then audit residuals, matrix conditioning, and units
+before claiming one fit is scientifically preferable.
+
 ## Weighted least squares
 
 `weighted_lstsq(design, y, weights=None, rcond=None)` solves

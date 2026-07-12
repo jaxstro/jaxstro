@@ -20,6 +20,17 @@ answer only after an explicit distance filter and a successful capacity check.
   contract only when `did_overflow` is false.
 :::
 
+## Learning objectives
+
+After this chapter, you should be able to separate candidate recall from exact
+geometry, interpret capacity and overflow evidence, and identify why topology
+construction is a discrete boundary rather than a differentiable interaction.
+
+### Concept check: candidate is not neighbor
+
+Predict which grid candidates fail the exact radius test. Compute both sets,
+then audit recall, symmetry, cutoff inclusion, and overflow independently.
+
 ## The pipeline
 
 ```text

@@ -32,6 +32,18 @@ visualizes one executable open-uniform configuration; it is not evidence about
 adaptive-knot quality or smoothing-model selection.
 :::
 
+## Learning objectives
+
+After this chapter, you should be able to explain local support, verify
+partition of unity, and distinguish basis construction from coefficient fitting
+and scientific regularization choices.
+
+### Concept check: local change, local effect
+
+Predict which query interval changes when one cubic-spline coefficient changes.
+Compute the basis support, then audit nonnegativity and the partition-of-unity
+sum before interpreting a fitted curve.
+
 ## The current boundary
 
 jaxstro's spline surface is deliberately fixed-knot first:

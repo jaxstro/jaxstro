@@ -12,6 +12,18 @@ and large solver stacks belong in dedicated libraries or downstream packages.
 The first slice covers explicit one-step methods for first-order systems and a
 symplectic-style velocity-Verlet helper for separable second-order systems.
 
+## Learning objectives
+
+After this chapter, you should be able to translate a model into a first-order
+system, compare fixed-step accuracy and structure, and separate differentiation
+through an integrator from evidence that its discretization is adequate.
+
+### Concept check: smaller step, stronger claim?
+
+Predict the convergence order for Euler, midpoint, and RK4 on a smooth test
+problem. Compute a step refinement, then audit observed error ratios and any
+conserved quantity relevant to the selected method.
+
 ## First-order systems
 
 The first-order API assumes a right-hand side

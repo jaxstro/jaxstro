@@ -73,6 +73,18 @@ visualization for one executable fixture, not a general interpolation-error
 benchmark.
 :::
 
+## Learning objectives
+
+After this chapter, you should be able to derive multilinear corner weights,
+separate boundary policy from interpolation arithmetic, and identify which
+preparation steps remain discrete under JAX transformations.
+
+### Concept check: outside the table
+
+Predict the value and coordinate gradient just outside a grid for clamp, fill,
+and reject policies. Compute each policy, then audit whether the observed
+gradient follows the documented policy rather than an imagined extrapolation.
+
 ## Boundary policy
 
 The boundary policy is explicit:

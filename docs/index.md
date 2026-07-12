@@ -72,6 +72,23 @@ reference covers the public modules: `units`, `constants`, `astrometry`,
 
 ::::
 
+## Scientific capabilities
+
+- **Explicit quantities and conventions.** Keep dimensions, unit systems,
+  coordinate conventions, and representation changes visible in code and
+  validation.
+- **Auditable numerical maps.** Use fixed-shape JAX kernels whose boundary,
+  failure, telemetry, and automatic-differentiation contracts are named.
+- **Events, equilibria, and inverse mappings.** Locate roots robustly, invert
+  monotone relations, and request implicit sensitivities only behind explicit
+  scientific and numerical certificates.
+- **Differentiable tabulated models.** Prepare interpolation topology outside
+  transformed kernels, then evaluate fixed-shape local stencils with tested
+  value and derivative behavior.
+- **Provenance-backed claims.** Connect constants, source artifacts, method
+  manifests, independent checks, and validation tests to the claims they
+  actually support.
+
 ## Astro-first, not astro-only
 
 The [](./10-theory/science-patterns.md) page starts from recurring research

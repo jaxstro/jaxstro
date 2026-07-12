@@ -31,6 +31,18 @@ complete local topology, converts its vertices to one requested spectral axis,
 and returns a fixed-shape PyTree. Evaluation then uses arrays only.
 :::
 
+## Learning objectives
+
+After this chapter, you should be able to separate source semantics, host-side
+preparation, and JAX evaluation; trace a spectral-density conversion; and state
+which evidence supports a prepared interpolation policy.
+
+### Concept check: what crosses the runtime boundary?
+
+Predict which metadata and topology decisions must be resolved before `jit`.
+Compute a prepared stencil evaluation, then audit units, coverage status,
+interpolation evidence, and the source-to-observable ownership chain.
+
 ## Three execution layers
 
 ```{list-table} Spectra execution and ownership boundaries

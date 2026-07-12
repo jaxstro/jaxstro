@@ -24,6 +24,18 @@ The value is the dynamic PyTree child. The unit is immutable auxiliary metadata,
 so `jax.jit`, `jax.vmap`, and `jax.grad` trace through values while dimensions and
 scale factors stay static and auditable.
 
+## Learning objectives
+
+After this chapter, you should be able to distinguish dimensions from units,
+trace a conversion through the chosen basis, and identify which parsing and
+registry operations stay outside transformed numerical kernels.
+
+### Concept check: same value, different meaning
+
+Predict whether two equal floating values with different dimensions may be
+added. Compute the valid and invalid operations, then audit both the converted
+value and the explicit dimensional error.
+
 ## Exact dimensions
 
 Dimensions are fixed exponent vectors with exact rational powers. That is why

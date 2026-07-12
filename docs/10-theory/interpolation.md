@@ -64,6 +64,18 @@ spline with natural boundary conditions. `monotone_cubic_interp(...)` computes
 PCHIP-style limited slopes from the values and then uses the same Hermite
 evaluator when avoiding overshoot is more important than global smoothness.
 
+## Learning objectives
+
+After this chapter, you should be able to choose an interpolation contract from
+the scientific shape information, predict boundary behavior, and audit local
+derivatives without treating smoothness as evidence of physical correctness.
+
+### Concept check: smooth or shape-preserving?
+
+Before plotting, predict whether a natural cubic can leave the range of monotone
+samples and whether PCHIP can. Compute both, then audit successive increments
+and range bounds rather than judging the curves by appearance.
+
 ## Boundary Policy
 
 The default policy matches `interp1d`: query points outside the grid clamp to
