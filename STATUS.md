@@ -1,7 +1,8 @@
 # jaxstro — status
 
-next: Preserve the live public-hardening baseline. The permanent distribution name is jaxstro;
-tagging, archives, and package-index publication remain deferred for Anna to do later.
+next: In the next session, review current upstream GitHub action releases and remove the Node 20
+deprecation warning without weakening the Pages gate. Then preserve the live public-hardening
+baseline; tagging, archives, and package-index publication remain deferred for Anna to do later.
 
 previous: Spectra-v1 completed on local main (2026-07-12). Real-artifact holdouts accept
 positive-log interpolation for NewEra and linear interpolation for representative BOSZ/OSTAR;
@@ -24,8 +25,8 @@ in 8 s. Live verification returned 200 for the homepage, release checklist, and 
 CSS. The first run's 404 exposed and permanently ratcheted the `_build/site` versus `_build/html`
 artifact boundary.
 
-blocker: None for the website. GitHub notes that older action tags are being forced from Node 20 to
-Node 24; update action majors when the upstream releases are reviewed. Tag/PyPI work is deferred.
+blocker: None. The website is live. Maintenance debt: GitHub notes that older action tags are being
+forced from Node 20 to Node 24; review upstream action majors next session. Tag/PyPI work is deferred.
 due:
 
 ## Phase C — DONE (2026-06-17, branch feature/phase-c-release-hardening, HEAD 40f936e)
