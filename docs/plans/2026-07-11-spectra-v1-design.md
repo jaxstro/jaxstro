@@ -184,6 +184,7 @@ metadata, but it does not stand in for an actual sampling grid:
 SpectralPlan(
     target_axis=SpectralAxis(...),
     coverage_policy="intersection",
+    point_method="linear",
 )
 ```
 
@@ -191,6 +192,50 @@ Identical grids use an exact no-remap path.  Bin-aware transformations use
 conservative remapping.  Intersection-only coverage is the default: the system
 does not extrapolate, invent values outside archive coverage, or silently fill
 missing wavelengths.
+
+### Point-resampling methods
+
+`SpectralPlan.point_method` is a static `PointResamplingMethod` with two v1
+choices:
+
+- `LINEAR` is the default.  It delegates to
+  `jaxstro.numerics.interpolation.interp1d`, is local to one interval, preserves
+  the range between adjacent samples, and does not invent spectral curvature.
+- `MONOTONE_CUBIC` is an explicit opt-in.  It delegates to
+  `jaxstro.numerics.interpolation.monotone_cubic_interp`, using the existing
+  PCHIP-style limited slopes to obtain smoother point spectra without the
+  overshoot risk of an unconstrained cubic spline.
+
+The method is never inferred from flux values, sampling density, or a runtime
+smoothness heuristic.  Equal axes still take the exact identity path regardless
+of the selected point method.  For `BIN_AVERAGES`, the point method is
+inapplicable and construction rejects a non-default point-method request;
+resampling is always `conservative_remap_1d`.  Point-to-bin, bin-to-point, and
+non-identity `BIN_INTEGRALS` remain unsupported in v1.
+
+Natural cubic, supplied-derivative Hermite, and B-spline routines remain public
+general-purpose Jaxstro numerics, but are not spectral-plan methods in v1.
+Natural cubic interpolation can overshoot or create negative flux; Hermite
+requires derivative data that `Spectrum` does not carry; B-splines introduce a
+fitting and regularization problem rather than a pure resampling operation.
+
+The gradient contract is explicitly piecewise:
+
+- linear interpolation is `smooth_pathwise` with respect to sample values and
+  an interior query while the selected interval is fixed;
+- monotone cubic interpolation is `smooth_pathwise` inside a fixed PCHIP
+  limiter branch;
+- conservative bin-average remapping is `smooth_pathwise` with respect to bin
+  values for fixed edges;
+- knots, limiter transitions, coverage boundaries, interval selection, grid
+  changes, and sampling-policy changes are validation boundaries, not globally
+  smooth inference directions.
+
+Every path records one of `resample:identity`, `resample:linear-points`,
+`resample:monotone-cubic-points`, or `resample:conservative-bin-average` in
+provenance.  Validation covers JIT, value gradients, interior query gradients,
+AD-versus-FD agreement away from boundaries, range preservation, absence of
+PCHIP overshoot, exact identity values, and bin-integral conservation.
 
 ## Parameter topology and interpolation
 
