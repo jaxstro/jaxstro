@@ -1,16 +1,16 @@
 # jaxstro — status
 
-next: Execute spectra-v1 Task 10 directly on main: implement distinct TLUSTY OSTAR2002 and
-BSTAR2006 vturb=2/vturb=10 adapters with analytic H_nu conversion.
+next: Execute spectra-v1 Task 11 directly on main: route AtmosphereLibrary selection and execution
+through exact-product adapter registry lookup with structured preparation results.
 
-previous: Spectra-v1 Task 9 completed on local main (2026-07-12). Sonora Diamondback product IDs
-separate cloud label, metallicity, and C/O planes. Processed micron wavelengths convert to nm and
-W m^-2 m^-1 flux converts to canonical per-nm CGS by 1e-6; the synthetic midpoint is
-[2.5,3.5,4.5]e-6. Released sampling changes only through the explicit SpectralPlan, and descending
-source grids are reversed without changing spectral pairing. Focused gate: 6 tests in 0.75 s
-(1.36 s wall); Ruff, format, mypy, and diff checks clean. Nothing has been pushed.
+previous: Spectra-v1 Task 10 completed on local main (2026-07-12). OSTAR2002, BSTAR2006 vturb=2,
+and BSTAR2006 vturb=10 C/N are distinct exact products. Each catalog row opens its recorded Zarr
+subgroup-local frequency grid; every vertex converts H_nu through F_nu=4*pi*H_nu and
+F_lambda=F_nu*c_nm_s/lambda_nm^2, then resamples to one common explicit plan before parameter
+interpolation. Product mismatch and noncommon coverage fail structurally. Focused gate: 9 tests in
+1.00 s (1.64 s wall); Ruff, format, mypy, and diff checks clean. Nothing has been pushed.
 
-blocker: None for spectra-v1 Task 10. Remote publication, tag/release, Pages configuration, and PyPI
+blocker: None for spectra-v1 Task 11. Remote publication, tag/release, Pages configuration, and PyPI
 remain outside this local feature branch and require separate authorization.
 due:
 

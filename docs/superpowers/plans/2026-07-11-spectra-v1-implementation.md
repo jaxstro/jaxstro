@@ -560,16 +560,16 @@ mypy, MyST.
   `F_nu=4*pi*H_nu`, `lambda=c/nu`, and
   `F_lambda=F_nu*c/lambda**2`.
 
-- [ ] **Step 1: Write failing ragged-grid and analytic conversion tests**
+- [x] **Step 1: Write failing ragged-grid and analytic conversion tests**
 
   Require preparation to load spectra from their catalog-recorded Zarr
   subgroups, resample each vertex to one explicit plan before parameter
   interpolation, and reject requests without common spectral coverage.
 
-- [ ] **Step 2: Verify RED**, implement dataset-specific adapters, and preserve
+- [x] **Step 2: Verify RED**, implement dataset-specific adapters, and preserve
   product identity and C/N flags.
 
-- [ ] **Step 3: Verify GREEN**
+- [x] **Step 3: Verify GREEN**
 
   ```bash
   env -u VIRTUAL_ENV uv run --no-sync --extra data pytest -q \
@@ -577,7 +577,7 @@ mypy, MyST.
     tests/validation/test_tlusty_interpolation_policy.py
   ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
   ```bash
   git add src/jaxstro/atmospheres/tlusty.py tests/unit/test_atmospheres_tlusty.py \

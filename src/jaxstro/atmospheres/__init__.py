@@ -58,7 +58,12 @@ from .spectra import (
     SpectrumResult,
     SpectrumStatus,
 )
-from .tlusty import TlustyFluxMetadata, parse_tlusty_float, parse_tlusty_flux_filename
+from .tlusty import (
+    TlustyBackend,
+    TlustyFluxMetadata,
+    parse_tlusty_float,
+    parse_tlusty_flux_filename,
+)
 from .topology import GridTopology, TopologyKind, TopologySelection, select_topology
 
 PathLike: TypeAlias = str | os.PathLike[str]
@@ -246,6 +251,7 @@ __all__ = [
     "Sonora2024Metadata",
     "SonoraBackend",
     "TlustyFluxMetadata",
+    "TlustyBackend",
     "GridTopology",
     "TopologyKind",
     "TopologySelection",
