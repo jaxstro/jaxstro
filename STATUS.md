@@ -1,16 +1,16 @@
 # jaxstro — status
 
-next: Execute spectra-v1 Task 11 directly on main: route AtmosphereLibrary selection and execution
-through exact-product adapter registry lookup with structured preparation results.
+next: Execute spectra-v1 Task 12 directly on main: add deterministic holdout metrics and a
+versioned accepted interpolation-policy manifest without inventing thresholds.
 
-previous: Spectra-v1 Task 10 completed on local main (2026-07-12). OSTAR2002, BSTAR2006 vturb=2,
-and BSTAR2006 vturb=10 C/N are distinct exact products. Each catalog row opens its recorded Zarr
-subgroup-local frequency grid; every vertex converts H_nu through F_nu=4*pi*H_nu and
-F_lambda=F_nu*c_nm_s/lambda_nm^2, then resamples to one common explicit plan before parameter
-interpolation. Product mismatch and noncommon coverage fail structurally. Focused gate: 9 tests in
-1.00 s (1.64 s wall); Ruff, format, mypy, and diff checks clean. Nothing has been pushed.
+previous: Spectra-v1 Task 11 completed on local main (2026-07-12). AtmosphereLibrary now prepares
+exact product queries through an adapter registry and evaluates prepared objects without backend
+conditionals. Local discovery builds installed NewEra, product-scoped BOSZ, product-plane Sonora,
+and distinct TLUSTY adapters while retaining aggregate coverage rows for reports. Expected gaps
+return NaN spectra plus structured status rather than RuntimeError. Focused plus local-artifact gate:
+10 tests in 3.59 s (4.17 s wall); Ruff, format, mypy, and diff checks clean. Nothing has been pushed.
 
-blocker: None for spectra-v1 Task 11. Remote publication, tag/release, Pages configuration, and PyPI
+blocker: None for spectra-v1 Task 12. Remote publication, tag/release, Pages configuration, and PyPI
 remain outside this local feature branch and require separate authorization.
 due:
 

@@ -14,7 +14,20 @@ from importlib import import_module
 from pathlib import Path
 from typing import Any
 
-from .spectra import AtmosphereParams, SpectrumResult
+import jax.numpy as jnp
+
+from jaxstro.spectra import (
+    SpectralCoordinate,
+    SpectralSemantic,
+    Spectrum,
+    SpectrumProvenance,
+    SpectrumResult,
+    SpectrumStatus,
+    SpectrumStatusCode,
+)
+
+from .adapters import AtmosphereAdapterRegistry, PreparationResult
+from .params import AtmosphereParams, AtmosphereQuery
 
 
 @dataclass(frozen=True)
@@ -24,6 +37,7 @@ class AtmosphereCatalogCoverage:
     dataset: str
     state: str
     n_spectra: int
+    product_id: str | None = None
     teff_min: float | None = None
     teff_max: float | None = None
     logg_min: float | None = None
@@ -89,15 +103,21 @@ class AtmosphereLibrary:
 
     coverages: tuple[AtmosphereCatalogCoverage, ...]
     data_dir: Path | None = None
+    registry: AtmosphereAdapterRegistry = AtmosphereAdapterRegistry(())
 
     @classmethod
     def from_coverages(
         cls,
         coverages: list[AtmosphereCatalogCoverage]
         | tuple[AtmosphereCatalogCoverage, ...],
+        *,
+        registry: AtmosphereAdapterRegistry | None = None,
     ) -> "AtmosphereLibrary":
         """Build a library from already summarized coverage rows."""
-        return cls(coverages=tuple(sorted(coverages, key=lambda row: row.dataset)))
+        return cls(
+            coverages=tuple(sorted(coverages, key=lambda row: row.dataset)),
+            registry=registry or AtmosphereAdapterRegistry(()),
+        )
 
     @classmethod
     def from_local(
@@ -113,6 +133,7 @@ class AtmosphereLibrary:
         )
         atmospheres_root = root / "atmospheres"
         coverages: list[AtmosphereCatalogCoverage] = []
+        adapters: list[Any] = []
 
         newera_catalog = atmospheres_root / "newera" / "processed" / "catalog.parquet"
         if newera_catalog.exists():
@@ -123,6 +144,7 @@ class AtmosphereLibrary:
                     rows=rows,
                     state="processed",
                     backend_name="newera",
+                    product_id="newera-v3-lowres",
                     catalog_path=newera_catalog,
                     zarr_path=atmospheres_root
                     / "newera"
@@ -130,6 +152,9 @@ class AtmosphereLibrary:
                     / "newera_lowres_v3.zarr",
                 )
             )
+            from .newera import NewEraBackend
+
+            adapters.append(NewEraBackend.open(newera_catalog.parent))
 
         bosz_catalog = (
             atmospheres_root
@@ -150,6 +175,46 @@ class AtmosphereLibrary:
                     zarr_path=bosz_catalog.parent / "bosz_2025_recomputed.zarr",
                 )
             )
+            from .bosz import BoszBackend
+
+            scopes = sorted(
+                {
+                    (
+                        str(row["atmosphere"]),
+                        str(row["resolution"]),
+                        str(row["product"]),
+                    )
+                    for row in rows
+                }
+            )
+            for atmosphere, resolution, product in scopes:
+                product_rows = tuple(
+                    row
+                    for row in rows
+                    if str(row["atmosphere"]) == atmosphere
+                    and str(row["resolution"]) == resolution
+                    and str(row["product"]) == product
+                )
+                product_id = f"bosz-2025-recomputed:{atmosphere}:{resolution}:{product}"
+                coverages.append(
+                    summarize_catalog_rows(
+                        dataset=product_id,
+                        product_id=product_id,
+                        rows=product_rows,
+                        state="processed",
+                        backend_name="bosz",
+                        catalog_path=bosz_catalog,
+                        zarr_path=bosz_catalog.parent / "bosz_2025_recomputed.zarr",
+                    )
+                )
+                adapters.append(
+                    BoszBackend.open(
+                        bosz_catalog.parent,
+                        atmosphere=atmosphere,
+                        resolution=resolution,
+                        product=product,
+                    )
+                )
 
         sonora_catalog = (
             atmospheres_root / "sonora" / "2024" / "processed" / "catalog.parquet"
@@ -165,6 +230,44 @@ class AtmosphereLibrary:
                     zarr_path=sonora_catalog.parent / "sonora_2024.zarr",
                 )
             )
+            from .sonora import SonoraBackend
+
+            planes = sorted(
+                {
+                    (str(row["cloud_label"]), float(row["m_h"]), float(row["c_o"]))
+                    for row in rows
+                }
+            )
+            for cloud_label, m_h, c_o in planes:
+                plane_rows = tuple(
+                    row
+                    for row in rows
+                    if str(row["cloud_label"]) == cloud_label
+                    and math.isclose(float(row["m_h"]), m_h)
+                    and math.isclose(float(row["c_o"]), c_o)
+                )
+                product_id = (
+                    f"sonora-diamondback-2024:{cloud_label}:m{m_h:+g}:co{c_o:g}"
+                )
+                coverages.append(
+                    summarize_catalog_rows(
+                        dataset=product_id,
+                        product_id=product_id,
+                        rows=plane_rows,
+                        state="processed",
+                        backend_name="sonora",
+                        catalog_path=sonora_catalog,
+                        zarr_path=sonora_catalog.parent / "sonora_2024.zarr",
+                    )
+                )
+                adapters.append(
+                    SonoraBackend.open(
+                        sonora_catalog.parent,
+                        cloud_label=cloud_label,
+                        m_h=m_h,
+                        c_o=c_o,
+                    )
+                )
 
         tlusty_catalog = atmospheres_root / "tlusty" / "processed" / "catalog.parquet"
         if tlusty_catalog.exists():
@@ -173,15 +276,31 @@ class AtmosphereLibrary:
                 dataset_rows = [
                     row for row in rows if str(row.get("dataset", "tlusty")) == dataset
                 ]
+                product_by_dataset = {
+                    "tlusty_ostar_2002": "tlusty-ostar2002",
+                    "tlusty_bstar_2007_vturb_2": "tlusty-bstar2006-vturb2",
+                    "tlusty_bstar_2007_vturb_10_cn": "tlusty-bstar2006-vturb10-cn",
+                }
+                tlusty_product_id = product_by_dataset.get(dataset)
                 coverages.append(
                     summarize_catalog_rows(
                         dataset=dataset,
+                        product_id=tlusty_product_id,
                         rows=dataset_rows,
                         state="processed",
                         catalog_path=tlusty_catalog,
                         zarr_path=tlusty_catalog.parent / "tlusty_flux.zarr",
                     )
                 )
+                if tlusty_product_id is not None:
+                    from .tlusty import TlustyBackend
+
+                    adapters.append(
+                        TlustyBackend.open(
+                            tlusty_catalog.parent,
+                            product_id=tlusty_product_id,
+                        )
+                    )
 
         staging_manifest = atmospheres_root / "local-staging-manifest.json"
         if staging_manifest.exists():
@@ -195,11 +314,26 @@ class AtmosphereLibrary:
         return cls(
             coverages=tuple(sorted(coverages, key=lambda row: row.dataset)),
             data_dir=root,
+            registry=AtmosphereAdapterRegistry(tuple(adapters)),
         )
 
     def coverage(self) -> tuple[AtmosphereCatalogCoverage, ...]:
         """Return deterministic coverage rows."""
         return self.coverages
+
+    def prepare(self, query: AtmosphereQuery) -> PreparationResult:
+        """Prepare one exact product through registry lookup."""
+        matching = tuple(
+            coverage
+            for coverage in self.coverages
+            if coverage.product_id == query.product_id
+        )
+        if not matching:
+            return PreparationResult.failure(
+                SpectrumStatusCode.NO_DATASET,
+                f"no coverage row for exact product {query.product_id}",
+            )
+        return self.registry.prepare(query)
 
     def select(
         self,
@@ -274,47 +408,36 @@ class AtmosphereLibrary:
             message="; ".join(rejection_reasons) or "No atmosphere catalogs loaded",
         )
 
-    def spectrum(
-        self,
-        params: AtmosphereParams,
-        *,
-        family: str | None = None,
-        resolution: str | None = None,
-        filters: dict[str, Any] | None = None,
-    ) -> SpectrumResult:
-        """Return a spectrum from the selected processed backend."""
-        selection = self.select(
-            params,
-            family=family,
-            resolution=resolution,
-            filters=filters,
+    def spectrum(self, query: AtmosphereQuery) -> SpectrumResult:
+        """Prepare then evaluate, retaining structured expected failures."""
+        preparation = self.prepare(query)
+        if preparation.prepared is not None:
+            return preparation.prepared.evaluate(query.params)
+        semantic = (
+            SpectralSemantic.SURFACE_FLUX_LAMBDA
+            if query.spectral_plan.target_axis.coordinate
+            is SpectralCoordinate.WAVELENGTH
+            else SpectralSemantic.SURFACE_FLUX_NU
         )
-        if selection.selected is None:
-            raise RuntimeError(
-                f"No processed atmosphere backend matches request: {selection.message}"
-            )
-
-        coverage = selection.selected.coverage
-        if coverage.backend_name == "newera":
-            from .newera import NewEraBackend
-
-            if coverage.catalog_path is None:
-                raise RuntimeError(f"{coverage.dataset} has no catalog path")
-            return NewEraBackend.open(Path(coverage.catalog_path).parent).spectrum(
-                params
-            )
-        if coverage.backend_name == "bosz":
-            from .bosz import BoszBackend
-
-            if coverage.catalog_path is None:
-                raise RuntimeError(f"{coverage.dataset} has no catalog path")
-            return BoszBackend.open(
-                Path(coverage.catalog_path).parent,
-                resolution=coverage.resolution or "r10000",
-            ).spectrum(params)
-        raise RuntimeError(
-            "Selected atmosphere catalog has no implemented backend: "
-            f"{coverage.dataset}"
+        provenance = SpectrumProvenance(
+            source_id="atmosphere-library",
+            product_id=query.product_id,
+            native_coordinate="unavailable",
+            native_density="unavailable",
+            native_unit="unavailable",
+            canonical_conversion="unavailable",
+            citations=("jaxstro:structured-failure",),
+            operations=("prepare:failed",),
+        )
+        spectrum = Spectrum(
+            axis=query.spectral_plan.target_axis,
+            values=jnp.full_like(query.spectral_plan.target_axis.values, jnp.nan),
+            semantic=semantic,
+            provenance=provenance,
+        )
+        return SpectrumResult(
+            spectrum=spectrum,
+            status=SpectrumStatus(preparation.status),
         )
 
 

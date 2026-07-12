@@ -15,6 +15,7 @@ def summarize_catalog_rows(
     rows: Iterable[dict[str, Any]],
     state: str,
     backend_name: str | None = None,
+    product_id: str | None = None,
     catalog_path: str | Path | None = None,
     zarr_path: str | Path | None = None,
 ) -> AtmosphereCatalogCoverage:
@@ -28,6 +29,7 @@ def summarize_catalog_rows(
     )
     return AtmosphereCatalogCoverage(
         dataset=dataset,
+        product_id=product_id,
         state=state,
         n_spectra=len(row_tuple),
         teff_min=_min_float(row_tuple, "teff"),
@@ -89,6 +91,7 @@ def coverage_rows_to_markdown(rows: Iterable[AtmosphereCatalogCoverage]) -> str:
 def _coverage_to_dict(row: AtmosphereCatalogCoverage) -> dict[str, Any]:
     return {
         "dataset": row.dataset,
+        "product_id": row.product_id,
         "state": row.state,
         "n_spectra": row.n_spectra,
         "teff_min": row.teff_min,

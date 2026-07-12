@@ -597,16 +597,16 @@ mypy, MyST.
 - Changes `AtmosphereLibrary.prepare(query) -> PreparationResult` and keeps
   `spectrum(query)` as a prepare-then-evaluate convenience path.
 
-- [ ] **Step 1: Write failing selection/execution identity tests**
+- [x] **Step 1: Write failing selection/execution identity tests**
 
   Require candidate ranking to include explicit product IDs and the selected
   adapter descriptor. Expected gaps return structured results rather than
   `RuntimeError`. Corrupt or mismatched artifacts still raise.
 
-- [ ] **Step 2: Verify RED**, replace backend conditionals with registry lookup,
+- [x] **Step 2: Verify RED**, replace backend conditionals with registry lookup,
   and verify all synthetic fixtures.
 
-- [ ] **Step 3: Verify GREEN**
+- [x] **Step 3: Verify GREEN**
 
   ```bash
   env -u VIRTUAL_ENV uv run --no-sync --extra data pytest -q \
@@ -614,7 +614,7 @@ mypy, MyST.
     tests/unit/test_atmospheres_coverage.py
   ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
   ```bash
   git add src/jaxstro/atmospheres/library.py src/jaxstro/atmospheres/coverage.py \

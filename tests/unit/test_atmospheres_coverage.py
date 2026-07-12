@@ -42,6 +42,7 @@ def test_summarize_catalog_rows_preserves_axes_and_units():
         ],
         state="processed",
         backend_name="bosz",
+        product_id="bosz-2025-recomputed:ap:r10000:resam",
     )
 
     assert coverage.dataset == "synthetic_bosz"
@@ -54,6 +55,7 @@ def test_summarize_catalog_rows_preserves_axes_and_units():
     assert coverage.resolution == "r10000"
     assert coverage.wavelength_unit == "angstrom"
     assert coverage.backend_available is True
+    assert coverage.product_id == "bosz-2025-recomputed:ap:r10000:resam"
 
 
 def test_coverage_outputs_are_deterministic_and_inspectable():
@@ -79,3 +81,4 @@ def test_coverage_outputs_are_deterministic_and_inspectable():
     assert markdown.splitlines()[3].startswith("| b |")
     assert [entry["dataset"] for entry in data] == ["a", "b"]
     assert data[0]["state"] == "processed"
+    assert "product_id" in data[0]
