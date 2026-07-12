@@ -152,13 +152,20 @@ Generic transformations are explicit pure functions rather than mutable
 methods:
 
 ```python
-to_wavelength(spectrum)
-to_frequency(spectrum)
+to_wavelength(axis)
+to_frequency(axis)
 to_flux_lambda(spectrum)
 to_flux_nu(spectrum)
 surface_flux_to_luminosity(spectrum, radius=...)
 surface_flux_to_observer_flux(spectrum, radius=..., distance=...)
 ```
+
+Coordinate functions operate on `SpectralAxis`.  Density functions transform a
+complete `Spectrum`, changing the axis, values, and semantic together so the API
+cannot represent `F_lambda` on a frequency axis or `F_nu` on a wavelength axis.
+Point-density conversion is exact at the tabulated samples.  Bin-aware density
+conversion requires the explicit conservative-remapping path rather than a
+center-point Jacobian approximation.
 
 The geometric transforms accept only compatible surface-flux semantics.
 `surface_flux_to_luminosity` applies `4*pi*radius**2`; the observer transform

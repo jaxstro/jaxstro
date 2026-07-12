@@ -207,8 +207,10 @@ mypy, MyST.
 
 **Interfaces:**
 - Consumes: Task 2 types and `jaxstro.constants.C_CGS`.
-- Produces: `to_frequency`, `to_wavelength`, `to_flux_nu`, `to_flux_lambda`,
-  `surface_flux_to_luminosity`, and `surface_flux_to_observer_flux`.
+- Produces: `to_frequency(axis)`, `to_wavelength(axis)`,
+  `to_flux_nu(spectrum)`, `to_flux_lambda(spectrum)`,
+  `surface_flux_to_luminosity(spectrum, radius_cm)`, and
+  `surface_flux_to_observer_flux(spectrum, radius_cm, distance_cm)`.
 
 - [ ] **Step 1: Write failing analytic tests**
 
@@ -226,9 +228,11 @@ mypy, MyST.
 
 - [ ] **Step 3: Implement pure JAX transforms**
 
-  Every coordinate transform reverses both coordinate and value arrays so axes
-  remain increasing. Every density transform updates semantic and provenance
-  operation history. Geometry functions require positive CGS radii/distances
+  Coordinate transforms operate only on `SpectralAxis`; density transforms
+  change the axis, values, and semantic together and reverse samples so axes
+  remain increasing. Point-density transforms update provenance operation
+  history; binned density conversion is rejected until Task 4 supplies the
+  conservative path. Geometry functions require positive CGS radii/distances
   and matching surface-flux semantics.
 
 - [ ] **Step 4: Verify GREEN and AD-vs-FD**

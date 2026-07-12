@@ -1,18 +1,18 @@
 # jaxstro — status
 
-next: Await Anna's per-slice checkpoint approval, then execute spectra-v1 Task 3: add exact
-wavelength/frequency, F_lambda/F_nu, surface-luminosity, and surface-observer transformations with
-analytic and shared AD-vs-FD validation.
+next: Await Anna's per-slice checkpoint approval, then execute spectra-v1 Task 4: add explicit
+fixed-shape `SpectralPlan` targets, identity and point interpolation, conservative bin remapping,
+and fail-closed spectral-window coverage.
 
-previous: Spectra-v1 Task 2 completed on `codex/spectra-v1` (2026-07-12). The new canonical owner,
-`jaxstro.spectra`, provides explicit point/bin axes, physical semantics, hashable provenance,
-stable scientific status codes, finite-success/NaN-failure contracts, PyTree behavior, and batched
-status arrays. TDD RED was the missing package; a second RED caught scalar-only status codes under
-`vmap`. GREEN is 55 combined new plus existing-atmosphere tests in 2.09 s (2.74 s wall), Ruff and
-format clean, mypy clean. The old atmosphere spectral module remains unchanged until migration.
-Nothing has been pushed.
+previous: Spectra-v1 Task 3 completed on `codex/spectra-v1` (2026-07-12). Pure JAX transforms now
+couple axis and density semantics: wavelength/frequency axes remain increasing; point F_lambda/F_nu
+uses the exact Jacobian; spherical luminosity uses 4*pi*R^2; observer dilution uses (R/d)^2; binned
+density conversion fails closed until conservative remapping. On a synthetic three-point CGS stack,
+round-trip max relative error is 1.78e-16; all four dimensionlessly scaled AD/FD ratios are within
+1.95e-10 of unity and classified clean. The combined gate is 68 tests in 7.84 s (9.91 s wall), with
+Ruff, format, mypy, and diff checks clean. Nothing has been pushed.
 
-blocker: None for spectra-v1 Task 3. Remote publication, tag/release, Pages configuration, and PyPI
+blocker: None for spectra-v1 Task 4. Remote publication, tag/release, Pages configuration, and PyPI
 remain outside this local feature branch and require separate authorization.
 due:
 

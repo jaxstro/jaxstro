@@ -219,6 +219,14 @@ _FREQUENCY_SEMANTICS = {
     SpectralSemantic.LUMINOSITY_NU,
     SpectralSemantic.OBSERVER_FLUX_NU,
 }
+_CANONICAL_VALUE_UNITS = {
+    SpectralSemantic.SURFACE_FLUX_LAMBDA: "erg s^-1 cm^-2 cm^-1",
+    SpectralSemantic.SURFACE_FLUX_NU: "erg s^-1 cm^-2 Hz^-1",
+    SpectralSemantic.LUMINOSITY_LAMBDA: "erg s^-1 cm^-1",
+    SpectralSemantic.LUMINOSITY_NU: "erg s^-1 Hz^-1",
+    SpectralSemantic.OBSERVER_FLUX_LAMBDA: "erg s^-1 cm^-2 cm^-1",
+    SpectralSemantic.OBSERVER_FLUX_NU: "erg s^-1 cm^-2 Hz^-1",
+}
 
 
 @jax.tree_util.register_pytree_node_class
@@ -250,6 +258,11 @@ class Spectrum:
             raise ValueError(f"{semantic.value} requires a frequency axis")
         object.__setattr__(self, "values", values)
         object.__setattr__(self, "semantic", semantic)
+
+    @property
+    def value_unit(self) -> str:
+        """Canonical physical unit implied by this spectrum's semantic."""
+        return _CANONICAL_VALUE_UNITS[self.semantic]
 
     def tree_flatten(self):
         children = (self.axis, self.values)
