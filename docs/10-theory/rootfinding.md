@@ -98,12 +98,13 @@ without corrupting root evidence or moving its own expensive trial state into
 Jaxstro.
 
 `BracketedRootState` pairs true `BracketState` endpoint evidence with
-`BracketHistory` used only for interpolation. `propose_bracketed` tries inverse-
-quadratic interpolation when three distinct residual points exist, then the
-endpoint secant, subject to finite-denominator, strict-bracket, safeguard-band,
-and previous-step progress guards. Rejected interpolation uses the overflow-safe
-midpoint. `advance_bracketed_root` consumes one evaluation; `valid=False`
-preserves bracket, history, and status exactly.
+`BracketHistory` used only for interpolation. `propose_bracketed` tries
+inverse-quadratic interpolation when three distinct residual points exist;
+otherwise the endpoint secant is selected. The selected interpolant must pass
+finite-denominator, strict-bracket, safeguard-band, and previous-step progress
+guards. A rejected selected interpolant uses the overflow-safe midpoint.
+`advance_bracketed_root` consumes one evaluation; `valid=False` preserves the
+bracket, history, and status exactly.
 
 ```{list-table} Proposal-kind telemetry
 :header-rows: 1

@@ -11,6 +11,13 @@ last_read: 0
 
 # 0008 — Reject Information Field Theory from core, adopt NIFTy.re at inference layer
 
+:::{note} IFT terminology
+This decision uses **IFT** for Information Field Theory. It does not prohibit
+dependency-free use of the **implicit function theorem** in a generic numerical
+primitive. The latter is governed by its own smoothness, uniqueness,
+conditioning, residual, and validation contracts.
+:::
+
 ## Context
 
 As the jaxstro ecosystem grew, a proposal emerged to include Information Field Theory (IFT) capabilities in the core. IFT is a powerful statistical framework used in some astrophysics applications, and the question was whether to include it in jaxstro or keep it external.
