@@ -1,8 +1,10 @@
 # Jaxstro spectra v1 design
 
-**Status:** Anna-approved in seven design checkpoints on 2026-07-11.  This
-document is the implementation authority for the spectra-completion program;
-implementation remains approval-gated per slice.
+**Status:** Anna-approved in seven design checkpoints on 2026-07-11, then
+implementation-preflight reviewed against the live code, local artifacts, and
+primary product documentation.  This document is the implementation authority
+for the spectra-completion program; implementation remains approval-gated per
+slice.
 
 **Supersedes:** The narrow ownership and interpolation decisions in
 `2026-06-20-spectra-hybrid-architecture.md`.  That plan remains useful as a
@@ -111,10 +113,13 @@ differentiation, and repeated evaluation.
 
 ## Canonical data model
 
-The canonical runtime representation is monotonically increasing wavelength
-plus CGS `F_lambda`, with mandatory physical semantics and retained native
+The canonical **atmosphere-output boundary** is monotonically increasing
+wavelength in cm plus surface `F_lambda` in
+`erg s^-1 cm^-2 cm^-1`, with mandatory physical semantics and retained native
 provenance.  This is an explicit spectral convention, not a quantity-system
-migration.
+migration.  A generic `Spectrum` may also hold an explicitly transformed
+frequency/`F_nu`, luminosity-density, or observer-flux-density representation;
+those are valid spectra but are not canonical atmosphere-adapter outputs.
 
 Conceptually:
 
@@ -136,7 +141,8 @@ Spectrum(
 - optional bin edges and resolution metadata;
 - a stable shape suitable for JAX transformations.
 
-Atmosphere adapters return emergent surface `F_lambda` in canonical CGS units.
+Atmosphere adapters return emergent surface `F_lambda` in those canonical CGS
+units.
 The native archive convention and every conversion factor, including any
 required pi or 4-pi factor, must be verified from primary documentation.  If
 that verification is unavailable, the product is unavailable; Jaxstro does not
@@ -154,18 +160,22 @@ surface_flux_to_luminosity(spectrum, radius=...)
 surface_flux_to_observer_flux(spectrum, radius=..., distance=...)
 ```
 
+The geometric transforms accept only compatible surface-flux semantics.
+`surface_flux_to_luminosity` applies `4*pi*radius**2`; the observer transform
+applies `(radius/distance)**2`.  Their exactness claim is conditional on the
+declared spherical, isotropic-emission geometry.  They do not encode extinction,
+beaming, lensing, cosmological redshift, or instrumental response.
+
 ## Query-scoped spectral planning
 
-Every preparation receives an explicit `SpectralPlan` describing the requested
-output window, sampling or resolution, point-versus-bin semantics, fixed output
-shape, and coverage policy:
+Every preparation receives an explicit `SpectralPlan` whose required
+`target_axis` fixes the output coordinate values or bin edges, unit,
+point-versus-bin semantics, and output shape.  Resolution may be recorded as
+metadata, but it does not stand in for an actual sampling grid:
 
 ```python
 SpectralPlan(
-    wavelength_min=...,
-    wavelength_max=...,
-    sampling=...,
-    representation="points" | "bins",
+    target_axis=SpectralAxis(...),
     coverage_policy="intersection",
 )
 ```
@@ -312,6 +322,11 @@ non-monotonic coordinates, incompatible shapes, forbidden non-finite values,
 broken prepared-object invariants, and internal errors.  These defects must not
 masquerade as ordinary scientific coverage gaps.
 
+Axes are always finite.  Successful results always contain finite values.
+Unsuccessful fixed-shape JAX evaluations carry a NaN value payload together
+with a non-OK status so an unsupported request cannot be mistaken for a clamped,
+zero-filled, or otherwise fabricated spectrum.
+
 Preparation is transactional.  A successful `PreparedAtmosphere` guarantees
 that required artifacts were validated and loaded, shapes are fixed,
 provenance is complete, and evaluation is filesystem-free.  Partial preparation
@@ -353,16 +368,19 @@ verified products remain unavailable.
 
 Generic spectral types move from `jaxstro.atmospheres` to `jaxstro.spectra`.
 Before removal, implementation audits current downstream imports and migrates
-real consumers in the same program.  The repository will not retain aliases, a
-parallel legacy namespace, or two canonical spectral owners.  This cutover does
-not reopen the deferred quantity-system redesign.
+real consumers before deleting the old owner.  The repository will not retain
+aliases, a parallel legacy namespace, or two canonical spectral owners.  The
+new owner may coexist temporarily while consumers are migrated, but the old
+module cannot receive new behavior and cannot affect the canonical path.  This
+cutover does not reopen the deferred quantity-system redesign.
 
 ## Implementation slices
 
 Each slice remains separately approval-gated and ends with tests,
 documentation, and a bounded scientific claim:
 
-1. Inventory downstream imports and freeze the ownership contract.
+1. Inventory downstream imports, verify the four native flux conventions from
+   primary product sources, and freeze the ownership contract.
 2. Add canonical spectral types, semantics, statuses, and invariants.
 3. Add `SpectralPlan` and fixed-shape spectral-axis construction.
 4. Add coordinate and `F_lambda`/`F_nu` transformations.
@@ -377,7 +395,8 @@ documentation, and a bounded scientific claim:
 13. Run per-family holdout studies and ratify interpolation policies.
 14. Add provenance records, validation manifests, and error budgets.
 15. Add JAX/AD, performance, memory, and real-artifact acceptance gates.
-16. Migrate downstream consumers and remove old spectral owners.
+16. Migrate downstream consumers, then remove old spectral owners in the same
+    verified hard-cutover slice.
 17. Complete API documentation, student-facing tutorials, and release evidence.
 
 Slices may combine if implementation evidence demonstrates that the boundary is
@@ -402,3 +421,37 @@ and implementation sequence in separate checkpoints on 2026-07-11.  After this
 document is reviewed, the next permitted action is to use
 `superpowers:writing-plans` to turn these slices into an implementation plan.
 No implementation begins from this design document alone.
+
+## Implementation-preflight corrections
+
+The preflight review found and repaired three ambiguities before code work:
+
+1. "Canonical" now refers specifically to the atmosphere-output boundary;
+   explicitly transformed spectra remain valid without pretending to be adapter
+   outputs.
+2. Canonical units are exact (`cm` and
+   `erg s^-1 cm^-2 cm^-1`), and the geometric assumptions behind luminosity and
+   observer-flux transforms are stated.
+3. `SpectralPlan` now owns an explicit fixed-shape target axis instead of an
+   underspecified `sampling` placeholder, and consumer migration precedes
+   deletion during the hard cutover.
+
+Primary product documentation resolves the native semantic gates for planning:
+
+- NewEra low-resolution products are wavelength in nm and `F_lambda` in
+  `W m^-2 nm^-1`; the HDF5 products document `F_lambda` in
+  `erg s^-1 cm^-2 cm^-1`.  The low-resolution canonical conversion factor is
+  `1e10`.
+- BOSZ 2024 original spectra provide Eddington first moment `H_lambda`; surface
+  flux is `4*pi*H_lambda`, while the lower-resolution products contain the
+  already resampled flux and continuum columns.
+- Sonora Diamondback documents top-of-atmosphere radiation flux
+  `F = 4*pi*H` in `W m^-2 m^-1` on a wavelength axis.  The archive description
+  prints a nu subscript despite the per-metre unit; Jaxstro records this source
+  inconsistency and follows the dimensional unit and wavelength coordinate.
+  The canonical conversion factor is `10`.
+- TLUSTY OSTAR2002 and BSTAR2006 SEDs provide surface Eddington flux `H_nu` in
+  `erg s^-1 cm^-2 Hz^-1`; surface flux is `4*pi*H_nu`.
+
+These claims must be encoded with source locators in the provenance registry and
+tested against artifact metadata before a backend is marked available.
