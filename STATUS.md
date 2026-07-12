@@ -1,19 +1,19 @@
 # jaxstro — status
 
-next: Present the Slice C8 theory-index page card for Anna's explicit approval. Do not edit
-`docs/10-theory/index.md` before that approval.
+next: Present the Slice C9 validation-page card for Anna's explicit approval. Do not edit
+`docs/60-validation/index.md` before that approval.
 
-previous: Slice C7 spatial-theory hardening completed locally (2026-07-11). Morton bin counts
-must now be positive powers of two so IDs fit the documented dense allocation; arbitrary dense
-dimensions remain owned by linear cells. The new spatial chapter separates fixed capacity,
-approximate candidates, exact `0 < r <= cutoff` pairs, overflow, and host/discrete boundaries.
-The StarViz-derived figure system moved cleanly to `laboratory/jaxtroviz`; its new spatial figure
-is computed from public APIs and the old namespace is removed. Twenty focused tests pass in
-14.10 s after formatting; both figure freshness checks pass in 7.01 s; strict MyST builds 59
-pages in 4.14 s; rendered `/spatial` has the figure, alt/asset, Morton citation, decision table,
-and registered xrefs. Nothing has been pushed.
+previous: Slice C8 theory-index hardening completed locally (2026-07-11). The overview now
+teaches the five live `GradContract` classes and reserves inference-ready wording for clean,
+finite, nonzero `smooth_pathwise` AD that agrees with central finite differences. It distinguishes
+fixed-iteration Newton conditions from branch-selected bisection and scopes hard branches,
+spatial preprocessing, and inactive-branch hazards. Four focused tests pass in 0.67 s; strict
+MyST builds all 59 pages in 9.12 s wall time; rendered `/index-2` has the exact five-row registry
+table, required routes, stable table anchor, and no internal new-tab links. The site-wide DOM
+scan also recorded the pre-existing bibliography `references` ID collision as C0-014. Nothing
+has been pushed.
 
-blocker: None for Slice C8 once Anna approves its website page card. Tag/release/PyPI remain
+blocker: None for Slice C9 once Anna approves its website page card. Tag/release/PyPI remain
 held on Anna's permanent package-name decision.
 due:
 

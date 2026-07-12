@@ -2,24 +2,22 @@
 title: Writing AD-safe scientific numerics
 short_title: Theory
 description: >-
-  Ten principles for numerics that survive jax.grad — the design thesis behind
-  every function in jaxstro, each bridging to the method page that exemplifies it.
+  Ten principles for classifying and validating JAX transform contracts — from
+  smooth pathwise gradients to deliberately discrete scientific preprocessing.
 ---
 
-A function can return the right number and still be wrong. If its gradient is
-silently zero, or `NaN`, or quietly detached from the parameter you care about,
-then the value "worked" and the science is broken — and nobody finds out until an
-optimizer stalls or a Fisher matrix comes back singular. *It ran* is not *it is
-correct*. Elegant nonsense is still nonsense.
+A function can return the right number and still be wrong. When a gradient is
+part of its contract, a silently zero, `NaN`, or detached derivative can break
+the science even though the value "worked." When the operation is deliberately
+discrete, pretending it has a useful gradient is equally wrong. *It ran* is not
+*it is correct*. Elegant nonsense is still nonsense.
 
-jaxstro exists so that the bottom of the dependency graph never produces that kind
-of failure. Every primitive here is built to a single constraint: **it must
-survive `jax.grad`, and its gradient must be checked against finite differences.**
-This is why the numerics layer is useful beyond astronomy: the discipline is not
-about a single domain, but about making differentiable scientific methods
-auditable. This page is the thesis — ten principles for writing numerics that
-differentiate cleanly. Each principle ends with a bridge to the method page that
-shows it at work, so you can read the idea and then read the code that obeys it.
+jaxstro therefore requires every public numerical path to name its transform
+contract. Smooth pathwise gradients receive independent finite-difference
+checks. Expected-zero, blocked, surrogate, validation-only, and discrete paths
+state their narrower claim instead of borrowing the language of smooth
+inference. This page is the thesis: ten principles for making those scientific
+contracts explicit, testable, and teachable.
 
 :::{tip} Already fluent in differentiable programming?
 Skip to the principle that bites you most often — most people's is
@@ -37,51 +35,96 @@ matrix-free algebra helpers live in
 construction, conservative rebinning, and stratified uniforms are in
 [](./grids.md), structured 1D mesh helpers are in [](./meshes.md), and explicit
 PRNG streams and resampling helpers are in [](./random.md). Quantity semantics
-and boundary conversion live in [](./quantities.md).
+and boundary conversion live in [](./quantities.md). Spatial indexing,
+candidate recall, and exact fixed-radius pairs are in [](./spatial.md).
 :::
 
-(p1-differentiability)=
-## 1. Differentiability is a design constraint, not an afterthought
+## Gradient contracts
 
-Decide up front that every public primitive will be differentiated, then design
-backward from that. This rules out whole categories of "convenient" code before
-you write them. The contract is concrete: for every differentiable function we
-compute both the autodiff gradient and a finite-difference estimate and require
-them to agree. If they disagree, the function is not done — see
-[](../60-validation/index.md) for how that audit is run.
+The first question is not “does `jax.grad` run?” It is “what derivative claim is
+scientifically valid here?” `jaxstro.testing` exposes five live contracts, and
+the audit gate interprets each one differently.
+
+```{list-table} Gradient contracts
+:header-rows: 1
+:label: tbl-gradient-contracts
+
+* - Gradient contract
+  - AD expectation
+  - FD role
+  - Inference / claim boundary
+* - `smooth_pathwise`
+  - Finite, nonzero AD agrees with the local smooth derivative.
+  - Required: AD and central FD must agree within the declared tolerance.
+  - Only a clean `smooth_pathwise` result is inference-ready.
+* - `known_zero`
+  - AD is intentionally zero because the output is locally insensitive.
+  - Required: FD must also be zero; an appearing derivative is a contract change.
+  - Documents insensitivity, not a usable inference direction.
+* - `known_blocked`
+  - Gradient flow is intentionally stopped or unavailable; the audited result
+    must remain finite.
+  - AD–FD equality is not part of this gate.
+  - Never inference-ready; callers must not describe it as a physical gradient.
+* - `surrogate`
+  - A live, nonzero surrogate sensitivity is required.
+  - FD equality to the underlying physical model is not claimed.
+  - May support an explicitly named surrogate claim; never silently substitutes
+    for a physical derivative.
+* - `validation_only`
+  - Any derivative is diagnostic evidence for a bounded validation question.
+  - FD comparison is optional and must be stated by the validation itself.
+  - Not an inference, Fisher, or OED gradient.
+```
+
+(p1-differentiability)=
+## 1. Classify the transform contract first
+
+Before implementation, classify the transform contract first. A smooth kernel,
+an expected-zero sensitivity, a stopped gradient, a surrogate, and a discrete
+index builder require different evidence. For `smooth_pathwise` and
+`known_zero`, the audit computes both AD and an independent finite-difference
+estimate. Other contracts fail closed for inference and carry only the narrower
+claim they name. See [](../60-validation/index.md) for the measured audit.
 
 (p2-fixed-iteration)=
-## 2. Fixed iteration, not convergence loops
+## 2. Fixed iteration is necessary, not sufficient
 
-A `while_loop` that runs "until converged" has a data-dependent trip count, and
-JAX cannot differentiate through that cleanly. The fix is to run a **fixed** number
-of `lax.scan` steps chosen to over-converge for the problem at hand. You trade a
-few wasted iterations for a bounded, fully differentiable computation. Bisection
-at 50 steps reaches $2^{-50}\approx10^{-15}$; Newton at 20–30 steps over-converges
-for smooth functions. This is the load-bearing choice behind the root-finders.
+Fixed scan lengths give JAX a static computation and avoid reverse-mode limits
+around data-dependent convergence loops. They do not make the update map smooth.
+A fixed-step solver can still contain branch-selected intervals, clips, or
+singular derivatives.
 
-→ [](./rootfinding.md) — why `bisect`, `newton`, and `newton_ppf` use `lax.scan`.
+For a smooth function with a nonzero derivative and a parameter-independent
+initial guess, Newton can carry a `smooth_pathwise` contract after AD–FD
+verification. In contrast, bisection is a branch-selected forward solve: it can
+deliver an accurate root value without providing the smooth inverse sensitivity
+needed for inference. Iteration count and gradient contract are separate facts.
+
+→ [](./rootfinding.md) — the distinct contracts of `bisect`, `newton`, and
+`newton_ppf`.
 
 (p3-guard-singularities)=
 ## 3. Guard singularities without killing the gradient — the `where`-trap
 
-The natural way to avoid a division by zero is `jnp.where(d == 0, fallback, a/d)`.
-It returns the right value and a *wrong* gradient. JAX evaluates **both branches**
-to differentiate the select, so `a/d` is still computed at $d=0$, producing an
-`inf`, and `inf * 0` in the backward pass becomes `NaN` that propagates through the
-"safe" branch. The discipline is to guard the **operand**, not the result: make the
-denominator safe *before* dividing, e.g. `a / (d + eps)` or a double-`where` that
-sanitizes $d$ first. jaxstro's `safe_div` and `safe_log` are exactly these guards.
+The natural way to avoid a division by zero is
+`jnp.where(d == 0, fallback, a / d)`. The selected forward value may be finite,
+but both branch expressions are traced. If the unselected expression creates an
+`inf` or `NaN`, its reverse-mode cotangent can meet a zero multiplier and the
+inactive branch can still poison a derivative. The discipline is to guard the
+**operand**, not only the selected result: sanitize the denominator before
+division, then select the intended value. `safe_div` and `safe_log` implement
+that policy for their documented domains.
 
 (p4-saturation)=
 ## 4. Saturation is a silent gradient killer
 
-`clip`, `min`, `max`, and `floor` set the gradient to zero wherever they
-saturate. Sometimes that is what you want (a hard bound). Often it is a bug: a
-parameter pinned at a clip boundary receives no gradient and never moves, and the
-optimizer reports "converged" while sitting on a wall. Know which case you are in.
-When you clip iterates to a support (as `newton_ppf` does to `[lo, hi]`), confirm
-the optimum is interior, or the gradient you wanted is gone.
+`clip`, `min`, `max`, and `floor` are piecewise or discrete operations. They can
+zero, route, or make a gradient convention-dependent at their boundaries.
+Sometimes that is the intended hard-bound contract. Sometimes it pins a
+parameter on a wall while an optimizer reports convergence. Name which case you
+intend. When `newton_ppf` clips iterates to `[lo, hi]`, for example, its smooth
+pathwise claim applies to an interior solution, not to saturation at the support.
 
 → [](./rootfinding.md#newton-ppf) discusses the clip-to-support trade-off.
 
@@ -103,6 +146,9 @@ useful gradient. They are not banned from the package — the spatial module nee
 them — but they must be **isolated** from any path you will differentiate. Build
 the Morton codes and neighbor lists once, as discrete preprocessing; keep the
 differentiable physics downstream of them.
+
+→ [](./spatial.md) — fixed-capacity cells, candidate recall, exact-pair overflow,
+and the boundary between discrete identity and downstream differentiable values.
 
 (p7-quadrature)=
 ## 7. Quadrature and sampling differentiate through the values, not the nodes
@@ -157,9 +203,10 @@ ecosystem's needs without each package reinventing them.
 
 ## What we just established
 
-These ten principles are not style preferences; they are the difference between a
-gradient you can trust and one that lies to you. The rest of the theory section
-shows them in specific methods. Read on:
+These ten principles are not style preferences. They separate gradients that can
+support inference from expected-zero, blocked, surrogate, validation-only, and
+discrete paths with narrower claims. The rest of the theory section shows those
+boundaries in specific methods. Read on:
 
 - [](./rootfinding.md) — fixed-iteration solvers, and the `bisect` zero-gradient
   caveat (principles [2](#p2-fixed-iteration), [3](#p3-guard-singularities),
@@ -187,6 +234,10 @@ shows them in specific methods. Read on:
 - [](./geometry.md) — vector normalization, angular distances, rotations,
   quaternions, rigid transforms, and explicit composition helpers (principles
   [1](#p1-differentiability), [9](#p9-correctness), [10](#p10-vectorize)).
+- [](./spatial.md) — Morton and linear cells, capacity/overflow, approximate
+  candidates, and exact fixed-radius neighbors as discrete preprocessing
+  (principles [1](#p1-differentiability), [6](#p6-non-diff-ops),
+  [9](#p9-correctness)).
 - [](./distributions.md) — logpdf, CDF, and inverse-CDF kernels for normal,
   lognormal, finite power-law, and truncated-normal families (principles
   [3](#p3-guard-singularities), [5](#p5-floating-point), [7](#p7-quadrature)).
