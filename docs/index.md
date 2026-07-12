@@ -74,6 +74,10 @@ reference covers the public modules: `units`, `constants`, `astrometry`,
 
 ## Astro-first, not astro-only
 
+The [](./10-theory/science-patterns.md) page starts from recurring research
+questions and routes each one to its generic primitive, transform contract,
+validation evidence, and downstream ownership boundary.
+
 jaxstro is useful outside astronomy wherever a project needs JAX-native
 scientific primitives whose gradient behavior is part of the contract. If you are
 building differentiable models in physics, geoscience, instrumentation,

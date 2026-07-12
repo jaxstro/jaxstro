@@ -28,7 +28,7 @@ def test_committed_route_manifest_matches_all_authored_pages() -> None:
     assert manifest_path.is_file()
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 
-    assert len(manifest) == 62
+    assert len(manifest) == 63
     assert manifest["index.md"] == "/"
     assert manifest["20-architecture/spectra-data-architecture.md"] == (
         "/spectra-data-architecture"

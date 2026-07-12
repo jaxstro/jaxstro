@@ -48,6 +48,7 @@ project:
     - title: Theory — AD-safe numerics
       children:
         - file: 10-theory/index.md
+        - file: 10-theory/science-patterns.md
         - file: 10-theory/quantities.md
         - file: 10-theory/rootfinding.md
         - file: 10-theory/cumulative-trapz.md

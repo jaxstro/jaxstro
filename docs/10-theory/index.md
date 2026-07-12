@@ -19,6 +19,11 @@ state their narrower claim instead of borrowing the language of smooth
 inference. This page is the thesis: ten principles for making those scientific
 contracts explicit, testable, and teachable.
 
+If you are starting from a research question rather than a method name, use
+[](./science-patterns.md) to route events, equilibria, integrals, tabulated
+models, limiting distributions, spatial interactions, and provenance to the
+relevant module and evidence.
+
 :::{tip} Already fluent in differentiable programming?
 Skip to the principle that bites you most often — most people's is
 [](#p3-guard-singularities) (the `where`-trap) or [](#p4-saturation) (the silent
