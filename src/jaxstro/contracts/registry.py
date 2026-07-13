@@ -3,23 +3,41 @@
 from __future__ import annotations
 
 import importlib
+import importlib.util
+from pathlib import Path
+from types import ModuleType
 from typing import Any
 
-from .schema import ContractInventory, ModuleContract, SupportLevel
+from .schema import (
+    ADSemantics,
+    ContractInventory,
+    EvidenceKind,
+    ExecutionBoundary,
+    FailureMode,
+    MaturityLevel,
+    ModuleContract,
+    SupportLevel,
+)
 
 
 def collect_contracts(*, source_revision: str = "unknown") -> ContractInventory:
     """Collect the explicit lightweight module manifests."""
     from jaxstro import __version__
-    from jaxstro.atmospheres._contracts import MODULE_CONTRACT as atmospheres
-    from jaxstro.numerics._contracts import MODULE_CONTRACT as numerics
-    from jaxstro.params._contracts import MODULE_CONTRACT as params
-    from jaxstro.quantity._contracts import MODULE_CONTRACT as quantity
-    from jaxstro.spatial._contracts import MODULE_CONTRACT as spatial
-    from jaxstro.spectra._contracts import MODULE_CONTRACT as spectra
-    from jaxstro.testing._contracts import MODULE_CONTRACT as testing
 
     from ._core import CORE_CONTRACTS
+
+    sidecars = tuple(
+        _load_sidecar(name)
+        for name in (
+            "atmospheres",
+            "numerics",
+            "params",
+            "quantity",
+            "spatial",
+            "spectra",
+            "testing",
+        )
+    )
 
     inventory = ContractInventory(
         "1",
@@ -27,22 +45,27 @@ def collect_contracts(*, source_revision: str = "unknown") -> ContractInventory:
         source_revision,
         tuple(
             sorted(
-                (
-                    *CORE_CONTRACTS,
-                    atmospheres,
-                    numerics,
-                    params,
-                    quantity,
-                    spatial,
-                    spectra,
-                    testing,
-                ),
+                (*CORE_CONTRACTS, *sidecars),
                 key=lambda item: item.id,
             )
         ),
     )
     validate_inventory(inventory)
     return inventory
+
+
+def _load_sidecar(name: str) -> ModuleContract:
+    """Load a manifest without importing its parent runtime package."""
+    path = Path(__file__).parents[1] / name / "_contracts.py"
+    spec = importlib.util.spec_from_file_location(f"_jaxstro_contract_{name}", path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load contract sidecar: {path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    contract = getattr(module, "MODULE_CONTRACT", None)
+    if not isinstance(contract, ModuleContract):
+        raise TypeError(f"invalid module contract sidecar: {name}")
+    return contract
 
 
 def get_module_contract(import_path: str) -> ModuleContract:
@@ -86,24 +109,43 @@ def validate_inventory(inventory: ContractInventory) -> None:
         _claim_unique(module.id, seen_contracts, "contract")
         _require_text(module.ownership, f"{module.id} ownership")
         _require_text(module.non_ownership, f"{module.id} non-ownership")
-        resolve_import_path(module.import_path)
+        _require_enum(module.maturity, MaturityLevel, "maturity")
+        _require_enum(
+            module.execution_boundary, ExecutionBoundary, "execution boundary"
+        )
+        target = resolve_import_path(module.import_path)
+        if not isinstance(target, ModuleType):
+            raise ValueError(
+                f"module contract target is not a module: {module.import_path}"
+            )
+        _require_public_module(module.import_path)
         module_evidence = {item.id for item in module.evidence}
         for evidence in module.evidence:
+            _require_enum(evidence.kind, EvidenceKind, "evidence kind")
             _validate_evidence(
                 evidence.id, evidence.target, evidence.claim, seen_evidence
             )
         for callable_contract in module.callables:
             _claim_unique(callable_contract.id, seen_contracts, "contract")
             _require_text(callable_contract.purpose, f"{callable_contract.id} purpose")
-            resolve_import_path(callable_contract.import_path)
+            _require_enum(callable_contract.maturity, MaturityLevel, "maturity")
+            _require_enum(callable_contract.ad_semantics, ADSemantics, "AD semantics")
+            target = resolve_import_path(callable_contract.import_path)
+            if not callable(target):
+                raise ValueError(
+                    f"callable contract target is not callable: {callable_contract.import_path}"
+                )
+            _require_public_callable(callable_contract.import_path)
             callable_evidence = {item.id for item in callable_contract.evidence}
             for evidence in callable_contract.evidence:
+                _require_enum(evidence.kind, EvidenceKind, "evidence kind")
                 _validate_evidence(
                     evidence.id, evidence.target, evidence.claim, seen_evidence
                 )
             available = module_evidence | callable_evidence
             seen_transforms: set[str] = set()
             for transform in callable_contract.transforms:
+                _require_enum(transform.support, SupportLevel, "transform support")
                 _claim_unique(transform.transform, seen_transforms, "transform")
                 if (
                     transform.support
@@ -125,6 +167,7 @@ def validate_inventory(inventory: ContractInventory) -> None:
                     )
                 _require_evidence(transform.evidence_ids, available)
             for boundary in callable_contract.boundaries:
+                _require_enum(boundary.failure_mode, FailureMode, "failure mode")
                 _require_text(boundary.summary, f"{callable_contract.id} boundary")
                 _require_evidence(boundary.evidence_ids, available)
 
@@ -139,6 +182,27 @@ def _claim_unique(value: str, seen: set[str], kind: str) -> None:
 def _require_text(value: str, identity: str) -> None:
     if not value.strip():
         raise ValueError(f"empty {identity}")
+
+
+def _require_enum(value: object, enum_type: type, identity: str) -> None:
+    if not isinstance(value, enum_type):
+        raise ValueError(f"unknown {identity}: {value!r}")
+
+
+def _require_public_module(path: str) -> None:
+    import jaxstro
+
+    name = path.removeprefix("jaxstro.")
+    if "." in name or (name not in jaxstro.__all__ and name != "jaxconfig"):
+        raise ValueError(f"module contract target is not public: {path}")
+
+
+def _require_public_callable(path: str) -> None:
+    parent_path, _, name = path.rpartition(".")
+    parent = resolve_import_path(parent_path)
+    exports = getattr(parent, "__all__", ())
+    if name.startswith("_") or (exports and name not in exports):
+        raise ValueError(f"callable contract target is not public: {path}")
 
 
 def _validate_evidence(

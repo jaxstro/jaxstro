@@ -9,6 +9,8 @@ from jaxstro.contracts import (
     ExecutionBoundary,
     MaturityLevel,
     ModuleContract,
+    SupportLevel,
+    TransformContract,
 )
 from jaxstro.contracts.registry import resolve_import_path, validate_inventory
 from jaxstro.contracts.render import inventory_to_json
@@ -65,3 +67,35 @@ def test_json_is_deterministic_and_portable() -> None:
     first = inventory_to_json(inventory)
     assert first == inventory_to_json(inventory)
     assert "/Users/" not in first
+
+
+def test_registry_rejects_unknown_runtime_vocabulary() -> None:
+    inventory = _inventory(
+        _callable("root", "jaxstro.numerics.safeguarded_bracketed_root")
+    )
+    object.__setattr__(inventory.modules[0], "maturity", "invented")
+    with pytest.raises(ValueError, match="maturity"):
+        validate_inventory(inventory)
+
+
+def test_registry_rejects_noncallable_callable_target() -> None:
+    inventory = _inventory(_callable("constant", "jaxstro.constants.G_CGS"))
+    with pytest.raises(ValueError, match="not callable"):
+        validate_inventory(inventory)
+
+
+def test_registry_rejects_private_callable_target() -> None:
+    inventory = _inventory(
+        _callable("private", "jaxstro.numerics.rootfinding._normalize_bracket_state")
+    )
+    with pytest.raises(ValueError, match="not public"):
+        validate_inventory(inventory)
+
+
+def test_supported_transform_requires_evidence() -> None:
+    record = _callable("root", "jaxstro.numerics.safeguarded_bracketed_root")
+    object.__setattr__(
+        record, "transforms", (TransformContract("jit", SupportLevel.SUPPORTED),)
+    )
+    with pytest.raises(ValueError, match="no evidence"):
+        validate_inventory(_inventory(record))

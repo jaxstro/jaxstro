@@ -9,6 +9,7 @@ from jaxstro.contracts import (
     CallableContract,
     EvidenceKind,
     EvidenceReference,
+    FailureMode,
     MaturityLevel,
     SupportLevel,
     TransformContract,
@@ -42,5 +43,6 @@ def test_callable_contract_is_frozen_and_uses_validated_vocabulary() -> None:
     assert contract.evidence[0].id == "root.value.quadratic"
     assert SupportLevel.UNVERIFIED is not SupportLevel.UNSUPPORTED
     assert SupportLevel.CONDITIONAL is not SupportLevel.SUPPORTED
+    assert FailureMode.STRUCTURED_RESULT.value == "structured_result"
     with pytest.raises(dataclasses.FrozenInstanceError):
         contract.purpose = "changed"  # type: ignore[misc]

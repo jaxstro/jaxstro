@@ -63,6 +63,17 @@ class ExecutionBoundary(str, Enum):
     STATIC = "static"
 
 
+class FailureMode(str, Enum):
+    """Observable behavior when a contract's boundary is crossed."""
+
+    RAISES = "raises"
+    STRUCTURED_RESULT = "structured_result"
+    SATURATES = "saturates"
+    RETURNS_NAN = "returns_nan"
+    UNDEFINED = "undefined"
+    NOT_APPLICABLE = "not_applicable"
+
+
 @dataclass(frozen=True)
 class EvidenceReference:
     """Reference to evidence supporting one named claim."""
@@ -88,7 +99,7 @@ class BoundaryContract:
     """Named domain boundary and its observable failure behavior."""
 
     summary: str
-    failure_mode: str
+    failure_mode: FailureMode
     evidence_ids: tuple[str, ...] = ()
 
 

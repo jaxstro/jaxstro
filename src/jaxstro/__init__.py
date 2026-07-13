@@ -11,22 +11,9 @@ The design intent is:
 - avoid any domain-specific simulation logic here.
 """
 
-from . import (
-    astrometry,
-    atmospheres,
-    constants,
-    contracts,
-    coords,
-    geometry,
-    numerics,
-    params,
-    provenance,
-    quantity,
-    spatial,
-    spectra,
-    testing,
-    units,
-)
+from importlib import import_module
+from types import ModuleType
+
 from .units import DEFAULT as DEFAULT_UNITS
 
 __all__ = [
@@ -47,3 +34,12 @@ __all__ = [
     "testing",
 ]
 __version__ = "0.1.0"
+
+
+def __getattr__(name: str) -> ModuleType:
+    """Load public submodules on first attribute access."""
+    if name in __all__ and name != "DEFAULT_UNITS":
+        module = import_module(f"{__name__}.{name}")
+        globals()[name] = module
+        return module
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
