@@ -1,314 +1,851 @@
 {
-  "cases": [
+  "artifact_id": "rootfinding.performance",
+  "artifact_version": "1",
+  "comparisons": [
     {
-      "bracket": [
-        0.0,
-        4.0
-      ],
-      "methods": {
-        "bisection": {
-          "converged": true,
-          "executed_iterations": {
-            "unit": "iterations",
-            "value": 48
-          },
-          "final_absolute_residual": {
-            "unit": "function units",
-            "value": 7.105427357601002e-15
-          },
-          "final_relative_residual": {
-            "unit": "dimensionless",
-            "value": 3.552713678800501e-15
-          },
-          "function_evaluations": {
-            "unit": "evaluations",
-            "value": 50
-          },
-          "status": "fixed_steps",
-          "warm_wall": {
-            "unit": "s",
-            "value": 4.875008016824722e-06
-          }
-        },
-        "safeguarded_hybrid": {
-          "converged": true,
-          "executed_iterations": {
-            "unit": "iterations",
-            "value": 1
-          },
-          "final_absolute_residual": {
-            "unit": "function units",
-            "value": 0.0
-          },
-          "final_relative_residual": {
-            "unit": "dimensionless",
-            "value": 0.0
-          },
-          "function_evaluations": {
-            "unit": "evaluations",
-            "value": 3
-          },
-          "status": 3,
-          "warm_wall": {
-            "unit": "s",
-            "value": 0.00028054090216755867
-          }
-        }
-      },
-      "name": "linear"
+      "atol": 0.0,
+      "identity": "flat_slope.hybrid-no-more-evaluations",
+      "metric_id": "flat_slope.safeguarded_hybrid.function_evaluations",
+      "note": "Hybrid evaluation count must not exceed fixed-step bisection.",
+      "reference": 50,
+      "relation": "less_equal",
+      "rtol": 0.0,
+      "status": "pass",
+      "units": "evaluations"
     },
     {
-      "bracket": [
-        0.0,
-        2.0
-      ],
-      "methods": {
-        "bisection": {
-          "converged": true,
-          "executed_iterations": {
-            "unit": "iterations",
-            "value": 48
-          },
-          "final_absolute_residual": {
-            "unit": "function units",
-            "value": 2.220446049250313e-15
-          },
-          "final_relative_residual": {
-            "unit": "dimensionless",
-            "value": 1.1102230246251565e-15
-          },
-          "function_evaluations": {
-            "unit": "evaluations",
-            "value": 50
-          },
-          "status": "fixed_steps",
-          "warm_wall": {
-            "unit": "s",
-            "value": 5.166977643966675e-06
-          }
-        },
-        "safeguarded_hybrid": {
-          "converged": true,
-          "executed_iterations": {
-            "unit": "iterations",
-            "value": 40
-          },
-          "final_absolute_residual": {
-            "unit": "function units",
-            "value": 1.6106786041140528e-15
-          },
-          "final_relative_residual": {
-            "unit": "dimensionless",
-            "value": 8.053393020570264e-16
-          },
-          "function_evaluations": {
-            "unit": "evaluations",
-            "value": 42
-          },
-          "status": 4,
-          "warm_wall": {
-            "unit": "s",
-            "value": 0.0006040411535650492
-          }
-        }
-      },
-      "name": "quadratic"
+      "atol": 0.0,
+      "identity": "linear.hybrid-no-more-evaluations",
+      "metric_id": "linear.safeguarded_hybrid.function_evaluations",
+      "note": "Hybrid evaluation count must not exceed fixed-step bisection.",
+      "reference": 50,
+      "relation": "less_equal",
+      "rtol": 0.0,
+      "status": "pass",
+      "units": "evaluations"
     },
     {
-      "bracket": [
-        0.0,
-        3.0
-      ],
-      "methods": {
-        "bisection": {
-          "converged": true,
-          "executed_iterations": {
-            "unit": "iterations",
-            "value": 48
-          },
-          "final_absolute_residual": {
-            "unit": "function units",
-            "value": 5.605193857299268e-45
-          },
-          "final_relative_residual": {
-            "unit": "dimensionless",
-            "value": 7.006492321624085e-46
-          },
-          "function_evaluations": {
-            "unit": "evaluations",
-            "value": 50
-          },
-          "status": "fixed_steps",
-          "warm_wall": {
-            "unit": "s",
-            "value": 5.00003807246685e-06
-          }
-        },
-        "safeguarded_hybrid": {
-          "converged": true,
-          "executed_iterations": {
-            "unit": "iterations",
-            "value": 3
-          },
-          "final_absolute_residual": {
-            "unit": "function units",
-            "value": 0.0
-          },
-          "final_relative_residual": {
-            "unit": "dimensionless",
-            "value": 0.0
-          },
-          "function_evaluations": {
-            "unit": "evaluations",
-            "value": 5
-          },
-          "status": 3,
-          "warm_wall": {
-            "unit": "s",
-            "value": 0.0005712499842047691
-          }
-        }
-      },
-      "name": "flat_slope"
+      "atol": 0.0,
+      "identity": "monotone_kink.hybrid-no-more-evaluations",
+      "metric_id": "monotone_kink.safeguarded_hybrid.function_evaluations",
+      "note": "Hybrid evaluation count must not exceed fixed-step bisection.",
+      "reference": 50,
+      "relation": "less_equal",
+      "rtol": 0.0,
+      "status": "pass",
+      "units": "evaluations"
     },
     {
-      "bracket": [
-        0.0,
-        1.0
-      ],
-      "methods": {
-        "bisection": {
-          "converged": true,
-          "executed_iterations": {
-            "unit": "iterations",
-            "value": 48
-          },
-          "final_absolute_residual": {
-            "unit": "function units",
-            "value": 2.1094237467877974e-15
-          },
-          "final_relative_residual": {
-            "unit": "dimensionless",
-            "value": 3.515706244646329e-15
-          },
-          "function_evaluations": {
-            "unit": "evaluations",
-            "value": 50
-          },
-          "status": "fixed_steps",
-          "warm_wall": {
-            "unit": "s",
-            "value": 4.916917532682419e-06
-          }
-        },
-        "safeguarded_hybrid": {
-          "converged": true,
-          "executed_iterations": {
-            "unit": "iterations",
-            "value": 48
-          },
-          "final_absolute_residual": {
-            "unit": "function units",
-            "value": 1.6062151608764452e-13
-          },
-          "final_relative_residual": {
-            "unit": "dimensionless",
-            "value": 2.6770252681274087e-13
-          },
-          "function_evaluations": {
-            "unit": "evaluations",
-            "value": 50
-          },
-          "status": 4,
-          "warm_wall": {
-            "unit": "s",
-            "value": 0.0004919159691780806
-          }
-        }
-      },
-      "name": "monotone_kink"
+      "atol": 0.0,
+      "identity": "oscillatory_fixed_point_residual.hybrid-no-more-evaluations",
+      "metric_id": "oscillatory_fixed_point_residual.safeguarded_hybrid.function_evaluations",
+      "note": "Hybrid evaluation count must not exceed fixed-step bisection.",
+      "reference": 50,
+      "relation": "less_equal",
+      "rtol": 0.0,
+      "status": "pass",
+      "units": "evaluations"
     },
     {
-      "bracket": [
-        0.0,
-        1.0
-      ],
-      "methods": {
-        "bisection": {
-          "converged": true,
-          "executed_iterations": {
-            "unit": "iterations",
-            "value": 48
-          },
-          "final_absolute_residual": {
-            "unit": "function units",
-            "value": 6.661338147750939e-16
-          },
-          "final_relative_residual": {
-            "unit": "dimensionless",
-            "value": 5.124106267500722e-16
-          },
-          "function_evaluations": {
-            "unit": "evaluations",
-            "value": 50
-          },
-          "status": "fixed_steps",
-          "warm_wall": {
-            "unit": "s",
-            "value": 4.834029823541641e-06
-          }
-        },
-        "safeguarded_hybrid": {
-          "converged": true,
-          "executed_iterations": {
-            "unit": "iterations",
-            "value": 1
-          },
-          "final_absolute_residual": {
-            "unit": "function units",
-            "value": 0.0
-          },
-          "final_relative_residual": {
-            "unit": "dimensionless",
-            "value": 0.0
-          },
-          "function_evaluations": {
-            "unit": "evaluations",
-            "value": 3
-          },
-          "status": 3,
-          "warm_wall": {
-            "unit": "s",
-            "value": 0.00025804084725677967
-          }
-        }
-      },
-      "name": "oscillatory_fixed_point_residual"
+      "atol": 0.0,
+      "identity": "quadratic.hybrid-no-more-evaluations",
+      "metric_id": "quadratic.safeguarded_hybrid.function_evaluations",
+      "note": "Hybrid evaluation count must not exceed fixed-step bisection.",
+      "reference": 50,
+      "relation": "less_equal",
+      "rtol": 0.0,
+      "status": "pass",
+      "units": "evaluations"
     }
   ],
-  "controls": {
-    "atol": 1e-12,
-    "bisection_steps": 48,
-    "hybrid_max_steps": 96,
-    "matched_coordinate_tolerance": {
-      "unit": "coordinate units",
-      "value": 5e-12
-    },
-    "rtol": 1e-12,
-    "safeguard_fraction": 0.1
-  },
+  "deterministic_config": [
+    [
+      "atol",
+      1e-12
+    ],
+    [
+      "bisection_steps",
+      48
+    ],
+    [
+      "hybrid_max_steps",
+      96
+    ],
+    [
+      "matched_coordinate_tolerance",
+      {
+        "unit": "coordinate units",
+        "value": 5e-12
+      }
+    ],
+    [
+      "rtol",
+      1e-12
+    ],
+    [
+      "safeguard_fraction",
+      0.1
+    ]
+  ],
   "environment": {
-    "device": "cpu:0",
-    "git_revision": "f9c8f804e0fec674becdd46349ce0c97d355a765",
-    "jax_backend": "cpu",
-    "jax_version": "0.10.1",
-    "measured_at_utc": "2026-07-12T20:56:51.937642+00:00",
-    "platform": "macOS-26.1-arm64-arm-64bit-Mach-O",
-    "python_version": "3.13.7",
-    "working_tree_dirty": true
+    "policy": "Recorded execution environment; wall metrics are informational.",
+    "values": [
+      [
+        "device",
+        "cpu:0"
+      ],
+      [
+        "git_revision",
+        "fd28c3a592d9feff5145f4f6d02263af22f2e228"
+      ],
+      [
+        "jax_backend",
+        "cpu"
+      ],
+      [
+        "jax_version",
+        "0.10.1"
+      ],
+      [
+        "measured_at_utc",
+        "2026-07-13T02:34:53.941963+00:00"
+      ],
+      [
+        "platform",
+        "macOS-26.1-arm64-arm-64bit-Mach-O"
+      ],
+      [
+        "python_version",
+        "3.13.7"
+      ],
+      [
+        "working_tree_dirty",
+        "True"
+      ]
+    ]
   },
+  "generation_command": "uv run --no-sync python scripts/benchmark_rootfinding.py --emit",
+  "limitations": [
+    "Warm wall time is hardware- and load-dependent."
+  ],
+  "method_payload": {
+    "cases": [
+      {
+        "bracket": [
+          0.0,
+          4.0
+        ],
+        "methods": {
+          "bisection": {
+            "converged": true,
+            "executed_iterations": {
+              "unit": "iterations",
+              "value": 48
+            },
+            "final_absolute_residual": {
+              "unit": "function units",
+              "value": 7.105427357601002e-15
+            },
+            "final_relative_residual": {
+              "unit": "dimensionless",
+              "value": 3.552713678800501e-15
+            },
+            "function_evaluations": {
+              "unit": "evaluations",
+              "value": 50
+            },
+            "status": "fixed_steps",
+            "warm_wall": {
+              "unit": "s",
+              "value": 5.209119990468025e-06
+            }
+          },
+          "safeguarded_hybrid": {
+            "converged": true,
+            "executed_iterations": {
+              "unit": "iterations",
+              "value": 1
+            },
+            "final_absolute_residual": {
+              "unit": "function units",
+              "value": 0.0
+            },
+            "final_relative_residual": {
+              "unit": "dimensionless",
+              "value": 0.0
+            },
+            "function_evaluations": {
+              "unit": "evaluations",
+              "value": 3
+            },
+            "status": 3,
+            "warm_wall": {
+              "unit": "s",
+              "value": 0.0005396248307079077
+            }
+          }
+        },
+        "name": "linear"
+      },
+      {
+        "bracket": [
+          0.0,
+          2.0
+        ],
+        "methods": {
+          "bisection": {
+            "converged": true,
+            "executed_iterations": {
+              "unit": "iterations",
+              "value": 48
+            },
+            "final_absolute_residual": {
+              "unit": "function units",
+              "value": 2.220446049250313e-15
+            },
+            "final_relative_residual": {
+              "unit": "dimensionless",
+              "value": 1.1102230246251565e-15
+            },
+            "function_evaluations": {
+              "unit": "evaluations",
+              "value": 50
+            },
+            "status": "fixed_steps",
+            "warm_wall": {
+              "unit": "s",
+              "value": 5.208887159824371e-06
+            }
+          },
+          "safeguarded_hybrid": {
+            "converged": true,
+            "executed_iterations": {
+              "unit": "iterations",
+              "value": 40
+            },
+            "final_absolute_residual": {
+              "unit": "function units",
+              "value": 1.6106786041140528e-15
+            },
+            "final_relative_residual": {
+              "unit": "dimensionless",
+              "value": 8.053393020570264e-16
+            },
+            "function_evaluations": {
+              "unit": "evaluations",
+              "value": 42
+            },
+            "status": 4,
+            "warm_wall": {
+              "unit": "s",
+              "value": 0.0005489580798894167
+            }
+          }
+        },
+        "name": "quadratic"
+      },
+      {
+        "bracket": [
+          0.0,
+          3.0
+        ],
+        "methods": {
+          "bisection": {
+            "converged": true,
+            "executed_iterations": {
+              "unit": "iterations",
+              "value": 48
+            },
+            "final_absolute_residual": {
+              "unit": "function units",
+              "value": 5.605193857299268e-45
+            },
+            "final_relative_residual": {
+              "unit": "dimensionless",
+              "value": 7.006492321624085e-46
+            },
+            "function_evaluations": {
+              "unit": "evaluations",
+              "value": 50
+            },
+            "status": "fixed_steps",
+            "warm_wall": {
+              "unit": "s",
+              "value": 5.624955520033836e-06
+            }
+          },
+          "safeguarded_hybrid": {
+            "converged": true,
+            "executed_iterations": {
+              "unit": "iterations",
+              "value": 3
+            },
+            "final_absolute_residual": {
+              "unit": "function units",
+              "value": 0.0
+            },
+            "final_relative_residual": {
+              "unit": "dimensionless",
+              "value": 0.0
+            },
+            "function_evaluations": {
+              "unit": "evaluations",
+              "value": 5
+            },
+            "status": 3,
+            "warm_wall": {
+              "unit": "s",
+              "value": 0.0003239999059587717
+            }
+          }
+        },
+        "name": "flat_slope"
+      },
+      {
+        "bracket": [
+          0.0,
+          1.0
+        ],
+        "methods": {
+          "bisection": {
+            "converged": true,
+            "executed_iterations": {
+              "unit": "iterations",
+              "value": 48
+            },
+            "final_absolute_residual": {
+              "unit": "function units",
+              "value": 2.1094237467877974e-15
+            },
+            "final_relative_residual": {
+              "unit": "dimensionless",
+              "value": 3.515706244646329e-15
+            },
+            "function_evaluations": {
+              "unit": "evaluations",
+              "value": 50
+            },
+            "status": "fixed_steps",
+            "warm_wall": {
+              "unit": "s",
+              "value": 5.417037755250931e-06
+            }
+          },
+          "safeguarded_hybrid": {
+            "converged": true,
+            "executed_iterations": {
+              "unit": "iterations",
+              "value": 48
+            },
+            "final_absolute_residual": {
+              "unit": "function units",
+              "value": 1.6062151608764452e-13
+            },
+            "final_relative_residual": {
+              "unit": "dimensionless",
+              "value": 2.6770252681274087e-13
+            },
+            "function_evaluations": {
+              "unit": "evaluations",
+              "value": 50
+            },
+            "status": 4,
+            "warm_wall": {
+              "unit": "s",
+              "value": 0.0006698749493807554
+            }
+          }
+        },
+        "name": "monotone_kink"
+      },
+      {
+        "bracket": [
+          0.0,
+          1.0
+        ],
+        "methods": {
+          "bisection": {
+            "converged": true,
+            "executed_iterations": {
+              "unit": "iterations",
+              "value": 48
+            },
+            "final_absolute_residual": {
+              "unit": "function units",
+              "value": 6.661338147750939e-16
+            },
+            "final_relative_residual": {
+              "unit": "dimensionless",
+              "value": 5.124106267500722e-16
+            },
+            "function_evaluations": {
+              "unit": "evaluations",
+              "value": 50
+            },
+            "status": "fixed_steps",
+            "warm_wall": {
+              "unit": "s",
+              "value": 5.208887159824371e-06
+            }
+          },
+          "safeguarded_hybrid": {
+            "converged": true,
+            "executed_iterations": {
+              "unit": "iterations",
+              "value": 1
+            },
+            "final_absolute_residual": {
+              "unit": "function units",
+              "value": 0.0
+            },
+            "final_relative_residual": {
+              "unit": "dimensionless",
+              "value": 0.0
+            },
+            "function_evaluations": {
+              "unit": "evaluations",
+              "value": 3
+            },
+            "status": 3,
+            "warm_wall": {
+              "unit": "s",
+              "value": 0.0002910420298576355
+            }
+          }
+        },
+        "name": "oscillatory_fixed_point_residual"
+      }
+    ],
+    "controls": {
+      "atol": 1e-12,
+      "bisection_steps": 48,
+      "hybrid_max_steps": 96,
+      "matched_coordinate_tolerance": {
+        "unit": "coordinate units",
+        "value": 5e-12
+      },
+      "rtol": 1e-12,
+      "safeguard_fraction": 0.1
+    },
+    "environment": {
+      "device": "cpu:0",
+      "git_revision": "fd28c3a592d9feff5145f4f6d02263af22f2e228",
+      "jax_backend": "cpu",
+      "jax_version": "0.10.1",
+      "measured_at_utc": "2026-07-13T02:34:53.941963+00:00",
+      "platform": "macOS-26.1-arm64-arm-64bit-Mach-O",
+      "python_version": "3.13.7",
+      "working_tree_dirty": true
+    },
+    "precision": "float64",
+    "relative_residual_definition": "abs(f(root)) / max(abs(f(lo)), abs(f(hi)))",
+    "schema_version": 1,
+    "warm_repeats": 21
+  },
+  "metrics": [
+    {
+      "identity": "flat_slope.bisection.executed_iterations",
+      "note": "",
+      "status": "pass",
+      "symbol": "N_iter",
+      "units": "iterations",
+      "value": 48
+    },
+    {
+      "identity": "flat_slope.bisection.final_absolute_residual",
+      "note": "",
+      "status": "pass",
+      "symbol": "abs(f(x_star))",
+      "units": "function units",
+      "value": 5.605193857299268e-45
+    },
+    {
+      "identity": "flat_slope.bisection.final_relative_residual",
+      "note": "",
+      "status": "pass",
+      "symbol": "R_root",
+      "units": "dimensionless",
+      "value": 7.006492321624085e-46
+    },
+    {
+      "identity": "flat_slope.bisection.function_evaluations",
+      "note": "",
+      "status": "pass",
+      "symbol": "N_eval",
+      "units": "evaluations",
+      "value": 50
+    },
+    {
+      "identity": "flat_slope.bisection.warm_wall",
+      "note": "",
+      "status": "info",
+      "symbol": "t_wall,warm",
+      "units": "s",
+      "value": 5.624955520033836e-06
+    },
+    {
+      "identity": "flat_slope.safeguarded_hybrid.executed_iterations",
+      "note": "",
+      "status": "pass",
+      "symbol": "N_iter",
+      "units": "iterations",
+      "value": 3
+    },
+    {
+      "identity": "flat_slope.safeguarded_hybrid.final_absolute_residual",
+      "note": "",
+      "status": "pass",
+      "symbol": "abs(f(x_star))",
+      "units": "function units",
+      "value": 0.0
+    },
+    {
+      "identity": "flat_slope.safeguarded_hybrid.final_relative_residual",
+      "note": "",
+      "status": "pass",
+      "symbol": "R_root",
+      "units": "dimensionless",
+      "value": 0.0
+    },
+    {
+      "identity": "flat_slope.safeguarded_hybrid.function_evaluations",
+      "note": "",
+      "status": "pass",
+      "symbol": "N_eval",
+      "units": "evaluations",
+      "value": 5
+    },
+    {
+      "identity": "flat_slope.safeguarded_hybrid.warm_wall",
+      "note": "",
+      "status": "info",
+      "symbol": "t_wall,warm",
+      "units": "s",
+      "value": 0.0003239999059587717
+    },
+    {
+      "identity": "linear.bisection.executed_iterations",
+      "note": "",
+      "status": "pass",
+      "symbol": "N_iter",
+      "units": "iterations",
+      "value": 48
+    },
+    {
+      "identity": "linear.bisection.final_absolute_residual",
+      "note": "",
+      "status": "pass",
+      "symbol": "abs(f(x_star))",
+      "units": "function units",
+      "value": 7.105427357601002e-15
+    },
+    {
+      "identity": "linear.bisection.final_relative_residual",
+      "note": "",
+      "status": "pass",
+      "symbol": "R_root",
+      "units": "dimensionless",
+      "value": 3.552713678800501e-15
+    },
+    {
+      "identity": "linear.bisection.function_evaluations",
+      "note": "",
+      "status": "pass",
+      "symbol": "N_eval",
+      "units": "evaluations",
+      "value": 50
+    },
+    {
+      "identity": "linear.bisection.warm_wall",
+      "note": "",
+      "status": "info",
+      "symbol": "t_wall,warm",
+      "units": "s",
+      "value": 5.209119990468025e-06
+    },
+    {
+      "identity": "linear.safeguarded_hybrid.executed_iterations",
+      "note": "",
+      "status": "pass",
+      "symbol": "N_iter",
+      "units": "iterations",
+      "value": 1
+    },
+    {
+      "identity": "linear.safeguarded_hybrid.final_absolute_residual",
+      "note": "",
+      "status": "pass",
+      "symbol": "abs(f(x_star))",
+      "units": "function units",
+      "value": 0.0
+    },
+    {
+      "identity": "linear.safeguarded_hybrid.final_relative_residual",
+      "note": "",
+      "status": "pass",
+      "symbol": "R_root",
+      "units": "dimensionless",
+      "value": 0.0
+    },
+    {
+      "identity": "linear.safeguarded_hybrid.function_evaluations",
+      "note": "",
+      "status": "pass",
+      "symbol": "N_eval",
+      "units": "evaluations",
+      "value": 3
+    },
+    {
+      "identity": "linear.safeguarded_hybrid.warm_wall",
+      "note": "",
+      "status": "info",
+      "symbol": "t_wall,warm",
+      "units": "s",
+      "value": 0.0005396248307079077
+    },
+    {
+      "identity": "monotone_kink.bisection.executed_iterations",
+      "note": "",
+      "status": "pass",
+      "symbol": "N_iter",
+      "units": "iterations",
+      "value": 48
+    },
+    {
+      "identity": "monotone_kink.bisection.final_absolute_residual",
+      "note": "",
+      "status": "pass",
+      "symbol": "abs(f(x_star))",
+      "units": "function units",
+      "value": 2.1094237467877974e-15
+    },
+    {
+      "identity": "monotone_kink.bisection.final_relative_residual",
+      "note": "",
+      "status": "pass",
+      "symbol": "R_root",
+      "units": "dimensionless",
+      "value": 3.515706244646329e-15
+    },
+    {
+      "identity": "monotone_kink.bisection.function_evaluations",
+      "note": "",
+      "status": "pass",
+      "symbol": "N_eval",
+      "units": "evaluations",
+      "value": 50
+    },
+    {
+      "identity": "monotone_kink.bisection.warm_wall",
+      "note": "",
+      "status": "info",
+      "symbol": "t_wall,warm",
+      "units": "s",
+      "value": 5.417037755250931e-06
+    },
+    {
+      "identity": "monotone_kink.safeguarded_hybrid.executed_iterations",
+      "note": "",
+      "status": "pass",
+      "symbol": "N_iter",
+      "units": "iterations",
+      "value": 48
+    },
+    {
+      "identity": "monotone_kink.safeguarded_hybrid.final_absolute_residual",
+      "note": "",
+      "status": "pass",
+      "symbol": "abs(f(x_star))",
+      "units": "function units",
+      "value": 1.6062151608764452e-13
+    },
+    {
+      "identity": "monotone_kink.safeguarded_hybrid.final_relative_residual",
+      "note": "",
+      "status": "pass",
+      "symbol": "R_root",
+      "units": "dimensionless",
+      "value": 2.6770252681274087e-13
+    },
+    {
+      "identity": "monotone_kink.safeguarded_hybrid.function_evaluations",
+      "note": "",
+      "status": "pass",
+      "symbol": "N_eval",
+      "units": "evaluations",
+      "value": 50
+    },
+    {
+      "identity": "monotone_kink.safeguarded_hybrid.warm_wall",
+      "note": "",
+      "status": "info",
+      "symbol": "t_wall,warm",
+      "units": "s",
+      "value": 0.0006698749493807554
+    },
+    {
+      "identity": "oscillatory_fixed_point_residual.bisection.executed_iterations",
+      "note": "",
+      "status": "pass",
+      "symbol": "N_iter",
+      "units": "iterations",
+      "value": 48
+    },
+    {
+      "identity": "oscillatory_fixed_point_residual.bisection.final_absolute_residual",
+      "note": "",
+      "status": "pass",
+      "symbol": "abs(f(x_star))",
+      "units": "function units",
+      "value": 6.661338147750939e-16
+    },
+    {
+      "identity": "oscillatory_fixed_point_residual.bisection.final_relative_residual",
+      "note": "",
+      "status": "pass",
+      "symbol": "R_root",
+      "units": "dimensionless",
+      "value": 5.124106267500722e-16
+    },
+    {
+      "identity": "oscillatory_fixed_point_residual.bisection.function_evaluations",
+      "note": "",
+      "status": "pass",
+      "symbol": "N_eval",
+      "units": "evaluations",
+      "value": 50
+    },
+    {
+      "identity": "oscillatory_fixed_point_residual.bisection.warm_wall",
+      "note": "",
+      "status": "info",
+      "symbol": "t_wall,warm",
+      "units": "s",
+      "value": 5.208887159824371e-06
+    },
+    {
+      "identity": "oscillatory_fixed_point_residual.safeguarded_hybrid.executed_iterations",
+      "note": "",
+      "status": "pass",
+      "symbol": "N_iter",
+      "units": "iterations",
+      "value": 1
+    },
+    {
+      "identity": "oscillatory_fixed_point_residual.safeguarded_hybrid.final_absolute_residual",
+      "note": "",
+      "status": "pass",
+      "symbol": "abs(f(x_star))",
+      "units": "function units",
+      "value": 0.0
+    },
+    {
+      "identity": "oscillatory_fixed_point_residual.safeguarded_hybrid.final_relative_residual",
+      "note": "",
+      "status": "pass",
+      "symbol": "R_root",
+      "units": "dimensionless",
+      "value": 0.0
+    },
+    {
+      "identity": "oscillatory_fixed_point_residual.safeguarded_hybrid.function_evaluations",
+      "note": "",
+      "status": "pass",
+      "symbol": "N_eval",
+      "units": "evaluations",
+      "value": 3
+    },
+    {
+      "identity": "oscillatory_fixed_point_residual.safeguarded_hybrid.warm_wall",
+      "note": "",
+      "status": "info",
+      "symbol": "t_wall,warm",
+      "units": "s",
+      "value": 0.0002910420298576355
+    },
+    {
+      "identity": "quadratic.bisection.executed_iterations",
+      "note": "",
+      "status": "pass",
+      "symbol": "N_iter",
+      "units": "iterations",
+      "value": 48
+    },
+    {
+      "identity": "quadratic.bisection.final_absolute_residual",
+      "note": "",
+      "status": "pass",
+      "symbol": "abs(f(x_star))",
+      "units": "function units",
+      "value": 2.220446049250313e-15
+    },
+    {
+      "identity": "quadratic.bisection.final_relative_residual",
+      "note": "",
+      "status": "pass",
+      "symbol": "R_root",
+      "units": "dimensionless",
+      "value": 1.1102230246251565e-15
+    },
+    {
+      "identity": "quadratic.bisection.function_evaluations",
+      "note": "",
+      "status": "pass",
+      "symbol": "N_eval",
+      "units": "evaluations",
+      "value": 50
+    },
+    {
+      "identity": "quadratic.bisection.warm_wall",
+      "note": "",
+      "status": "info",
+      "symbol": "t_wall,warm",
+      "units": "s",
+      "value": 5.208887159824371e-06
+    },
+    {
+      "identity": "quadratic.safeguarded_hybrid.executed_iterations",
+      "note": "",
+      "status": "pass",
+      "symbol": "N_iter",
+      "units": "iterations",
+      "value": 40
+    },
+    {
+      "identity": "quadratic.safeguarded_hybrid.final_absolute_residual",
+      "note": "",
+      "status": "pass",
+      "symbol": "abs(f(x_star))",
+      "units": "function units",
+      "value": 1.6106786041140528e-15
+    },
+    {
+      "identity": "quadratic.safeguarded_hybrid.final_relative_residual",
+      "note": "",
+      "status": "pass",
+      "symbol": "R_root",
+      "units": "dimensionless",
+      "value": 8.053393020570264e-16
+    },
+    {
+      "identity": "quadratic.safeguarded_hybrid.function_evaluations",
+      "note": "",
+      "status": "pass",
+      "symbol": "N_eval",
+      "units": "evaluations",
+      "value": 42
+    },
+    {
+      "identity": "quadratic.safeguarded_hybrid.warm_wall",
+      "note": "",
+      "status": "info",
+      "symbol": "t_wall,warm",
+      "units": "s",
+      "value": 0.0005489580798894167
+    }
+  ],
+  "package_version": "0.1.0",
   "precision": "float64",
-  "relative_residual_definition": "abs(f(root)) / max(abs(f(lo)), abs(f(hi)))",
-  "schema_version": 1,
-  "warm_repeats": 21
+  "schema_version": "1",
+  "source_revision": "fd28c3a592d9feff5145f4f6d02263af22f2e228"
 }

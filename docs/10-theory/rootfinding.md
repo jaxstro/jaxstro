@@ -203,7 +203,9 @@ telemetry, not universal speed for every residual.
 :::
 
 The reproducible evaluation-count and warm-timing comparison with fixed-count
-bisection is stored in [](../validation/rootfinding-performance.json). The
+bisection is available as a
+[human-readable evidence report](../validation/rootfinding-performance.md) and
+[machine-readable envelope](../validation/rootfinding-performance.json). The
 benchmark treats function-evaluation count as the primary algorithmic cost and
 does not impose a hardware-dependent wall-time threshold. The ratified gate
 requires the hybrid not to exceed bisection evaluations on any of five cases and

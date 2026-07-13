@@ -22,6 +22,18 @@ enable_high_precision()
 import jax  # noqa: E402
 import jax.numpy as jnp  # noqa: E402
 
+from jaxstro import __version__  # noqa: E402
+from jaxstro.evidence import (  # noqa: E402
+    ComparisonRecord,
+    ComparisonRelation,
+    EnvironmentRecord,
+    EvidenceArtifact,
+    EvidenceStatus,
+    MetricRecord,
+    artifact_from_dict,
+    check_artifact,
+    emit_artifact,
+)
 from jaxstro.numerics.rootfinding import (  # noqa: E402
     bisect,
     safeguarded_bracketed_root,
@@ -35,6 +47,7 @@ RTOL = 1.0e-12
 SAFEGUARD_FRACTION = 0.1
 REPO_ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = REPO_ROOT / "docs" / "validation" / "rootfinding-performance.json"
+REPORT = REPO_ROOT / "docs" / "validation" / "rootfinding-performance.md"
 
 
 class Case(NamedTuple):
@@ -196,6 +209,67 @@ def _validate(payload: dict[str, Any]) -> None:
         raise ValueError("forward efficiency gate requires three 25% reductions")
 
 
+def build_artifact(payload: dict[str, Any]) -> EvidenceArtifact:
+    """Wrap unchanged measurements in the shared evidence envelope."""
+    metrics = []
+    comparisons = []
+    symbols = {
+        "function_evaluations": "N_eval",
+        "executed_iterations": "N_iter",
+        "final_absolute_residual": "abs(f(x_star))",
+        "final_relative_residual": "R_root",
+        "warm_wall": "t_wall,warm",
+    }
+    for case in payload["cases"]:
+        methods = case["methods"]
+        for method_name, method in methods.items():
+            for metric_name, symbol in symbols.items():
+                measured = method[metric_name]
+                identity = f"{case['name']}.{method_name}.{metric_name}"
+                metrics.append(
+                    MetricRecord(
+                        identity,
+                        symbol,
+                        measured["value"],
+                        measured["unit"],
+                        EvidenceStatus.INFO
+                        if metric_name == "warm_wall"
+                        else EvidenceStatus.PASS,
+                    )
+                )
+        hybrid_id = f"{case['name']}.safeguarded_hybrid.function_evaluations"
+        comparisons.append(
+            ComparisonRecord(
+                f"{case['name']}.hybrid-no-more-evaluations",
+                hybrid_id,
+                ComparisonRelation.LESS_EQUAL,
+                methods["bisection"]["function_evaluations"]["value"],
+                "evaluations",
+                EvidenceStatus.PASS,
+                note="Hybrid evaluation count must not exceed fixed-step bisection.",
+            )
+        )
+    environment = payload["environment"]
+    return EvidenceArtifact(
+        schema_version="1",
+        artifact_id="rootfinding.performance",
+        artifact_version="1",
+        package_version=__version__,
+        source_revision=environment["git_revision"],
+        generation_command="uv run --no-sync python scripts/benchmark_rootfinding.py --emit",
+        precision=payload["precision"],
+        deterministic_config=tuple(sorted(payload["controls"].items())),
+        environment=EnvironmentRecord(
+            "Recorded execution environment; wall metrics are informational.",
+            tuple((key, str(value)) for key, value in sorted(environment.items())),
+        ),
+        metrics=tuple(metrics),
+        comparisons=tuple(comparisons),
+        limitations=("Warm wall time is hardware- and load-dependent.",),
+        method_payload=payload,
+    )
+
+
 def _algorithmic_metrics_match(stored: dict[str, Any], current: dict[str, Any]) -> bool:
     stored_cases = {case["name"]: case for case in stored["cases"]}
     current_cases = {case["name"]: case for case in current["cases"]}
@@ -232,18 +306,20 @@ def main() -> int:
 
     current = run_benchmark()
     _validate(current)
+    current_artifact = build_artifact(current)
     if args.emit:
-        OUTPUT.write_text(
-            json.dumps(current, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-        )
+        emit_artifact(OUTPUT, current_artifact)
+        emit_artifact(REPORT, current_artifact)
         print(f"wrote {OUTPUT.relative_to(REPO_ROOT)}")
         return 0
 
     if not OUTPUT.exists():
         print("rootfinding benchmark manifest is missing")
         return 1
-    stored = json.loads(OUTPUT.read_text(encoding="utf-8"))
+    stored_artifact = artifact_from_dict(json.loads(OUTPUT.read_text(encoding="utf-8")))
+    stored = stored_artifact.method_payload
     _validate(stored)
+    check_artifact(REPORT, stored_artifact)
     if not _algorithmic_metrics_match(stored, current):
         print("rootfinding benchmark algorithmic metrics are stale")
         return 1

@@ -9,10 +9,18 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = REPO_ROOT / "docs" / "validation" / "rootfinding-performance.json"
+REPORT = REPO_ROOT / "docs" / "validation" / "rootfinding-performance.md"
 
 
 def test_rootfinding_benchmark_manifest_has_required_metrics_and_units() -> None:
     payload = json.loads(MANIFEST.read_text(encoding="utf-8"))
+
+    assert payload["schema_version"] == "1"
+    assert payload["artifact_id"] == "rootfinding.performance"
+    assert payload["metrics"]
+    assert payload["comparisons"]
+    assert REPORT.is_file()
+    payload = payload["method_payload"]
 
     assert payload["schema_version"] == 1
     assert payload["precision"] == "float64"
