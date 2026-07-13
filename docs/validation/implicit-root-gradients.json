@@ -1,158 +1,590 @@
 {
-  "cases": [
+  "artifact_id": "rootfinding.implicit-gradients",
+  "artifact_version": "1",
+  "comparisons": [
     {
-      "absolute_residual": {
-        "unit": "function units",
-        "value": 0.0
-      },
-      "ad_derivative": {
-        "unit": "coordinate units per parameter unit",
-        "value": 1.0
-      },
-      "analytic_derivative": {
-        "unit": "coordinate units per parameter unit",
-        "value": 1.0
-      },
-      "bracket_width": {
-        "unit": "coordinate units",
-        "value": 0.0
-      },
-      "certified": true,
-      "fd_derivative": {
-        "unit": "coordinate units per parameter unit",
-        "value": 1.0000000000065512
-      },
-      "name": "linear",
-      "relative_ad_analytic_error": {
-        "unit": "dimensionless",
-        "value": 0.0
-      },
-      "relative_ad_fd_error": {
-        "unit": "dimensionless",
-        "value": 6.551204023665206e-12
-      },
-      "root": {
-        "unit": "coordinate units",
-        "value": 2.0
-      },
-      "slope_magnitude": {
-        "unit": "function units per coordinate unit",
-        "value": 1.0
-      },
-      "status": 0
+      "atol": 0.0,
+      "identity": "exponential.absolute_residual.gate",
+      "metric_id": "exponential.absolute_residual",
+      "note": "Existing implicit-root validation threshold.",
+      "reference": 1e-12,
+      "relation": "less_equal",
+      "rtol": 0.0,
+      "status": "pass",
+      "units": "function units"
     },
     {
-      "absolute_residual": {
-        "unit": "function units",
-        "value": 4.440892098500626e-16
-      },
-      "ad_derivative": {
-        "unit": "coordinate units per parameter unit",
-        "value": 0.3535533905932738
-      },
-      "analytic_derivative": {
-        "unit": "coordinate units per parameter unit",
-        "value": 0.35355339059327373
-      },
-      "bracket_width": {
-        "unit": "coordinate units",
-        "value": 1.7763568394002505e-14
-      },
-      "certified": true,
-      "fd_derivative": {
-        "unit": "coordinate units per parameter unit",
-        "value": 0.35355339059739416
-      },
-      "name": "quadratic",
-      "relative_ad_analytic_error": {
-        "unit": "dimensionless",
-        "value": 1.5700924586837752e-16
-      },
-      "relative_ad_fd_error": {
-        "unit": "dimensionless",
-        "value": 1.1654168283690369e-11
-      },
-      "root": {
-        "unit": "coordinate units",
-        "value": 1.414213562373095
-      },
-      "slope_magnitude": {
-        "unit": "function units per coordinate unit",
-        "value": 2.82842712474619
-      },
-      "status": 0
+      "atol": 0.0,
+      "identity": "exponential.bracket_width.gate",
+      "metric_id": "exponential.bracket_width",
+      "note": "Existing implicit-root validation threshold.",
+      "reference": 1e-12,
+      "relation": "less_equal",
+      "rtol": 0.0,
+      "status": "pass",
+      "units": "coordinate units"
     },
     {
-      "absolute_residual": {
-        "unit": "function units",
-        "value": 0.0
-      },
-      "ad_derivative": {
-        "unit": "coordinate units per parameter unit",
-        "value": 0.5
-      },
-      "analytic_derivative": {
-        "unit": "coordinate units per parameter unit",
-        "value": 0.5
-      },
-      "bracket_width": {
-        "unit": "coordinate units",
-        "value": 0.0
-      },
-      "certified": true,
-      "fd_derivative": {
-        "unit": "coordinate units per parameter unit",
-        "value": 0.5000000000088267
-      },
-      "name": "exponential",
-      "relative_ad_analytic_error": {
-        "unit": "dimensionless",
-        "value": 0.0
-      },
-      "relative_ad_fd_error": {
-        "unit": "dimensionless",
-        "value": 1.7653434269648046e-11
-      },
-      "root": {
-        "unit": "coordinate units",
-        "value": 0.6931471805599453
-      },
-      "slope_magnitude": {
-        "unit": "function units per coordinate unit",
-        "value": 2.0
-      },
-      "status": 0
+      "atol": 0.0,
+      "identity": "exponential.relative_ad_analytic_error.gate",
+      "metric_id": "exponential.relative_ad_analytic_error",
+      "note": "Existing implicit-root validation threshold.",
+      "reference": 1e-09,
+      "relation": "less_equal",
+      "rtol": 0.0,
+      "status": "pass",
+      "units": "dimensionless"
+    },
+    {
+      "atol": 0.0,
+      "identity": "exponential.relative_ad_fd_error.gate",
+      "metric_id": "exponential.relative_ad_fd_error",
+      "note": "Existing implicit-root validation threshold.",
+      "reference": 1e-06,
+      "relation": "less_equal",
+      "rtol": 0.0,
+      "status": "pass",
+      "units": "dimensionless"
+    },
+    {
+      "atol": 0.0,
+      "identity": "linear.absolute_residual.gate",
+      "metric_id": "linear.absolute_residual",
+      "note": "Existing implicit-root validation threshold.",
+      "reference": 1e-12,
+      "relation": "less_equal",
+      "rtol": 0.0,
+      "status": "pass",
+      "units": "function units"
+    },
+    {
+      "atol": 0.0,
+      "identity": "linear.bracket_width.gate",
+      "metric_id": "linear.bracket_width",
+      "note": "Existing implicit-root validation threshold.",
+      "reference": 1e-12,
+      "relation": "less_equal",
+      "rtol": 0.0,
+      "status": "pass",
+      "units": "coordinate units"
+    },
+    {
+      "atol": 0.0,
+      "identity": "linear.relative_ad_analytic_error.gate",
+      "metric_id": "linear.relative_ad_analytic_error",
+      "note": "Existing implicit-root validation threshold.",
+      "reference": 1e-09,
+      "relation": "less_equal",
+      "rtol": 0.0,
+      "status": "pass",
+      "units": "dimensionless"
+    },
+    {
+      "atol": 0.0,
+      "identity": "linear.relative_ad_fd_error.gate",
+      "metric_id": "linear.relative_ad_fd_error",
+      "note": "Existing implicit-root validation threshold.",
+      "reference": 1e-06,
+      "relation": "less_equal",
+      "rtol": 0.0,
+      "status": "pass",
+      "units": "dimensionless"
+    },
+    {
+      "atol": 0.0,
+      "identity": "quadratic.absolute_residual.gate",
+      "metric_id": "quadratic.absolute_residual",
+      "note": "Existing implicit-root validation threshold.",
+      "reference": 1e-12,
+      "relation": "less_equal",
+      "rtol": 0.0,
+      "status": "pass",
+      "units": "function units"
+    },
+    {
+      "atol": 0.0,
+      "identity": "quadratic.bracket_width.gate",
+      "metric_id": "quadratic.bracket_width",
+      "note": "Existing implicit-root validation threshold.",
+      "reference": 1e-12,
+      "relation": "less_equal",
+      "rtol": 0.0,
+      "status": "pass",
+      "units": "coordinate units"
+    },
+    {
+      "atol": 0.0,
+      "identity": "quadratic.relative_ad_analytic_error.gate",
+      "metric_id": "quadratic.relative_ad_analytic_error",
+      "note": "Existing implicit-root validation threshold.",
+      "reference": 1e-09,
+      "relation": "less_equal",
+      "rtol": 0.0,
+      "status": "pass",
+      "units": "dimensionless"
+    },
+    {
+      "atol": 0.0,
+      "identity": "quadratic.relative_ad_fd_error.gate",
+      "metric_id": "quadratic.relative_ad_fd_error",
+      "note": "Existing implicit-root validation threshold.",
+      "reference": 1e-06,
+      "relation": "less_equal",
+      "rtol": 0.0,
+      "status": "pass",
+      "units": "dimensionless"
     }
   ],
-  "controls": {
-    "fd_step": {
-      "unit": "parameter units",
-      "value": 1e-05
-    },
-    "residual_limit": {
-      "unit": "function units",
-      "value": 1e-12
-    },
-    "slope_floor": {
-      "unit": "function units per coordinate unit",
-      "value": 1e-08
-    },
-    "width_limit": {
-      "unit": "coordinate units",
-      "value": 1e-12
-    }
-  },
+  "deterministic_config": [
+    [
+      "fd_step",
+      {
+        "unit": "parameter units",
+        "value": 1e-05
+      }
+    ],
+    [
+      "residual_limit",
+      {
+        "unit": "function units",
+        "value": 1e-12
+      }
+    ],
+    [
+      "slope_floor",
+      {
+        "unit": "function units per coordinate unit",
+        "value": 1e-08
+      }
+    ],
+    [
+      "width_limit",
+      {
+        "unit": "coordinate units",
+        "value": 1e-12
+      }
+    ]
+  ],
   "environment": {
-    "device": "cpu:0",
-    "git_revision": "3dee9413f5352a6a63c5359f486cab2228150f85",
-    "jax_backend": "cpu",
-    "jax_version": "0.10.1",
-    "measured_at_utc": "2026-07-12T22:20:42.946566+00:00",
-    "platform": "macOS-26.1-arm64-arm-64bit-Mach-O",
-    "python_version": "3.13.7",
-    "working_tree_dirty": true
+    "policy": "environment is an emission snapshot; --check gates deterministic controls, schema, units, and algorithmic metrics, not current revision",
+    "values": [
+      [
+        "device",
+        "cpu:0"
+      ],
+      [
+        "git_revision",
+        "d292b9000ce98f62a512d56d1b3052604adc7f0d"
+      ],
+      [
+        "jax_backend",
+        "cpu"
+      ],
+      [
+        "jax_version",
+        "0.10.1"
+      ],
+      [
+        "measured_at_utc",
+        "2026-07-13T02:38:22.797093+00:00"
+      ],
+      [
+        "platform",
+        "macOS-26.1-arm64-arm-64bit-Mach-O"
+      ],
+      [
+        "python_version",
+        "3.13.7"
+      ],
+      [
+        "working_tree_dirty",
+        "True"
+      ]
+    ]
   },
+  "generation_command": "uv run --no-sync python scripts/benchmark_implicit_root.py --emit",
+  "limitations": [
+    "Certification relies on caller assertions of uniqueness and smoothness.",
+    "Flat-slope rejection is validated in executable tests, not represented as a certified case."
+  ],
+  "method_payload": {
+    "cases": [
+      {
+        "absolute_residual": {
+          "unit": "function units",
+          "value": 0.0
+        },
+        "ad_derivative": {
+          "unit": "coordinate units per parameter unit",
+          "value": 1.0
+        },
+        "analytic_derivative": {
+          "unit": "coordinate units per parameter unit",
+          "value": 1.0
+        },
+        "bracket_width": {
+          "unit": "coordinate units",
+          "value": 0.0
+        },
+        "certified": true,
+        "fd_derivative": {
+          "unit": "coordinate units per parameter unit",
+          "value": 1.0000000000065512
+        },
+        "name": "linear",
+        "relative_ad_analytic_error": {
+          "unit": "dimensionless",
+          "value": 0.0
+        },
+        "relative_ad_fd_error": {
+          "unit": "dimensionless",
+          "value": 6.551204023665206e-12
+        },
+        "root": {
+          "unit": "coordinate units",
+          "value": 2.0
+        },
+        "slope_magnitude": {
+          "unit": "function units per coordinate unit",
+          "value": 1.0
+        },
+        "status": 0
+      },
+      {
+        "absolute_residual": {
+          "unit": "function units",
+          "value": 4.440892098500626e-16
+        },
+        "ad_derivative": {
+          "unit": "coordinate units per parameter unit",
+          "value": 0.3535533905932738
+        },
+        "analytic_derivative": {
+          "unit": "coordinate units per parameter unit",
+          "value": 0.35355339059327373
+        },
+        "bracket_width": {
+          "unit": "coordinate units",
+          "value": 1.7763568394002505e-14
+        },
+        "certified": true,
+        "fd_derivative": {
+          "unit": "coordinate units per parameter unit",
+          "value": 0.35355339059739416
+        },
+        "name": "quadratic",
+        "relative_ad_analytic_error": {
+          "unit": "dimensionless",
+          "value": 1.5700924586837752e-16
+        },
+        "relative_ad_fd_error": {
+          "unit": "dimensionless",
+          "value": 1.1654168283690369e-11
+        },
+        "root": {
+          "unit": "coordinate units",
+          "value": 1.414213562373095
+        },
+        "slope_magnitude": {
+          "unit": "function units per coordinate unit",
+          "value": 2.82842712474619
+        },
+        "status": 0
+      },
+      {
+        "absolute_residual": {
+          "unit": "function units",
+          "value": 0.0
+        },
+        "ad_derivative": {
+          "unit": "coordinate units per parameter unit",
+          "value": 0.5
+        },
+        "analytic_derivative": {
+          "unit": "coordinate units per parameter unit",
+          "value": 0.5
+        },
+        "bracket_width": {
+          "unit": "coordinate units",
+          "value": 0.0
+        },
+        "certified": true,
+        "fd_derivative": {
+          "unit": "coordinate units per parameter unit",
+          "value": 0.5000000000088267
+        },
+        "name": "exponential",
+        "relative_ad_analytic_error": {
+          "unit": "dimensionless",
+          "value": 0.0
+        },
+        "relative_ad_fd_error": {
+          "unit": "dimensionless",
+          "value": 1.7653434269648046e-11
+        },
+        "root": {
+          "unit": "coordinate units",
+          "value": 0.6931471805599453
+        },
+        "slope_magnitude": {
+          "unit": "function units per coordinate unit",
+          "value": 2.0
+        },
+        "status": 0
+      }
+    ],
+    "controls": {
+      "fd_step": {
+        "unit": "parameter units",
+        "value": 1e-05
+      },
+      "residual_limit": {
+        "unit": "function units",
+        "value": 1e-12
+      },
+      "slope_floor": {
+        "unit": "function units per coordinate unit",
+        "value": 1e-08
+      },
+      "width_limit": {
+        "unit": "coordinate units",
+        "value": 1e-12
+      }
+    },
+    "environment": {
+      "device": "cpu:0",
+      "git_revision": "d292b9000ce98f62a512d56d1b3052604adc7f0d",
+      "jax_backend": "cpu",
+      "jax_version": "0.10.1",
+      "measured_at_utc": "2026-07-13T02:38:22.797093+00:00",
+      "platform": "macOS-26.1-arm64-arm-64bit-Mach-O",
+      "python_version": "3.13.7",
+      "working_tree_dirty": true
+    },
+    "precision": "float64",
+    "provenance_policy": "environment is an emission snapshot; --check gates deterministic controls, schema, units, and algorithmic metrics, not current revision",
+    "schema_version": 2
+  },
+  "metrics": [
+    {
+      "identity": "exponential.absolute_residual",
+      "note": "",
+      "status": "pass",
+      "symbol": "abs(f(x_star))",
+      "units": "function units",
+      "value": 0.0
+    },
+    {
+      "identity": "exponential.ad_derivative",
+      "note": "",
+      "status": "pass",
+      "symbol": "dx_star/dtheta|AD",
+      "units": "coordinate units per parameter unit",
+      "value": 0.5
+    },
+    {
+      "identity": "exponential.analytic_derivative",
+      "note": "",
+      "status": "pass",
+      "symbol": "dx_star/dtheta|analytic",
+      "units": "coordinate units per parameter unit",
+      "value": 0.5
+    },
+    {
+      "identity": "exponential.bracket_width",
+      "note": "",
+      "status": "pass",
+      "symbol": "Delta_x",
+      "units": "coordinate units",
+      "value": 0.0
+    },
+    {
+      "identity": "exponential.fd_derivative",
+      "note": "",
+      "status": "pass",
+      "symbol": "dx_star/dtheta|FD",
+      "units": "coordinate units per parameter unit",
+      "value": 0.5000000000088267
+    },
+    {
+      "identity": "exponential.relative_ad_analytic_error",
+      "note": "",
+      "status": "pass",
+      "symbol": "R_AD,analytic",
+      "units": "dimensionless",
+      "value": 0.0
+    },
+    {
+      "identity": "exponential.relative_ad_fd_error",
+      "note": "",
+      "status": "pass",
+      "symbol": "R_AD,FD",
+      "units": "dimensionless",
+      "value": 1.7653434269648046e-11
+    },
+    {
+      "identity": "exponential.root",
+      "note": "",
+      "status": "pass",
+      "symbol": "x_star",
+      "units": "coordinate units",
+      "value": 0.6931471805599453
+    },
+    {
+      "identity": "exponential.slope_magnitude",
+      "note": "",
+      "status": "pass",
+      "symbol": "abs(df/dx)",
+      "units": "function units per coordinate unit",
+      "value": 2.0
+    },
+    {
+      "identity": "linear.absolute_residual",
+      "note": "",
+      "status": "pass",
+      "symbol": "abs(f(x_star))",
+      "units": "function units",
+      "value": 0.0
+    },
+    {
+      "identity": "linear.ad_derivative",
+      "note": "",
+      "status": "pass",
+      "symbol": "dx_star/dtheta|AD",
+      "units": "coordinate units per parameter unit",
+      "value": 1.0
+    },
+    {
+      "identity": "linear.analytic_derivative",
+      "note": "",
+      "status": "pass",
+      "symbol": "dx_star/dtheta|analytic",
+      "units": "coordinate units per parameter unit",
+      "value": 1.0
+    },
+    {
+      "identity": "linear.bracket_width",
+      "note": "",
+      "status": "pass",
+      "symbol": "Delta_x",
+      "units": "coordinate units",
+      "value": 0.0
+    },
+    {
+      "identity": "linear.fd_derivative",
+      "note": "",
+      "status": "pass",
+      "symbol": "dx_star/dtheta|FD",
+      "units": "coordinate units per parameter unit",
+      "value": 1.0000000000065512
+    },
+    {
+      "identity": "linear.relative_ad_analytic_error",
+      "note": "",
+      "status": "pass",
+      "symbol": "R_AD,analytic",
+      "units": "dimensionless",
+      "value": 0.0
+    },
+    {
+      "identity": "linear.relative_ad_fd_error",
+      "note": "",
+      "status": "pass",
+      "symbol": "R_AD,FD",
+      "units": "dimensionless",
+      "value": 6.551204023665206e-12
+    },
+    {
+      "identity": "linear.root",
+      "note": "",
+      "status": "pass",
+      "symbol": "x_star",
+      "units": "coordinate units",
+      "value": 2.0
+    },
+    {
+      "identity": "linear.slope_magnitude",
+      "note": "",
+      "status": "pass",
+      "symbol": "abs(df/dx)",
+      "units": "function units per coordinate unit",
+      "value": 1.0
+    },
+    {
+      "identity": "quadratic.absolute_residual",
+      "note": "",
+      "status": "pass",
+      "symbol": "abs(f(x_star))",
+      "units": "function units",
+      "value": 4.440892098500626e-16
+    },
+    {
+      "identity": "quadratic.ad_derivative",
+      "note": "",
+      "status": "pass",
+      "symbol": "dx_star/dtheta|AD",
+      "units": "coordinate units per parameter unit",
+      "value": 0.3535533905932738
+    },
+    {
+      "identity": "quadratic.analytic_derivative",
+      "note": "",
+      "status": "pass",
+      "symbol": "dx_star/dtheta|analytic",
+      "units": "coordinate units per parameter unit",
+      "value": 0.35355339059327373
+    },
+    {
+      "identity": "quadratic.bracket_width",
+      "note": "",
+      "status": "pass",
+      "symbol": "Delta_x",
+      "units": "coordinate units",
+      "value": 1.7763568394002505e-14
+    },
+    {
+      "identity": "quadratic.fd_derivative",
+      "note": "",
+      "status": "pass",
+      "symbol": "dx_star/dtheta|FD",
+      "units": "coordinate units per parameter unit",
+      "value": 0.35355339059739416
+    },
+    {
+      "identity": "quadratic.relative_ad_analytic_error",
+      "note": "",
+      "status": "pass",
+      "symbol": "R_AD,analytic",
+      "units": "dimensionless",
+      "value": 1.5700924586837752e-16
+    },
+    {
+      "identity": "quadratic.relative_ad_fd_error",
+      "note": "",
+      "status": "pass",
+      "symbol": "R_AD,FD",
+      "units": "dimensionless",
+      "value": 1.1654168283690369e-11
+    },
+    {
+      "identity": "quadratic.root",
+      "note": "",
+      "status": "pass",
+      "symbol": "x_star",
+      "units": "coordinate units",
+      "value": 1.414213562373095
+    },
+    {
+      "identity": "quadratic.slope_magnitude",
+      "note": "",
+      "status": "pass",
+      "symbol": "abs(df/dx)",
+      "units": "function units per coordinate unit",
+      "value": 2.82842712474619
+    }
+  ],
+  "package_version": "0.1.0",
   "precision": "float64",
-  "provenance_policy": "environment is an emission snapshot; --check gates deterministic controls, schema, units, and algorithmic metrics, not current revision",
-  "schema_version": 2
+  "schema_version": "1",
+  "source_revision": "d292b9000ce98f62a512d56d1b3052604adc7f0d"
 }

@@ -11,10 +11,21 @@ EVIDENCE = (
     / "validation"
     / "implicit-root-gradients.json"
 )
+REPORT = EVIDENCE.with_suffix(".md")
+
+
+def _payload() -> dict:
+    envelope = json.loads(EVIDENCE.read_text(encoding="utf-8"))
+    assert envelope["schema_version"] == "1"
+    assert envelope["artifact_id"] == "rootfinding.implicit-gradients"
+    assert envelope["metrics"]
+    assert envelope["comparisons"]
+    assert REPORT.is_file()
+    return envelope["method_payload"]
 
 
 def test_implicit_root_evidence_has_units_and_passes_claim_bounds() -> None:
-    payload = json.loads(EVIDENCE.read_text(encoding="utf-8"))
+    payload = _payload()
 
     assert payload["schema_version"] == 2
     assert payload["precision"] == "float64"
@@ -35,14 +46,14 @@ def test_implicit_root_evidence_has_units_and_passes_claim_bounds() -> None:
 
 
 def test_implicit_root_evidence_matches_fresh_algorithmic_metrics() -> None:
-    stored = json.loads(EVIDENCE.read_text(encoding="utf-8"))
+    stored = _payload()
     current = benchmark_implicit_root.run_benchmark()
 
     assert benchmark_implicit_root.algorithmic_metrics_match(stored, current)
 
 
 def test_implicit_root_evidence_records_environment_fields() -> None:
-    payload = json.loads(EVIDENCE.read_text(encoding="utf-8"))
+    payload = _payload()
 
     assert set(payload["environment"]) == {
         "device",
@@ -70,11 +81,11 @@ def test_implicit_root_evidence_records_environment_fields() -> None:
 
 
 def test_implicit_root_evidence_matcher_rejects_control_and_unit_drift() -> None:
-    stored = json.loads(EVIDENCE.read_text(encoding="utf-8"))
+    stored = _payload()
     current = benchmark_implicit_root.run_benchmark()
     stored["controls"]["fd_step"]["value"] = 999.0
     assert not benchmark_implicit_root.algorithmic_metrics_match(stored, current)
 
-    stored = json.loads(EVIDENCE.read_text(encoding="utf-8"))
+    stored = _payload()
     stored["cases"][0]["root"]["unit"] = "wrong units"
     assert not benchmark_implicit_root.algorithmic_metrics_match(stored, current)

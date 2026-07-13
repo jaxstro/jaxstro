@@ -279,10 +279,12 @@ rejection, not as a derivative estimate.
   - coordinate units per parameter unit
 ```
 
-These values are copied from the JSON artifact generated and freshness-checked
-by `scripts/benchmark_implicit_root.py`. A documentation test requires the table
-to match that artifact; the JSON and numerical tests remain the primary
-executable evidence.
+These values are copied from the
+[machine-readable envelope](../validation/implicit-root-gradients.json), with a
+[human-readable evidence report](../validation/implicit-root-gradients.md), both
+generated and freshness-checked by `scripts/benchmark_implicit_root.py`. A
+documentation test requires the table to match that artifact; the JSON and
+numerical tests remain the primary executable evidence.
 
 ## `newton` and `newton_with_grad` — smooth iterates, finite-map gradients
 

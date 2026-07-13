@@ -54,6 +54,7 @@ def test_rootfinding_metric_table_matches_generated_quadratic_evidence() -> None
             encoding="utf-8"
         )
     )
+    payload = payload["method_payload"]
     quadratic = next(case for case in payload["cases"] if case["name"] == "quadratic")
     for metric in (
         "root",

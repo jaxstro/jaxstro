@@ -20,6 +20,18 @@ enable_high_precision()
 import jax  # noqa: E402
 import jax.numpy as jnp  # noqa: E402
 
+from jaxstro import __version__  # noqa: E402
+from jaxstro.evidence import (  # noqa: E402
+    ComparisonRecord,
+    ComparisonRelation,
+    EnvironmentRecord,
+    EvidenceArtifact,
+    EvidenceStatus,
+    MetricRecord,
+    artifact_from_dict,
+    check_artifact,
+    emit_artifact,
+)
 from jaxstro.numerics import (  # noqa: E402
     ImplicitRootAssumptions,
     implicit_bracketed_root,
@@ -27,6 +39,7 @@ from jaxstro.numerics import (  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = REPO_ROOT / "docs" / "validation" / "implicit-root-gradients.json"
+REPORT = REPO_ROOT / "docs" / "validation" / "implicit-root-gradients.md"
 FD_STEP = 1.0e-5
 RESIDUAL_LIMIT = 1.0e-12
 WIDTH_LIMIT = 1.0e-12
@@ -216,6 +229,74 @@ def _validate(payload: dict[str, Any]) -> None:
                 raise ValueError(f"implicit-root metric unit is invalid: {metric}")
 
 
+def build_artifact(payload: dict[str, Any]) -> EvidenceArtifact:
+    """Wrap unchanged derivative measurements in the shared envelope."""
+    metrics = []
+    comparisons = []
+    symbols = {
+        "root": "x_star",
+        "absolute_residual": "abs(f(x_star))",
+        "bracket_width": "Delta_x",
+        "slope_magnitude": "abs(df/dx)",
+        "analytic_derivative": "dx_star/dtheta|analytic",
+        "ad_derivative": "dx_star/dtheta|AD",
+        "fd_derivative": "dx_star/dtheta|FD",
+        "relative_ad_fd_error": "R_AD,FD",
+        "relative_ad_analytic_error": "R_AD,analytic",
+    }
+    for case in payload["cases"]:
+        for name, symbol in symbols.items():
+            measured = case[name]
+            metrics.append(
+                MetricRecord(
+                    f"{case['name']}.{name}",
+                    symbol,
+                    measured["value"],
+                    measured["unit"],
+                    EvidenceStatus.PASS,
+                )
+            )
+        for name, reference, units in (
+            ("absolute_residual", RESIDUAL_LIMIT, "function units"),
+            ("bracket_width", WIDTH_LIMIT, "coordinate units"),
+            ("relative_ad_fd_error", 1.0e-6, "dimensionless"),
+            ("relative_ad_analytic_error", 1.0e-9, "dimensionless"),
+        ):
+            comparisons.append(
+                ComparisonRecord(
+                    f"{case['name']}.{name}.gate",
+                    f"{case['name']}.{name}",
+                    ComparisonRelation.LESS_EQUAL,
+                    reference,
+                    units,
+                    EvidenceStatus.PASS,
+                    note="Existing implicit-root validation threshold.",
+                )
+            )
+    environment = payload["environment"]
+    return EvidenceArtifact(
+        schema_version="1",
+        artifact_id="rootfinding.implicit-gradients",
+        artifact_version="1",
+        package_version=__version__,
+        source_revision=environment["git_revision"],
+        generation_command="uv run --no-sync python scripts/benchmark_implicit_root.py --emit",
+        precision=payload["precision"],
+        deterministic_config=tuple(sorted(payload["controls"].items())),
+        environment=EnvironmentRecord(
+            payload["provenance_policy"],
+            tuple((key, str(value)) for key, value in sorted(environment.items())),
+        ),
+        metrics=tuple(metrics),
+        comparisons=tuple(comparisons),
+        limitations=(
+            "Certification relies on caller assertions of uniqueness and smoothness.",
+            "Flat-slope rejection is validated in executable tests, not represented as a certified case.",
+        ),
+        method_payload=payload,
+    )
+
+
 def algorithmic_metrics_match(stored: dict[str, Any], current: dict[str, Any]) -> bool:
     """Compare deterministic evidence while ignoring environment timestamps."""
     try:
@@ -270,16 +351,18 @@ def main() -> int:
 
     current = run_benchmark()
     _validate(current)
+    current_artifact = build_artifact(current)
     if args.emit:
-        OUTPUT.write_text(
-            json.dumps(current, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-        )
+        emit_artifact(OUTPUT, current_artifact)
+        emit_artifact(REPORT, current_artifact)
         print(f"wrote {OUTPUT.relative_to(REPO_ROOT)}")
         return 0
     if not OUTPUT.exists():
         print("implicit-root evidence manifest is missing")
         return 1
-    stored = json.loads(OUTPUT.read_text(encoding="utf-8"))
+    stored_artifact = artifact_from_dict(json.loads(OUTPUT.read_text(encoding="utf-8")))
+    stored = stored_artifact.method_payload
+    check_artifact(REPORT, stored_artifact)
     if not algorithmic_metrics_match(stored, current):
         print("implicit-root evidence algorithmic metrics are stale")
         return 1
