@@ -41,6 +41,10 @@ and available for evaluation, but ecosystem adoption and any replacement cutover
 The statuses below describe current evidence boundaries, not a hidden migration
 schedule.
 
+The generated [](./contracts.md) registry is the machine-checked source for
+ownership, maturity, JAX-transform, AD, limitation, and evidence claims. This
+page retains signatures and usage context rather than duplicating that matrix.
+
 ```{list-table} Public modules
 :header-rows: 1
 :label: tbl-modules

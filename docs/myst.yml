@@ -96,6 +96,7 @@ project:
     - title: API reference
       children:
         - file: 40-api/index.md
+        - file: 40-api/contracts.md
         - file: 40-api/provenance/index.md
         - file: 40-api/provenance/constants.md
         - file: 40-api/provenance/transforms.md

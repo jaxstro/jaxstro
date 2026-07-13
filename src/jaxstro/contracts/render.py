@@ -26,7 +26,7 @@ def inventory_to_json(inventory: ContractInventory) -> str:
 
 
 def render_contract_reference(inventory: ContractInventory) -> str:
-    """Render a compact generated MyST reference from validated records."""
+    """Render generated ownership, transform, evidence, and limitation tables."""
 
     lines = [
         "---",
@@ -36,27 +36,81 @@ def render_contract_reference(inventory: ContractInventory) -> str:
         "# Scientific contract registry",
         "",
         "Unverified does not mean unsupported; it means no claim is registered.",
+        "This generated page does not infer support from importability or an unrelated passing test.",
         "",
         "## Module ownership",
         "",
-        "| Module | Maturity | Ownership | Non-ownership |",
-        "| --- | --- | --- | --- |",
+        "| Module | Maturity | Boundary | Dimensional policy | Ownership | Non-ownership |",
+        "| --- | --- | --- | --- | --- | --- |",
     ]
     for module in sorted(inventory.modules, key=lambda item: item.id):
         lines.append(
-            f"| `{module.import_path}` | {module.maturity.value} | "
-            f"{module.ownership} | {module.non_ownership} |"
+            f"| `{module.import_path}` | {module.maturity.value} | {module.execution_boundary.value} | "
+            f"{_cell(module.dimensional_policy)} | {_cell(module.ownership)} | {_cell(module.non_ownership)} |"
         )
-    lines.extend(["", "## Transform and AD contracts", ""])
+    lines.extend(
+        [
+            "",
+            "## Transform and AD contracts",
+            "",
+            "| Callable | Maturity | AD semantics | Transform claims | Boundaries | Evidence | Limitations and cost |",
+            "| --- | --- | --- | --- | --- | --- | --- |",
+        ]
+    )
     for module in sorted(inventory.modules, key=lambda item: item.id):
         for contract in sorted(module.callables, key=lambda item: item.id):
-            lines.append(
-                f"- `{contract.import_path}` — `{contract.ad_semantics.value}`"
+            transforms = (
+                "; ".join(
+                    f"`{item.transform}`: {item.support.value}"
+                    + (f" ({item.conditions})" if item.conditions else "")
+                    for item in contract.transforms
+                )
+                or "none claimed"
             )
+            boundaries = (
+                "; ".join(
+                    f"{item.summary} [{item.failure_mode.value}]"
+                    for item in contract.boundaries
+                )
+                or "none registered"
+            )
+            evidence = (
+                "; ".join(
+                    f"`{item.id}` → `{item.target}` ({item.kind.value})"
+                    for item in contract.evidence
+                )
+                or "none registered"
+            )
+            notes = (
+                "; ".join((*contract.limitations, contract.cost_notes)).strip("; ")
+                or "none registered"
+            )
+            lines.append(
+                f"| `{contract.import_path}` | {contract.maturity.value} | {contract.ad_semantics.value} | "
+                f"{_cell(transforms)} | {_cell(boundaries)} | {_cell(evidence)} | {_cell(notes)} |"
+            )
+    unclassified = [
+        f"`{module.import_path}`"
+        for module in sorted(inventory.modules, key=lambda item: item.id)
+        if not module.callables
+    ]
     lines.extend(
-        ["", "## Unclassified callable surfaces", "", "Reported by coverage ratchets."]
+        [
+            "",
+            "## Unclassified callable surfaces",
+            "",
+            "Callable coverage is deliberately tiered. These modules have module-level records but no callable-level claims:",
+            "",
+            ", ".join(unclassified) + ".",
+            "",
+            "Modules with exemplars may still contain other unclassified callables; absence from the table is not a support or maturity claim.",
+        ]
     )
     return "\n".join(lines) + "\n"
+
+
+def _cell(value: str) -> str:
+    return value.replace("|", "\\|").replace("\n", " ")
 
 
 def _normalize(value: Any) -> Any:

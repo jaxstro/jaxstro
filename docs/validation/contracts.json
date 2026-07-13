@@ -1,0 +1,674 @@
+{
+  "modules": [
+    {
+      "callables": [],
+      "dimensional_policy": "Angles in radians/degrees and proper motion in mas/yr as named.",
+      "evidence": [],
+      "execution_boundary": "runtime",
+      "id": "astrometry",
+      "import_path": "jaxstro.astrometry",
+      "intended_uses": [
+        "Converting proper-motion and angular units."
+      ],
+      "maturity": "validated",
+      "non_ownership": "Survey or population models.",
+      "ownership": "Astrometric constants."
+    },
+    {
+      "callables": [],
+      "dimensional_policy": "Source coordinates and flux semantics are explicit per product.",
+      "evidence": [],
+      "execution_boundary": "mixed",
+      "id": "atmospheres",
+      "import_path": "jaxstro.atmospheres",
+      "intended_uses": [
+        "Preparing and evaluating evidence-approved atmosphere spectra."
+      ],
+      "maturity": "validated",
+      "non_ownership": "Photometry or model validity.",
+      "ownership": "Catalog and artifact preparation plus evidence-gated evaluation."
+    },
+    {
+      "callables": [],
+      "dimensional_policy": "CGS unless the symbol explicitly names another unit.",
+      "evidence": [],
+      "execution_boundary": "static",
+      "id": "constants",
+      "import_path": "jaxstro.constants",
+      "intended_uses": [
+        "Shared physical constants and nominal conversions."
+      ],
+      "maturity": "validated",
+      "non_ownership": "Runtime source lookup.",
+      "ownership": "Source-backed physical constants."
+    },
+    {
+      "callables": [],
+      "dimensional_policy": "Metadata only; scientific units are recorded by owned contracts.",
+      "evidence": [],
+      "execution_boundary": "tooling",
+      "id": "contracts",
+      "import_path": "jaxstro.contracts",
+      "intended_uses": [
+        "Auditing public ownership, transforms, AD semantics, and evidence."
+      ],
+      "maturity": "validated",
+      "non_ownership": "Runtime scientific acceptance or automatic certification.",
+      "ownership": "Scientific contract vocabulary, validation, and rendering."
+    },
+    {
+      "callables": [],
+      "dimensional_policy": "Positions in pc, velocities in km/s, angles in degrees, proper motions in mas/yr, and parallax in mas where documented.",
+      "evidence": [],
+      "execution_boundary": "runtime",
+      "id": "coords",
+      "import_path": "jaxstro.coords",
+      "intended_uses": [
+        "Astrometric coordinate conversion."
+      ],
+      "maturity": "validated",
+      "non_ownership": "Domain frame selection.",
+      "ownership": "Coordinate transformations."
+    },
+    {
+      "callables": [],
+      "dimensional_policy": "Caller-owned coordinate units; angles follow each function contract.",
+      "evidence": [],
+      "execution_boundary": "runtime",
+      "id": "geometry",
+      "import_path": "jaxstro.geometry",
+      "intended_uses": [
+        "Vector, rotation, and rigid-transform operations."
+      ],
+      "maturity": "validated",
+      "non_ownership": "Domain geometry policy.",
+      "ownership": "Generic geometric transformations."
+    },
+    {
+      "callables": [],
+      "dimensional_policy": "No physical dimensions.",
+      "evidence": [],
+      "execution_boundary": "static",
+      "id": "jaxconfig",
+      "import_path": "jaxstro.jaxconfig",
+      "intended_uses": [
+        "Enabling float64 and highest matmul precision."
+      ],
+      "maturity": "validated",
+      "non_ownership": "Import-time global configuration.",
+      "ownership": "Explicit JAX precision configuration."
+    },
+    {
+      "callables": [
+        {
+          "ad_semantics": "certified_implicit",
+          "boundaries": [
+            {
+              "evidence_ids": [
+                "root.implicit_bracketed_root"
+              ],
+              "failure_mode": "returns_nan",
+              "summary": "Rejected assumption or numerical certificate."
+            }
+          ],
+          "cost_notes": "Runs the safeguarded primal before exposing a custom-root derivative.",
+          "domain": "Caller asserts a unique root and smooth branch; numerical certificate gates must pass.",
+          "evidence": [
+            {
+              "claim": "Certified sensitivities agree with analytic and central finite differences.",
+              "id": "root.implicit_bracketed_root",
+              "kind": "validation_test",
+              "target": "tests/validation/test_implicit_root_gradients.py"
+            }
+          ],
+          "id": "numerics.implicit_bracketed_root",
+          "import_path": "jaxstro.numerics.implicit_bracketed_root",
+          "limitations": [
+            "Requires a unique mathematical root.",
+            "Requires a smooth selected branch and adequate slope conditioning."
+          ],
+          "maturity": "validated",
+          "outputs": "ImplicitRootResult with primal evidence and derivative certificate.",
+          "precision": "float32 and float64; certificate tolerances are explicit.",
+          "purpose": "Fail-closed implicit-function derivative for a certified scalar root.",
+          "transforms": [
+            {
+              "conditions": "",
+              "evidence_ids": [
+                "root.implicit_bracketed_root"
+              ],
+              "support": "supported",
+              "transform": "jit"
+            }
+          ]
+        },
+        {
+          "ad_semantics": "value_first",
+          "boundaries": [],
+          "cost_notes": "",
+          "domain": "Finite scalar bracket evidence.",
+          "evidence": [
+            {
+              "claim": "Deterministic low-level bracket behavior.",
+              "id": "root.initialize_bracket",
+              "kind": "unit_test",
+              "target": "tests/unit/test_bracketed_root.py"
+            }
+          ],
+          "id": "numerics.initialize_bracket",
+          "import_path": "jaxstro.numerics.initialize_bracket",
+          "limitations": [
+            "Primary purpose is auditable forward-value control flow."
+          ],
+          "maturity": "validated",
+          "outputs": "Fixed-shape bracket state or proposal.",
+          "precision": "float32 and float64.",
+          "purpose": "Validate endpoint evidence and initialize a sign bracket.",
+          "transforms": []
+        },
+        {
+          "ad_semantics": "smooth_pathwise",
+          "boundaries": [],
+          "cost_notes": "",
+          "domain": "Ordered one-dimensional nodes.",
+          "evidence": [
+            {
+              "claim": "Analytic values and central finite differences validate the smooth domain.",
+              "id": "numerics.interp1d",
+              "kind": "validation_test",
+              "target": "tests/validation/test_grad_checks.py"
+            }
+          ],
+          "id": "numerics.interp1d",
+          "import_path": "jaxstro.numerics.interpolation.interp1d",
+          "limitations": [],
+          "maturity": "validated",
+          "outputs": "JAX array values.",
+          "precision": "float32 and float64; validation uses float64.",
+          "purpose": "Piecewise-linear interpolation.",
+          "transforms": []
+        },
+        {
+          "ad_semantics": "value_first",
+          "boundaries": [
+            {
+              "evidence_ids": [
+                "root.map_safeguarded_bracketed_root"
+              ],
+              "failure_mode": "structured_result",
+              "summary": "Missing sign bracket or nonfinite admissible evaluation."
+            }
+          ],
+          "cost_notes": "Use lax.map when physical per-lane skipping of expensive residuals matters.",
+          "domain": "Finite scalar endpoints enclosing an exact root or a typed missing-bracket result.",
+          "evidence": [
+            {
+              "claim": "JIT, VMAP, bracket invariants, and analytic root behavior.",
+              "id": "root.map_safeguarded_bracketed_root",
+              "kind": "validation_test",
+              "target": "tests/validation/test_bracketed_root_algorithms.py"
+            }
+          ],
+          "id": "numerics.map_safeguarded_bracketed_root",
+          "import_path": "jaxstro.numerics.map_safeguarded_bracketed_root",
+          "limitations": [
+            "No implicit-root derivative claim."
+          ],
+          "maturity": "validated",
+          "outputs": "Fixed-shape value-first bracket evidence and terminal status.",
+          "precision": "float32 and float64; tolerances are caller-owned.",
+          "purpose": "Mapped safeguarded scalar root solves with per-lane control flow.",
+          "transforms": [
+            {
+              "conditions": "",
+              "evidence_ids": [
+                "root.map_safeguarded_bracketed_root"
+              ],
+              "support": "supported",
+              "transform": "jit"
+            },
+            {
+              "conditions": "Values and shapes are preserved, but physical per-lane skipping is not guaranteed.",
+              "evidence_ids": [
+                "root.map_safeguarded_bracketed_root"
+              ],
+              "support": "conditional",
+              "transform": "vmap"
+            }
+          ]
+        },
+        {
+          "ad_semantics": "smooth_pathwise",
+          "boundaries": [],
+          "cost_notes": "",
+          "domain": "Ordered one-dimensional nodes with monotone data.",
+          "evidence": [
+            {
+              "claim": "Analytic values and central finite differences validate the smooth domain.",
+              "id": "numerics.monotone_cubic_interp",
+              "kind": "validation_test",
+              "target": "tests/unit/test_interpolation_shape_preserving.py"
+            }
+          ],
+          "id": "numerics.monotone_cubic_interp",
+          "import_path": "jaxstro.numerics.interpolation.monotone_cubic_interp",
+          "limitations": [],
+          "maturity": "validated",
+          "outputs": "JAX array values.",
+          "precision": "float32 and float64; validation uses float64.",
+          "purpose": "Shape-preserving cubic interpolation.",
+          "transforms": []
+        },
+        {
+          "ad_semantics": "smooth_pathwise",
+          "boundaries": [
+            {
+              "evidence_ids": [
+                "numerics.powerlaw_cdf"
+              ],
+              "failure_mode": "saturates",
+              "summary": "Outside x support clamps to zero or one."
+            }
+          ],
+          "cost_notes": "",
+          "domain": "Finite ordered support with positive bounds; smooth through alpha = -1.",
+          "evidence": [
+            {
+              "claim": "Analytic values and central finite differences validate the smooth domain.",
+              "id": "numerics.powerlaw_cdf",
+              "kind": "validation_test",
+              "target": "tests/validation/test_grad_checks.py"
+            }
+          ],
+          "id": "numerics.powerlaw_cdf",
+          "import_path": "jaxstro.numerics.powerlaw_cdf",
+          "limitations": [],
+          "maturity": "validated",
+          "outputs": "JAX array values.",
+          "precision": "float32 and float64; validation uses float64.",
+          "purpose": "Finite power-law cumulative distribution.",
+          "transforms": []
+        },
+        {
+          "ad_semantics": "smooth_pathwise",
+          "boundaries": [
+            {
+              "evidence_ids": [
+                "numerics.powerlaw_logpdf"
+              ],
+              "failure_mode": "returns_sentinel",
+              "summary": "Outside x support returns negative infinity."
+            }
+          ],
+          "cost_notes": "",
+          "domain": "Finite ordered support with positive bounds; smooth through alpha = -1.",
+          "evidence": [
+            {
+              "claim": "Analytic values and central finite differences validate the smooth domain.",
+              "id": "numerics.powerlaw_logpdf",
+              "kind": "validation_test",
+              "target": "tests/validation/test_grad_checks.py"
+            }
+          ],
+          "id": "numerics.powerlaw_logpdf",
+          "import_path": "jaxstro.numerics.powerlaw_logpdf",
+          "limitations": [],
+          "maturity": "validated",
+          "outputs": "JAX array values.",
+          "precision": "float32 and float64; validation uses float64.",
+          "purpose": "Finite power-law log density and normalization.",
+          "transforms": []
+        },
+        {
+          "ad_semantics": "smooth_pathwise",
+          "boundaries": [
+            {
+              "evidence_ids": [
+                "numerics.powerlaw_ppf"
+              ],
+              "failure_mode": "undefined",
+              "summary": "Quantile input is defined on the closed unit interval."
+            }
+          ],
+          "cost_notes": "",
+          "domain": "Finite ordered support with positive bounds; smooth through alpha = -1.",
+          "evidence": [
+            {
+              "claim": "Analytic values and central finite differences validate the smooth domain.",
+              "id": "numerics.powerlaw_ppf",
+              "kind": "validation_test",
+              "target": "tests/validation/test_grad_checks.py"
+            }
+          ],
+          "id": "numerics.powerlaw_ppf",
+          "import_path": "jaxstro.numerics.powerlaw_ppf",
+          "limitations": [],
+          "maturity": "validated",
+          "outputs": "JAX array values.",
+          "precision": "float32 and float64; validation uses float64.",
+          "purpose": "Finite power-law inverse cumulative distribution.",
+          "transforms": []
+        },
+        {
+          "ad_semantics": "value_first",
+          "boundaries": [],
+          "cost_notes": "",
+          "domain": "Finite scalar bracket evidence.",
+          "evidence": [
+            {
+              "claim": "Deterministic low-level bracket behavior.",
+              "id": "root.propose_bracketed",
+              "kind": "unit_test",
+              "target": "tests/unit/test_bracketed_root.py"
+            }
+          ],
+          "id": "numerics.propose_bracketed",
+          "import_path": "jaxstro.numerics.propose_bracketed",
+          "limitations": [
+            "Primary purpose is auditable forward-value control flow."
+          ],
+          "maturity": "validated",
+          "outputs": "Fixed-shape bracket state or proposal.",
+          "precision": "float32 and float64.",
+          "purpose": "Choose deterministic safeguarded interpolation or midpoint fallback.",
+          "transforms": []
+        },
+        {
+          "ad_semantics": "smooth_pathwise",
+          "boundaries": [
+            {
+              "evidence_ids": [
+                "numerics.regular_grid_interp"
+              ],
+              "failure_mode": "saturates",
+              "summary": "clamp policy holds queries at the nearest boundary."
+            },
+            {
+              "evidence_ids": [
+                "numerics.regular_grid_interp"
+              ],
+              "failure_mode": "raises",
+              "summary": "reject policy raises for invalid concrete queries."
+            }
+          ],
+          "cost_notes": "",
+          "domain": "Strictly increasing grid axes and explicit boundary policy.",
+          "evidence": [
+            {
+              "claim": "Analytic values and central finite differences validate the smooth domain.",
+              "id": "numerics.regular_grid_interp",
+              "kind": "validation_test",
+              "target": "tests/unit/test_regular_grid.py"
+            }
+          ],
+          "id": "numerics.regular_grid_interp",
+          "import_path": "jaxstro.numerics.regular_grid_interp",
+          "limitations": [],
+          "maturity": "validated",
+          "outputs": "JAX array values.",
+          "precision": "float32 and float64; validation uses float64.",
+          "purpose": "Static-rank tensor-product interpolation.",
+          "transforms": []
+        },
+        {
+          "ad_semantics": "value_first",
+          "boundaries": [
+            {
+              "evidence_ids": [
+                "root.safeguarded_bracketed_root"
+              ],
+              "failure_mode": "structured_result",
+              "summary": "Missing sign bracket or nonfinite admissible evaluation."
+            }
+          ],
+          "cost_notes": "Use lax.map when physical per-lane skipping of expensive residuals matters.",
+          "domain": "Finite scalar endpoints enclosing an exact root or a typed missing-bracket result.",
+          "evidence": [
+            {
+              "claim": "JIT, VMAP, bracket invariants, and analytic root behavior.",
+              "id": "root.safeguarded_bracketed_root",
+              "kind": "validation_test",
+              "target": "tests/validation/test_bracketed_root_algorithms.py"
+            }
+          ],
+          "id": "numerics.safeguarded_bracketed_root",
+          "import_path": "jaxstro.numerics.safeguarded_bracketed_root",
+          "limitations": [
+            "No implicit-root derivative claim."
+          ],
+          "maturity": "validated",
+          "outputs": "Fixed-shape value-first bracket evidence and terminal status.",
+          "precision": "float32 and float64; tolerances are caller-owned.",
+          "purpose": "Auditable scalar safeguarded root solve.",
+          "transforms": [
+            {
+              "conditions": "",
+              "evidence_ids": [
+                "root.safeguarded_bracketed_root"
+              ],
+              "support": "supported",
+              "transform": "jit"
+            },
+            {
+              "conditions": "Values and shapes are preserved, but physical per-lane skipping is not guaranteed.",
+              "evidence_ids": [
+                "root.safeguarded_bracketed_root"
+              ],
+              "support": "conditional",
+              "transform": "vmap"
+            }
+          ]
+        },
+        {
+          "ad_semantics": "value_first",
+          "boundaries": [],
+          "cost_notes": "",
+          "domain": "Finite scalar bracket evidence.",
+          "evidence": [
+            {
+              "claim": "Deterministic low-level bracket behavior.",
+              "id": "root.update_bracket",
+              "kind": "unit_test",
+              "target": "tests/unit/test_bracketed_root.py"
+            }
+          ],
+          "id": "numerics.update_bracket",
+          "import_path": "jaxstro.numerics.update_bracket",
+          "limitations": [
+            "Primary purpose is auditable forward-value control flow."
+          ],
+          "maturity": "validated",
+          "outputs": "Fixed-shape bracket state or proposal.",
+          "precision": "float32 and float64.",
+          "purpose": "Update one bracket side without losing valid evidence.",
+          "transforms": []
+        }
+      ],
+      "dimensional_policy": "Caller-owned units; each callable declares dimensional behavior.",
+      "evidence": [],
+      "execution_boundary": "runtime",
+      "id": "numerics",
+      "import_path": "jaxstro.numerics",
+      "intended_uses": [
+        "Reusable numerical maps for differentiable science."
+      ],
+      "maturity": "validated",
+      "non_ownership": "Domain acceptance, retry policy, or physical state.",
+      "ownership": "Generic numerical mechanics."
+    },
+    {
+      "callables": [],
+      "dimensional_policy": "Leaf units remain caller-owned through transformations.",
+      "evidence": [],
+      "execution_boundary": "runtime",
+      "id": "params",
+      "import_path": "jaxstro.params",
+      "intended_uses": [
+        "Mapping selected array leaves to unconstrained parameter vectors."
+      ],
+      "maturity": "validated",
+      "non_ownership": "Inference algorithms or identifiability.",
+      "ownership": "Selective PyTree/vector parameter bridges."
+    },
+    {
+      "callables": [],
+      "dimensional_policy": "Metric units remain explicit in producer-owned payloads.",
+      "evidence": [],
+      "execution_boundary": "tooling",
+      "id": "provenance",
+      "import_path": "jaxstro.provenance",
+      "intended_uses": [
+        "Recording deterministic computational provenance."
+      ],
+      "maturity": "validated",
+      "non_ownership": "Scientific-source validation.",
+      "ownership": "Runtime artifact manifests."
+    },
+    {
+      "callables": [],
+      "dimensional_policy": "Dimensions and scales are represented explicitly in Unit metadata.",
+      "evidence": [],
+      "execution_boundary": "runtime",
+      "id": "quantity",
+      "import_path": "jaxstro.quantity",
+      "intended_uses": [
+        "Explicit dimensional arithmetic and conversion evaluation."
+      ],
+      "maturity": "validated",
+      "non_ownership": "Approved ecosystem adoption or cutover.",
+      "ownership": "Dimensional quantity evaluation."
+    },
+    {
+      "callables": [],
+      "dimensional_policy": "Coordinates use caller-owned consistent length units.",
+      "evidence": [],
+      "execution_boundary": "mixed",
+      "id": "spatial",
+      "import_path": "jaxstro.spatial",
+      "intended_uses": [
+        "Fixed-shape spatial candidate and exact-pair mechanics."
+      ],
+      "maturity": "validated",
+      "non_ownership": "Force or encounter semantics.",
+      "ownership": "Spatial indexing, candidates, and exact pairs."
+    },
+    {
+      "callables": [],
+      "dimensional_policy": "Spectral coordinates and density semantics carry explicit unit metadata.",
+      "evidence": [],
+      "execution_boundary": "mixed",
+      "id": "spectra",
+      "import_path": "jaxstro.spectra",
+      "intended_uses": [
+        "Representing and remapping generic spectral densities."
+      ],
+      "maturity": "validated",
+      "non_ownership": "Filters, photometry, or instruments.",
+      "ownership": "Generic spectral representations and remapping."
+    },
+    {
+      "callables": [
+        {
+          "ad_semantics": "validation_only",
+          "boundaries": [],
+          "cost_notes": "",
+          "domain": "Validation and documentation tooling inputs.",
+          "evidence": [
+            {
+              "claim": "Deterministic validation-tool behavior.",
+              "id": "testing.compare_gradients",
+              "kind": "integration_test",
+              "target": "tests/integration/test_grad_audit.py"
+            }
+          ],
+          "id": "testing.compare_gradients",
+          "import_path": "jaxstro.testing.compare_gradients",
+          "limitations": [
+            "Does not determine downstream scientific acceptance."
+          ],
+          "maturity": "validated",
+          "outputs": "Structured validation evidence.",
+          "precision": "Tool-owned and explicit.",
+          "purpose": "Compare automatic and finite-difference derivatives.",
+          "transforms": []
+        },
+        {
+          "ad_semantics": "validation_only",
+          "boundaries": [],
+          "cost_notes": "",
+          "domain": "Validation and documentation tooling inputs.",
+          "evidence": [
+            {
+              "claim": "Deterministic validation-tool behavior.",
+              "id": "testing.render_registry",
+              "kind": "integration_test",
+              "target": "tests/validation/provenance_cards/test_registry.py"
+            }
+          ],
+          "id": "testing.render_registry",
+          "import_path": "jaxstro.testing.render_registry",
+          "limitations": [
+            "Does not determine downstream scientific acceptance."
+          ],
+          "maturity": "validated",
+          "outputs": "Structured validation evidence.",
+          "precision": "Tool-owned and explicit.",
+          "purpose": "Render deterministic provenance-card pages.",
+          "transforms": []
+        },
+        {
+          "ad_semantics": "validation_only",
+          "boundaries": [],
+          "cost_notes": "",
+          "domain": "Validation and documentation tooling inputs.",
+          "evidence": [
+            {
+              "claim": "Deterministic validation-tool behavior.",
+              "id": "testing.validate_card",
+              "kind": "integration_test",
+              "target": "tests/validation/provenance_cards/test_registry.py"
+            }
+          ],
+          "id": "testing.validate_card",
+          "import_path": "jaxstro.testing.validate_card",
+          "limitations": [
+            "Does not determine downstream scientific acceptance."
+          ],
+          "maturity": "validated",
+          "outputs": "Structured validation evidence.",
+          "precision": "Tool-owned and explicit.",
+          "purpose": "Validate source-backed provenance cards.",
+          "transforms": []
+        }
+      ],
+      "dimensional_policy": "Every reported metric retains producer-declared units.",
+      "evidence": [],
+      "execution_boundary": "tooling",
+      "id": "testing",
+      "import_path": "jaxstro.testing",
+      "intended_uses": [
+        "Auditing derivatives, numerical evidence, and provenance cards."
+      ],
+      "maturity": "validated",
+      "non_ownership": "Runtime scientific acceptance.",
+      "ownership": "Validation and provenance tooling."
+    },
+    {
+      "callables": [],
+      "dimensional_policy": "CGS is canonical; named systems declare mass, length, and time scales.",
+      "evidence": [],
+      "execution_boundary": "static",
+      "id": "units",
+      "import_path": "jaxstro.units",
+      "intended_uses": [
+        "Explicit conversion among named unit systems."
+      ],
+      "maturity": "validated",
+      "non_ownership": "Hidden domain unit defaults.",
+      "ownership": "Canonical ecosystem unit systems."
+    }
+  ],
+  "package_version": "0.1.0",
+  "schema_version": "1",
+  "source_revision": "repository-versioned"
+}

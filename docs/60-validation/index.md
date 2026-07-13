@@ -113,3 +113,7 @@ uv run mypy src
 
 The validation table is intentionally compact. Detailed numerical derivations
 belong in [](../10-theory/index.md); this page records the executable anchors.
+
+The generated [](../40-api/contracts.md) registry connects selected public claims
+to these evidence classes. An unclassified callable remains unverified rather
+than inheriting support from its module.
