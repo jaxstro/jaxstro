@@ -1,6 +1,8 @@
 # jaxstro — status
 
-next: Design a contract-derived foundations figure and learner-evaluation slice covering derivative maps, model/parameter geometry, evidence classes, accessibility, and misconception transfer. Keep callable contract expansion and downstream adoption as separate package roadmap work. The Pages Node-action maintenance remains queued behind this work.
+next: Design a contract-derived foundations figure and learner-evaluation slice covering derivative maps, model/parameter geometry, evidence classes, accessibility, and misconception transfer. Keep callable contract expansion and downstream adoption as separate package roadmap work.
+
+previous: GitHub Actions Node-runtime maintenance completed (2026-07-12). Active workflows now use the Node 24 releases of checkout, setup-node, upload-pages-artifact, and deploy-pages; setup-uv is pinned to the immutable v8.1.0 release SHA. Focused workflow contracts passed (7 tests), all 3 workflow files parsed, and Pages run 29224678647 built in 44 s and deployed in 8 s with zero build or deploy annotations. The live homepage returned HTTP 200.
 
 previous: Release closeout published to `origin/main` and GitHub Pages (2026-07-12). The full local release gate passed with 1,352 non-slow tests, 162 ML-integration tests, a clean Python 3.13 wheel import, fresh provenance/contract/evidence/curriculum registries, and 88 strict documentation routes. Pages run 29224056600 built and deployed successfully after the docs jobs were repaired to provision Python 3.13 plus locked dependencies through `setup-uv`; focused workflow contracts now prevent recurrence. Live HTTP and rendered-content checks passed for the homepage, foundations, investigations, rootfinding, and package assessment scorecard.
 
@@ -33,9 +35,7 @@ in 8 s. Live verification returned 200 for the homepage, release checklist, and 
 CSS. The first run's 404 exposed and permanently ratcheted the `_build/site` versus `_build/html`
 artifact boundary.
 
-blocker: None. The website is live. Maintenance debt: GitHub notes that older action tags are being
-forced from Node 20 to Node 24; review upstream action majors after the numerics handoff. Tag/PyPI
-work is deferred.
+blocker: None. The website is live. Tag/PyPI work is deferred.
 due:
 
 ## Phase C — DONE (2026-06-17, branch feature/phase-c-release-hardening, HEAD 40f936e)
