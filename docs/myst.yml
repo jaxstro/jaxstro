@@ -144,6 +144,7 @@ project:
     - title: Development log
       children:
         - file: 90-development-log/index.md
+        - file: 90-development-log/future-capabilities-roadmap.md
         - file: 90-development-log/numerical-methods-roadmap.md
         - file: 90-development-log/sota-assessment.md
         - file: 90-development-log/package-assessment-scorecard.md

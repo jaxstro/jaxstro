@@ -16,3 +16,7 @@ Start with [](./numerical-methods-roadmap.md) for the chunked plan to grow
 The current package and website priorities are in
 [](./sota-assessment.md). It separates delivered strengths from
 high-confidence gaps and ranks investments into Now, Next, and Later horizons.
+
+The living [](./future-capabilities-roadmap.md) inventories the implemented
+method families and turns the proposed numerical-methods and scientific-ML
+expansion into ownership-aware build checklists.
