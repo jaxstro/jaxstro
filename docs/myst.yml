@@ -50,6 +50,14 @@ project:
         - file: 05-foundations/foundations.md
         - file: 05-foundations/choose-your-path.md
         - file: 05-foundations/why-this-documentation-works-this-way.md
+        - file: 05-foundations/functions-units-scales.md
+        - file: 05-foundations/what-is-a-model.md
+        - file: 05-foundations/linear-algebra-language-of-change.md
+        - file: 05-foundations/what-is-a-derivative.md
+        - file: 05-foundations/probability-and-distributions.md
+        - file: 05-foundations/models-inference-information.md
+        - file: 05-foundations/sensitivity-conditioning-identifiability.md
+        - file: 05-foundations/from-relations-to-differentiable-programs.md
     - title: Theory — AD-safe numerics
       children:
         - file: 10-theory/index.md

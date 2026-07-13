@@ -5,6 +5,11 @@ description: >-
   empirical Fisher-style products.
 ---
 
+If you want to connect calculus, local linear maps, scientific sensitivity, and
+the derivative of an executed program, begin with
+[](../05-foundations/what-is-a-derivative.md). This chapter focuses on Jaxstro's
+automatic-differentiation products and contracts.
+
 `jaxstro.numerics.autodiff` exposes small derivative-product helpers that
 downstream scientific packages often reimplement in tests, optimizers, and
 diagnostics. These helpers do not change JAX's differentiation semantics; they

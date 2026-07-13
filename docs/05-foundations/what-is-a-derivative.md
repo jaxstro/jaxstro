@@ -1,0 +1,118 @@
+---
+title: What is a derivative?
+description: Change, local linear maps, sensitivity, and evidence in differentiable programs.
+---
+
+# What is a derivative?
+
+A derivative is one idea seen from several scientific viewpoints. It is a
+**local rate of change**, the **best local linear map** approximating a function,
+and a **scientific sensitivity** describing how a stated output responds to a
+stated perturbation under stated assumptions. Connecting those views is the
+foundation of differentiable programming.
+
+## View 1: local change
+
+For a scalar function, the derivative at $x$ is the limiting ratio
+
+```{math}
+f'(x)=\lim_{h\to0}\frac{f(x+h)-f(x)}{h}.
+```
+
+This says more than “slope on a graph.” It names which input changes, which
+output changes, their units, and the local point. For Newtonian gravity,
+derivatives with respect to mass and separation answer different scientific
+questions. For Stefan–Boltzmann luminosity, temperature sensitivity carries
+luminosity-per-temperature units.
+
+## View 2: the best local linear map
+
+Near $x$, a differentiable function satisfies
+
+```{math}
+f(x+\delta x) \approx f(x) + Df(x)[\delta x].
+```
+
+$Df(x)$ is a linear map from input perturbations to output perturbations. In
+coordinates it becomes a derivative, gradient, or Jacobian depending on shapes
+and conventions. A directional derivative applies the map to one direction.
+This formulation scales from one variable to millions.
+
+A **JVP** computes $Jv$: push one input perturbation forward. A **VJP** computes
+$u^T J$: pull one output sensitivity backward. Reverse-mode gradients are VJPs
+of a scalar output, not a magical new type of derivative. Tangent vectors carry
+input perturbations; cotangent vectors carry linear measurements of output
+perturbations.
+
+## View 3: scientific sensitivity and evidence
+
+A derivative always belongs to a mapping. In statistics, the gradient of a log
+likelihood is the **likelihood score**. A Hessian records local curvature. Fisher
+information summarizes expected score geometry under a specified probabilistic
+model. None of these is meaningful without the model, parameterization, data
+distribution, and point of evaluation.
+
+For a root defined by $f(x^\star,\theta)=0$, an **implicit sensitivity** can be
+derived on a unique smooth branch:
+
+```{math}
+\frac{dx^\star}{d\theta}=-\frac{\partial f/\partial\theta}{\partial f/\partial x}.
+```
+
+This derivative becomes unstable when the denominator is poorly conditioned and
+is not justified when uniqueness or smoothness fails.
+
+## The derivative of a relation versus an executed program
+
+Automatic differentiation differentiates the **executed program**: its selected
+branches, finite iteration count, clamps, and represented arithmetic. That may
+be exactly the desired finite-map sensitivity. It is not automatically the
+derivative of an ideal mathematical solution. Jaxstro therefore distinguishes
+smooth pathwise derivatives, value-first iterative maps, validation-only
+finite-difference checks, and strictly certified implicit derivatives.
+
+At a branch boundary, knot, absolute-value kink, clipping threshold, repeated
+root, or discrete selection, a classical derivative can fail to exist or become
+branch-dependent. A finite number returned by AD does not settle that question.
+
+## Why this motivates differentiable programming
+
+Differentiable programming makes local linear maps composable across a program.
+The same machinery supports physical sensitivity analysis, inverse problems,
+uncertainty propagation, optimization, control, experimental design, and
+probabilistic inference. Its power comes from composition; its scientific
+validity still comes from model and derivative contracts.
+
+## Predict
+
+Name the input, output, evaluation point, units, held-fixed quantities, desired
+derivative meaning, smooth branch, and expected sign before invoking AD.
+
+## Compute
+
+Choose forward or reverse products from input/output geometry. Retain solver
+certificates and control-flow information. Do not hide a nonsmooth selection
+inside an unqualified gradient claim.
+
+## Audit
+
+Compare with an analytic derivative, central finite differences at several step
+sizes, complex-step where admissible, or an independent implicit calculation.
+Probe both sides of suspected boundaries and monitor conditioning.
+
+## State the warranted claim
+
+State “the AD derivative of this executed smooth branch agrees with this
+independent check on this domain.” Claim an ideal implicit sensitivity only when
+uniqueness, smoothness, residual, width, and slope gates support it.
+
+## Misconception check
+
+> A derivative is not just a symbolic rule and not just the number produced by
+> `grad`. It is a local linear claim about a specified map. A correct derivative
+> of an inadequate model remains a correct derivative of an inadequate model.
+
+Continue to [](./sensitivity-conditioning-identifiability.md),
+[](./from-relations-to-differentiable-programs.md), or Jaxstro's
+[](../10-theory/autodiff.md) and [](../10-theory/rootfinding.md) chapters.
+

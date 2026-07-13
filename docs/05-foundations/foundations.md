@@ -18,16 +18,16 @@ claim the evidence warrants.
 
 ## The foundations sequence
 
-1. Choose your path.
-2. Functions, units, and scales.
-3. What is a model? Representations, assumptions, parameters, and predictions.
-4. Parameter space, data space, state space, and dimensionality.
-5. Linear algebra as the language of change.
-6. What a derivative means: change, sensitivity, and scientific evidence.
-7. Probability and distributions.
-8. Models, inference, and information.
-9. Sensitivity, conditioning, and identifiability.
-10. From mathematical relations to differentiable programs.
+1. [](./choose-your-path.md).
+2. [](./functions-units-scales.md).
+3. [](./what-is-a-model.md): representations, assumptions, parameters,
+   predictions, information compression, and dimensionality.
+4. [](./linear-algebra-language-of-change.md).
+5. [](./what-is-a-derivative.md): change, sensitivity, and scientific evidence.
+6. [](./probability-and-distributions.md).
+7. [](./models-inference-information.md).
+8. [](./sensitivity-conditioning-identifiability.md).
+9. [](./from-relations-to-differentiable-programs.md).
 
 The established [](../10-theory/index.md) module chapters remain the method
 reference. Foundations explain the connective ideas; module pages explain the
@@ -45,4 +45,3 @@ Prediction names expected structure before results can bias the story.
 Computation exposes the method that actually ran. Audit compares the output
 with independent evidence. The final statement is deliberately no stronger
 than those checks.
-

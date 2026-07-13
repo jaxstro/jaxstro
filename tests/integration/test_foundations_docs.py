@@ -44,9 +44,9 @@ def test_choose_your_path_is_optional_ungraded_and_task_routed() -> None:
         assert phrase in chooser
     assert "beginner" not in chooser.lower()
     assert "advanced learner" not in chooser.lower()
-    assert "../10-theory/linear-algebra.md" in chooser
-    assert "../10-theory/autodiff.md" in chooser
-    assert "../10-theory/distributions.md" in chooser
+    assert "./linear-algebra-language-of-change.md" in chooser
+    assert "./what-is-a-derivative.md" in chooser
+    assert "./probability-and-distributions.md" in chooser
 
 
 def test_homepage_names_four_routes_without_stale_door_count() -> None:

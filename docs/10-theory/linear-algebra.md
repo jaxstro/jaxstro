@@ -5,6 +5,11 @@ description: >-
   positive-definite jitter with explicit numerical and differentiation contracts.
 ---
 
+For a first-principles account of vectors as perturbations, linear maps,
+geometry, null directions, and conditioning, begin with
+[](../05-foundations/linear-algebra-language-of-change.md). This chapter remains
+the numerical-method and public-API reference.
+
 Linear algebra is where many scientific workflows quietly become numerically
 fragile. A fit is "just" a matrix solve until the design loses rank. A covariance
 is "just" centered data until its normalization denominator vanishes. A kernel
