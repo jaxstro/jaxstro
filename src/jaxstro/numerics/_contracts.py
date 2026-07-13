@@ -139,6 +139,102 @@ ROOT_CALLABLES += (
     ),
 )
 
+
+def _smooth_callable(
+    name: str,
+    purpose: str,
+    domain: str,
+    target: str,
+    *,
+    boundaries: tuple[BoundaryContract, ...] = (),
+    public_path: str | None = None,
+) -> CallableContract:
+    evidence = EvidenceReference(
+        f"numerics.{name}",
+        EvidenceKind.VALIDATION_TEST,
+        target,
+        "Analytic values and central finite differences validate the smooth domain.",
+    )
+    linked = tuple(replace(item, evidence_ids=(evidence.id,)) for item in boundaries)
+    return CallableContract(
+        id=f"numerics.{name}",
+        import_path=public_path or f"jaxstro.numerics.{name}",
+        purpose=purpose,
+        domain=domain,
+        outputs="JAX array values.",
+        ad_semantics=ADSemantics.SMOOTH_PATHWISE,
+        precision="float32 and float64; validation uses float64.",
+        maturity=MaturityLevel.VALIDATED,
+        boundaries=linked,
+        evidence=(evidence,),
+    )
+
+
+_grid_boundaries = (
+    BoundaryContract(
+        "clamp policy holds queries at the nearest boundary.", FailureMode.SATURATES
+    ),
+    BoundaryContract(
+        "reject policy raises for invalid concrete queries.", FailureMode.RAISES
+    ),
+)
+EXEMPLAR_CALLABLES = tuple(
+    _smooth_callable(
+        name,
+        f"Finite power-law {purpose}.",
+        "Finite ordered support with positive bounds; smooth through alpha = -1.",
+        "tests/validation/test_grad_checks.py",
+        boundaries=(boundary,),
+    )
+    for name, purpose, boundary in (
+        (
+            "powerlaw_logpdf",
+            "log density and normalization",
+            BoundaryContract(
+                "Outside x support returns negative infinity.",
+                FailureMode.RETURNS_SENTINEL,
+            ),
+        ),
+        (
+            "powerlaw_cdf",
+            "cumulative distribution",
+            BoundaryContract(
+                "Outside x support clamps to zero or one.", FailureMode.SATURATES
+            ),
+        ),
+        (
+            "powerlaw_ppf",
+            "inverse cumulative distribution",
+            BoundaryContract(
+                "Quantile input is defined on the closed unit interval.",
+                FailureMode.UNDEFINED,
+            ),
+        ),
+    )
+) + (
+    _smooth_callable(
+        "interp1d",
+        "Piecewise-linear interpolation.",
+        "Ordered one-dimensional nodes.",
+        "tests/validation/test_grad_checks.py",
+        public_path="jaxstro.numerics.interpolation.interp1d",
+    ),
+    _smooth_callable(
+        "monotone_cubic_interp",
+        "Shape-preserving cubic interpolation.",
+        "Ordered one-dimensional nodes with monotone data.",
+        "tests/unit/test_interpolation_shape_preserving.py",
+        public_path="jaxstro.numerics.interpolation.monotone_cubic_interp",
+    ),
+    _smooth_callable(
+        "regular_grid_interp",
+        "Static-rank tensor-product interpolation.",
+        "Strictly increasing grid axes and explicit boundary policy.",
+        "tests/unit/test_regular_grid.py",
+        boundaries=_grid_boundaries,
+    ),
+)
+
 MODULE_CONTRACT = module_contract(
     "numerics",
     "Generic numerical mechanics.",
@@ -146,4 +242,6 @@ MODULE_CONTRACT = module_contract(
     "Reusable numerical maps for differentiable science.",
     "Caller-owned units; each callable declares dimensional behavior.",
 )
-MODULE_CONTRACT = replace(MODULE_CONTRACT, callables=ROOT_CALLABLES)
+MODULE_CONTRACT = replace(
+    MODULE_CONTRACT, callables=ROOT_CALLABLES + EXEMPLAR_CALLABLES
+)

@@ -70,6 +70,7 @@ class FailureMode(str, Enum):
     STRUCTURED_RESULT = "structured_result"
     SATURATES = "saturates"
     RETURNS_NAN = "returns_nan"
+    RETURNS_SENTINEL = "returns_sentinel"
     UNDEFINED = "undefined"
     NOT_APPLICABLE = "not_applicable"
 
