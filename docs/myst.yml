@@ -81,6 +81,12 @@ project:
         - file: 10-theory/random.md
         - file: 10-theory/grids.md
         - file: 10-theory/meshes.md
+    - title: Research investigations
+      children:
+        - file: 70-investigations/investigations.md
+        - file: 70-investigations/root-values-and-sensitivities.md
+        - file: 70-investigations/powerlaw-removable-limit.md
+        - file: 70-investigations/interpolation-boundary-policies.md
     - title: Architecture
       children:
         - file: 20-architecture/index.md

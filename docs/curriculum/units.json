@@ -1,0 +1,94 @@
+{
+  "schema_version": "1",
+  "units": [
+    {
+      "contract_ids": [
+        "numerics.implicit_bracketed_root",
+        "numerics.safeguarded_bracketed_root"
+      ],
+      "evidence_ids": [
+        "rootfinding.implicit-gradients",
+        "rootfinding.performance"
+      ],
+      "example": "examples/investigations/root_values_and_sensitivities.py",
+      "id": "root-values-and-sensitivities",
+      "instructor_route": "",
+      "limitations": [
+        "The analytic quadratic fixture does not establish uniqueness or conditioning for arbitrary residuals.",
+        "The value-first solver retains no ideal-root derivative claim."
+      ],
+      "page": "docs/70-investigations/root-values-and-sensitivities.md",
+      "prerequisites": [
+        "docs/05-foundations/what-is-a-derivative.md",
+        "docs/05-foundations/from-relations-to-differentiable-programs.md"
+      ],
+      "public_apis": [
+        "jaxstro.numerics.implicit_bracketed_root",
+        "jaxstro.numerics.safeguarded_bracketed_root"
+      ],
+      "title": "Root values and sensitivities",
+      "validation_targets": [
+        "tests/validation/test_bracketed_root_algorithms.py",
+        "tests/validation/test_implicit_root_gradients.py"
+      ]
+    },
+    {
+      "contract_ids": [
+        "numerics.powerlaw_cdf",
+        "numerics.powerlaw_logpdf",
+        "numerics.powerlaw_ppf"
+      ],
+      "evidence_ids": [],
+      "example": "examples/investigations/powerlaw_removable_limit.py",
+      "id": "powerlaw-removable-limit",
+      "instructor_route": "",
+      "limitations": [
+        "The fixture validates one finite support and does not select a physical stellar-mass model.",
+        "Callable validation exists, but no standalone power-law artifact is yet indexed."
+      ],
+      "page": "docs/70-investigations/powerlaw-removable-limit.md",
+      "prerequisites": [
+        "docs/05-foundations/probability-and-distributions.md",
+        "docs/05-foundations/what-is-a-derivative.md"
+      ],
+      "public_apis": [
+        "jaxstro.numerics.powerlaw_cdf",
+        "jaxstro.numerics.powerlaw_logpdf",
+        "jaxstro.numerics.powerlaw_ppf"
+      ],
+      "title": "Finite power-law removable limit",
+      "validation_targets": [
+        "tests/unit/test_distributions.py",
+        "tests/validation/test_grad_checks.py"
+      ]
+    },
+    {
+      "contract_ids": [
+        "numerics.interp1d",
+        "numerics.regular_grid_interp"
+      ],
+      "evidence_ids": [],
+      "example": "examples/investigations/interpolation_boundary_policies.py",
+      "id": "interpolation-boundary-policies",
+      "instructor_route": "",
+      "limitations": [
+        "Interior affine derivative evidence does not apply at knots or boundary-policy transitions.",
+        "Callable validation exists, but no standalone interpolation artifact is yet indexed."
+      ],
+      "page": "docs/70-investigations/interpolation-boundary-policies.md",
+      "prerequisites": [
+        "docs/05-foundations/what-is-a-derivative.md",
+        "docs/05-foundations/from-relations-to-differentiable-programs.md"
+      ],
+      "public_apis": [
+        "jaxstro.numerics.interpolation.interp1d",
+        "jaxstro.numerics.regular_grid_interp"
+      ],
+      "title": "Interpolation boundary policies",
+      "validation_targets": [
+        "tests/validation/test_grad_checks.py",
+        "tests/unit/test_regular_grid.py"
+      ]
+    }
+  ]
+}

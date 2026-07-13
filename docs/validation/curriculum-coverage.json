@@ -1,0 +1,30 @@
+{
+  "schema_version": "1",
+  "unit_count": 3,
+  "units": [
+    {
+      "contract_count": 2,
+      "evidence_count": 0,
+      "id": "interpolation-boundary-policies",
+      "instructor_route": "",
+      "limitation_count": 2,
+      "validation_target_count": 2
+    },
+    {
+      "contract_count": 3,
+      "evidence_count": 0,
+      "id": "powerlaw-removable-limit",
+      "instructor_route": "",
+      "limitation_count": 2,
+      "validation_target_count": 2
+    },
+    {
+      "contract_count": 2,
+      "evidence_count": 2,
+      "id": "root-values-and-sensitivities",
+      "instructor_route": "",
+      "limitation_count": 2,
+      "validation_target_count": 2
+    }
+  ]
+}

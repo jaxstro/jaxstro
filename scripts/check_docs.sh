@@ -26,6 +26,10 @@ echo "== docs: scientific evidence index freshness =="
 env -u VIRTUAL_ENV uv run --no-sync python \
   "$ROOT_DIR/scripts/build_evidence_index.py" --check
 
+echo "== docs: executable curriculum registry freshness =="
+env -u VIRTUAL_ENV uv run --no-sync python \
+  "$ROOT_DIR/scripts/build_curriculum_registry.py" --check
+
 echo "== docs: strict static build =="
 (
   cd "$ROOT_DIR/docs"
