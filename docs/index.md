@@ -41,7 +41,7 @@ The optional [](./05-foundations/foundations.md) route rebuilds the connected id
 the site will not assume are currently active.
 
 (three-doors)=
-## Three doors in
+## Choose your route
 
 ::::{grid} 1 1 2 2
 

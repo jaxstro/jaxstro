@@ -35,6 +35,7 @@ def test_choose_your_path_is_optional_ungraded_and_task_routed() -> None:
     for phrase in (
         "ungraded",
         "not a placement test",
+        "complete first-principles path",
         "computation-first",
         "astronomy",
         "statistics and inference",
@@ -43,6 +44,15 @@ def test_choose_your_path_is_optional_ungraded_and_task_routed() -> None:
         assert phrase in chooser
     assert "beginner" not in chooser.lower()
     assert "advanced learner" not in chooser.lower()
+    assert "../10-theory/linear-algebra.md" in chooser
+    assert "../10-theory/autodiff.md" in chooser
+    assert "../10-theory/distributions.md" in chooser
+
+
+def test_homepage_names_four_routes_without_stale_door_count() -> None:
+    homepage = (DOCS / "index.md").read_text(encoding="utf-8")
+    assert "## Choose your route" in homepage
+    assert "## Three doors in" not in homepage
 
 
 def test_foundations_navigation_preserves_module_theory_section() -> None:
