@@ -15,6 +15,7 @@ from . import (
     astrometry,
     atmospheres,
     constants,
+    contracts,
     coords,
     geometry,
     numerics,
@@ -31,6 +32,7 @@ from .units import DEFAULT as DEFAULT_UNITS
 __all__ = [
     "DEFAULT_UNITS",
     "constants",
+    "contracts",
     "units",
     "atmospheres",
     "astrometry",

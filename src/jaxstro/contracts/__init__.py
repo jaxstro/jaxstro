@@ -1,5 +1,6 @@
 """Public scientific-contract vocabulary and registry records."""
 
+from .registry import collect_contracts, get_module_contract
 from .schema import (
     ADSemantics,
     BoundaryContract,
@@ -26,4 +27,6 @@ __all__ = [
     "ModuleContract",
     "SupportLevel",
     "TransformContract",
+    "collect_contracts",
+    "get_module_contract",
 ]

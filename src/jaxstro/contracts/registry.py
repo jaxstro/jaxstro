@@ -5,7 +5,52 @@ from __future__ import annotations
 import importlib
 from typing import Any
 
-from .schema import ContractInventory, SupportLevel
+from .schema import ContractInventory, ModuleContract, SupportLevel
+
+
+def collect_contracts(*, source_revision: str = "unknown") -> ContractInventory:
+    """Collect the explicit lightweight module manifests."""
+    from jaxstro import __version__
+    from jaxstro.atmospheres._contracts import MODULE_CONTRACT as atmospheres
+    from jaxstro.numerics._contracts import MODULE_CONTRACT as numerics
+    from jaxstro.params._contracts import MODULE_CONTRACT as params
+    from jaxstro.quantity._contracts import MODULE_CONTRACT as quantity
+    from jaxstro.spatial._contracts import MODULE_CONTRACT as spatial
+    from jaxstro.spectra._contracts import MODULE_CONTRACT as spectra
+    from jaxstro.testing._contracts import MODULE_CONTRACT as testing
+
+    from ._core import CORE_CONTRACTS
+
+    inventory = ContractInventory(
+        "1",
+        __version__,
+        source_revision,
+        tuple(
+            sorted(
+                (
+                    *CORE_CONTRACTS,
+                    atmospheres,
+                    numerics,
+                    params,
+                    quantity,
+                    spatial,
+                    spectra,
+                    testing,
+                ),
+                key=lambda item: item.id,
+            )
+        ),
+    )
+    validate_inventory(inventory)
+    return inventory
+
+
+def get_module_contract(import_path: str) -> ModuleContract:
+    """Return one registered module or fail closed."""
+    for module in collect_contracts().modules:
+        if module.import_path == import_path:
+            return module
+    raise KeyError(import_path)
 
 
 def resolve_import_path(path: str) -> object:
@@ -44,7 +89,9 @@ def validate_inventory(inventory: ContractInventory) -> None:
         resolve_import_path(module.import_path)
         module_evidence = {item.id for item in module.evidence}
         for evidence in module.evidence:
-            _validate_evidence(evidence.id, evidence.target, evidence.claim, seen_evidence)
+            _validate_evidence(
+                evidence.id, evidence.target, evidence.claim, seen_evidence
+            )
         for callable_contract in module.callables:
             _claim_unique(callable_contract.id, seen_contracts, "contract")
             _require_text(callable_contract.purpose, f"{callable_contract.id} purpose")
@@ -58,10 +105,14 @@ def validate_inventory(inventory: ContractInventory) -> None:
             seen_transforms: set[str] = set()
             for transform in callable_contract.transforms:
                 _claim_unique(transform.transform, seen_transforms, "transform")
-                if transform.support in {
-                    SupportLevel.SUPPORTED,
-                    SupportLevel.CONDITIONAL,
-                } and not transform.evidence_ids:
+                if (
+                    transform.support
+                    in {
+                        SupportLevel.SUPPORTED,
+                        SupportLevel.CONDITIONAL,
+                    }
+                    and not transform.evidence_ids
+                ):
                     raise ValueError(
                         f"{callable_contract.id} {transform.transform} support has no evidence"
                     )
@@ -104,4 +155,3 @@ def _require_evidence(references: tuple[str, ...], available: set[str]) -> None:
     missing = set(references) - available
     if missing:
         raise ValueError(f"unknown evidence ids: {sorted(missing)}")
-

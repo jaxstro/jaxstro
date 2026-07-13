@@ -53,7 +53,9 @@ def render_contract_reference(inventory: ContractInventory) -> str:
             lines.append(
                 f"- `{contract.import_path}` — `{contract.ad_semantics.value}`"
             )
-    lines.extend(["", "## Unclassified callable surfaces", "", "Reported by coverage ratchets."])
+    lines.extend(
+        ["", "## Unclassified callable surfaces", "", "Reported by coverage ratchets."]
+    )
     return "\n".join(lines) + "\n"
 
 
@@ -61,11 +63,15 @@ def _normalize(value: Any) -> Any:
     if isinstance(value, Enum):
         return value.value
     if is_dataclass(value) and not isinstance(value, type):
-        result = {item.name: _normalize(getattr(value, item.name)) for item in fields(value)}
+        result = {
+            item.name: _normalize(getattr(value, item.name)) for item in fields(value)
+        }
         if "modules" in result:
             result["modules"] = sorted(result["modules"], key=lambda item: item["id"])
         if "callables" in result:
-            result["callables"] = sorted(result["callables"], key=lambda item: item["id"])
+            result["callables"] = sorted(
+                result["callables"], key=lambda item: item["id"]
+            )
         if "evidence" in result:
             result["evidence"] = sorted(result["evidence"], key=lambda item: item["id"])
         if "transforms" in result:
@@ -76,4 +82,3 @@ def _normalize(value: Any) -> Any:
     if isinstance(value, tuple):
         return [_normalize(item) for item in value]
     return value
-

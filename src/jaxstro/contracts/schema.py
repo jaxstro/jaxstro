@@ -135,4 +135,3 @@ class ContractInventory:
     package_version: str
     source_revision: str
     modules: tuple[ModuleContract, ...]
-
