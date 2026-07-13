@@ -17,17 +17,18 @@ def test_pages_workflow_uses_the_verified_docs_gate_and_site_output() -> None:
     assert "contents: read" in workflow
     assert "pages: write" in workflow
     assert "id-token: write" in workflow
-    assert "actions/checkout@v4" in workflow
-    assert "actions/setup-node@v4" in workflow
-    assert 'node-version: "20"' in workflow
+    assert "actions/checkout@v6" in workflow
+    assert "actions/setup-node@v6" in workflow
+    assert 'node-version: "24"' in workflow
+    assert "package-manager-cache: false" in workflow
     assert "astral-sh/setup-uv@v6" in workflow
     assert 'python-version: "3.13"' in workflow
     assert "uv sync --locked --extra dev" in workflow
     assert "mystmd@1.10.1" in workflow
     assert "bash scripts/check_docs.sh" in workflow
-    assert "actions/upload-pages-artifact@v3" in workflow
+    assert "actions/upload-pages-artifact@v5" in workflow
     assert "path: docs/_build/html" in workflow
-    assert "actions/deploy-pages@v4" in workflow
+    assert "actions/deploy-pages@v5" in workflow
     assert "environment:" in workflow
     assert "name: github-pages" in workflow
 
@@ -35,6 +36,27 @@ def test_pages_workflow_uses_the_verified_docs_gate_and_site_output() -> None:
     assert 'BASE_PATH="${BASE_URL:-}"' in docs_gate
     assert '--base-path "$BASE_PATH"' in docs_gate
     assert "docs/_build/html/index.html" in docs_gate
+
+
+def test_active_workflows_do_not_use_deprecated_node20_action_majors() -> None:
+    workflows = tuple((REPO_ROOT / ".github" / "workflows").glob("*.yml"))
+    assert workflows
+
+    deprecated = (
+        "actions/checkout@v4",
+        "actions/setup-node@v4",
+        "actions/upload-pages-artifact@v3",
+        "actions/deploy-pages@v4",
+    )
+    for workflow_path in workflows:
+        workflow = workflow_path.read_text(encoding="utf-8")
+        for action in deprecated:
+            assert action not in workflow, f"{workflow_path.name}: {action}"
+
+        if "actions/setup-node@" in workflow:
+            assert "actions/setup-node@v6" in workflow, workflow_path.name
+            assert 'node-version: "24"' in workflow, workflow_path.name
+            assert "package-manager-cache: false" in workflow, workflow_path.name
 
 
 def test_release_checklist_preserves_irreversible_stop_gates() -> None:
