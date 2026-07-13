@@ -1,7 +1,6 @@
 # jaxstro — status
 
-next: Unify evidence-artifact infrastructure and design a generated JAX transform-contract matrix, the two highest-impact Now items in the package-wide SOTA assessment. Hand the committed safeguarded value API to Gravax; downstream projects may opt into the separate certified implicit-root API only where its assumptions hold.
-The Pages Node-action maintenance remains queued behind this numerics handoff.
+next: Write and execute the Phase C unified evidence-infrastructure plan using the scientific contract registry as the claim index. Preserve method-specific scientific thresholds while consolidating artifact identity, units, environment, freshness, and comparison records. The Pages Node-action maintenance remains queued behind this work.
 
 previous: Safeguarded scalar rootfinding and the separate finite power-law alpha=-1 correctness slice
 completed on local main (2026-07-12). Jaxstro now owns typed sign-bracket evidence, deterministic

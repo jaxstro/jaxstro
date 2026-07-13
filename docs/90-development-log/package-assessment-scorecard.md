@@ -10,8 +10,9 @@ package, and curriculum material. The companion
 [](./sota-assessment.md) ranks investments; this page records current grades and
 what evidence is required to change them.
 
-**Assessment date: 2026-07-12.** Grades describe the repository evidence reviewed
-on that date and must be re-audited when their supporting contracts change.
+**Assessment date: 2026-07-12; registry reconciliation: 2026-07-12.** Grades
+describe the repository evidence reviewed on that date and must be re-audited
+when their supporting contracts change.
 
 ## Grading rubric
 
@@ -35,7 +36,7 @@ evidence, not effort or ambition.
 | Public scientific package | B+ | [](../40-api/index.md) | Cohesive surface, minimal core dependencies, typed failures, and a public site | Public reach and external adoption trail the implementation | Stable release, public compatibility evidence, and external use cases |
 | Curriculum concept | B+ | [](../00-getting-started/how-to-learn.md) | Predict → compute → audit, objectives, misconceptions, and science-pattern routing form a coherent philosophy | The approved foundations sequence is not yet implemented | Reviewed foundations spine with tested scientific examples |
 | Executable curriculum | B | [](../10-theory/index.md) | Tested examples exist and documentation is build-gated | Activities, instructor materials, diagnostics, and rubrics are incomplete | CI-executed investigations and instructor-facing assessment materials |
-| Architecture and ownership | A | [](../20-architecture/index.md) | Thin-foundation ADRs and one-way ecosystem boundaries are explicit | Some active summaries lag newer modules | Scientific contract registry and generated ownership inventory |
+| Architecture and ownership | A | [](../40-api/contracts.md) | Thin-foundation ADRs, one-way ecosystem boundaries, and generated module contracts are explicit | Evidence depth remains uneven at callable level | Expand callable classification without weakening the thin-foundation boundary |
 | Numerical correctness | A− | [](../60-validation/index.md) | Analytic cases, limits, round trips, convergence, and FD comparisons cover major kernels | Validation and performance artifacts remain uneven by module | Per-contract evidence coverage and missing-evidence ratchets |
 | AD honesty | A | [](../10-theory/rootfinding.md) | Smooth, blocked, zero, value-first, validation-only, and certified implicit paths are distinguished | The taxonomy is distributed across prose and tests | Generated callable-level AD contract matrix |
 | JAX architecture | A− | [](../10-theory/index.md) | JIT, VMAP, scan, PyTree, JVP/VJP, and gradient behavior are tested on substantial surfaces | Transform and batching-cost behavior is hard to discover per callable | Generated transform matrix linked to executable evidence |
@@ -43,7 +44,7 @@ evidence, not effort or ambition.
 | Test architecture | A− | [](../60-validation/index.md) | Unit, integration, and validation tiers contain analytic and independent checks | No public module-by-module branch-coverage ratchet is maintained | Coverage policy tied to semantic contracts rather than raw volume alone |
 | Units and dimensional safety | B+ | [](../20-architecture/quantity-system.md) | `UnitSystem` is mature and `quantity` is substantially implemented | Two live dimensional surfaces remain while adoption is deferred | Downstream parity, performance, serialization, and migration evidence |
 | Provenance | A− | [](../20-architecture/provenance.md) | Source cards, runtime manifests, deterministic rendering, and freshness checks exist | Artifact schemas and environment policies are duplicated | Unified evidence envelope without weakened scientific thresholds |
-| API cohesion | B+ | [](../40-api/index.md) | Public modules, exports, types, and evidence routes are documented | The manual API catalog is growing and can drift | Generated contract-backed reference tables and export checks |
+| API cohesion | B+ | [](../40-api/contracts.md) | Public modules and selected consequential callables now have generated, export-audited contracts | Many public callables remain explicitly unclassified | Prioritized callable-level coverage and downstream query evidence |
 | Documentation correctness | A− | [](../60-validation/index.md) | Examples, routes, links, figures, and content contracts are tested | Active guides and some command narratives can lag implementation | Current `CLAUDE.md` plus generated claims and freshness gates |
 | Accessibility | B+ | [](../10-theory/rootfinding.md) | Alt text and redundant visual encodings are enforced for new figures | Structural checks do not yet constitute learner-centered accessibility evidence | Keyboard, contrast, comprehension, and learner review gates |
 | Performance evidence | B | [](../60-validation/index.md) | Rootfinding and spectra have reproducible cost evidence | Compile, warm runtime, graph size, memory, and evaluation metrics are not standardized | Shared metric envelope and method-appropriate performance records |
@@ -110,7 +111,19 @@ can lower a grade immediately.
 
 ## Current hardening sequence
 
-1. Build the Scientific contract registry.
-2. Unify evidence envelopes and freshness infrastructure.
-3. Build executable foundations and research-student investigations from those
+**Scientific contract registry: implemented.** The registry is deliberately not
+evidence-complete. Evidence depth remains uneven, and an unclassified symbol is
+not treated as supported.
+
+| Metric identity | Symbol | Value | Units |
+| --- | --- | ---: | --- |
+| Registered public modules | `N_module,contract` | 15 | modules |
+| Callable-level contracts | `N_callable,contract` | 15 | callables |
+| Explicitly unclassified public callables | `N_callable,unclassified` | 200 | callables |
+| Module-inherited public record types | `N_symbol,inherited` | 115 | symbols |
+
+The next ordered investments are:
+
+1. **Phase C:** unify evidence envelopes and freshness infrastructure.
+2. **Phase B:** build executable foundations and research-student investigations from those
    contracts and evidence.

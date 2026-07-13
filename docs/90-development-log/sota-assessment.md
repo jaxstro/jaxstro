@@ -65,6 +65,9 @@ generic toolkit while each method owns its metrics.
 **Evidence gate.** Migrate existing artifacts without weakening any freshness,
 unit, or scientific threshold.
 
+The scientific contract registry is now implemented and exposes the uneven
+evidence coverage that this Phase C investment must address.
+
 ### 2. Generate a JAX transform-contract matrix
 
 **Impact.** Users can see supported transforms, static arguments, batching cost,
