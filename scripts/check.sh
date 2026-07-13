@@ -21,6 +21,9 @@ $RUN python scripts/build_provenance_registry.py --check
 echo "== scientific contract registry freshness =="
 $RUN python scripts/build_contract_registry.py --check
 
+echo "== scientific evidence index freshness =="
+$RUN python scripts/build_evidence_index.py --check
+
 echo "== documentation gate =="
 bash scripts/check_docs.sh
 

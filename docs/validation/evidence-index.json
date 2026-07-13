@@ -1,0 +1,67 @@
+{
+  "entries": [
+    {
+      "content_digest": "sha256:3daa0e47e3857cb6f25b019d3bc3d477a3de1e321c5cd54aed947ccf9d98e678",
+      "evidence_class": "scientific_policy",
+      "id": "atmosphere.interpolation-policy",
+      "limitations": [
+        "This evidence class is indexed but not rewritten as a computational envelope."
+      ],
+      "optional_data_policy": "Policy regeneration requires approved local atmosphere holdouts.",
+      "schema_version": "1",
+      "source_revision": "sha256:3daa0e47e3857cb6f25b019d3bc3d477a3de1e321c5cd54aed947ccf9d98e678",
+      "target": "docs/validation/atmosphere-interpolation.json"
+    },
+    {
+      "content_digest": "sha256:102af76268ad0fb81de09e0bdcce9a421dda61c20c19a8d6ce5dce9f0bc74451",
+      "evidence_class": "source_provenance",
+      "id": "provenance.cards",
+      "limitations": [
+        "This evidence class is indexed but not rewritten as a computational envelope."
+      ],
+      "optional_data_policy": "Uses repository-owned source cards; no runtime dataset required.",
+      "schema_version": "source-card-v1",
+      "source_revision": "sha256:102af76268ad0fb81de09e0bdcce9a421dda61c20c19a8d6ce5dce9f0bc74451",
+      "target": "docs/40-api/provenance/index.md"
+    },
+    {
+      "content_digest": "sha256:51951c2518d2496bb2dae027d29a1ce20aa34fc29598d3ca430a2dcaca3959df",
+      "evidence_class": "computational",
+      "id": "rootfinding.implicit-gradients",
+      "limitations": [
+        "Certification relies on caller assertions of uniqueness and smoothness.",
+        "Flat-slope rejection is validated in executable tests, not represented as a certified case."
+      ],
+      "optional_data_policy": "No external data required.",
+      "schema_version": "1",
+      "source_revision": "d292b9000ce98f62a512d56d1b3052604adc7f0d",
+      "target": "docs/validation/implicit-root-gradients.json"
+    },
+    {
+      "content_digest": "sha256:b4c300720958340396b4b2760932193c226367c969a52a8ac3490997e15574e2",
+      "evidence_class": "computational",
+      "id": "rootfinding.performance",
+      "limitations": [
+        "Warm wall time is hardware- and load-dependent."
+      ],
+      "optional_data_policy": "No external data required.",
+      "schema_version": "1",
+      "source_revision": "fd28c3a592d9feff5145f4f6d02263af22f2e228",
+      "target": "docs/validation/rootfinding-performance.json"
+    },
+    {
+      "content_digest": "sha256:4b9240c2eff9366b70ed3760ea5e47793b12477c07698105a1f5be592ef20720",
+      "evidence_class": "computational",
+      "id": "spectra.performance",
+      "limitations": [
+        "Wall times depend on hardware and system load.",
+        "Host peak memory covers Python allocations measured by tracemalloc."
+      ],
+      "optional_data_policy": "Requires the local NewEra artifact and the declared data extra.",
+      "schema_version": "1",
+      "source_revision": "dbfde557532be4df515d16253933321f4f58c19b",
+      "target": "docs/validation/spectra-performance.json"
+    }
+  ],
+  "schema_version": "1"
+}

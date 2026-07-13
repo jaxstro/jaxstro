@@ -50,7 +50,7 @@ This generated page does not infer support from importability or an unrelated pa
 
 ## Unclassified callable surfaces
 
-The runtime export audit found **206** public callables without callable-level records:
+The runtime export audit found **208** public callables without callable-level records:
 
 - `jaxstro.atmospheres.acquisition_rows_to_markdown`
 - `jaxstro.atmospheres.build_bosz_index`
@@ -80,9 +80,11 @@ The runtime export audit found **206** public callables without callable-level r
 - `jaxstro.coords.sky_tangent`
 - `jaxstro.coords.spherical_to_cartesian`
 - `jaxstro.coords.zenith_parallactic`
+- `jaxstro.evidence.artifact_from_dict`
 - `jaxstro.evidence.artifact_to_dict`
 - `jaxstro.evidence.artifact_to_json`
 - `jaxstro.evidence.artifact_to_markdown`
+- `jaxstro.evidence.build_evidence_index`
 - `jaxstro.evidence.check_artifact`
 - `jaxstro.evidence.emit_artifact`
 - `jaxstro.evidence.validate_artifact`
@@ -311,7 +313,10 @@ These immutable record or type constructors inherit their module-level contract:
 - `jaxstro.evidence.ComparisonRelation`
 - `jaxstro.evidence.EnvironmentRecord`
 - `jaxstro.evidence.EvidenceArtifact`
+- `jaxstro.evidence.EvidenceClass`
 - `jaxstro.evidence.EvidenceFreshnessError`
+- `jaxstro.evidence.EvidenceIndex`
+- `jaxstro.evidence.EvidenceIndexEntry`
 - `jaxstro.evidence.EvidenceStatus`
 - `jaxstro.evidence.MetricRecord`
 - `jaxstro.numerics.Array`

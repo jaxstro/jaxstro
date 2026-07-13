@@ -56,6 +56,7 @@
   "50-howto/query-atmosphere-spectra.md": "/query-atmosphere-spectra",
   "50-howto/sonora-data-processing.md": "/sonora-data-processing",
   "50-howto/tlusty-data-processing.md": "/tlusty-data-processing",
+  "60-validation/evidence-index.md": "/evidence-index",
   "60-validation/index.md": "/index-8",
   "90-development-log/index.md": "/index-9",
   "90-development-log/numerical-methods-roadmap.md": "/numerical-methods-roadmap",
@@ -64,5 +65,8 @@
   "95-release/index.md": "/index-10",
   "95-release/checklist.md": "/checklist",
   "99-bibliography/index.md": "/index-11",
-  "index.md": "/"
+  "index.md": "/",
+  "validation/implicit-root-gradients.md": "/implicit-root-gradients",
+  "validation/rootfinding-performance.md": "/rootfinding-performance",
+  "validation/spectra-performance.md": "/spectra-performance"
 }
