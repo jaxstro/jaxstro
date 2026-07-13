@@ -20,6 +20,9 @@ def test_pages_workflow_uses_the_verified_docs_gate_and_site_output() -> None:
     assert "actions/checkout@v4" in workflow
     assert "actions/setup-node@v4" in workflow
     assert 'node-version: "20"' in workflow
+    assert "astral-sh/setup-uv@v6" in workflow
+    assert 'python-version: "3.13"' in workflow
+    assert "uv sync --locked --extra dev" in workflow
     assert "mystmd@1.10.1" in workflow
     assert "bash scripts/check_docs.sh" in workflow
     assert "actions/upload-pages-artifact@v3" in workflow

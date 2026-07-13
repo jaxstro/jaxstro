@@ -22,10 +22,13 @@ def test_docs_gate_is_reused_by_local_and_full_ci_gates() -> None:
     full_gate = (REPO_ROOT / ".github" / "workflows" / "full-gate.yml").read_text(
         encoding="utf-8"
     )
+    docs_job = full_gate.split("  test-matrix:", maxsplit=1)[0]
     assert "bash scripts/check_docs.sh" in local_gate
     assert "docs:" in full_gate
-    assert "bash scripts/check_docs.sh" in full_gate
-    assert "mystmd@1.10.1" in full_gate
+    assert "bash scripts/check_docs.sh" in docs_job
+    assert "mystmd@1.10.1" in docs_job
+    assert "astral-sh/setup-uv@v6" in docs_job
+    assert "uv sync --locked --extra dev" in docs_job
 
 
 def test_committed_route_manifest_matches_all_authored_pages() -> None:

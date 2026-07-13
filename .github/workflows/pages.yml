@@ -37,6 +37,15 @@ jobs:
         with:
           node-version: "20"
 
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install locked documentation dependencies
+        run: uv sync --locked --extra dev
+
       - name: Install pinned MyST
         run: npm install --global mystmd@1.10.1
 
