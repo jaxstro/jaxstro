@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import statistics
+import subprocess
 import time
 import tracemalloc
 from pathlib import Path
@@ -18,10 +19,20 @@ enable_high_precision()
 import jax  # noqa: E402
 import jax.numpy as jnp  # noqa: E402
 
+from jaxstro import __version__  # noqa: E402
 from jaxstro.atmospheres import (  # noqa: E402
     AtmosphereLibrary,
     AtmosphereParams,
     AtmosphereQuery,
+)
+from jaxstro.evidence import (  # noqa: E402
+    EnvironmentRecord,
+    EvidenceArtifact,
+    EvidenceStatus,
+    MetricRecord,
+    artifact_from_dict,
+    check_artifact,
+    emit_artifact,
 )
 from jaxstro.spectra import (  # noqa: E402
     SpectralAxis,
@@ -31,6 +42,7 @@ from jaxstro.spectra import (  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = REPO_ROOT / "docs" / "validation" / "spectra-performance.json"
+REPORT = OUTPUT.with_suffix(".md")
 PRODUCT_ID = "newera-v3-lowres"
 SPECTRAL_BINS = 64
 BATCH_SIZE = 8
@@ -127,12 +139,66 @@ def _validate(payload: dict[str, Any]) -> None:
         isinstance(value, (int, float)) and value >= 0.0 for value in timings.values()
     ):
         raise ValueError("spectra benchmark timings are incomplete or invalid")
-    if payload.get("output_shape") != [SPECTRAL_BINS]:
+    if list(payload.get("output_shape", ())) != [SPECTRAL_BINS]:
         raise ValueError("spectra benchmark output shape is invalid")
-    if payload.get("batched_output_shape") != [BATCH_SIZE, SPECTRAL_BINS]:
+    if list(payload.get("batched_output_shape", ())) != [BATCH_SIZE, SPECTRAL_BINS]:
         raise ValueError("spectra benchmark batched output shape is invalid")
     if int(payload.get("host_peak_memory_bytes", 0)) <= 0:
         raise ValueError("spectra benchmark host peak memory is invalid")
+
+
+def build_artifact(payload: dict[str, Any]) -> EvidenceArtifact:
+    """Wrap bounded performance observations without inventing thresholds."""
+    symbols = {
+        "host_preparation": "t_host,prepare",
+        "first_jit_evaluation": "t_wall,first-jit",
+        "cached_evaluation_median": "t_wall,warm",
+        "batched_evaluation": "t_wall,batch",
+    }
+    metrics = tuple(
+        MetricRecord(
+            f"spectra.{name}",
+            symbols[name],
+            value,
+            "s",
+            EvidenceStatus.INFO,
+        )
+        for name, value in sorted(payload["timings_seconds"].items())
+    ) + (
+        MetricRecord(
+            "spectra.host_peak_memory",
+            "M_host,peak",
+            payload["host_peak_memory_bytes"],
+            "bytes",
+            EvidenceStatus.INFO,
+        ),
+    )
+    revision = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, text=True
+    ).strip()
+    return EvidenceArtifact(
+        schema_version="1",
+        artifact_id="spectra.performance",
+        artifact_version="1",
+        package_version=__version__,
+        source_revision=revision,
+        generation_command="uv run --no-sync python scripts/benchmark_spectra.py --emit",
+        precision=payload["dtype"],
+        deterministic_config=tuple(sorted(payload["case"].items())),
+        environment=EnvironmentRecord(
+            "Backend, dtype, and host-memory scope recorded; performance metrics are informational.",
+            (
+                ("jax_backend", payload["jax_backend"]),
+                ("memory_scope", payload["memory_scope"]),
+            ),
+        ),
+        metrics=metrics,
+        limitations=(
+            "Wall times depend on hardware and system load.",
+            "Host peak memory covers Python allocations measured by tracemalloc.",
+        ),
+        method_payload=payload,
+    )
 
 
 def main() -> int:
@@ -144,12 +210,10 @@ def main() -> int:
 
     measured = run_benchmark()
     _validate(measured)
+    artifact = build_artifact(measured)
     if args.emit:
-        OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-        OUTPUT.write_text(
-            json.dumps(measured, indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
-        )
+        emit_artifact(OUTPUT, artifact)
+        emit_artifact(REPORT, artifact)
         print(
             f"wrote {OUTPUT.relative_to(REPO_ROOT)}: "
             f"prepare={measured['timings_seconds']['host_preparation']:.3f}s, "
@@ -162,8 +226,9 @@ def main() -> int:
     if not OUTPUT.exists():
         print("spectra performance manifest is missing")
         return 1
-    stored = json.loads(OUTPUT.read_text(encoding="utf-8"))
-    _validate(stored)
+    stored_artifact = artifact_from_dict(json.loads(OUTPUT.read_text(encoding="utf-8")))
+    _validate(stored_artifact.method_payload)
+    check_artifact(REPORT, stored_artifact)
     print(
         "spectra benchmark healthy: "
         f"current prepare={measured['timings_seconds']['host_preparation']:.3f}s, "

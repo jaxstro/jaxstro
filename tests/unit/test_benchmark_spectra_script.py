@@ -7,10 +7,18 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = REPO_ROOT / "docs" / "validation" / "spectra-performance.json"
+REPORT = MANIFEST.with_suffix(".md")
 
 
 def test_spectra_benchmark_manifest_has_separate_bounded_timings() -> None:
     payload = json.loads(MANIFEST.read_text(encoding="utf-8"))
+
+    assert payload["schema_version"] == "1"
+    assert payload["artifact_id"] == "spectra.performance"
+    assert payload["metrics"]
+    assert payload["comparisons"] == []
+    assert REPORT.is_file()
+    payload = payload["method_payload"]
 
     assert payload["schema_version"] == 1
     assert payload["case"]["product_id"] == "newera-v3-lowres"

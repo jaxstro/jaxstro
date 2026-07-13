@@ -113,6 +113,9 @@ project:
     - title: Validation
       children:
         - file: 60-validation/index.md
+        - file: validation/rootfinding-performance.md
+        - file: validation/implicit-root-gradients.md
+        - file: validation/spectra-performance.md
     - title: Development log
       children:
         - file: 90-development-log/index.md
