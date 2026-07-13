@@ -6,6 +6,7 @@ import tomllib
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+SETUP_UV_V8_SHA = "08807647e7069bb48b6ef5acd8ec9567f424441b"
 
 
 def test_pages_workflow_uses_the_verified_docs_gate_and_site_output() -> None:
@@ -21,7 +22,7 @@ def test_pages_workflow_uses_the_verified_docs_gate_and_site_output() -> None:
     assert "actions/setup-node@v6" in workflow
     assert 'node-version: "24"' in workflow
     assert "package-manager-cache: false" in workflow
-    assert "astral-sh/setup-uv@v6" in workflow
+    assert f"astral-sh/setup-uv@{SETUP_UV_V8_SHA}" in workflow
     assert 'python-version: "3.13"' in workflow
     assert "uv sync --locked --extra dev" in workflow
     assert "mystmd@1.10.1" in workflow
@@ -38,7 +39,7 @@ def test_pages_workflow_uses_the_verified_docs_gate_and_site_output() -> None:
     assert "docs/_build/html/index.html" in docs_gate
 
 
-def test_active_workflows_do_not_use_deprecated_node20_action_majors() -> None:
+def test_active_workflows_use_node24_action_releases() -> None:
     workflows = tuple((REPO_ROOT / ".github" / "workflows").glob("*.yml"))
     assert workflows
 
@@ -47,6 +48,7 @@ def test_active_workflows_do_not_use_deprecated_node20_action_majors() -> None:
         "actions/setup-node@v4",
         "actions/upload-pages-artifact@v3",
         "actions/deploy-pages@v4",
+        "astral-sh/setup-uv@v6",
     )
     for workflow_path in workflows:
         workflow = workflow_path.read_text(encoding="utf-8")
@@ -57,6 +59,11 @@ def test_active_workflows_do_not_use_deprecated_node20_action_majors() -> None:
             assert "actions/setup-node@v6" in workflow, workflow_path.name
             assert 'node-version: "24"' in workflow, workflow_path.name
             assert "package-manager-cache: false" in workflow, workflow_path.name
+
+        if "astral-sh/setup-uv@" in workflow:
+            assert f"astral-sh/setup-uv@{SETUP_UV_V8_SHA}" in workflow, (
+                workflow_path.name
+            )
 
 
 def test_release_checklist_preserves_irreversible_stop_gates() -> None:

@@ -27,7 +27,7 @@ def test_docs_gate_is_reused_by_local_and_full_ci_gates() -> None:
     assert "docs:" in full_gate
     assert "bash scripts/check_docs.sh" in docs_job
     assert "mystmd@1.10.1" in docs_job
-    assert "astral-sh/setup-uv@v6" in docs_job
+    assert "astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b" in docs_job
     assert "uv sync --locked --extra dev" in docs_job
 
 
