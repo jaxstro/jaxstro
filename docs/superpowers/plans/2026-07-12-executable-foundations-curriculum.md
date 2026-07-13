@@ -198,7 +198,7 @@ Use public 1D and regular-grid interpolation APIs. Predict clamp/fill/reject beh
 ### Task 11: Add instructor notes and a claim-calibrated rubric
 
 **Files:**
-- Create: `docs/80-instructor/index.md`
+- Create: `docs/80-instructor/instructor-resources.md`
 - Create: `docs/80-instructor/teaching-with-jaxstro.md`
 - Create: `docs/80-instructor/assessment-rubric.md`
 - Create: `tests/integration/test_instructor_docs.py`

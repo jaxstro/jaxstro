@@ -24,6 +24,12 @@ UNIT_FIELDS = {
 }
 
 
+def validate_instructor_route(root: Path, route: str) -> None:
+    """Require an instructor route to resolve to a committed page."""
+    if not route or not (root / route).is_file():
+        raise ValueError(f"instructor route does not exist: {route}")
+
+
 def load_and_validate_units(root: Path) -> list[dict[str, Any]]:
     """Load units and fail closed on references or schema drift."""
     payload = json.loads((root / MANIFEST).read_text(encoding="utf-8"))
@@ -92,6 +98,7 @@ def load_and_validate_units(root: Path) -> list[dict[str, Any]]:
             for target in unit[field]:
                 if not (root / target).is_file():
                     raise ValueError(f"curriculum target does not exist: {target}")
+        validate_instructor_route(root, unit["instructor_route"])
     return units
 
 

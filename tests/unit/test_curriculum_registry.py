@@ -12,7 +12,11 @@ from examples.investigations._common import (
     InvestigationResult,
     validate_result,
 )
-from scripts.build_curriculum_registry import load_and_validate_units, render_outputs
+from scripts.build_curriculum_registry import (
+    load_and_validate_units,
+    render_outputs,
+    validate_instructor_route,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -72,3 +76,8 @@ def test_curriculum_registry_outputs_are_deterministic_and_fresh() -> None:
         cwd=ROOT,
         check=True,
     )
+
+
+def test_instructor_route_must_resolve_to_a_repository_page() -> None:
+    with pytest.raises(ValueError, match="instructor route does not exist"):
+        validate_instructor_route(ROOT, "docs/80-instructor/missing.md")

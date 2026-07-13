@@ -12,7 +12,7 @@
       ],
       "example": "examples/investigations/root_values_and_sensitivities.py",
       "id": "root-values-and-sensitivities",
-      "instructor_route": "",
+      "instructor_route": "docs/80-instructor/teaching-with-jaxstro.md",
       "limitations": [
         "The analytic quadratic fixture does not establish uniqueness or conditioning for arbitrary residuals.",
         "The value-first solver retains no ideal-root derivative claim."
@@ -41,7 +41,7 @@
       "evidence_ids": [],
       "example": "examples/investigations/powerlaw_removable_limit.py",
       "id": "powerlaw-removable-limit",
-      "instructor_route": "",
+      "instructor_route": "docs/80-instructor/teaching-with-jaxstro.md",
       "limitations": [
         "The fixture validates one finite support and does not select a physical stellar-mass model.",
         "Callable validation exists, but no standalone power-law artifact is yet indexed."
@@ -70,7 +70,7 @@
       "evidence_ids": [],
       "example": "examples/investigations/interpolation_boundary_policies.py",
       "id": "interpolation-boundary-policies",
-      "instructor_route": "",
+      "instructor_route": "docs/80-instructor/teaching-with-jaxstro.md",
       "limitations": [
         "Interior affine derivative evidence does not apply at knots or boundary-policy transitions.",
         "Callable validation exists, but no standalone interpolation artifact is yet indexed."

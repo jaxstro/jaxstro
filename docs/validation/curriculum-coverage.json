@@ -6,7 +6,7 @@
       "contract_count": 2,
       "evidence_count": 0,
       "id": "interpolation-boundary-policies",
-      "instructor_route": "",
+      "instructor_route": "docs/80-instructor/teaching-with-jaxstro.md",
       "limitation_count": 2,
       "validation_target_count": 2
     },
@@ -14,7 +14,7 @@
       "contract_count": 3,
       "evidence_count": 0,
       "id": "powerlaw-removable-limit",
-      "instructor_route": "",
+      "instructor_route": "docs/80-instructor/teaching-with-jaxstro.md",
       "limitation_count": 2,
       "validation_target_count": 2
     },
@@ -22,7 +22,7 @@
       "contract_count": 2,
       "evidence_count": 2,
       "id": "root-values-and-sensitivities",
-      "instructor_route": "",
+      "instructor_route": "docs/80-instructor/teaching-with-jaxstro.md",
       "limitation_count": 2,
       "validation_target_count": 2
     }

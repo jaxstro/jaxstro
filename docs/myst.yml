@@ -87,6 +87,11 @@ project:
         - file: 70-investigations/root-values-and-sensitivities.md
         - file: 70-investigations/powerlaw-removable-limit.md
         - file: 70-investigations/interpolation-boundary-policies.md
+    - title: Instructor resources
+      children:
+        - file: 80-instructor/instructor-resources.md
+        - file: 80-instructor/teaching-with-jaxstro.md
+        - file: 80-instructor/assessment-rubric.md
     - title: Architecture
       children:
         - file: 20-architecture/index.md
