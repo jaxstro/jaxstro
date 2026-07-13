@@ -10,7 +10,8 @@ from ._common import (
     AuditCheck,
     InvestigationMetric,
     InvestigationResult,
-    metric_table,
+    calibrated_claim,
+    investigation_report,
     validate_result,
 )
 
@@ -120,16 +121,22 @@ def run() -> InvestigationResult:
             "closed-support CDF boundaries",
         ),
     )
+    claim = calibrated_claim(
+        checks,
+        "The public finite-power-law kernels preserve normalization, inversion, support, and the independently derived local alpha derivative through the tested removable limit.",
+    )
     result = InvestigationResult(
         "powerlaw-removable-limit",
         "At alpha = -1 the finite power law should approach a logarithmic CDF with a smooth parameter derivative from both sides.",
         metrics,
         checks,
-        "The public finite-power-law kernels preserve normalization, inversion, support, and the independently derived local alpha derivative through the tested removable limit.",
+        claim,
     )
     validate_result(result)
     return result
 
 
 if __name__ == "__main__":
-    print(metric_table(run()), end="")
+    output = run()
+    print(investigation_report(output), end="")
+    raise SystemExit(not all(check.passed for check in output.audit_checks))

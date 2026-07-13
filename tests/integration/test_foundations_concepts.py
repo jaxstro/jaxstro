@@ -108,9 +108,7 @@ def test_each_foundation_page_has_required_concepts_and_learning_cycle() -> None
 
 def test_foundation_pages_are_navigable_without_replacing_module_pages() -> None:
     myst = (DOCS / "myst.yml").read_text(encoding="utf-8")
-    manifest = json.loads(
-        (DOCS / "route-manifest.json").read_text(encoding="utf-8")
-    )
+    manifest = json.loads((DOCS / "route-manifest.json").read_text(encoding="utf-8"))
     for filename in PAGES:
         page = f"05-foundations/{filename}"
         assert myst.count(f"file: {page}") == 1

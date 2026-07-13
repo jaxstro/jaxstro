@@ -14,7 +14,8 @@ from ._common import (
     AuditCheck,
     InvestigationMetric,
     InvestigationResult,
-    metric_table,
+    calibrated_claim,
+    investigation_report,
     validate_result,
 )
 
@@ -104,9 +105,14 @@ def run() -> InvestigationResult:
             "independent square-root identity",
         ),
         AuditCheck(
+            "root.positive-branch-unique-smooth",
+            True,
+            "analytic fixture: x^2-theta is smooth and strictly increasing for x > 0 because df/dx = 2x > 0",
+        ),
+        AuditCheck(
             "root.implicit-certified",
             bool(implicit.certified),
-            "uniqueness, smoothness, residual, width, and slope certificate",
+            "caller uniqueness/smoothness assertions plus checked convergence, finite state, residual, width, and slope gates",
         ),
         AuditCheck(
             "root.derivative-identity",
@@ -114,16 +120,22 @@ def run() -> InvestigationResult:
             "analytic implicit derivative",
         ),
     )
+    claim = calibrated_claim(
+        checks,
+        "The tested unique smooth quadratic root has a certified implicit sensitivity; this does not make the value-first branch history an IFT derivative.",
+    )
     result = InvestigationResult(
         "root-values-and-sensitivities",
         "The value-first solve should locate sqrt(theta); only the separately certified implicit API should expose the ideal-root sensitivity.",
         metrics,
         checks,
-        "The tested unique smooth quadratic root has a certified implicit sensitivity; this does not make the value-first branch history an IFT derivative.",
+        claim,
     )
     validate_result(result)
     return result
 
 
 if __name__ == "__main__":
-    print(metric_table(run()), end="")
+    output = run()
+    print(investigation_report(output), end="")
+    raise SystemExit(not all(check.passed for check in output.audit_checks))

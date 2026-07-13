@@ -25,9 +25,7 @@ def test_documentation_design_page_explains_the_evidence_first_structure() -> No
 
 
 def test_choose_your_path_is_optional_ungraded_and_task_routed() -> None:
-    index = (DOCS / "05-foundations" / "foundations.md").read_text(
-        encoding="utf-8"
-    )
+    index = (DOCS / "05-foundations" / "foundations.md").read_text(encoding="utf-8")
     chooser = (DOCS / "05-foundations" / "choose-your-path.md").read_text(
         encoding="utf-8"
     )
@@ -57,9 +55,7 @@ def test_homepage_names_four_routes_without_stale_door_count() -> None:
 
 def test_foundations_navigation_preserves_module_theory_section() -> None:
     myst = (DOCS / "myst.yml").read_text(encoding="utf-8")
-    manifest = json.loads(
-        (DOCS / "route-manifest.json").read_text(encoding="utf-8")
-    )
+    manifest = json.loads((DOCS / "route-manifest.json").read_text(encoding="utf-8"))
     for page, route in (
         ("05-foundations/foundations.md", "/foundations"),
         ("05-foundations/choose-your-path.md", "/choose-your-path"),

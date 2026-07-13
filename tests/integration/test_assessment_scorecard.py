@@ -67,6 +67,22 @@ def test_scorecard_closes_unified_evidence_phase_from_index() -> None:
     classes = {entry["evidence_class"] for entry in evidence["entries"]}
     assert "Unified evidence infrastructure: implemented" in text
     assert "Method-specific scientific thresholds remain method-owned" in text
-    assert "Phase B" in text
+    assert "Executable foundations curriculum: implemented" in text
     assert f"| {len(evidence['entries'])} | artifacts |" in text
     assert f"| {len(classes)} | evidence classes |" in text
+
+
+def test_scorecard_closes_executable_curriculum_from_generated_coverage() -> None:
+    text = SCORECARD.read_text(encoding="utf-8")
+    coverage = json.loads(
+        (ROOT / "docs/validation/curriculum-coverage.json").read_text(encoding="utf-8")
+    )
+    contract_count = sum(item["contract_count"] for item in coverage["units"])
+    indexed_count = sum(item["evidence_count"] for item in coverage["units"])
+    instructor_count = sum(bool(item["instructor_route"]) for item in coverage["units"])
+    assert "Executable foundations curriculum: implemented" in text
+    assert f"| {coverage['unit_count']} | investigations |" in text
+    assert f"| {contract_count} | contract links |" in text
+    assert f"| {indexed_count} | indexed evidence links |" in text
+    assert f"| {instructor_count} | instructor routes |" in text
+    assert "does not automatically raise every pedagogy grade" in text

@@ -27,11 +27,14 @@ work.
 
 ## Which derivative is being computed?
 
-A smooth finite algorithm has a pathwise derivative of its executed operations.
-A **value-first** iterative solver promises a robust value and telemetry but no
-ideal-root derivative. A separately certified **implicit derivative** applies a
-mathematical sensitivity rule only after uniqueness, smoothness, convergence,
-residual, width, and conditioning gates pass.
+A smooth finite algorithm ordinarily has a pathwise derivative of its executed
+operations. JAX also permits custom derivative rules: `custom_jvp`, `custom_vjp`,
+and `custom_root` can assign derivative semantics that do not follow the primal
+iteration history. A **value-first** iterative solver promises a robust value
+and telemetry but no ideal-root derivative. Jaxstro's **implicit derivative**
+records caller assertions of uniqueness and smoothness, then checks numerical
+convergence, finite state, residual, width, and conditioning gates before
+exposing the custom-root sensitivity.
 
 This distinction generalizes. Differentiating an interpolator at an interior
 point is different from differentiating the discrete selection of an
@@ -79,4 +82,3 @@ let one passing class silently stand in for another.
 
 Continue to the [](../10-theory/index.md) module chapters and the generated
 [](../40-api/contracts.md) contract registry.
-

@@ -10,6 +10,7 @@ def test_interpolation_investigation_separates_interior_and_boundary_claims() ->
     assert metrics["interpolation.interior_value_error"].value <= 1.0e-12
     assert metrics["interpolation.interior_derivative_error"].value <= 1.0e-12
     assert metrics["interpolation.regular_grid_affine_error"].value <= 1.0e-12
+    assert metrics["interpolation.clamp_error"].value <= 1.0e-12
     assert metrics["interpolation.reject_raised"].value == 1
     assert all(check.passed for check in result.audit_checks)
     assert "not at knots or policy boundaries" in result.warranted_claim

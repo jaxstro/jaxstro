@@ -30,6 +30,16 @@ def validate_instructor_route(root: Path, route: str) -> None:
         raise ValueError(f"instructor route does not exist: {route}")
 
 
+def validate_unique_references(
+    identity: str, unit: dict[str, Any], fields: tuple[str, ...]
+) -> None:
+    """Reject duplicate references before computing coverage counts."""
+    for field in fields:
+        values = unit[field]
+        if len(values) != len(set(values)):
+            raise ValueError(f"duplicate curriculum {field}: {identity}")
+
+
 def load_and_validate_units(root: Path) -> list[dict[str, Any]]:
     """Load units and fail closed on references or schema drift."""
     payload = json.loads((root / MANIFEST).read_text(encoding="utf-8"))
@@ -71,6 +81,17 @@ def load_and_validate_units(root: Path) -> list[dict[str, Any]]:
                 isinstance(value, str) and value.strip() for value in unit[field]
             ):
                 raise ValueError(f"curriculum {field} must be text list: {identity}")
+        validate_unique_references(
+            identity,
+            unit,
+            (
+                "contract_ids",
+                "public_apis",
+                "evidence_ids",
+                "validation_targets",
+                "prerequisites",
+            ),
+        )
         if not unit["contract_ids"] or not unit["validation_targets"]:
             raise ValueError(
                 f"curriculum unit lacks contract or validation: {identity}"
@@ -130,7 +151,7 @@ def _render_index(units: list[dict[str, Any]]) -> str:
     lines.extend(
         [
             "",
-            "Every command prints measured results only as:",
+            "Every command prints a complete prediction, metric, audit, and claim report. Measured results appear only in the required form:",
             "",
             "| Metric identity | Symbol | Value | Units |",
             "| --- | --- | ---: | --- |",

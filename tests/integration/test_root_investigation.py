@@ -16,6 +16,12 @@ def test_root_investigation_predicts_computes_and_audits() -> None:
     assert metrics["root.derivative_absolute_error"].value <= 1.0e-9
     assert math.isfinite(metrics["root.implicit_derivative"].value)
     assert all(check.passed for check in result.audit_checks)
+    analytic_check = next(
+        check
+        for check in result.audit_checks
+        if check.identity == "root.positive-branch-unique-smooth"
+    )
+    assert "strictly increasing" in analytic_check.evidence
     assert "does not make the value-first branch history an IFT derivative" in (
         result.warranted_claim
     )

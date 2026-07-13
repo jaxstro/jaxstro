@@ -26,9 +26,11 @@ Run the repository-owned example:
 uv run --no-sync python -m examples.investigations.root_values_and_sensitivities
 ```
 
-The command prints only the required metric table. The source retains typed
-solver status, final bracket, evaluation count, derivative certificate, and the
-analytic fixture.
+The command prints a complete report: prediction, the required units-explicit
+metric table, audit status and evidence, and the calibrated warranted claim. A
+failed audit is visible and gives the command a nonzero exit status. The source
+retains typed solver status, final bracket, evaluation count, derivative
+certificate, and the analytic fixture.
 
 ## Audit
 
@@ -44,7 +46,8 @@ registered [](../validation/rootfinding-performance.md) and
 
 ## State the warranted claim
 
-The executed fixture supports a certified derivative for this unique, smooth,
-well-conditioned branch. It does not prove those assumptions for arbitrary
-residuals or downstream physical models.
-
+The analytic positive branch independently supplies uniqueness and smoothness.
+The runtime certificate records those caller assertions and checks convergence,
+finite state, residual, width, and slope conditioning. Together they support the
+fixture's derivative; they do not prove the assumptions for arbitrary residuals
+or downstream physical models.

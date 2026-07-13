@@ -81,3 +81,40 @@ def metric_table(result: InvestigationResult) -> str:
         for item in result.metrics
     )
     return "\n".join(lines) + "\n"
+
+
+def calibrated_claim(checks: tuple[AuditCheck, ...], positive_claim: str) -> str:
+    """Return a positive claim only when every declared audit passes."""
+    failed = [check.identity for check in checks if not check.passed]
+    if failed:
+        return (
+            "No positive claim is warranted because these audits failed: "
+            + ", ".join(failed)
+            + "."
+        )
+    return positive_claim
+
+
+def investigation_report(result: InvestigationResult) -> str:
+    """Render prediction, metrics, audits, and the calibrated claim."""
+    validate_result(result)
+    lines = [
+        "## Prediction",
+        "",
+        result.prediction,
+        "",
+        "## Metrics",
+        "",
+        metric_table(result).rstrip(),
+        "",
+        "## Audit",
+        "",
+        "| Audit identity | Status | Evidence |",
+        "| --- | --- | --- |",
+    ]
+    lines.extend(
+        f"| {check.identity} | {'pass' if check.passed else 'fail'} | {check.evidence} |"
+        for check in result.audit_checks
+    )
+    lines.extend(["", "## State the warranted claim", "", result.warranted_claim, ""])
+    return "\n".join(lines)

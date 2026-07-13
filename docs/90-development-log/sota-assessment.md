@@ -31,9 +31,9 @@ no numeric score is assigned without an observable rubric.
 | Performance and compilation evidence | implemented | Rootfinding and spectra now share a units-explicit evidence envelope; compile/runtime/memory coverage is not yet uniform. |
 | Evidence freshness | validated | Computational artifacts, scientific policy, and full provenance-card content resolve through a deterministic class-preserving index. |
 | Provenance | validated | Runtime manifests and source-backed cards remain distinct from computational evidence while sharing identity, digest, and freshness infrastructure. |
-| Curriculum quality | implemented | Predict → compute → audit, science-pattern routing, objectives, activities, and evidence-bearing figures now form a learning spine. |
+| Curriculum quality | implemented | Optional preparation, a complete expert-reviewed conceptual spine, three executable investigations, and instructor assessment all use predict → compute → audit → state the warranted claim; learner validation remains future evidence. |
 | Accessibility | implemented | The docs gate checks alt text; new figures also use marker and line-style encodings beyond color. |
-| Discoverability | implemented | Diátaxis, three entry doors, science patterns, modules, API reference, and validation serve distinct questions. |
+| Discoverability | implemented | Four explicit homepage routes, foundations, investigations, science patterns, modules, API reference, and validation serve distinct questions. |
 | Downstream reuse | implemented | Local parity fixtures and known sibling use motivate shared primitives, but pinned adoption and compatibility evidence is not yet generated or validated. |
 
 ## High-confidence gaps
@@ -44,28 +44,32 @@ no numeric score is assigned without an observable rubric.
   generated public contract matrix.
 - Dimensional safety has two live surfaces until quantity adoption is ratified
   or rejected.
-- Curriculum examples are not yet a reusable executable exercise corpus.
+- Curriculum breadth, automated feedback, visual coverage, and learner evidence remain limited beyond the three initial investigations.
 - Visual coverage is strong for selected modules but sparse for distribution
   limits, AD contracts, validation logic, quantities, and provenance.
 - Downstream reuse lacks a generated symbol-to-project compatibility map.
 
 ## Now
 
-### 1. Make curriculum activities executable
+### 1. Add contract-derived foundation figures and learner evidence
 
-**Impact.** Students can run the exact fixtures used by the site and receive
-invariant-focused feedback.
+**Impact.** Learners can see parameter-space geometry, derivative maps,
+removable limits, and evidence classes while maintainers can test whether the
+material actually improves comprehension and transfer.
 
-**Audience and ownership.** Computational-science courses; instructors own
-sequencing and grading while Jaxstro owns reusable public examples and checks.
+**Audience and ownership.** Research students and courses; Jaxstro owns
+public-API-derived figures and structural checks, while instructors and learners
+provide comprehension and accessibility evidence.
 
-**Risk.** Copied notebooks can become a stale second test suite.
+**Risk.** Attractive diagrams can oversimplify conditional derivative and model
+claims or become manually maintained parallel truth.
 
-**Evidence gate.** Exercises import public APIs or tested helpers, run in CI,
-and include expected reasoning and accessibility metadata.
+**Evidence gate.** Figures derive from contracts, evidence artifacts, public
+APIs, or explicit analytic identities; learner checks test stated misconceptions
+and accessibility rather than page existence alone.
 
-The scientific contract registry and unified evidence index are implemented.
-They now provide the claim and audit spine for this Phase B investment.
+The scientific contract registry, evidence index, foundations spine, executable
+investigations, and instructor rubric now provide the source material.
 
 ### 2. Generate a JAX transform-contract matrix
 

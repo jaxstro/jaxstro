@@ -13,7 +13,7 @@ Each investigation imports public APIs from one repository-owned Python module. 
 | [Finite power-law removable limit](./powerlaw-removable-limit.md) | `numerics.powerlaw_cdf`, `numerics.powerlaw_logpdf`, `numerics.powerlaw_ppf` | No standalone indexed artifact; callable validation only | The fixture validates one finite support and does not select a physical stellar-mass model.; Callable validation exists, but no standalone power-law artifact is yet indexed. |
 | [Root values and sensitivities](./root-values-and-sensitivities.md) | `numerics.implicit_bracketed_root`, `numerics.safeguarded_bracketed_root` | `rootfinding.implicit-gradients`, `rootfinding.performance` | The analytic quadratic fixture does not establish uniqueness or conditioning for arbitrary residuals.; The value-first solver retains no ideal-root derivative claim. |
 
-Every command prints measured results only as:
+Every command prints a complete prediction, metric, audit, and claim report. Measured results appear only in the required form:
 
 | Metric identity | Symbol | Value | Units |
 | --- | --- | ---: | --- |

@@ -10,12 +10,15 @@ from examples.investigations._common import (
     AuditCheck,
     InvestigationMetric,
     InvestigationResult,
+    calibrated_claim,
+    investigation_report,
     validate_result,
 )
 from scripts.build_curriculum_registry import (
     load_and_validate_units,
     render_outputs,
     validate_instructor_route,
+    validate_unique_references,
 )
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -40,6 +43,22 @@ def test_investigation_result_requires_units_and_passing_audits() -> None:
                 "claim",
             )
         )
+
+
+def test_failed_audit_is_visible_and_blocks_positive_claim() -> None:
+    checks = (AuditCheck("fixture.failed", False, "independent identity"),)
+    claim = calibrated_claim(checks, "This positive claim must not survive.")
+    result = InvestigationResult(
+        "failed-fixture",
+        "predict a passing identity",
+        (InvestigationMetric("fixture.value", "x", 2.0, "dimensionless"),),
+        checks,
+        claim,
+    )
+    report = investigation_report(result)
+    assert "| fixture.failed | fail | independent identity |" in report
+    assert "No positive claim is warranted" in report
+    assert "This positive claim must not survive" not in report
 
 
 def test_curriculum_manifest_resolves_contracts_evidence_and_files() -> None:
@@ -81,3 +100,12 @@ def test_curriculum_registry_outputs_are_deterministic_and_fresh() -> None:
 def test_instructor_route_must_resolve_to_a_repository_page() -> None:
     with pytest.raises(ValueError, match="instructor route does not exist"):
         validate_instructor_route(ROOT, "docs/80-instructor/missing.md")
+
+
+def test_duplicate_references_cannot_inflate_curriculum_coverage() -> None:
+    with pytest.raises(ValueError, match="duplicate curriculum contract_ids"):
+        validate_unique_references(
+            "duplicate-unit",
+            {"contract_ids": ["numerics.root", "numerics.root"]},
+            ("contract_ids",),
+        )

@@ -11,7 +11,8 @@ from ._common import (
     AuditCheck,
     InvestigationMetric,
     InvestigationResult,
-    metric_table,
+    calibrated_claim,
+    investigation_report,
     validate_result,
 )
 
@@ -34,6 +35,7 @@ def run() -> InvestigationResult:
     analytic_grid = 2.0 * xi[0] - 3.0 * xi[1] + 1.0
     outside = jnp.asarray([3.0, 0.2])
     clamped = regular_grid_interp((axis_x, axis_y), values, outside, boundary="clamp")
+    expected_clamped = 2.0 * axis_x[-1] - 3.0 * outside[1] + 1.0
     filled = regular_grid_interp(
         (axis_x, axis_y), values, outside, boundary="fill", fill_value=-99.0
     )
@@ -69,6 +71,12 @@ def run() -> InvestigationResult:
             "function units",
         ),
         InvestigationMetric(
+            "interpolation.clamp_error",
+            "abs(I_clamp-f(x_clipped))",
+            abs(float(clamped - expected_clamped)),
+            "function units",
+        ),
+        InvestigationMetric(
             "interpolation.fill_value",
             "I_fill",
             float(filled),
@@ -99,20 +107,28 @@ def run() -> InvestigationResult:
         ),
         AuditCheck(
             "interpolation.boundary-policies",
-            metrics[4].value == -99.0 and reject_raised == 1,
+            metrics[4].value <= 1.0e-12
+            and metrics[5].value == -99.0
+            and reject_raised == 1,
             "explicit clamp, fill, and reject policy outcomes",
         ),
+    )
+    claim = calibrated_claim(
+        checks,
+        "The tested affine values and derivatives are exact on cell interiors, not at knots or policy boundaries; outside-grid behavior follows the explicitly selected policy.",
     )
     result = InvestigationResult(
         "interpolation-boundary-policies",
         "Affine data should be exact on branch-stable interiors; clamp, fill, and reject should remain visibly different outside the grid.",
         metrics,
         checks,
-        "The tested affine values and derivatives are exact on cell interiors, not at knots or policy boundaries; outside-grid behavior follows the explicitly selected policy.",
+        claim,
     )
     validate_result(result)
     return result
 
 
 if __name__ == "__main__":
-    print(metric_table(run()), end="")
+    output = run()
+    print(investigation_report(output), end="")
+    raise SystemExit(not all(check.passed for check in output.audit_checks))

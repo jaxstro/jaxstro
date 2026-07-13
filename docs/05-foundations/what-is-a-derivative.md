@@ -64,12 +64,14 @@ is not justified when uniqueness or smoothness fails.
 
 ## The derivative of a relation versus an executed program
 
-Automatic differentiation differentiates the **executed program**: its selected
-branches, finite iteration count, clamps, and represented arithmetic. That may
-be exactly the desired finite-map sensitivity. It is not automatically the
-derivative of an ideal mathematical solution. Jaxstro therefore distinguishes
-smooth pathwise derivatives, value-first iterative maps, validation-only
-finite-difference checks, and strictly certified implicit derivatives.
+JAX differentiates the represented map according to primitive and custom
+transformation rules. Ordinary pathwise AD follows selected branches, finite
+iteration counts, clamps, and represented arithmetic. But `custom_jvp`,
+`custom_vjp`, and `custom_root` deliberately install derivative semantics that
+need not differentiate the executed primal iteration history. Jaxstro's
+certified implicit API uses the latter pattern. It therefore distinguishes
+smooth finite-map derivatives, value-first iterative maps, validation-only
+finite-difference checks, and separately defined implicit derivatives.
 
 At a branch boundary, knot, absolute-value kink, clipping threshold, repeated
 root, or discrete selection, a classical derivative can fail to exist or become
@@ -102,9 +104,10 @@ Probe both sides of suspected boundaries and monitor conditioning.
 
 ## State the warranted claim
 
-State “the AD derivative of this executed smooth branch agrees with this
+State “the AD derivative of this represented smooth map agrees with this
 independent check on this domain.” Claim an ideal implicit sensitivity only when
-uniqueness, smoothness, residual, width, and slope gates support it.
+uniqueness and smoothness are independently justified and declared, and the
+runtime convergence, finiteness, residual, width, and slope gates pass.
 
 ## Misconception check
 
@@ -115,4 +118,3 @@ uniqueness, smoothness, residual, width, and slope gates support it.
 Continue to [](./sensitivity-conditioning-identifiability.md),
 [](./from-relations-to-differentiable-programs.md), or Jaxstro's
 [](../10-theory/autodiff.md) and [](../10-theory/rootfinding.md) chapters.
-

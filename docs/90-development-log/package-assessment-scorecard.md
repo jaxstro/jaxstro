@@ -34,8 +34,8 @@ evidence, not effort or ambition.
 | --- | --- | --- | --- | --- | --- |
 | Internal differentiable-science foundation | A− | [](../60-validation/index.md) | Broad shared primitives, explicit ownership, and extensive executable validation | Evidence depth and downstream verification are not uniform | Generated contracts, uniform evidence classes, and pinned adoption records |
 | Public scientific package | B+ | [](../40-api/index.md) | Cohesive surface, minimal core dependencies, typed failures, and a public site | Public reach and external adoption trail the implementation | Stable release, public compatibility evidence, and external use cases |
-| Curriculum concept | B+ | [](../00-getting-started/how-to-learn.md) | Predict → compute → audit, objectives, misconceptions, and science-pattern routing form a coherent philosophy | The approved foundations sequence is not yet implemented | Reviewed foundations spine with tested scientific examples |
-| Executable curriculum | B | [](../10-theory/index.md) | Tested examples exist and documentation is build-gated | Activities, instructor materials, diagnostics, and rubrics are incomplete | CI-executed investigations and instructor-facing assessment materials |
+| Curriculum concept | B+ | [](../05-foundations/foundations.md) | An expert-reviewed first-principles spine connects models, dimensionality, linear algebra, derivatives, probability, inference, conditioning, and programs through predict → compute → audit | Learner comprehension and transfer have not yet been studied | Learner evidence, misconception diagnostics, and concept-linked figures |
+| Executable curriculum | B+ | [](../70-investigations/investigations.md) | Three CI-executed investigations resolve public APIs to contracts, evidence, limitations, instructor notes, and a claim-calibrated rubric | Unit breadth, automated feedback, optional exports, and learner trials remain limited | Broader investigation coverage and evidence from real course use |
 | Architecture and ownership | A | [](../40-api/contracts.md) | Thin-foundation ADRs, one-way ecosystem boundaries, and generated module contracts are explicit | Evidence depth remains uneven at callable level | Expand callable classification without weakening the thin-foundation boundary |
 | Numerical correctness | A− | [](../60-validation/index.md) | Analytic cases, limits, round trips, convergence, and FD comparisons cover major kernels | Validation and performance artifacts remain uneven by module | Per-contract evidence coverage and missing-evidence ratchets |
 | AD honesty | A | [](../10-theory/rootfinding.md) | Smooth, blocked, zero, value-first, validation-only, and certified implicit paths are distinguished | The taxonomy is distributed across prose and tests | Generated callable-level AD contract matrix |
@@ -136,5 +136,20 @@ and serialization without inventing cross-method acceptance rules.
 | Indexed evidence artifacts | `N_artifact,evidence` | 5 | artifacts |
 | Distinct evidence classes | `N_class,evidence` | 3 | evidence classes |
 
-The single next investment is **Phase B:** build executable foundations and
-research-student investigations from the contracts and indexed evidence.
+**Executable foundations curriculum: implemented.** Optional readiness routing,
+first-principles foundations, executable research investigations, and instructor
+assessment now coexist with the unchanged module and API reference sections.
+This delivery does not automatically raise every pedagogy grade: learner testing,
+visual coverage, automated feedback, optional exports, and investigation breadth
+remain explicit promotion gates.
+
+| Metric identity | Symbol | Value | Units |
+| --- | --- | ---: | --- |
+| Executable research investigations | `N_unit,curriculum` | 3 | investigations |
+| Callable contract links | `N_contract,curriculum` | 7 | contract links |
+| Indexed artifact links | `N_evidence,curriculum` | 2 | indexed evidence links |
+| Units with instructor routes | `N_instructor,curriculum` | 3 | instructor routes |
+
+The next curriculum investment is a contract-derived pedagogical figure suite
+plus learner-centered accessibility and comprehension evidence. Package-wide
+callable coverage and downstream adoption remain separate roadmap priorities.
