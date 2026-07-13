@@ -1,4 +1,143 @@
+from dataclasses import replace
+
+from jaxstro.contracts import (
+    ADSemantics,
+    BoundaryContract,
+    CallableContract,
+    EvidenceKind,
+    EvidenceReference,
+    FailureMode,
+    MaturityLevel,
+    SupportLevel,
+    TransformContract,
+)
 from jaxstro.contracts._core import module_contract
+
+
+def _root_evidence(name: str, target: str, claim: str) -> EvidenceReference:
+    return EvidenceReference(
+        f"root.{name}", EvidenceKind.VALIDATION_TEST, target, claim
+    )
+
+
+def _value_root_contract(name: str, purpose: str) -> CallableContract:
+    evidence = _root_evidence(
+        name,
+        "tests/validation/test_bracketed_root_algorithms.py",
+        "JIT, VMAP, bracket invariants, and analytic root behavior.",
+    )
+    return CallableContract(
+        id=f"numerics.{name}",
+        import_path=f"jaxstro.numerics.{name}",
+        purpose=purpose,
+        domain="Finite scalar endpoints enclosing an exact root or a typed missing-bracket result.",
+        outputs="Fixed-shape value-first bracket evidence and terminal status.",
+        ad_semantics=ADSemantics.VALUE_FIRST,
+        precision="float32 and float64; tolerances are caller-owned.",
+        maturity=MaturityLevel.VALIDATED,
+        transforms=(
+            TransformContract(
+                "jit", SupportLevel.SUPPORTED, evidence_ids=(evidence.id,)
+            ),
+            TransformContract(
+                "vmap",
+                SupportLevel.CONDITIONAL,
+                conditions="Values and shapes are preserved, but physical per-lane skipping is not guaranteed.",
+                evidence_ids=(evidence.id,),
+            ),
+        ),
+        boundaries=(
+            BoundaryContract(
+                "Missing sign bracket or nonfinite admissible evaluation.",
+                FailureMode.STRUCTURED_RESULT,
+                (evidence.id,),
+            ),
+        ),
+        evidence=(evidence,),
+        limitations=("No implicit-root derivative claim.",),
+        cost_notes="Use lax.map when physical per-lane skipping of expensive residuals matters.",
+    )
+
+
+_implicit_evidence = _root_evidence(
+    "implicit_bracketed_root",
+    "tests/validation/test_implicit_root_gradients.py",
+    "Certified sensitivities agree with analytic and central finite differences.",
+)
+
+ROOT_CALLABLES: tuple[CallableContract, ...] = (
+    _value_root_contract(
+        "safeguarded_bracketed_root", "Auditable scalar safeguarded root solve."
+    ),
+    _value_root_contract(
+        "map_safeguarded_bracketed_root",
+        "Mapped safeguarded scalar root solves with per-lane control flow.",
+    ),
+    CallableContract(
+        id="numerics.implicit_bracketed_root",
+        import_path="jaxstro.numerics.implicit_bracketed_root",
+        purpose="Fail-closed implicit-function derivative for a certified scalar root.",
+        domain="Caller asserts a unique root and smooth branch; numerical certificate gates must pass.",
+        outputs="ImplicitRootResult with primal evidence and derivative certificate.",
+        ad_semantics=ADSemantics.CERTIFIED_IMPLICIT,
+        precision="float32 and float64; certificate tolerances are explicit.",
+        maturity=MaturityLevel.VALIDATED,
+        transforms=(
+            TransformContract(
+                "jit", SupportLevel.SUPPORTED, evidence_ids=(_implicit_evidence.id,)
+            ),
+        ),
+        boundaries=(
+            BoundaryContract(
+                "Rejected assumption or numerical certificate.",
+                FailureMode.RETURNS_NAN,
+                (_implicit_evidence.id,),
+            ),
+        ),
+        evidence=(_implicit_evidence,),
+        limitations=(
+            "Requires a unique mathematical root.",
+            "Requires a smooth selected branch and adequate slope conditioning.",
+        ),
+        cost_notes="Runs the safeguarded primal before exposing a custom-root derivative.",
+    ),
+)
+
+
+def _primitive(name: str, purpose: str) -> CallableContract:
+    evidence = EvidenceReference(
+        f"root.{name}",
+        EvidenceKind.UNIT_TEST,
+        "tests/unit/test_bracketed_root.py",
+        "Deterministic low-level bracket behavior.",
+    )
+    return CallableContract(
+        id=f"numerics.{name}",
+        import_path=f"jaxstro.numerics.{name}",
+        purpose=purpose,
+        domain="Finite scalar bracket evidence.",
+        outputs="Fixed-shape bracket state or proposal.",
+        ad_semantics=ADSemantics.VALUE_FIRST,
+        precision="float32 and float64.",
+        maturity=MaturityLevel.VALIDATED,
+        evidence=(evidence,),
+        limitations=("Primary purpose is auditable forward-value control flow.",),
+    )
+
+
+ROOT_CALLABLES += (
+    _primitive(
+        "initialize_bracket",
+        "Validate endpoint evidence and initialize a sign bracket.",
+    ),
+    _primitive(
+        "update_bracket", "Update one bracket side without losing valid evidence."
+    ),
+    _primitive(
+        "propose_bracketed",
+        "Choose deterministic safeguarded interpolation or midpoint fallback.",
+    ),
+)
 
 MODULE_CONTRACT = module_contract(
     "numerics",
@@ -7,3 +146,4 @@ MODULE_CONTRACT = module_contract(
     "Reusable numerical maps for differentiable science.",
     "Caller-owned units; each callable declares dimensional behavior.",
 )
+MODULE_CONTRACT = replace(MODULE_CONTRACT, callables=ROOT_CALLABLES)

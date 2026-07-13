@@ -10,6 +10,7 @@ from typing import Any
 
 from .schema import (
     ADSemantics,
+    CallableContract,
     ContractInventory,
     EvidenceKind,
     ExecutionBoundary,
@@ -73,6 +74,15 @@ def get_module_contract(import_path: str) -> ModuleContract:
     for module in collect_contracts().modules:
         if module.import_path == import_path:
             return module
+    raise KeyError(import_path)
+
+
+def get_callable_contract(import_path: str) -> CallableContract:
+    """Return one registered callable or fail closed."""
+    for module in collect_contracts().modules:
+        for contract in module.callables:
+            if contract.import_path == import_path:
+                return contract
     raise KeyError(import_path)
 
 
