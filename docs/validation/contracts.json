@@ -42,6 +42,12 @@
     "jaxstro.contracts.ModuleContract",
     "jaxstro.contracts.SupportLevel",
     "jaxstro.contracts.TransformContract",
+    "jaxstro.evidence.ComparisonRecord",
+    "jaxstro.evidence.ComparisonRelation",
+    "jaxstro.evidence.EnvironmentRecord",
+    "jaxstro.evidence.EvidenceArtifact",
+    "jaxstro.evidence.EvidenceStatus",
+    "jaxstro.evidence.MetricRecord",
     "jaxstro.numerics.Array",
     "jaxstro.numerics.BSpline1D",
     "jaxstro.numerics.BlockDiagonalOperator",
@@ -186,6 +192,20 @@
       "maturity": "validated",
       "non_ownership": "Domain frame selection.",
       "ownership": "Coordinate transformations."
+    },
+    {
+      "callables": [],
+      "dimensional_policy": "Every metric carries explicit producer-owned units.",
+      "evidence": [],
+      "execution_boundary": "tooling",
+      "id": "evidence",
+      "import_path": "jaxstro.evidence",
+      "intended_uses": [
+        "Recording and auditing numerical metrics and comparisons."
+      ],
+      "maturity": "validated",
+      "non_ownership": "Method-specific scientific thresholds or source-provenance claims.",
+      "ownership": "Portable computational-evidence schemas, validation, and rendering."
     },
     {
       "callables": [],
@@ -801,7 +821,7 @@
   ],
   "package_version": "0.1.0",
   "schema_version": "1",
-  "source_revision": "sha256:af58385a2a6f650ce4b34be2f8ab64d019268f415bf4e7dddd770a6c0a1b042d",
+  "source_revision": "sha256:c1af808f04788a41979f4c48940a018a8991a00869296fc011e68a1f9a1fd095",
   "unclassified_callables": [
     "jaxstro.atmospheres.acquisition_rows_to_markdown",
     "jaxstro.atmospheres.build_bosz_index",
@@ -831,6 +851,7 @@
     "jaxstro.coords.sky_tangent",
     "jaxstro.coords.spherical_to_cartesian",
     "jaxstro.coords.zenith_parallactic",
+    "jaxstro.evidence.validate_artifact",
     "jaxstro.geometry.angular_distance",
     "jaxstro.geometry.compose_rigid",
     "jaxstro.geometry.invert_rigid",

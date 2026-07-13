@@ -14,6 +14,7 @@ PUBLIC = {
         "constants",
         "contracts",
         "coords",
+        "evidence",
         "geometry",
         "jaxconfig",
         "numerics",

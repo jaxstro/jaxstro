@@ -88,4 +88,12 @@ CORE_CONTRACTS = (
         "Metadata only; scientific units are recorded by owned contracts.",
         boundary=ExecutionBoundary.TOOLING,
     ),
+    module_contract(
+        "evidence",
+        "Portable computational-evidence schemas, validation, and rendering.",
+        "Method-specific scientific thresholds or source-provenance claims.",
+        "Recording and auditing numerical metrics and comparisons.",
+        "Every metric carries explicit producer-owned units.",
+        boundary=ExecutionBoundary.TOOLING,
+    ),
 )

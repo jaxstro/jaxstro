@@ -117,10 +117,10 @@ not treated as supported.
 
 | Metric identity | Symbol | Value | Units |
 | --- | --- | ---: | --- |
-| Registered public modules | `N_module,contract` | 15 | modules |
+| Registered public modules | `N_module,contract` | 16 | modules |
 | Callable-level contracts | `N_callable,contract` | 15 | callables |
-| Explicitly unclassified public callables | `N_callable,unclassified` | 200 | callables |
-| Module-inherited public record types | `N_symbol,inherited` | 115 | symbols |
+| Explicitly unclassified public callables | `N_callable,unclassified` | 201 | callables |
+| Module-inherited public record types | `N_symbol,inherited` | 121 | symbols |
 
 The next ordered investments are:
 

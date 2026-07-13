@@ -16,6 +16,7 @@ This generated page does not infer support from importability or an unrelated pa
 | `jaxstro.constants` | validated | static | CGS unless the symbol explicitly names another unit. | Source-backed physical constants. | Runtime source lookup. |
 | `jaxstro.contracts` | validated | tooling | Metadata only; scientific units are recorded by owned contracts. | Scientific contract vocabulary, validation, and rendering. | Runtime scientific acceptance or automatic certification. |
 | `jaxstro.coords` | validated | runtime | Positions in pc, velocities in km/s, angles in degrees, proper motions in mas/yr, and parallax in mas where documented. | Coordinate transformations. | Domain frame selection. |
+| `jaxstro.evidence` | validated | tooling | Every metric carries explicit producer-owned units. | Portable computational-evidence schemas, validation, and rendering. | Method-specific scientific thresholds or source-provenance claims. |
 | `jaxstro.geometry` | validated | runtime | Caller-owned coordinate units; angles follow each function contract. | Generic geometric transformations. | Domain geometry policy. |
 | `jaxstro.jaxconfig` | validated | static | No physical dimensions. | Explicit JAX precision configuration. | Import-time global configuration. |
 | `jaxstro.numerics` | validated | runtime | Caller-owned units; each callable declares dimensional behavior. | Generic numerical mechanics. | Domain acceptance, retry policy, or physical state. |
@@ -49,7 +50,7 @@ This generated page does not infer support from importability or an unrelated pa
 
 ## Unclassified callable surfaces
 
-The runtime export audit found **200** public callables without callable-level records:
+The runtime export audit found **201** public callables without callable-level records:
 
 - `jaxstro.atmospheres.acquisition_rows_to_markdown`
 - `jaxstro.atmospheres.build_bosz_index`
@@ -79,6 +80,7 @@ The runtime export audit found **200** public callables without callable-level r
 - `jaxstro.coords.sky_tangent`
 - `jaxstro.coords.spherical_to_cartesian`
 - `jaxstro.coords.zenith_parallactic`
+- `jaxstro.evidence.validate_artifact`
 - `jaxstro.geometry.angular_distance`
 - `jaxstro.geometry.compose_rigid`
 - `jaxstro.geometry.invert_rigid`
@@ -300,6 +302,12 @@ These immutable record or type constructors inherit their module-level contract:
 - `jaxstro.contracts.ModuleContract`
 - `jaxstro.contracts.SupportLevel`
 - `jaxstro.contracts.TransformContract`
+- `jaxstro.evidence.ComparisonRecord`
+- `jaxstro.evidence.ComparisonRelation`
+- `jaxstro.evidence.EnvironmentRecord`
+- `jaxstro.evidence.EvidenceArtifact`
+- `jaxstro.evidence.EvidenceStatus`
+- `jaxstro.evidence.MetricRecord`
 - `jaxstro.numerics.Array`
 - `jaxstro.numerics.BSpline1D`
 - `jaxstro.numerics.BlockDiagonalOperator`

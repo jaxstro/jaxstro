@@ -25,6 +25,7 @@ __all__ = [
     "astrometry",
     "numerics",
     "coords",
+    "evidence",
     "geometry",
     "params",
     "provenance",
