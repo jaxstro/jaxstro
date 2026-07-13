@@ -43,6 +43,10 @@ assert 'jaxstro.numerics' not in sys.modules
 assert 'jaxstro.quantity' not in sys.modules
 assert 'jaxstro.spectra' not in sys.modules
 collect_contracts()
+assert 'jaxstro.atmospheres' not in sys.modules
+assert 'jaxstro.numerics' not in sys.modules
+assert 'jaxstro.quantity' not in sys.modules
+assert 'jaxstro.spectra' not in sys.modules
 assert all(name not in sys.modules for name in ('polars', 'numpyro', 'optax'))
 """
     subprocess.run([sys.executable, "-c", code], check=True)

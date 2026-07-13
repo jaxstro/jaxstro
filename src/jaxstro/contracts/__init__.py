@@ -1,6 +1,11 @@
 """Public scientific-contract vocabulary and registry records."""
 
-from .registry import collect_contracts, get_callable_contract, get_module_contract
+from .registry import (
+    audit_runtime_inventory,
+    collect_contracts,
+    get_callable_contract,
+    get_module_contract,
+)
 from .schema import (
     ADSemantics,
     BoundaryContract,
@@ -30,6 +35,7 @@ __all__ = [
     "SupportLevel",
     "TransformContract",
     "collect_contracts",
+    "audit_runtime_inventory",
     "get_callable_contract",
     "get_module_contract",
 ]

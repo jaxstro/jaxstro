@@ -147,3 +147,5 @@ class ContractInventory:
     package_version: str
     source_revision: str
     modules: tuple[ModuleContract, ...]
+    unclassified_callables: tuple[str, ...] = ()
+    inherited_symbols: tuple[str, ...] = ()

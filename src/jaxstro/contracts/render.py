@@ -76,7 +76,7 @@ def render_contract_reference(inventory: ContractInventory) -> str:
             )
             evidence = (
                 "; ".join(
-                    f"`{item.id}` → `{item.target}` ({item.kind.value})"
+                    f"[`{item.id}`](https://github.com/drannarosen/jaxstro/blob/main/{item.target}) ({item.kind.value})"
                     for item in contract.evidence
                 )
                 or "none registered"
@@ -89,21 +89,22 @@ def render_contract_reference(inventory: ContractInventory) -> str:
                 f"| `{contract.import_path}` | {contract.maturity.value} | {contract.ad_semantics.value} | "
                 f"{_cell(transforms)} | {_cell(boundaries)} | {_cell(evidence)} | {_cell(notes)} |"
             )
-    unclassified = [
-        f"`{module.import_path}`"
-        for module in sorted(inventory.modules, key=lambda item: item.id)
-        if not module.callables
-    ]
     lines.extend(
         [
             "",
             "## Unclassified callable surfaces",
             "",
-            "Callable coverage is deliberately tiered. These modules have module-level records but no callable-level claims:",
+            f"The runtime export audit found **{len(inventory.unclassified_callables)}** public callables without callable-level records:",
             "",
-            ", ".join(unclassified) + ".",
+            *[f"- `{path}`" for path in inventory.unclassified_callables],
             "",
-            "Modules with exemplars may still contain other unclassified callables; absence from the table is not a support or maturity claim.",
+            "The absence from the table is not a support or maturity claim.",
+            "",
+            "## Module-inherited public types",
+            "",
+            "These immutable record or type constructors inherit their module-level contract:",
+            "",
+            *[f"- `{path}`" for path in inventory.inherited_symbols],
         ]
     )
     return "\n".join(lines) + "\n"

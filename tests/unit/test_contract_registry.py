@@ -1,5 +1,7 @@
 """Fail-closed registry and deterministic rendering contracts."""
 
+from pathlib import Path
+
 import pytest
 
 from jaxstro.contracts import (
@@ -81,7 +83,7 @@ def test_registry_rejects_unknown_runtime_vocabulary() -> None:
 def test_registry_rejects_noncallable_callable_target() -> None:
     inventory = _inventory(_callable("constant", "jaxstro.constants.G_CGS"))
     with pytest.raises(ValueError, match="not callable"):
-        validate_inventory(inventory)
+        validate_inventory(inventory, resolve_paths=True)
 
 
 def test_registry_rejects_private_callable_target() -> None:
@@ -89,7 +91,7 @@ def test_registry_rejects_private_callable_target() -> None:
         _callable("private", "jaxstro.numerics.rootfinding._normalize_bracket_state")
     )
     with pytest.raises(ValueError, match="not public"):
-        validate_inventory(inventory)
+        validate_inventory(inventory, resolve_paths=True)
 
 
 def test_supported_transform_requires_evidence() -> None:
@@ -99,3 +101,23 @@ def test_supported_transform_requires_evidence() -> None:
     )
     with pytest.raises(ValueError, match="no evidence"):
         validate_inventory(_inventory(record))
+
+
+def test_repository_audit_rejects_missing_evidence_target(tmp_path: Path) -> None:
+    record = _callable("root", "jaxstro.numerics.safeguarded_bracketed_root")
+    from jaxstro.contracts import EvidenceKind, EvidenceReference
+
+    object.__setattr__(
+        record,
+        "evidence",
+        (
+            EvidenceReference(
+                "missing",
+                EvidenceKind.UNIT_TEST,
+                "does/not/exist.py",
+                "missing fixture",
+            ),
+        ),
+    )
+    with pytest.raises(ValueError, match="evidence target does not exist"):
+        validate_inventory(_inventory(record), evidence_root=tmp_path)

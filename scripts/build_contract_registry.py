@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
+from dataclasses import replace
 from pathlib import Path
 
-from jaxstro.contracts import collect_contracts
+from jaxstro.contracts import audit_runtime_inventory, collect_contracts
 from jaxstro.contracts.render import inventory_to_json, render_contract_reference
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,7 +19,13 @@ OUTPUTS = {
 
 def render_outputs() -> dict[Path, str]:
     """Render every committed output from the same validated inventory."""
-    inventory = collect_contracts(source_revision="repository-versioned")
+    inventory = audit_runtime_inventory(
+        collect_contracts(source_revision="pending-content-digest"),
+        repository_root=ROOT,
+    )
+    digest_payload = inventory_to_json(replace(inventory, source_revision=""))
+    digest = hashlib.sha256(digest_payload.encode("utf-8")).hexdigest()
+    inventory = replace(inventory, source_revision=f"sha256:{digest}")
     return {path: renderer(inventory) for path, renderer in OUTPUTS.items()}
 
 

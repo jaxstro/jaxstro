@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib
 import importlib.util
+from dataclasses import replace
 from pathlib import Path
 from types import ModuleType
 from typing import Any
@@ -110,7 +111,12 @@ def resolve_import_path(path: str) -> object:
     return value
 
 
-def validate_inventory(inventory: ContractInventory) -> None:
+def validate_inventory(
+    inventory: ContractInventory,
+    *,
+    evidence_root: Path | None = None,
+    resolve_paths: bool = False,
+) -> None:
     """Validate identities, public paths, evidence links, and support claims."""
 
     seen_contracts: set[str] = set()
@@ -123,34 +129,44 @@ def validate_inventory(inventory: ContractInventory) -> None:
         _require_enum(
             module.execution_boundary, ExecutionBoundary, "execution boundary"
         )
-        target = resolve_import_path(module.import_path)
-        if not isinstance(target, ModuleType):
-            raise ValueError(
-                f"module contract target is not a module: {module.import_path}"
-            )
-        _require_public_module(module.import_path)
+        if resolve_paths:
+            target = resolve_import_path(module.import_path)
+            if not isinstance(target, ModuleType):
+                raise ValueError(
+                    f"module contract target is not a module: {module.import_path}"
+                )
+            _require_public_module(module.import_path)
         module_evidence = {item.id for item in module.evidence}
         for evidence in module.evidence:
             _require_enum(evidence.kind, EvidenceKind, "evidence kind")
             _validate_evidence(
-                evidence.id, evidence.target, evidence.claim, seen_evidence
+                evidence.id,
+                evidence.target,
+                evidence.claim,
+                seen_evidence,
+                evidence_root,
             )
         for callable_contract in module.callables:
             _claim_unique(callable_contract.id, seen_contracts, "contract")
             _require_text(callable_contract.purpose, f"{callable_contract.id} purpose")
             _require_enum(callable_contract.maturity, MaturityLevel, "maturity")
             _require_enum(callable_contract.ad_semantics, ADSemantics, "AD semantics")
-            target = resolve_import_path(callable_contract.import_path)
-            if not callable(target):
-                raise ValueError(
-                    f"callable contract target is not callable: {callable_contract.import_path}"
-                )
-            _require_public_callable(callable_contract.import_path)
+            if resolve_paths:
+                target = resolve_import_path(callable_contract.import_path)
+                if not callable(target):
+                    raise ValueError(
+                        f"callable contract target is not callable: {callable_contract.import_path}"
+                    )
+                _require_public_callable(callable_contract.import_path)
             callable_evidence = {item.id for item in callable_contract.evidence}
             for evidence in callable_contract.evidence:
                 _require_enum(evidence.kind, EvidenceKind, "evidence kind")
                 _validate_evidence(
-                    evidence.id, evidence.target, evidence.claim, seen_evidence
+                    evidence.id,
+                    evidence.target,
+                    evidence.claim,
+                    seen_evidence,
+                    evidence_root,
                 )
             available = module_evidence | callable_evidence
             seen_transforms: set[str] = set()
@@ -216,13 +232,61 @@ def _require_public_callable(path: str) -> None:
 
 
 def _validate_evidence(
-    identifier: str, target: str, claim: str, seen: set[str]
+    identifier: str,
+    target: str,
+    claim: str,
+    seen: set[str],
+    evidence_root: Path | None,
 ) -> None:
     _claim_unique(identifier, seen, "evidence")
     _require_text(target, f"{identifier} target")
     _require_text(claim, f"{identifier} claim")
     if target.startswith("/"):
         raise ValueError(f"absolute evidence path is not portable: {target}")
+    if evidence_root is not None and not (evidence_root / target).is_file():
+        raise ValueError(f"evidence target does not exist: {target}")
+
+
+def audit_runtime_inventory(
+    inventory: ContractInventory, *, repository_root: Path
+) -> ContractInventory:
+    """Run explicit heavyweight path/evidence checks and classify public callables."""
+    validate_inventory(inventory, evidence_root=repository_root, resolve_paths=True)
+    registered = {
+        contract.import_path
+        for module in inventory.modules
+        for contract in module.callables
+    }
+    unclassified: list[str] = []
+    inherited: list[str] = []
+    for module_contract in inventory.modules:
+        module = resolve_import_path(module_contract.import_path)
+        assert isinstance(module, ModuleType)
+        exports = getattr(module, "__all__", None)
+        names = (
+            exports
+            if exports is not None
+            else [
+                name
+                for name, value in vars(module).items()
+                if not name.startswith("_")
+                and getattr(value, "__module__", None) == module.__name__
+            ]
+        )
+        for name in names:
+            path = f"{module_contract.import_path}.{name}"
+            value = getattr(module, name)
+            if path in registered or not callable(value):
+                continue
+            if isinstance(value, type):
+                inherited.append(path)
+            else:
+                unclassified.append(path)
+    return replace(
+        inventory,
+        unclassified_callables=tuple(sorted(set(unclassified))),
+        inherited_symbols=tuple(sorted(set(inherited))),
+    )
 
 
 def _require_evidence(references: tuple[str, ...], available: set[str]) -> None:
