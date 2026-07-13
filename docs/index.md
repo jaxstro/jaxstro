@@ -37,11 +37,21 @@ up the call signature; the decision log records every choice and its trade-offs.
 Research students and course learners should begin with
 [](./00-getting-started/how-to-learn.md), which explains the site's recurring
 **predict → compute → audit** reasoning cycle.
+The optional [](./05-foundations/foundations.md) route rebuilds the connected ideas
+the site will not assume are currently active.
 
 (three-doors)=
 ## Three doors in
 
-::::{grid} 1 1 3 3
+::::{grid} 1 1 2 2
+
+:::{card} Rebuild the foundations
+:link: ./05-foundations/foundations.md
+
+Start here if models, parameters, derivatives, linear algebra, probability, or
+inference were taught separately—or simply need reactivation. This is an
+ungraded route, not a placement judgment.
+:::
 
 :::{card} Learn the methods
 :link: ./10-theory/index.md

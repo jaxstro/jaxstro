@@ -1,6 +1,9 @@
 {
   "00-getting-started/index.md": "/index-1",
   "00-getting-started/how-to-learn.md": "/how-to-learn",
+  "05-foundations/choose-your-path.md": "/choose-your-path",
+  "05-foundations/foundations.md": "/foundations",
+  "05-foundations/why-this-documentation-works-this-way.md": "/why-this-documentation-works-this-way",
   "10-theory/autodiff.md": "/autodiff",
   "10-theory/bsplines.md": "/bsplines",
   "10-theory/cumulative-trapz.md": "/cumulative-trapz",

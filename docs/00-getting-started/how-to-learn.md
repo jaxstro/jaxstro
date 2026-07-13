@@ -22,6 +22,12 @@ connects a mathematical model to the algorithm that actually executed. Auditing
 separates evidence from plausibility and narrows the claim to what the method,
 data, and checks support.
 
+The rationale for this structure, including why optional prerequisite recovery
+is rigorous rather than remedial, is in
+[](../05-foundations/why-this-documentation-works-this-way.md). Use the
+[](../05-foundations/choose-your-path.md) page whenever a concept needs
+reactivation before you continue.
+
 ## Predict
 
 Before running code, write down what should happen. Name the units, signs,

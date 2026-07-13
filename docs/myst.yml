@@ -45,6 +45,11 @@ project:
       children:
         - file: 00-getting-started/index.md
         - file: 00-getting-started/how-to-learn.md
+    - title: "Foundations: the ideas we will not assume"
+      children:
+        - file: 05-foundations/foundations.md
+        - file: 05-foundations/choose-your-path.md
+        - file: 05-foundations/why-this-documentation-works-this-way.md
     - title: Theory — AD-safe numerics
       children:
         - file: 10-theory/index.md

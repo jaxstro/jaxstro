@@ -46,7 +46,7 @@
 ### Task 2: Add an ungraded choose-your-path readiness route
 
 **Files:**
-- Create: `docs/05-foundations/index.md`
+- Create: `docs/05-foundations/foundations.md`
 - Create: `docs/05-foundations/choose-your-path.md`
 - Modify: `docs/myst.yml`, `docs/route-manifest.json`
 - Modify: `tests/integration/test_foundations_docs.py`
