@@ -285,9 +285,17 @@
         },
         {
           "ad_semantics": "smooth_pathwise",
-          "boundaries": [],
+          "boundaries": [
+            {
+              "evidence_ids": [
+                "numerics.interp1d"
+              ],
+              "failure_mode": "saturates",
+              "summary": "Queries outside the table clamp to endpoint values."
+            }
+          ],
           "cost_notes": "",
-          "domain": "Ordered one-dimensional nodes.",
+          "domain": "Ordered one-dimensional nodes; query sensitivities are smooth only off knots and clamp boundaries.",
           "evidence": [
             {
               "claim": "Analytic values and central finite differences validate the smooth domain.",
@@ -298,7 +306,9 @@
           ],
           "id": "numerics.interp1d",
           "import_path": "jaxstro.numerics.interpolation.interp1d",
-          "limitations": [],
+          "limitations": [
+            "AD evidence covers interior off-knot, branch-stable queries."
+          ],
           "maturity": "validated",
           "outputs": "JAX array values.",
           "precision": "float32 and float64; validation uses float64.",
@@ -320,10 +330,10 @@
           "domain": "Finite scalar endpoints enclosing an exact root or a typed missing-bracket result.",
           "evidence": [
             {
-              "claim": "JIT, VMAP, bracket invariants, and analytic root behavior.",
+              "claim": "The registered solver's JIT/batching, terminal status, trace, and analytic-root behavior.",
               "id": "root.map_safeguarded_bracketed_root",
-              "kind": "validation_test",
-              "target": "tests/validation/test_bracketed_root_algorithms.py"
+              "kind": "unit_test",
+              "target": "tests/unit/test_bracketed_root.py"
             }
           ],
           "id": "numerics.map_safeguarded_bracketed_root",
@@ -358,18 +368,20 @@
           "ad_semantics": "smooth_pathwise",
           "boundaries": [],
           "cost_notes": "",
-          "domain": "Ordered one-dimensional nodes with monotone data.",
+          "domain": "Strictly ordered nodes and monotone data on a branch-stable PCHIP slope selection.",
           "evidence": [
             {
               "claim": "Analytic values and central finite differences validate the smooth domain.",
               "id": "numerics.monotone_cubic_interp",
               "kind": "validation_test",
-              "target": "tests/unit/test_interpolation_shape_preserving.py"
+              "target": "tests/validation/test_grad_checks.py"
             }
           ],
           "id": "numerics.monotone_cubic_interp",
           "import_path": "jaxstro.numerics.interpolation.monotone_cubic_interp",
-          "limitations": [],
+          "limitations": [
+            "Sign, plateau, knot, and overshoot branch boundaries are nonsmooth."
+          ],
           "maturity": "validated",
           "outputs": "JAX array values.",
           "precision": "float32 and float64; validation uses float64.",
@@ -515,12 +527,14 @@
               "claim": "Analytic values and central finite differences validate the smooth domain.",
               "id": "numerics.regular_grid_interp",
               "kind": "validation_test",
-              "target": "tests/unit/test_regular_grid.py"
+              "target": "tests/validation/test_grad_checks.py"
             }
           ],
           "id": "numerics.regular_grid_interp",
           "import_path": "jaxstro.numerics.regular_grid_interp",
-          "limitations": [],
+          "limitations": [
+            "Coordinate derivatives are claimed only inside branch-stable cells."
+          ],
           "maturity": "validated",
           "outputs": "JAX array values.",
           "precision": "float32 and float64; validation uses float64.",
@@ -542,10 +556,10 @@
           "domain": "Finite scalar endpoints enclosing an exact root or a typed missing-bracket result.",
           "evidence": [
             {
-              "claim": "JIT, VMAP, bracket invariants, and analytic root behavior.",
+              "claim": "The registered solver's JIT/batching, terminal status, trace, and analytic-root behavior.",
               "id": "root.safeguarded_bracketed_root",
-              "kind": "validation_test",
-              "target": "tests/validation/test_bracketed_root_algorithms.py"
+              "kind": "unit_test",
+              "target": "tests/unit/test_numerics.py"
             }
           ],
           "id": "numerics.safeguarded_bracketed_root",
@@ -787,7 +801,7 @@
   ],
   "package_version": "0.1.0",
   "schema_version": "1",
-  "source_revision": "sha256:6c8fd2b1f06b83ba01659fb6f7c8ad45dd8ed11ccdcacc3d76a14279e41663e7",
+  "source_revision": "sha256:af58385a2a6f650ce4b34be2f8ab64d019268f415bf4e7dddd770a6c0a1b042d",
   "unclassified_callables": [
     "jaxstro.atmospheres.acquisition_rows_to_markdown",
     "jaxstro.atmospheres.build_bosz_index",

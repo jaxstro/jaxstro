@@ -15,16 +15,24 @@ from jaxstro.contracts._core import module_contract
 
 
 def _root_evidence(name: str, target: str, claim: str) -> EvidenceReference:
-    return EvidenceReference(
-        f"root.{name}", EvidenceKind.VALIDATION_TEST, target, claim
+    kind = (
+        EvidenceKind.UNIT_TEST
+        if target.startswith("tests/unit/")
+        else EvidenceKind.VALIDATION_TEST
     )
+    return EvidenceReference(f"root.{name}", kind, target, claim)
 
 
 def _value_root_contract(name: str, purpose: str) -> CallableContract:
+    target = (
+        "tests/unit/test_bracketed_root.py"
+        if name == "map_safeguarded_bracketed_root"
+        else "tests/unit/test_numerics.py"
+    )
     evidence = _root_evidence(
         name,
-        "tests/validation/test_bracketed_root_algorithms.py",
-        "JIT, VMAP, bracket invariants, and analytic root behavior.",
+        target,
+        "The registered solver's JIT/batching, terminal status, trace, and analytic-root behavior.",
     )
     return CallableContract(
         id=f"numerics.{name}",
@@ -148,6 +156,7 @@ def _smooth_callable(
     *,
     boundaries: tuple[BoundaryContract, ...] = (),
     public_path: str | None = None,
+    limitations: tuple[str, ...] = (),
 ) -> CallableContract:
     evidence = EvidenceReference(
         f"numerics.{name}",
@@ -167,6 +176,7 @@ def _smooth_callable(
         maturity=MaturityLevel.VALIDATED,
         boundaries=linked,
         evidence=(evidence,),
+        limitations=limitations,
     )
 
 
@@ -215,23 +225,36 @@ EXEMPLAR_CALLABLES = tuple(
     _smooth_callable(
         "interp1d",
         "Piecewise-linear interpolation.",
-        "Ordered one-dimensional nodes.",
+        "Ordered one-dimensional nodes; query sensitivities are smooth only off knots and clamp boundaries.",
         "tests/validation/test_grad_checks.py",
+        boundaries=(
+            BoundaryContract(
+                "Queries outside the table clamp to endpoint values.",
+                FailureMode.SATURATES,
+            ),
+        ),
         public_path="jaxstro.numerics.interpolation.interp1d",
+        limitations=("AD evidence covers interior off-knot, branch-stable queries.",),
     ),
     _smooth_callable(
         "monotone_cubic_interp",
         "Shape-preserving cubic interpolation.",
-        "Ordered one-dimensional nodes with monotone data.",
-        "tests/unit/test_interpolation_shape_preserving.py",
+        "Strictly ordered nodes and monotone data on a branch-stable PCHIP slope selection.",
+        "tests/validation/test_grad_checks.py",
         public_path="jaxstro.numerics.interpolation.monotone_cubic_interp",
+        limitations=(
+            "Sign, plateau, knot, and overshoot branch boundaries are nonsmooth.",
+        ),
     ),
     _smooth_callable(
         "regular_grid_interp",
         "Static-rank tensor-product interpolation.",
         "Strictly increasing grid axes and explicit boundary policy.",
-        "tests/unit/test_regular_grid.py",
+        "tests/validation/test_grad_checks.py",
         boundaries=_grid_boundaries,
+        limitations=(
+            "Coordinate derivatives are claimed only inside branch-stable cells.",
+        ),
     ),
 )
 
