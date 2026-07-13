@@ -40,7 +40,7 @@ def test_scorecard_separates_registry_delivery_from_uniform_evidence() -> None:
     text = SCORECARD.read_text(encoding="utf-8")
     assert "Scientific contract registry: implemented" in text
     assert "Evidence depth remains uneven" in text
-    assert "Phase C" in text
+    assert "Unified evidence infrastructure: implemented" in text
     assert "Build the Scientific contract registry" not in text
 
 
@@ -57,3 +57,16 @@ def test_scorecard_registry_counts_match_generated_inventory() -> None:
     )
     for value in counts:
         assert f"| {value} |" in text
+
+
+def test_scorecard_closes_unified_evidence_phase_from_index() -> None:
+    text = SCORECARD.read_text(encoding="utf-8")
+    evidence = json.loads(
+        (ROOT / "docs/validation/evidence-index.json").read_text(encoding="utf-8")
+    )
+    classes = {entry["evidence_class"] for entry in evidence["entries"]}
+    assert "Unified evidence infrastructure: implemented" in text
+    assert "Method-specific scientific thresholds remain method-owned" in text
+    assert "Phase B" in text
+    assert f"| {len(evidence['entries'])} | artifacts |" in text
+    assert f"| {len(classes)} | evidence classes |" in text

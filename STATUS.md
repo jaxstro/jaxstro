@@ -1,6 +1,8 @@
 # jaxstro — status
 
-next: Write and execute the Phase C unified evidence-infrastructure plan using the scientific contract registry as the claim index. Preserve method-specific scientific thresholds while consolidating artifact identity, units, environment, freshness, and comparison records. The Pages Node-action maintenance remains queued behind this work.
+next: Write and execute the Phase B executable-foundations curriculum plan. Build research-student investigations from public Jaxstro APIs, scientific contracts, and the unified evidence index; keep predict → compute → audit, prerequisite recovery, and instructor-facing assessment explicit. The Pages Node-action maintenance remains queued behind this work.
+
+previous: Unified evidence infrastructure completed on local main (2026-07-12). Computational evidence, source provenance, and scientific policy remain deliberately distinct classes in one index. Rootfinding, implicit derivatives, and spectra now use one strict frozen envelope with units, environment policy, informational metrics, explicit passing comparisons, deterministic emit/check, and human reports. Contract links name exact passing artifact gates; provenance digests cover all rendered card content. Method-specific thresholds remain method-owned. The focused tests, Ruff, MyPy, and rendered docs gate passed. Independent C3 reviews found no Critical issues, and every Important finding was resolved.
 
 previous: Safeguarded scalar rootfinding and the separate finite power-law alpha=-1 correctness slice
 completed on local main (2026-07-12). Jaxstro now owns typed sign-bracket evidence, deterministic

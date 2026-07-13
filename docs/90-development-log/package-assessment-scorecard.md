@@ -43,11 +43,11 @@ evidence, not effort or ambition.
 | Failure semantics | A | [](../10-theory/rootfinding.md) | Root, atmosphere, spatial, and spectral APIs expose typed or structured failure evidence | Some numerical helpers still return less-auditable scalar state | Callable-level boundary and failure records with coverage ratchets |
 | Test architecture | A− | [](../60-validation/index.md) | Unit, integration, and validation tiers contain analytic and independent checks | No public module-by-module branch-coverage ratchet is maintained | Coverage policy tied to semantic contracts rather than raw volume alone |
 | Units and dimensional safety | B+ | [](../20-architecture/quantity-system.md) | `UnitSystem` is mature and `quantity` is substantially implemented | Two live dimensional surfaces remain while adoption is deferred | Downstream parity, performance, serialization, and migration evidence |
-| Provenance | A− | [](../20-architecture/provenance.md) | Source cards, runtime manifests, deterministic rendering, and freshness checks exist | Artifact schemas and environment policies are duplicated | Unified evidence envelope without weakened scientific thresholds |
+| Provenance | A | [](../60-validation/evidence-index.md) | Source cards, runtime manifests, full-card content digests, and a class-preserving evidence index are freshness checked | Downstream reproduction policies and adoption records are not yet uniform | Pinned downstream evidence manifests and compatibility records |
 | API cohesion | B+ | [](../40-api/contracts.md) | Public modules and selected consequential callables now have generated, export-audited contracts | Many public callables remain explicitly unclassified | Prioritized callable-level coverage and downstream query evidence |
 | Documentation correctness | A− | [](../60-validation/index.md) | Examples, routes, links, figures, and content contracts are tested | Active guides and some command narratives can lag implementation | Current `CLAUDE.md` plus generated claims and freshness gates |
 | Accessibility | B+ | [](../10-theory/rootfinding.md) | Alt text and redundant visual encodings are enforced for new figures | Structural checks do not yet constitute learner-centered accessibility evidence | Keyboard, contrast, comprehension, and learner review gates |
-| Performance evidence | B | [](../60-validation/index.md) | Rootfinding and spectra have reproducible cost evidence | Compile, warm runtime, graph size, memory, and evaluation metrics are not standardized | Shared metric envelope and method-appropriate performance records |
+| Performance evidence | B+ | [](../60-validation/evidence-index.md) | Rootfinding and spectra use one units-explicit metric/comparison envelope with deterministic freshness checks | Compile, graph-size, memory, and cost coverage remains uneven by module | Method-appropriate performance records for consequential public contracts |
 | Downstream usefulness | B+ | [](../20-architecture/science-general-vision.md) | Active sibling packages motivate and consume selected shared foundations | Adoption claims are not generated from pinned downstream revisions | Symbol-to-project compatibility records and consumer validation |
 | External reach | B | [](../index.md) | The package is science-general, permissively licensed, dependency-light, and publicly documented | Stable distribution and independent adoption are limited | Release evidence, external examples, and comparative positioning |
 | Maintenance readiness | B+ | [](../95-release/checklist.md) | Release gates, deterministic docs, Ruff, MyPy, and wheel smoke exist | Type strictness and manually duplicated truth remain uneven | Contract-driven docs, stricter typing plan, and unified evidence infrastructure |
@@ -92,11 +92,12 @@ The selective bridge is appropriately narrow and avoids becoming an inference
 framework. More examples are needed around identifiability, constraint geometry,
 and cached derived leaves.
 
-### Testing and provenance — A−
+### Testing and provenance — A
 
 Gradient audits, numerical ratchets, source cards, and deterministic reports are
-distinctive strengths. They remain several strong tools rather than one uniform
-Scientific contract registry and evidence system.
+connected by one scientific contract registry and a class-preserving evidence
+index. Evidence depth remains uneven across public callables, and source evidence
+still must not be mistaken for computational validation.
 
 ## Grade-change policy
 
@@ -122,8 +123,18 @@ not treated as supported.
 | Explicitly unclassified public callables | `N_callable,unclassified` | 208 | callables |
 | Module-inherited public record types | `N_symbol,inherited` | 125 | symbols |
 
-The next ordered investments are:
+The completed foundation and next investment are:
 
-1. **Phase C:** unify evidence envelopes and freshness infrastructure.
-2. **Phase B:** build executable foundations and research-student investigations from those
-   contracts and evidence.
+**Unified evidence infrastructure: implemented.** Computational measurements,
+source provenance, and scientific policy remain separate evidence classes in one
+freshness-checked index. Method-specific scientific thresholds remain method-owned;
+the shared envelope validates identity, units, comparison truth, environment policy,
+and serialization without inventing cross-method acceptance rules.
+
+| Metric identity | Symbol | Value | Units |
+| --- | --- | ---: | --- |
+| Indexed evidence artifacts | `N_artifact,evidence` | 5 | artifacts |
+| Distinct evidence classes | `N_class,evidence` | 3 | evidence classes |
+
+The single next investment is **Phase B:** build executable foundations and
+research-student investigations from the contracts and indexed evidence.

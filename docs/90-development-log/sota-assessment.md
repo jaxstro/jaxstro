@@ -28,9 +28,9 @@ no numeric score is assigned without an observable rubric.
 | Dimensional safety | implemented | `jaxstro.units` is canonical; `jaxstro.quantity` implements exact dimensions and transforms without claiming ecosystem adoption. |
 | API cohesion | validated | Exports, reference docs, typed results, and focused tests give downstream packages stable contracts. |
 | Serialization | implemented | Scalar quantities have explicit round trips and array rejection; provenance records render deterministically; root telemetry uses fixed-shape NamedTuples suitable for transport, but no public root round-trip/replay serializer is yet validated. |
-| Performance and compilation evidence | implemented | Rootfinding and spectra have evidence, but compile/runtime/memory coverage is not uniform. |
-| Evidence freshness | validated | Root artifacts, provenance pages, and figures have emit/check or deterministic freshness gates. |
-| Provenance | validated | Runtime manifests and source-backed cards separate computational reproduction from scientific-source claims. |
+| Performance and compilation evidence | implemented | Rootfinding and spectra now share a units-explicit evidence envelope; compile/runtime/memory coverage is not yet uniform. |
+| Evidence freshness | validated | Computational artifacts, scientific policy, and full provenance-card content resolve through a deterministic class-preserving index. |
+| Provenance | validated | Runtime manifests and source-backed cards remain distinct from computational evidence while sharing identity, digest, and freshness infrastructure. |
 | Curriculum quality | implemented | Predict → compute → audit, science-pattern routing, objectives, activities, and evidence-bearing figures now form a learning spine. |
 | Accessibility | implemented | The docs gate checks alt text; new figures also use marker and line-style encodings beyond color. |
 | Discoverability | implemented | Diátaxis, three entry doors, science patterns, modules, API reference, and validation serve distinct questions. |
@@ -44,7 +44,6 @@ no numeric score is assigned without an observable rubric.
   generated public contract matrix.
 - Dimensional safety has two live surfaces until quantity adoption is ratified
   or rejected.
-- Evidence manifests duplicate schema, environment, unit, and freshness logic.
 - Curriculum examples are not yet a reusable executable exercise corpus.
 - Visual coverage is strong for selected modules but sparse for distribution
   limits, AD contracts, validation logic, quantities, and provenance.
@@ -52,21 +51,21 @@ no numeric score is assigned without an observable rubric.
 
 ## Now
 
-### 1. Unify evidence artifact infrastructure
+### 1. Make curriculum activities executable
 
-**Impact.** Shared schema, unit, environment, revision-policy, and comparison
-helpers remove drift across root, spectra, atmosphere, and future artifacts.
+**Impact.** Students can run the exact fixtures used by the site and receive
+invariant-focused feedback.
 
-**Audience and ownership.** Maintainers and research students; Jaxstro owns the
-generic toolkit while each method owns its metrics.
+**Audience and ownership.** Computational-science courses; instructors own
+sequencing and grading while Jaxstro owns reusable public examples and checks.
 
-**Risk.** Forcing unlike scientific evidence into one rigid schema.
+**Risk.** Copied notebooks can become a stale second test suite.
 
-**Evidence gate.** Migrate existing artifacts without weakening any freshness,
-unit, or scientific threshold.
+**Evidence gate.** Exercises import public APIs or tested helpers, run in CI,
+and include expected reasoning and accessibility metadata.
 
-The scientific contract registry is now implemented and exposes the uneven
-evidence coverage that this Phase C investment must address.
+The scientific contract registry and unified evidence index are implemented.
+They now provide the claim and audit spine for this Phase B investment.
 
 ### 2. Generate a JAX transform-contract matrix
 
@@ -94,20 +93,7 @@ while Jaxstro owns quantity mechanics.
 **Evidence gate.** Downstream parity, serialization, performance, ergonomics,
 and migration-cost reports precede the ADR.
 
-### 4. Make curriculum activities executable
-
-**Impact.** Students can run the exact fixtures used by the site and receive
-invariant-focused feedback.
-
-**Audience and ownership.** Computational-science courses; instructors own
-sequencing and grading.
-
-**Risk.** Copied notebooks can become a stale second test suite.
-
-**Evidence gate.** Exercises import public APIs or tested helpers, run in CI,
-and include expected reasoning and accessibility metadata.
-
-### 5. Generate downstream adoption evidence
+### 4. Generate downstream adoption evidence
 
 **Impact.** Reuse claims become observable, and abstractions are judged by real
 cross-project demand.
