@@ -8,7 +8,14 @@ from dataclasses import fields, is_dataclass
 from enum import Enum
 from typing import Any
 
-from .schema import EvidenceArtifact
+from .schema import (
+    ComparisonRecord,
+    ComparisonRelation,
+    EnvironmentRecord,
+    EvidenceArtifact,
+    EvidenceStatus,
+    MetricRecord,
+)
 from .validation import validate_artifact
 
 
@@ -29,6 +36,58 @@ def artifact_to_json(artifact: EvidenceArtifact) -> str:
         )
         + "\n"
     )
+
+
+def artifact_from_dict(payload: Mapping[str, Any]) -> EvidenceArtifact:
+    """Reconstruct and validate an artifact from portable JSON-ready data."""
+    metrics = tuple(
+        MetricRecord(
+            identity=item["identity"],
+            symbol=item["symbol"],
+            value=item["value"],
+            units=item["units"],
+            status=EvidenceStatus(item["status"]),
+            note=item.get("note", ""),
+        )
+        for item in payload.get("metrics", ())
+    )
+    comparisons = tuple(
+        ComparisonRecord(
+            identity=item["identity"],
+            metric_id=item["metric_id"],
+            relation=ComparisonRelation(item["relation"]),
+            reference=item["reference"],
+            units=item["units"],
+            status=EvidenceStatus(item["status"]),
+            atol=item.get("atol", 0.0),
+            rtol=item.get("rtol", 0.0),
+            note=item.get("note", ""),
+        )
+        for item in payload.get("comparisons", ())
+    )
+    environment_payload = payload["environment"]
+    artifact = EvidenceArtifact(
+        schema_version=payload["schema_version"],
+        artifact_id=payload["artifact_id"],
+        artifact_version=payload["artifact_version"],
+        package_version=payload["package_version"],
+        source_revision=payload["source_revision"],
+        generation_command=payload["generation_command"],
+        precision=payload["precision"],
+        deterministic_config=tuple(
+            tuple(item) for item in payload.get("deterministic_config", ())
+        ),
+        environment=EnvironmentRecord(
+            environment_payload["policy"],
+            tuple(tuple(item) for item in environment_payload.get("values", ())),
+        ),
+        metrics=metrics,
+        comparisons=comparisons,
+        limitations=tuple(payload.get("limitations", ())),
+        method_payload=dict(payload.get("method_payload", {})),
+    )
+    validate_artifact(artifact)
+    return artifact
 
 
 def artifact_to_markdown(artifact: EvidenceArtifact) -> str:

@@ -1,7 +1,12 @@
 """Portable schemas and tools for scientific evidence artifacts."""
 
 from .files import EvidenceFreshnessError, check_artifact, emit_artifact
-from .render import artifact_to_dict, artifact_to_json, artifact_to_markdown
+from .render import (
+    artifact_from_dict,
+    artifact_to_dict,
+    artifact_to_json,
+    artifact_to_markdown,
+)
 from .schema import (
     ComparisonRecord,
     ComparisonRelation,
@@ -21,6 +26,7 @@ __all__ = [
     "EvidenceStatus",
     "MetricRecord",
     "artifact_to_dict",
+    "artifact_from_dict",
     "artifact_to_json",
     "artifact_to_markdown",
     "check_artifact",

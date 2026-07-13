@@ -13,7 +13,12 @@ from jaxstro.evidence import (
     MetricRecord,
 )
 from jaxstro.evidence.files import EvidenceFreshnessError, check_artifact
-from jaxstro.evidence.render import artifact_to_json, artifact_to_markdown
+from jaxstro.evidence.render import (
+    artifact_from_dict,
+    artifact_to_dict,
+    artifact_to_json,
+    artifact_to_markdown,
+)
 
 
 @pytest.fixture
@@ -53,6 +58,8 @@ def test_json_and_markdown_are_deterministic(valid_artifact) -> None:
     assert "1e-06" in markdown
     assert "Declared residual gate." in markdown
     assert "/Users/" not in artifact_to_json(valid_artifact)
+    restored = artifact_from_dict(artifact_to_dict(valid_artifact))
+    assert artifact_to_json(restored) == artifact_to_json(valid_artifact)
 
 
 def test_check_artifact_rejects_stale_bytes(
