@@ -31,3 +31,12 @@ def test_guide_is_not_a_historical_status_log() -> None:
         "feature/consolidate-harden-release",
     ):
         assert stale not in text
+
+
+def test_guide_preserves_parameter_reconstruction_and_brain_invariants() -> None:
+    text = GUIDE.read_text(encoding="utf-8")
+    assert "does not rerun model initialization" in text
+    assert "fit the leaf the observable reads" in text
+    assert "## Brain status updates" in text
+    assert "federate.py" in text
+    assert 'brain "…"' in text

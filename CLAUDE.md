@@ -154,6 +154,13 @@ branch whose forward value is correct but whose parameter derivative is wrong.
 surface, not an approved ecosystem cutover. Migration requires downstream parity,
 serialization, performance, ergonomics, and migration-cost evidence.
 
+### Parameter reconstruction
+
+`Parameterization.from_vector` does not rerun model initialization when it
+replaces selected PyTree leaves. Cached leaves derived in `__init__` can remain
+stale when only their source leaf is free; fit the leaf the observable reads, or
+recompute derived state explicitly at use time.
+
 ## Evidence and documentation
 
 - Theory explains mathematics, assumptions, boundary behavior, and derivative
@@ -194,6 +201,5 @@ This repository is a spoke of `~/brain`, which remains pull-only from here.
 <!-- brain-handshake: keep in sync with ~/brain/guide/how-to/set-up-a-project.md#spoke-stanza -->
 
 <!-- brain-status-convention -->
-When notable progress, a blocker, or the next action changes, update the
-`next:` / `blocker:` / `due:` lines in `STATUS.md`. Brain pulls those fields into
-the portfolio dashboard; it is not hand-edited from this repository.
+## Brain status updates
+When you make notable progress, hit a blocker, or set the next action, update this repo's `STATUS.md` (`next:` / `blocker:` / `due:` lines) — the brain pulls it into the portfolio dashboard + standup via `federate.py` (see `~/brain/work/meta/status-convention.md`). Brain stays pull-only: never hand-edit `~/brain`; capture events with `brain "…"`.

@@ -282,13 +282,15 @@ by `scripts/benchmark_implicit_root.py`. A documentation test requires the table
 to match that artifact; the JSON and numerical tests remain the primary
 executable evidence.
 
-## `newton` and `newton_with_grad` — smooth iterates, real gradients
+## `newton` and `newton_with_grad` — smooth iterates, finite-map gradients
 
 `newton(f, x0)` runs the update $x_{k+1} = x_k - f(x_k)/f'(x_k)$ for a fixed 30
 steps, taking $f'$ from `jax.grad(f)` automatically. Because every step is a smooth
-arithmetic function of $x_k$ and of any parameters captured in $f$, the gradient
-flows through the whole iteration — Newton's root *is* differentiable with respect
-to those parameters, exactly where `bisect` fails.
+arithmetic function of $x_k$ and of any parameters captured in $f$, AD can expose
+the finite executed-map sensitivity with respect to those parameters. This is a
+derivative of the fixed iteration that ran, not automatically the derivative of
+the ideal mathematical root. Use `implicit_bracketed_root` when the scientific
+target is a certified mathematical-root sensitivity.
 
 The one hazard is division by a zero derivative. jaxstro guards the **operand**,
 not the result (principle [3](./index.md#p3-guard-singularities)): it replaces a
@@ -316,8 +318,9 @@ x_{k+1} = x_k - \frac{F(x_k) - u}{\mathrm{pdf}(x_k)}.
 It is deliberately distribution-agnostic — you pass your own `cdf` (closing over the
 distribution's parameters), an initial guess, and the support bounds `[lo, hi]`. The
 PDF comes from your `pdf` argument or, failing that, from `jax.grad(cdf)`. The
-result is differentiable **both** with respect to $u$ **and** with respect to the
-parameters inside `cdf`, which is what makes it usable inside an inference loop.
+finite executed iteration can carry sensitivities **both** with respect to $u$
+**and** with respect to parameters inside `cdf`. This supports inference through
+that executed numerical map; it is not a generic implicit-root certificate.
 
 Two guards deserve a note, and they connect back to the principles:
 
@@ -380,13 +383,13 @@ once and keep the monotonicity contract explicit.
   - No w.r.t. function parameters
 * - a smooth $f$ and a good guess
   - `newton`
-  - Yes
+  - Finite executed-map sensitivity; not an implicit-root certificate
 * - a smooth $f$ and a cheap analytic $f'$
   - `newton_with_grad`
-  - Yes
+  - Finite executed-map sensitivity; not an implicit-root certificate
 * - an inverse-CDF / quantile to sample
   - `newton_ppf`
-  - Yes (w.r.t. $u$ and CDF parameters)
+  - Finite executed-map sensitivity w.r.t. $u$ and CDF parameters
 * - a monotone table that should be inverted by lookup
   - `monotone_inverse_interp`
   - Yes inside table cells w.r.t. query values
