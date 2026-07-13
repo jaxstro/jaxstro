@@ -31,7 +31,7 @@ def test_pages_workflow_uses_the_verified_docs_gate_and_site_output() -> None:
     docs_gate = (REPO_ROOT / "scripts" / "check_docs.sh").read_text(encoding="utf-8")
     assert 'BASE_PATH="${BASE_URL:-}"' in docs_gate
     assert '--base-path "$BASE_PATH"' in docs_gate
-    assert 'docs/_build/html/index.html' in docs_gate
+    assert "docs/_build/html/index.html" in docs_gate
 
 
 def test_release_checklist_preserves_irreversible_stop_gates() -> None:

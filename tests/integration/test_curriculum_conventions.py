@@ -27,7 +27,7 @@ def test_substantial_chapters_state_objectives_and_active_learning_prompt() -> N
         )
 
 
-def test_homepage_names_scientific_capabilities_without_removing_entry_doors() -> None:
+def test_homepage_names_scientific_capabilities_and_all_entry_routes() -> None:
     text = (REPO_ROOT / "docs" / "index.md").read_text(encoding="utf-8")
     for phrase in (
         "Explicit quantities and conventions",
@@ -35,7 +35,15 @@ def test_homepage_names_scientific_capabilities_without_removing_entry_doors() -
         "Events, equilibria, and inverse mappings",
         "Differentiable tabulated models",
         "Provenance-backed claims",
-        "## Three doors in",
+        "## Choose your route",
+        "Rebuild the foundations",
+        "./05-foundations/foundations.md",
+        "Learn the methods",
+        "./10-theory/index.md",
+        "Audit the evidence",
+        "./60-validation/index.md",
+        "Look up the API",
+        "./40-api/index.md",
     ):
         assert phrase in text
 
