@@ -5,6 +5,10 @@ description: Evidence-backed strengths, gaps, and ranked investments for Jaxstro
 
 # Package and documentation SOTA assessment
 
+The [](./package-assessment-scorecard.md) is the living graded companion to this
+ranked investment roadmap. It records current evidence, the deficiency preventing
+the next grade, and the promotion gate for each assessed dimension.
+
 Here “state of the art” means unusually strong alignment among scientific scope,
 numerical contracts, JAX behavior, independent evidence, provenance, pedagogy,
 and maintenance cost—not the largest feature list. Maturity labels are
