@@ -36,7 +36,8 @@ def validate_artifact(artifact: EvidenceArtifact) -> None:
             raise ValueError("units must use 'dimensionless', not 'unitless'")
         if not isinstance(metric.status, EvidenceStatus):
             raise ValueError(f"unknown evidence status: {metric.status!r}")
-        if not math.isfinite(float(metric.value)):
+        _require_finite_number(metric.value, f"{metric.identity} numeric value")
+        if not math.isfinite(metric.value):
             raise ValueError(f"nonfinite metric value: {metric.identity}")
         metrics[metric.identity] = metric
     seen_comparisons: set[str] = set()
@@ -47,6 +48,12 @@ def validate_artifact(artifact: EvidenceArtifact) -> None:
         seen_comparisons.add(comparison.identity)
         if comparison.metric_id not in metrics:
             raise ValueError(f"unknown comparison metric: {comparison.metric_id}")
+        _require_text(comparison.units, f"{comparison.identity} units")
+        _require_finite_number(comparison.reference, "comparison reference")
+        _require_finite_number(comparison.atol, "absolute tolerance")
+        _require_finite_number(comparison.rtol, "relative tolerance")
+        if comparison.atol < 0.0 or comparison.rtol < 0.0:
+            raise ValueError("comparison tolerances must be nonnegative")
         _validate_comparison(metrics[comparison.metric_id].value, comparison)
 
 
@@ -84,3 +91,10 @@ def _validate_comparison(value: int | float, comparison) -> None:
 def _require_text(value: object, identity: str) -> None:
     if not isinstance(value, str) or not value.strip():
         raise ValueError(f"{identity} must be nonempty text")
+
+
+def _require_finite_number(value: object, identity: str) -> None:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise TypeError(f"{identity} must be an int or float numeric value")
+    if not math.isfinite(value):
+        raise ValueError(f"{identity} must be finite")

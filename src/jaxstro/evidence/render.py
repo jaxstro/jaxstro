@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from dataclasses import fields, is_dataclass
 from enum import Enum
 from typing import Any
@@ -22,7 +23,12 @@ def artifact_to_dict(artifact: EvidenceArtifact) -> dict[str, object]:
 
 def artifact_to_json(artifact: EvidenceArtifact) -> str:
     """Render deterministic portable JSON with one terminal newline."""
-    return json.dumps(artifact_to_dict(artifact), indent=2, sort_keys=True) + "\n"
+    return (
+        json.dumps(
+            artifact_to_dict(artifact), indent=2, sort_keys=True, allow_nan=False
+        )
+        + "\n"
+    )
 
 
 def artifact_to_markdown(artifact: EvidenceArtifact) -> str:
@@ -47,14 +53,15 @@ def artifact_to_markdown(artifact: EvidenceArtifact) -> str:
     if artifact.comparisons:
         lines.extend(
             [
-                "| Comparison | Metric | Relation | Reference | Status |",
-                "| --- | --- | --- | ---: | --- |",
+                "| Comparison | Metric | Relation | Reference | Units | Absolute tolerance | Relative tolerance | Status | Note |",
+                "| --- | --- | --- | ---: | --- | ---: | ---: | --- | --- |",
             ]
         )
         for item in sorted(artifact.comparisons, key=lambda value: value.identity):
             lines.append(
                 f"| {item.identity} | `{item.metric_id}` | {item.relation.value} | "
-                f"{item.reference} | {item.status.value} |"
+                f"{item.reference} | {item.units} | {item.atol} | {item.rtol} | "
+                f"{item.status.value} | {item.note} |"
             )
     else:
         lines.append("- none")
@@ -82,7 +89,7 @@ def _normalize(value: Any) -> Any:
             if key in result:
                 result[key] = sorted(result[key], key=lambda item: item["identity"])
         return result
-    if isinstance(value, dict):
+    if isinstance(value, Mapping):
         return {str(key): _normalize(item) for key, item in sorted(value.items())}
     if isinstance(value, tuple):
         return [_normalize(item) for item in value]
