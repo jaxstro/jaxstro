@@ -256,7 +256,9 @@
           "domain": "Caller asserts a unique root and smooth branch; numerical certificate gates must pass.",
           "evidence": [
             {
+              "artifact_id": "rootfinding.implicit-gradients",
               "claim": "Certified sensitivities agree with analytic and central finite differences.",
+              "evidence_class": "computational",
               "id": "root.implicit_bracketed_root",
               "kind": "validation_test",
               "target": "tests/validation/test_implicit_root_gradients.py"
@@ -354,7 +356,9 @@
           "domain": "Finite scalar endpoints enclosing an exact root or a typed missing-bracket result.",
           "evidence": [
             {
+              "artifact_id": "rootfinding.performance",
               "claim": "The registered solver's JIT/batching, terminal status, trace, and analytic-root behavior.",
+              "evidence_class": "computational",
               "id": "root.map_safeguarded_bracketed_root",
               "kind": "unit_test",
               "target": "tests/unit/test_bracketed_root.py"
@@ -580,7 +584,9 @@
           "domain": "Finite scalar endpoints enclosing an exact root or a typed missing-bracket result.",
           "evidence": [
             {
+              "artifact_id": "rootfinding.performance",
               "claim": "The registered solver's JIT/batching, terminal status, trace, and analytic-root behavior.",
+              "evidence_class": "computational",
               "id": "root.safeguarded_bracketed_root",
               "kind": "unit_test",
               "target": "tests/unit/test_numerics.py"
@@ -825,7 +831,7 @@
   ],
   "package_version": "0.1.0",
   "schema_version": "1",
-  "source_revision": "sha256:5c680a19edf2a95890ed3a81612d0e29c18250c334386a2a73c6ecbff094f515",
+  "source_revision": "sha256:e971f7efe46bfe5b9e664970905e1c5a2a14044b38a3345de2af4b0bbd40e483",
   "unclassified_callables": [
     "jaxstro.atmospheres.acquisition_rows_to_markdown",
     "jaxstro.atmospheres.build_bosz_index",

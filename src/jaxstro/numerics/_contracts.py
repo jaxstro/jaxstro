@@ -14,13 +14,26 @@ from jaxstro.contracts import (
 from jaxstro.contracts._core import module_contract
 
 
-def _root_evidence(name: str, target: str, claim: str) -> EvidenceReference:
+def _root_evidence(
+    name: str,
+    target: str,
+    claim: str,
+    *,
+    artifact_id: str = "",
+) -> EvidenceReference:
     kind = (
         EvidenceKind.UNIT_TEST
         if target.startswith("tests/unit/")
         else EvidenceKind.VALIDATION_TEST
     )
-    return EvidenceReference(f"root.{name}", kind, target, claim)
+    return EvidenceReference(
+        f"root.{name}",
+        kind,
+        target,
+        claim,
+        artifact_id=artifact_id,
+        evidence_class="computational" if artifact_id else "",
+    )
 
 
 def _value_root_contract(name: str, purpose: str) -> CallableContract:
@@ -33,6 +46,7 @@ def _value_root_contract(name: str, purpose: str) -> CallableContract:
         name,
         target,
         "The registered solver's JIT/batching, terminal status, trace, and analytic-root behavior.",
+        artifact_id="rootfinding.performance",
     )
     return CallableContract(
         id=f"numerics.{name}",
@@ -71,6 +85,7 @@ _implicit_evidence = _root_evidence(
     "implicit_bracketed_root",
     "tests/validation/test_implicit_root_gradients.py",
     "Certified sensitivities agree with analytic and central finite differences.",
+    artifact_id="rootfinding.implicit-gradients",
 )
 
 ROOT_CALLABLES: tuple[CallableContract, ...] = (

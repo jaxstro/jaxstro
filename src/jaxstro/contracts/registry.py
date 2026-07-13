@@ -7,7 +7,7 @@ import importlib.util
 from dataclasses import replace
 from pathlib import Path
 from types import ModuleType
-from typing import Any
+from typing import Any, Mapping
 
 from .schema import (
     ADSemantics,
@@ -116,6 +116,7 @@ def validate_inventory(
     *,
     evidence_root: Path | None = None,
     resolve_paths: bool = False,
+    evidence_index: Mapping[str, Mapping[str, str]] | None = None,
 ) -> None:
     """Validate identities, public paths, evidence links, and support claims."""
 
@@ -143,8 +144,11 @@ def validate_inventory(
                 evidence.id,
                 evidence.target,
                 evidence.claim,
+                evidence.artifact_id,
+                evidence.evidence_class,
                 seen_evidence,
                 evidence_root,
+                evidence_index,
             )
         for callable_contract in module.callables:
             _claim_unique(callable_contract.id, seen_contracts, "contract")
@@ -165,8 +169,11 @@ def validate_inventory(
                     evidence.id,
                     evidence.target,
                     evidence.claim,
+                    evidence.artifact_id,
+                    evidence.evidence_class,
                     seen_evidence,
                     evidence_root,
+                    evidence_index,
                 )
             available = module_evidence | callable_evidence
             seen_transforms: set[str] = set()
@@ -235,8 +242,11 @@ def _validate_evidence(
     identifier: str,
     target: str,
     claim: str,
+    artifact_id: str,
+    evidence_class: str,
     seen: set[str],
     evidence_root: Path | None,
+    evidence_index: Mapping[str, Mapping[str, str]] | None,
 ) -> None:
     _claim_unique(identifier, seen, "evidence")
     _require_text(target, f"{identifier} target")
@@ -245,13 +255,36 @@ def _validate_evidence(
         raise ValueError(f"absolute evidence path is not portable: {target}")
     if evidence_root is not None and not (evidence_root / target).is_file():
         raise ValueError(f"evidence target does not exist: {target}")
+    if bool(artifact_id) != bool(evidence_class):
+        raise ValueError(
+            f"{identifier} must declare artifact_id and evidence_class together"
+        )
+    if not artifact_id or evidence_index is None:
+        return
+    indexed = evidence_index.get(artifact_id)
+    if indexed is None:
+        raise ValueError(f"indexed evidence artifact does not exist: {artifact_id}")
+    indexed_class = indexed.get("evidence_class", "")
+    if indexed_class != evidence_class:
+        raise ValueError(
+            "indexed evidence class mismatch: "
+            f"{artifact_id} declares {evidence_class}, index has {indexed_class}"
+        )
 
 
 def audit_runtime_inventory(
-    inventory: ContractInventory, *, repository_root: Path
+    inventory: ContractInventory,
+    *,
+    repository_root: Path,
+    evidence_index: Mapping[str, Mapping[str, str]] | None = None,
 ) -> ContractInventory:
     """Run explicit heavyweight path/evidence checks and classify public callables."""
-    validate_inventory(inventory, evidence_root=repository_root, resolve_paths=True)
+    validate_inventory(
+        inventory,
+        evidence_root=repository_root,
+        resolve_paths=True,
+        evidence_index=evidence_index,
+    )
     registered = {
         contract.import_path
         for module in inventory.modules

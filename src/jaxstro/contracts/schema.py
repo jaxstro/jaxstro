@@ -83,6 +83,8 @@ class EvidenceReference:
     kind: EvidenceKind
     target: str
     claim: str
+    artifact_id: str = ""
+    evidence_class: str = ""
 
 
 @dataclass(frozen=True)

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 from dataclasses import replace
 from pathlib import Path
 
@@ -22,11 +23,18 @@ def render_outputs() -> dict[Path, str]:
     inventory = audit_runtime_inventory(
         collect_contracts(source_revision="pending-content-digest"),
         repository_root=ROOT,
+        evidence_index=_load_evidence_index(),
     )
     digest_payload = inventory_to_json(replace(inventory, source_revision=""))
     digest = hashlib.sha256(digest_payload.encode("utf-8")).hexdigest()
     inventory = replace(inventory, source_revision=f"sha256:{digest}")
     return {path: renderer(inventory) for path, renderer in OUTPUTS.items()}
+
+
+def _load_evidence_index() -> dict[str, dict[str, str]]:
+    path = ROOT / "docs/validation/evidence-index.json"
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    return {entry["id"]: entry for entry in payload["entries"]}
 
 
 def main() -> int:

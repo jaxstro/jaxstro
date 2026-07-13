@@ -121,3 +121,101 @@ def test_repository_audit_rejects_missing_evidence_target(tmp_path: Path) -> Non
     )
     with pytest.raises(ValueError, match="evidence target does not exist"):
         validate_inventory(_inventory(record), evidence_root=tmp_path)
+
+
+def test_repository_audit_rejects_missing_indexed_artifact() -> None:
+    record = _callable("root", "jaxstro.numerics.safeguarded_bracketed_root")
+    from jaxstro.contracts import EvidenceKind, EvidenceReference
+
+    object.__setattr__(
+        record,
+        "evidence",
+        (
+            EvidenceReference(
+                "root.performance",
+                EvidenceKind.BENCHMARK,
+                "tests/benchmarks/benchmark_bracketed_root.py",
+                "measured root-solver cost",
+                artifact_id="rootfinding.performance",
+                evidence_class="computational",
+            ),
+        ),
+    )
+    with pytest.raises(ValueError, match="indexed evidence artifact does not exist"):
+        validate_inventory(_inventory(record), evidence_index={})
+
+
+def test_repository_audit_rejects_wrong_indexed_evidence_class() -> None:
+    record = _callable("root", "jaxstro.numerics.safeguarded_bracketed_root")
+    from jaxstro.contracts import EvidenceKind, EvidenceReference
+
+    object.__setattr__(
+        record,
+        "evidence",
+        (
+            EvidenceReference(
+                "root.performance",
+                EvidenceKind.BENCHMARK,
+                "tests/benchmarks/benchmark_bracketed_root.py",
+                "measured root-solver cost",
+                artifact_id="rootfinding.performance",
+                evidence_class="source_provenance",
+            ),
+        ),
+    )
+    index = {
+        "rootfinding.performance": {
+            "evidence_class": "computational",
+            "target": "docs/validation/rootfinding-performance.json",
+        }
+    }
+    with pytest.raises(ValueError, match="indexed evidence class mismatch"):
+        validate_inventory(_inventory(record), evidence_index=index)
+
+
+def test_repository_audit_accepts_matching_indexed_artifact() -> None:
+    record = _callable("root", "jaxstro.numerics.safeguarded_bracketed_root")
+    from jaxstro.contracts import EvidenceKind, EvidenceReference
+
+    object.__setattr__(
+        record,
+        "evidence",
+        (
+            EvidenceReference(
+                "root.performance",
+                EvidenceKind.BENCHMARK,
+                "tests/benchmarks/benchmark_bracketed_root.py",
+                "measured root-solver cost",
+                artifact_id="rootfinding.performance",
+                evidence_class="computational",
+            ),
+        ),
+    )
+    index = {
+        "rootfinding.performance": {
+            "evidence_class": "computational",
+            "target": "docs/validation/rootfinding-performance.json",
+        }
+    }
+    validate_inventory(_inventory(record), evidence_index=index)
+
+
+def test_registry_requires_complete_artifact_linkage() -> None:
+    record = _callable("root", "jaxstro.numerics.safeguarded_bracketed_root")
+    from jaxstro.contracts import EvidenceKind, EvidenceReference
+
+    object.__setattr__(
+        record,
+        "evidence",
+        (
+            EvidenceReference(
+                "root.performance",
+                EvidenceKind.BENCHMARK,
+                "tests/benchmarks/benchmark_bracketed_root.py",
+                "measured root-solver cost",
+                artifact_id="rootfinding.performance",
+            ),
+        ),
+    )
+    with pytest.raises(ValueError, match="artifact_id and evidence_class together"):
+        validate_inventory(_inventory(record))
