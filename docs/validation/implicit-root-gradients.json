@@ -26,6 +26,17 @@
     },
     {
       "atol": 0.0,
+      "identity": "exponential.certificate.gate",
+      "metric_id": "exponential.certificate",
+      "note": "The complete runtime certificate accepted the case.",
+      "reference": 1,
+      "relation": "equal",
+      "rtol": 0.0,
+      "status": "pass",
+      "units": "dimensionless"
+    },
+    {
+      "atol": 0.0,
       "identity": "exponential.relative_ad_analytic_error.gate",
       "metric_id": "exponential.relative_ad_analytic_error",
       "note": "Existing implicit-root validation threshold.",
@@ -45,6 +56,17 @@
       "rtol": 0.0,
       "status": "pass",
       "units": "dimensionless"
+    },
+    {
+      "atol": 0.0,
+      "identity": "exponential.slope_magnitude.gate",
+      "metric_id": "exponential.slope_magnitude",
+      "note": "Implicit derivative requires adequate root-slope conditioning.",
+      "reference": 1e-08,
+      "relation": "greater_equal",
+      "rtol": 0.0,
+      "status": "pass",
+      "units": "function units per coordinate unit"
     },
     {
       "atol": 0.0,
@@ -70,6 +92,17 @@
     },
     {
       "atol": 0.0,
+      "identity": "linear.certificate.gate",
+      "metric_id": "linear.certificate",
+      "note": "The complete runtime certificate accepted the case.",
+      "reference": 1,
+      "relation": "equal",
+      "rtol": 0.0,
+      "status": "pass",
+      "units": "dimensionless"
+    },
+    {
+      "atol": 0.0,
       "identity": "linear.relative_ad_analytic_error.gate",
       "metric_id": "linear.relative_ad_analytic_error",
       "note": "Existing implicit-root validation threshold.",
@@ -89,6 +122,17 @@
       "rtol": 0.0,
       "status": "pass",
       "units": "dimensionless"
+    },
+    {
+      "atol": 0.0,
+      "identity": "linear.slope_magnitude.gate",
+      "metric_id": "linear.slope_magnitude",
+      "note": "Implicit derivative requires adequate root-slope conditioning.",
+      "reference": 1e-08,
+      "relation": "greater_equal",
+      "rtol": 0.0,
+      "status": "pass",
+      "units": "function units per coordinate unit"
     },
     {
       "atol": 0.0,
@@ -114,6 +158,17 @@
     },
     {
       "atol": 0.0,
+      "identity": "quadratic.certificate.gate",
+      "metric_id": "quadratic.certificate",
+      "note": "The complete runtime certificate accepted the case.",
+      "reference": 1,
+      "relation": "equal",
+      "rtol": 0.0,
+      "status": "pass",
+      "units": "dimensionless"
+    },
+    {
+      "atol": 0.0,
       "identity": "quadratic.relative_ad_analytic_error.gate",
       "metric_id": "quadratic.relative_ad_analytic_error",
       "note": "Existing implicit-root validation threshold.",
@@ -133,6 +188,17 @@
       "rtol": 0.0,
       "status": "pass",
       "units": "dimensionless"
+    },
+    {
+      "atol": 0.0,
+      "identity": "quadratic.slope_magnitude.gate",
+      "metric_id": "quadratic.slope_magnitude",
+      "note": "Implicit derivative requires adequate root-slope conditioning.",
+      "reference": 1e-08,
+      "relation": "greater_equal",
+      "rtol": 0.0,
+      "status": "pass",
+      "units": "function units per coordinate unit"
     }
   ],
   "deterministic_config": [
@@ -174,7 +240,7 @@
       ],
       [
         "git_revision",
-        "d292b9000ce98f62a512d56d1b3052604adc7f0d"
+        "a3f0d4bd563555e67a3ec0ca8e1ed0e8be671f60"
       ],
       [
         "jax_backend",
@@ -186,7 +252,7 @@
       ],
       [
         "measured_at_utc",
-        "2026-07-13T02:38:22.797093+00:00"
+        "2026-07-13T03:01:34.508984+00:00"
       ],
       [
         "platform",
@@ -353,10 +419,10 @@
     },
     "environment": {
       "device": "cpu:0",
-      "git_revision": "d292b9000ce98f62a512d56d1b3052604adc7f0d",
+      "git_revision": "a3f0d4bd563555e67a3ec0ca8e1ed0e8be671f60",
       "jax_backend": "cpu",
       "jax_version": "0.10.1",
-      "measured_at_utc": "2026-07-13T02:38:22.797093+00:00",
+      "measured_at_utc": "2026-07-13T03:01:34.508984+00:00",
       "platform": "macOS-26.1-arm64-arm-64bit-Mach-O",
       "python_version": "3.13.7",
       "working_tree_dirty": true
@@ -369,7 +435,7 @@
     {
       "identity": "exponential.absolute_residual",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "abs(f(x_star))",
       "units": "function units",
       "value": 0.0
@@ -377,7 +443,7 @@
     {
       "identity": "exponential.ad_derivative",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "dx_star/dtheta|AD",
       "units": "coordinate units per parameter unit",
       "value": 0.5
@@ -385,7 +451,7 @@
     {
       "identity": "exponential.analytic_derivative",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "dx_star/dtheta|analytic",
       "units": "coordinate units per parameter unit",
       "value": 0.5
@@ -393,15 +459,23 @@
     {
       "identity": "exponential.bracket_width",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "Delta_x",
       "units": "coordinate units",
       "value": 0.0
     },
     {
+      "identity": "exponential.certificate",
+      "note": "",
+      "status": "info",
+      "symbol": "I_certified",
+      "units": "dimensionless",
+      "value": 1
+    },
+    {
       "identity": "exponential.fd_derivative",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "dx_star/dtheta|FD",
       "units": "coordinate units per parameter unit",
       "value": 0.5000000000088267
@@ -409,7 +483,7 @@
     {
       "identity": "exponential.relative_ad_analytic_error",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "R_AD,analytic",
       "units": "dimensionless",
       "value": 0.0
@@ -417,7 +491,7 @@
     {
       "identity": "exponential.relative_ad_fd_error",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "R_AD,FD",
       "units": "dimensionless",
       "value": 1.7653434269648046e-11
@@ -425,7 +499,7 @@
     {
       "identity": "exponential.root",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "x_star",
       "units": "coordinate units",
       "value": 0.6931471805599453
@@ -433,7 +507,7 @@
     {
       "identity": "exponential.slope_magnitude",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "abs(df/dx)",
       "units": "function units per coordinate unit",
       "value": 2.0
@@ -441,7 +515,7 @@
     {
       "identity": "linear.absolute_residual",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "abs(f(x_star))",
       "units": "function units",
       "value": 0.0
@@ -449,7 +523,7 @@
     {
       "identity": "linear.ad_derivative",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "dx_star/dtheta|AD",
       "units": "coordinate units per parameter unit",
       "value": 1.0
@@ -457,7 +531,7 @@
     {
       "identity": "linear.analytic_derivative",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "dx_star/dtheta|analytic",
       "units": "coordinate units per parameter unit",
       "value": 1.0
@@ -465,15 +539,23 @@
     {
       "identity": "linear.bracket_width",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "Delta_x",
       "units": "coordinate units",
       "value": 0.0
     },
     {
+      "identity": "linear.certificate",
+      "note": "",
+      "status": "info",
+      "symbol": "I_certified",
+      "units": "dimensionless",
+      "value": 1
+    },
+    {
       "identity": "linear.fd_derivative",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "dx_star/dtheta|FD",
       "units": "coordinate units per parameter unit",
       "value": 1.0000000000065512
@@ -481,7 +563,7 @@
     {
       "identity": "linear.relative_ad_analytic_error",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "R_AD,analytic",
       "units": "dimensionless",
       "value": 0.0
@@ -489,7 +571,7 @@
     {
       "identity": "linear.relative_ad_fd_error",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "R_AD,FD",
       "units": "dimensionless",
       "value": 6.551204023665206e-12
@@ -497,7 +579,7 @@
     {
       "identity": "linear.root",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "x_star",
       "units": "coordinate units",
       "value": 2.0
@@ -505,7 +587,7 @@
     {
       "identity": "linear.slope_magnitude",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "abs(df/dx)",
       "units": "function units per coordinate unit",
       "value": 1.0
@@ -513,7 +595,7 @@
     {
       "identity": "quadratic.absolute_residual",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "abs(f(x_star))",
       "units": "function units",
       "value": 4.440892098500626e-16
@@ -521,7 +603,7 @@
     {
       "identity": "quadratic.ad_derivative",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "dx_star/dtheta|AD",
       "units": "coordinate units per parameter unit",
       "value": 0.3535533905932738
@@ -529,7 +611,7 @@
     {
       "identity": "quadratic.analytic_derivative",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "dx_star/dtheta|analytic",
       "units": "coordinate units per parameter unit",
       "value": 0.35355339059327373
@@ -537,15 +619,23 @@
     {
       "identity": "quadratic.bracket_width",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "Delta_x",
       "units": "coordinate units",
       "value": 1.7763568394002505e-14
     },
     {
+      "identity": "quadratic.certificate",
+      "note": "",
+      "status": "info",
+      "symbol": "I_certified",
+      "units": "dimensionless",
+      "value": 1
+    },
+    {
       "identity": "quadratic.fd_derivative",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "dx_star/dtheta|FD",
       "units": "coordinate units per parameter unit",
       "value": 0.35355339059739416
@@ -553,7 +643,7 @@
     {
       "identity": "quadratic.relative_ad_analytic_error",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "R_AD,analytic",
       "units": "dimensionless",
       "value": 1.5700924586837752e-16
@@ -561,7 +651,7 @@
     {
       "identity": "quadratic.relative_ad_fd_error",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "R_AD,FD",
       "units": "dimensionless",
       "value": 1.1654168283690369e-11
@@ -569,7 +659,7 @@
     {
       "identity": "quadratic.root",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "x_star",
       "units": "coordinate units",
       "value": 1.414213562373095
@@ -577,7 +667,7 @@
     {
       "identity": "quadratic.slope_magnitude",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "abs(df/dx)",
       "units": "function units per coordinate unit",
       "value": 2.82842712474619
@@ -586,5 +676,5 @@
   "package_version": "0.1.0",
   "precision": "float64",
   "schema_version": "1",
-  "source_revision": "d292b9000ce98f62a512d56d1b3052604adc7f0d"
+  "source_revision": "a3f0d4bd563555e67a3ec0ca8e1ed0e8be671f60"
 }

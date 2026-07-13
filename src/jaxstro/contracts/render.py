@@ -79,6 +79,7 @@ def render_contract_reference(inventory: ContractInventory) -> str:
                     f"[`{item.id}`](https://github.com/drannarosen/jaxstro/blob/main/{item.target}) ({item.kind.value})"
                     + (
                         f" -> [`{item.artifact_id}`](../evidence-index)"
+                        f" gates `{', '.join(item.artifact_comparison_ids)}`"
                         if item.artifact_id
                         else ""
                     )
@@ -137,6 +138,7 @@ def _normalize(value: Any) -> Any:
         if result.get("artifact_id") == "":
             result.pop("artifact_id")
             result.pop("evidence_class")
+            result.pop("artifact_comparison_ids")
         if "transforms" in result:
             result["transforms"] = sorted(
                 result["transforms"], key=lambda item: item["transform"]

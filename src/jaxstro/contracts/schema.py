@@ -85,6 +85,7 @@ class EvidenceReference:
     claim: str
     artifact_id: str = ""
     evidence_class: str = ""
+    artifact_comparison_ids: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

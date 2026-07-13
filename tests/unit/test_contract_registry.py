@@ -138,6 +138,7 @@ def test_repository_audit_rejects_missing_indexed_artifact() -> None:
                 "measured root-solver cost",
                 artifact_id="rootfinding.performance",
                 evidence_class="computational",
+                artifact_comparison_ids=("linear.gate",),
             ),
         ),
     )
@@ -160,6 +161,7 @@ def test_repository_audit_rejects_wrong_indexed_evidence_class() -> None:
                 "measured root-solver cost",
                 artifact_id="rootfinding.performance",
                 evidence_class="source_provenance",
+                artifact_comparison_ids=("linear.gate",),
             ),
         ),
     )
@@ -167,6 +169,7 @@ def test_repository_audit_rejects_wrong_indexed_evidence_class() -> None:
         "rootfinding.performance": {
             "evidence_class": "computational",
             "target": "docs/validation/rootfinding-performance.json",
+            "comparison_statuses": {"linear.gate": "pass"},
         }
     }
     with pytest.raises(ValueError, match="indexed evidence class mismatch"):
@@ -188,6 +191,7 @@ def test_repository_audit_accepts_matching_indexed_artifact() -> None:
                 "measured root-solver cost",
                 artifact_id="rootfinding.performance",
                 evidence_class="computational",
+                artifact_comparison_ids=("linear.gate",),
             ),
         ),
     )
@@ -195,6 +199,7 @@ def test_repository_audit_accepts_matching_indexed_artifact() -> None:
         "rootfinding.performance": {
             "evidence_class": "computational",
             "target": "docs/validation/rootfinding-performance.json",
+            "comparison_statuses": {"linear.gate": "pass"},
         }
     }
     validate_inventory(_inventory(record), evidence_index=index)
@@ -219,3 +224,33 @@ def test_registry_requires_complete_artifact_linkage() -> None:
     )
     with pytest.raises(ValueError, match="artifact_id and evidence_class together"):
         validate_inventory(_inventory(record))
+
+
+def test_repository_audit_rejects_failed_artifact_gate() -> None:
+    record = _callable("root", "jaxstro.numerics.safeguarded_bracketed_root")
+    from jaxstro.contracts import EvidenceKind, EvidenceReference
+
+    object.__setattr__(
+        record,
+        "evidence",
+        (
+            EvidenceReference(
+                "root.performance",
+                EvidenceKind.BENCHMARK,
+                "scripts/benchmark_rootfinding.py",
+                "hybrid evaluation-count gate",
+                artifact_id="rootfinding.performance",
+                evidence_class="computational",
+                artifact_comparison_ids=("linear.gate",),
+            ),
+        ),
+    )
+    index = {
+        "rootfinding.performance": {
+            "evidence_class": "computational",
+            "target": "docs/validation/rootfinding-performance.json",
+            "comparison_statuses": {"linear.gate": "fail"},
+        }
+    }
+    with pytest.raises(ValueError, match="indexed evidence gate did not pass"):
+        validate_inventory(_inventory(record), evidence_index=index)

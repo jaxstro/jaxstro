@@ -205,7 +205,7 @@ telemetry, not universal speed for every residual.
 The reproducible evaluation-count and warm-timing comparison with fixed-count
 bisection is available as a
 [human-readable evidence report](../validation/rootfinding-performance.md) and
-[machine-readable envelope](../validation/rootfinding-performance.json). The
+[machine-readable envelope](https://github.com/drannarosen/jaxstro/blob/main/docs/validation/rootfinding-performance.json). The
 benchmark treats function-evaluation count as the primary algorithmic cost and
 does not impose a hardware-dependent wall-time threshold. The ratified gate
 requires the hybrid not to exceed bisection evaluations on any of five cases and
@@ -280,7 +280,7 @@ rejection, not as a derivative estimate.
 ```
 
 These values are copied from the
-[machine-readable envelope](../validation/implicit-root-gradients.json), with a
+[machine-readable envelope](https://github.com/drannarosen/jaxstro/blob/main/docs/validation/implicit-root-gradients.json), with a
 [human-readable evidence report](../validation/implicit-root-gradients.md), both
 generated and freshness-checked by `scripts/benchmark_implicit_root.py`. A
 documentation test requires the table to match that artifact; the JSON and

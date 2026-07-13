@@ -18,21 +18,36 @@ def _root_evidence(
     name: str,
     target: str,
     claim: str,
-    *,
-    artifact_id: str = "",
 ) -> EvidenceReference:
     kind = (
         EvidenceKind.UNIT_TEST
         if target.startswith("tests/unit/")
         else EvidenceKind.VALIDATION_TEST
     )
+    return EvidenceReference(f"root.{name}", kind, target, claim)
+
+
+_ROOT_PERFORMANCE_GATES = tuple(
+    f"{case}.hybrid-no-more-evaluations"
+    for case in (
+        "flat_slope",
+        "linear",
+        "monotone_kink",
+        "oscillatory_fixed_point_residual",
+        "quadratic",
+    )
+)
+
+
+def _root_performance_evidence(name: str) -> EvidenceReference:
     return EvidenceReference(
-        f"root.{name}",
-        kind,
-        target,
-        claim,
-        artifact_id=artifact_id,
-        evidence_class="computational" if artifact_id else "",
+        f"root.{name}.performance",
+        EvidenceKind.BENCHMARK,
+        "scripts/benchmark_rootfinding.py",
+        "All registered analytic cases satisfy the hybrid evaluation-count gate.",
+        artifact_id="rootfinding.performance",
+        evidence_class="computational",
+        artifact_comparison_ids=_ROOT_PERFORMANCE_GATES,
     )
 
 
@@ -46,8 +61,8 @@ def _value_root_contract(name: str, purpose: str) -> CallableContract:
         name,
         target,
         "The registered solver's JIT/batching, terminal status, trace, and analytic-root behavior.",
-        artifact_id="rootfinding.performance",
     )
+    performance = _root_performance_evidence(name)
     return CallableContract(
         id=f"numerics.{name}",
         import_path=f"jaxstro.numerics.{name}",
@@ -75,7 +90,7 @@ def _value_root_contract(name: str, purpose: str) -> CallableContract:
                 (evidence.id,),
             ),
         ),
-        evidence=(evidence,),
+        evidence=(evidence, performance),
         limitations=("No implicit-root derivative claim.",),
         cost_notes="Use lax.map when physical per-lane skipping of expensive residuals matters.",
     )
@@ -85,7 +100,27 @@ _implicit_evidence = _root_evidence(
     "implicit_bracketed_root",
     "tests/validation/test_implicit_root_gradients.py",
     "Certified sensitivities agree with analytic and central finite differences.",
+)
+_IMPLICIT_GATES = tuple(
+    f"{case}.{gate}"
+    for case in ("exponential", "linear", "quadratic")
+    for gate in (
+        "absolute_residual.gate",
+        "bracket_width.gate",
+        "relative_ad_analytic_error.gate",
+        "relative_ad_fd_error.gate",
+        "slope_magnitude.gate",
+        "certificate.gate",
+    )
+)
+_implicit_artifact_evidence = EvidenceReference(
+    "root.implicit_bracketed_root.certification",
+    EvidenceKind.ARTIFACT,
+    "scripts/benchmark_implicit_root.py",
+    "All registered primal and derivative certificate comparisons pass.",
     artifact_id="rootfinding.implicit-gradients",
+    evidence_class="computational",
+    artifact_comparison_ids=_IMPLICIT_GATES,
 )
 
 ROOT_CALLABLES: tuple[CallableContract, ...] = (
@@ -117,7 +152,7 @@ ROOT_CALLABLES: tuple[CallableContract, ...] = (
                 (_implicit_evidence.id,),
             ),
         ),
-        evidence=(_implicit_evidence,),
+        evidence=(_implicit_evidence, _implicit_artifact_evidence),
         limitations=(
             "Requires a unique mathematical root.",
             "Requires a smooth selected branch and adequate slope conditioning.",

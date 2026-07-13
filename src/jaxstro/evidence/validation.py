@@ -13,6 +13,10 @@ from .schema import (
 
 def validate_artifact(artifact: EvidenceArtifact) -> None:
     """Validate identities, units, finiteness, and comparison truth."""
+    if artifact.schema_version != "1":
+        raise ValueError(
+            f"unsupported evidence schema version: {artifact.schema_version}"
+        )
     for name, value in (
         ("schema version", artifact.schema_version),
         ("artifact id", artifact.artifact_id),
@@ -49,6 +53,10 @@ def validate_artifact(artifact: EvidenceArtifact) -> None:
         if comparison.metric_id not in metrics:
             raise ValueError(f"unknown comparison metric: {comparison.metric_id}")
         _require_text(comparison.units, f"{comparison.identity} units")
+        if comparison.units != metrics[comparison.metric_id].units:
+            raise ValueError(
+                f"comparison units do not match metric units: {comparison.identity}"
+            )
         _require_finite_number(comparison.reference, "comparison reference")
         _require_finite_number(comparison.atol, "absolute tolerance")
         _require_finite_number(comparison.rtol, "relative tolerance")
@@ -65,9 +73,11 @@ def _validate_comparison(value: int | float, comparison) -> None:
     if comparison.relation is ComparisonRelation.INFORMATIONAL:
         passed = None
     elif comparison.relation is ComparisonRelation.LESS_EQUAL:
-        passed = value <= comparison.reference + comparison.atol
+        tolerance = comparison.atol + comparison.rtol * abs(comparison.reference)
+        passed = value <= comparison.reference + tolerance
     elif comparison.relation is ComparisonRelation.GREATER_EQUAL:
-        passed = value >= comparison.reference - comparison.atol
+        tolerance = comparison.atol + comparison.rtol * abs(comparison.reference)
+        passed = value >= comparison.reference - tolerance
     elif comparison.relation is ComparisonRelation.CLOSE:
         passed = math.isclose(
             value,

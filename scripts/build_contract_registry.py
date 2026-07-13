@@ -31,10 +31,18 @@ def render_outputs() -> dict[Path, str]:
     return {path: renderer(inventory) for path, renderer in OUTPUTS.items()}
 
 
-def _load_evidence_index() -> dict[str, dict[str, str]]:
+def _load_evidence_index() -> dict[str, dict[str, object]]:
     path = ROOT / "docs/validation/evidence-index.json"
     payload = json.loads(path.read_text(encoding="utf-8"))
-    return {entry["id"]: entry for entry in payload["entries"]}
+    result = {entry["id"]: entry for entry in payload["entries"]}
+    for entry in result.values():
+        if entry["evidence_class"] != "computational":
+            continue
+        artifact = json.loads((ROOT / str(entry["target"])).read_text(encoding="utf-8"))
+        entry["comparison_statuses"] = {
+            item["identity"]: item["status"] for item in artifact["comparisons"]
+        }
+    return result
 
 
 def main() -> int:

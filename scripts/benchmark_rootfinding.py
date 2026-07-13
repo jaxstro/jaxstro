@@ -124,7 +124,7 @@ def _measure_case(case: Case) -> dict[str, Any]:
         "methods": {
             "bisection": {
                 "status": "fixed_steps",
-                "converged": True,
+                "converged": None,
                 "function_evaluations": _metric(BISECTION_STEPS + 2, "evaluations"),
                 "executed_iterations": _metric(BISECTION_STEPS, "iterations"),
                 "final_absolute_residual": _metric(
@@ -232,9 +232,7 @@ def build_artifact(payload: dict[str, Any]) -> EvidenceArtifact:
                         symbol,
                         measured["value"],
                         measured["unit"],
-                        EvidenceStatus.INFO
-                        if metric_name == "warm_wall"
-                        else EvidenceStatus.PASS,
+                        EvidenceStatus.INFO,
                     )
                 )
         hybrid_id = f"{case['name']}.safeguarded_hybrid.function_evaluations"

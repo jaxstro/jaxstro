@@ -116,7 +116,7 @@ def validate_inventory(
     *,
     evidence_root: Path | None = None,
     resolve_paths: bool = False,
-    evidence_index: Mapping[str, Mapping[str, str]] | None = None,
+    evidence_index: Mapping[str, Mapping[str, object]] | None = None,
 ) -> None:
     """Validate identities, public paths, evidence links, and support claims."""
 
@@ -146,6 +146,7 @@ def validate_inventory(
                 evidence.claim,
                 evidence.artifact_id,
                 evidence.evidence_class,
+                evidence.artifact_comparison_ids,
                 seen_evidence,
                 evidence_root,
                 evidence_index,
@@ -171,6 +172,7 @@ def validate_inventory(
                     evidence.claim,
                     evidence.artifact_id,
                     evidence.evidence_class,
+                    evidence.artifact_comparison_ids,
                     seen_evidence,
                     evidence_root,
                     evidence_index,
@@ -244,9 +246,10 @@ def _validate_evidence(
     claim: str,
     artifact_id: str,
     evidence_class: str,
+    artifact_comparison_ids: tuple[str, ...],
     seen: set[str],
     evidence_root: Path | None,
-    evidence_index: Mapping[str, Mapping[str, str]] | None,
+    evidence_index: Mapping[str, Mapping[str, object]] | None,
 ) -> None:
     _claim_unique(identifier, seen, "evidence")
     _require_text(target, f"{identifier} target")
@@ -259,6 +262,8 @@ def _validate_evidence(
         raise ValueError(
             f"{identifier} must declare artifact_id and evidence_class together"
         )
+    if artifact_comparison_ids and not artifact_id:
+        raise ValueError(f"{identifier} comparison ids require an artifact_id")
     if not artifact_id or evidence_index is None:
         return
     indexed = evidence_index.get(artifact_id)
@@ -270,13 +275,27 @@ def _validate_evidence(
             "indexed evidence class mismatch: "
             f"{artifact_id} declares {evidence_class}, index has {indexed_class}"
         )
+    if evidence_class == "computational" and not artifact_comparison_ids:
+        raise ValueError(
+            f"computational evidence link has no comparison ids: {artifact_id}"
+        )
+    statuses = indexed.get("comparison_statuses", {})
+    if not isinstance(statuses, Mapping):
+        raise ValueError(f"indexed comparison statuses are invalid: {artifact_id}")
+    for comparison_id in artifact_comparison_ids:
+        status = statuses.get(comparison_id)
+        if status != "pass":
+            raise ValueError(
+                "indexed evidence gate did not pass: "
+                f"{artifact_id}:{comparison_id} status={status!r}"
+            )
 
 
 def audit_runtime_inventory(
     inventory: ContractInventory,
     *,
     repository_root: Path,
-    evidence_index: Mapping[str, Mapping[str, str]] | None = None,
+    evidence_index: Mapping[str, Mapping[str, object]] | None = None,
 ) -> ContractInventory:
     """Run explicit heavyweight path/evidence checks and classify public callables."""
     validate_inventory(

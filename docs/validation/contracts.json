@@ -256,12 +256,38 @@
           "domain": "Caller asserts a unique root and smooth branch; numerical certificate gates must pass.",
           "evidence": [
             {
-              "artifact_id": "rootfinding.implicit-gradients",
               "claim": "Certified sensitivities agree with analytic and central finite differences.",
-              "evidence_class": "computational",
               "id": "root.implicit_bracketed_root",
               "kind": "validation_test",
               "target": "tests/validation/test_implicit_root_gradients.py"
+            },
+            {
+              "artifact_comparison_ids": [
+                "exponential.absolute_residual.gate",
+                "exponential.bracket_width.gate",
+                "exponential.relative_ad_analytic_error.gate",
+                "exponential.relative_ad_fd_error.gate",
+                "exponential.slope_magnitude.gate",
+                "exponential.certificate.gate",
+                "linear.absolute_residual.gate",
+                "linear.bracket_width.gate",
+                "linear.relative_ad_analytic_error.gate",
+                "linear.relative_ad_fd_error.gate",
+                "linear.slope_magnitude.gate",
+                "linear.certificate.gate",
+                "quadratic.absolute_residual.gate",
+                "quadratic.bracket_width.gate",
+                "quadratic.relative_ad_analytic_error.gate",
+                "quadratic.relative_ad_fd_error.gate",
+                "quadratic.slope_magnitude.gate",
+                "quadratic.certificate.gate"
+              ],
+              "artifact_id": "rootfinding.implicit-gradients",
+              "claim": "All registered primal and derivative certificate comparisons pass.",
+              "evidence_class": "computational",
+              "id": "root.implicit_bracketed_root.certification",
+              "kind": "artifact",
+              "target": "scripts/benchmark_implicit_root.py"
             }
           ],
           "id": "numerics.implicit_bracketed_root",
@@ -356,12 +382,25 @@
           "domain": "Finite scalar endpoints enclosing an exact root or a typed missing-bracket result.",
           "evidence": [
             {
-              "artifact_id": "rootfinding.performance",
               "claim": "The registered solver's JIT/batching, terminal status, trace, and analytic-root behavior.",
-              "evidence_class": "computational",
               "id": "root.map_safeguarded_bracketed_root",
               "kind": "unit_test",
               "target": "tests/unit/test_bracketed_root.py"
+            },
+            {
+              "artifact_comparison_ids": [
+                "flat_slope.hybrid-no-more-evaluations",
+                "linear.hybrid-no-more-evaluations",
+                "monotone_kink.hybrid-no-more-evaluations",
+                "oscillatory_fixed_point_residual.hybrid-no-more-evaluations",
+                "quadratic.hybrid-no-more-evaluations"
+              ],
+              "artifact_id": "rootfinding.performance",
+              "claim": "All registered analytic cases satisfy the hybrid evaluation-count gate.",
+              "evidence_class": "computational",
+              "id": "root.map_safeguarded_bracketed_root.performance",
+              "kind": "benchmark",
+              "target": "scripts/benchmark_rootfinding.py"
             }
           ],
           "id": "numerics.map_safeguarded_bracketed_root",
@@ -584,12 +623,25 @@
           "domain": "Finite scalar endpoints enclosing an exact root or a typed missing-bracket result.",
           "evidence": [
             {
-              "artifact_id": "rootfinding.performance",
               "claim": "The registered solver's JIT/batching, terminal status, trace, and analytic-root behavior.",
-              "evidence_class": "computational",
               "id": "root.safeguarded_bracketed_root",
               "kind": "unit_test",
               "target": "tests/unit/test_numerics.py"
+            },
+            {
+              "artifact_comparison_ids": [
+                "flat_slope.hybrid-no-more-evaluations",
+                "linear.hybrid-no-more-evaluations",
+                "monotone_kink.hybrid-no-more-evaluations",
+                "oscillatory_fixed_point_residual.hybrid-no-more-evaluations",
+                "quadratic.hybrid-no-more-evaluations"
+              ],
+              "artifact_id": "rootfinding.performance",
+              "claim": "All registered analytic cases satisfy the hybrid evaluation-count gate.",
+              "evidence_class": "computational",
+              "id": "root.safeguarded_bracketed_root.performance",
+              "kind": "benchmark",
+              "target": "scripts/benchmark_rootfinding.py"
             }
           ],
           "id": "numerics.safeguarded_bracketed_root",
@@ -831,7 +883,7 @@
   ],
   "package_version": "0.1.0",
   "schema_version": "1",
-  "source_revision": "sha256:e971f7efe46bfe5b9e664970905e1c5a2a14044b38a3345de2af4b0bbd40e483",
+  "source_revision": "sha256:3b932e2d554eb044eacfc59088f1d41b94965d3a9052e0c1ed5bdebddc7b9415",
   "unclassified_callables": [
     "jaxstro.atmospheres.acquisition_rows_to_markdown",
     "jaxstro.atmospheres.build_bosz_index",

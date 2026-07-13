@@ -13,14 +13,15 @@ REPORT = REPO_ROOT / "docs" / "validation" / "rootfinding-performance.md"
 
 
 def test_rootfinding_benchmark_manifest_has_required_metrics_and_units() -> None:
-    payload = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    envelope = json.loads(MANIFEST.read_text(encoding="utf-8"))
 
-    assert payload["schema_version"] == "1"
-    assert payload["artifact_id"] == "rootfinding.performance"
-    assert payload["metrics"]
-    assert payload["comparisons"]
+    assert envelope["schema_version"] == "1"
+    assert envelope["artifact_id"] == "rootfinding.performance"
+    assert envelope["metrics"]
+    assert envelope["comparisons"]
+    assert {metric["status"] for metric in envelope["metrics"]} == {"info"}
     assert REPORT.is_file()
-    payload = payload["method_payload"]
+    payload = envelope["method_payload"]
 
     assert payload["schema_version"] == 1
     assert payload["precision"] == "float64"
@@ -45,9 +46,11 @@ def test_rootfinding_benchmark_manifest_has_required_metrics_and_units() -> None
     assert payload["cases"]
     for case in payload["cases"]:
         assert set(case["methods"]) == {"bisection", "safeguarded_hybrid"}
+        assert case["methods"]["bisection"]["status"] == "fixed_steps"
+        assert case["methods"]["bisection"]["converged"] is None
+        assert isinstance(case["methods"]["safeguarded_hybrid"]["converged"], bool)
         for metrics in case["methods"].values():
             assert isinstance(metrics["status"], (int, str))
-            assert isinstance(metrics["converged"], bool)
             assert metrics["function_evaluations"]["unit"] == "evaluations"
             assert metrics["executed_iterations"]["unit"] == "iterations"
             assert metrics["final_absolute_residual"]["unit"] == "function units"

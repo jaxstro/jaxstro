@@ -69,3 +69,54 @@ def test_check_artifact_rejects_stale_bytes(
     path.write_text("{}\n", encoding="utf-8")
     with pytest.raises(EvidenceFreshnessError, match="stale"):
         check_artifact(path, valid_artifact)
+
+
+@pytest.mark.parametrize("missing", ["metrics", "comparisons", "method_payload"])
+def test_artifact_parser_requires_complete_top_level_schema(
+    valid_artifact: EvidenceArtifact, missing: str
+) -> None:
+    payload = artifact_to_dict(valid_artifact)
+    del payload[missing]
+    with pytest.raises(ValueError, match="evidence artifact fields"):
+        artifact_from_dict(payload)
+
+
+def test_artifact_parser_rejects_unknown_fields(
+    valid_artifact: EvidenceArtifact,
+) -> None:
+    payload = artifact_to_dict(valid_artifact)
+    payload["metricz"] = []
+    with pytest.raises(ValueError, match="evidence artifact fields"):
+        artifact_from_dict(payload)
+
+
+def test_artifact_parser_rejects_unknown_nested_fields(
+    valid_artifact: EvidenceArtifact,
+) -> None:
+    payload = artifact_to_dict(valid_artifact)
+    payload["metrics"][0]["extra"] = "typo"  # type: ignore[index]
+    with pytest.raises(ValueError, match="metric fields"):
+        artifact_from_dict(payload)
+
+
+def test_markdown_escapes_table_cell_pipes_and_newlines() -> None:
+    artifact = EvidenceArtifact.fixture(
+        "table-cells",
+        metrics=(MetricRecord("m|x", "a\nb", 1.0, "function|units"),),
+    )
+    comparison = ComparisonRecord(
+        "gate|one",
+        "m|x",
+        ComparisonRelation.EQUAL,
+        1.0,
+        "function|units",
+        EvidenceStatus.PASS,
+        note="line|one\nline two",
+    )
+    markdown = artifact_to_markdown(
+        dataclasses.replace(artifact, comparisons=(comparison,))
+    )
+    assert "m\\|x" in markdown
+    assert "a b" in markdown
+    assert "function\\|units" in markdown
+    assert "line\\|one line two" in markdown

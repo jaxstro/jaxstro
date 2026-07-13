@@ -6,56 +6,56 @@ Artifact version: `1`
 
 | Metric identity | Symbol | Value | Units | Status |
 | --- | --- | ---: | --- | --- |
-| flat_slope.bisection.executed_iterations | `N_iter` | 48 | iterations | pass |
-| flat_slope.bisection.final_absolute_residual | `abs(f(x_star))` | 5.605193857299268e-45 | function units | pass |
-| flat_slope.bisection.final_relative_residual | `R_root` | 7.006492321624085e-46 | dimensionless | pass |
-| flat_slope.bisection.function_evaluations | `N_eval` | 50 | evaluations | pass |
-| flat_slope.bisection.warm_wall | `t_wall,warm` | 5.624955520033836e-06 | s | info |
-| flat_slope.safeguarded_hybrid.executed_iterations | `N_iter` | 3 | iterations | pass |
-| flat_slope.safeguarded_hybrid.final_absolute_residual | `abs(f(x_star))` | 0.0 | function units | pass |
-| flat_slope.safeguarded_hybrid.final_relative_residual | `R_root` | 0.0 | dimensionless | pass |
-| flat_slope.safeguarded_hybrid.function_evaluations | `N_eval` | 5 | evaluations | pass |
-| flat_slope.safeguarded_hybrid.warm_wall | `t_wall,warm` | 0.0003239999059587717 | s | info |
-| linear.bisection.executed_iterations | `N_iter` | 48 | iterations | pass |
-| linear.bisection.final_absolute_residual | `abs(f(x_star))` | 7.105427357601002e-15 | function units | pass |
-| linear.bisection.final_relative_residual | `R_root` | 3.552713678800501e-15 | dimensionless | pass |
-| linear.bisection.function_evaluations | `N_eval` | 50 | evaluations | pass |
-| linear.bisection.warm_wall | `t_wall,warm` | 5.209119990468025e-06 | s | info |
-| linear.safeguarded_hybrid.executed_iterations | `N_iter` | 1 | iterations | pass |
-| linear.safeguarded_hybrid.final_absolute_residual | `abs(f(x_star))` | 0.0 | function units | pass |
-| linear.safeguarded_hybrid.final_relative_residual | `R_root` | 0.0 | dimensionless | pass |
-| linear.safeguarded_hybrid.function_evaluations | `N_eval` | 3 | evaluations | pass |
-| linear.safeguarded_hybrid.warm_wall | `t_wall,warm` | 0.0005396248307079077 | s | info |
-| monotone_kink.bisection.executed_iterations | `N_iter` | 48 | iterations | pass |
-| monotone_kink.bisection.final_absolute_residual | `abs(f(x_star))` | 2.1094237467877974e-15 | function units | pass |
-| monotone_kink.bisection.final_relative_residual | `R_root` | 3.515706244646329e-15 | dimensionless | pass |
-| monotone_kink.bisection.function_evaluations | `N_eval` | 50 | evaluations | pass |
-| monotone_kink.bisection.warm_wall | `t_wall,warm` | 5.417037755250931e-06 | s | info |
-| monotone_kink.safeguarded_hybrid.executed_iterations | `N_iter` | 48 | iterations | pass |
-| monotone_kink.safeguarded_hybrid.final_absolute_residual | `abs(f(x_star))` | 1.6062151608764452e-13 | function units | pass |
-| monotone_kink.safeguarded_hybrid.final_relative_residual | `R_root` | 2.6770252681274087e-13 | dimensionless | pass |
-| monotone_kink.safeguarded_hybrid.function_evaluations | `N_eval` | 50 | evaluations | pass |
-| monotone_kink.safeguarded_hybrid.warm_wall | `t_wall,warm` | 0.0006698749493807554 | s | info |
-| oscillatory_fixed_point_residual.bisection.executed_iterations | `N_iter` | 48 | iterations | pass |
-| oscillatory_fixed_point_residual.bisection.final_absolute_residual | `abs(f(x_star))` | 6.661338147750939e-16 | function units | pass |
-| oscillatory_fixed_point_residual.bisection.final_relative_residual | `R_root` | 5.124106267500722e-16 | dimensionless | pass |
-| oscillatory_fixed_point_residual.bisection.function_evaluations | `N_eval` | 50 | evaluations | pass |
+| flat_slope.bisection.executed_iterations | `N_iter` | 48 | iterations | info |
+| flat_slope.bisection.final_absolute_residual | `abs(f(x_star))` | 5.605193857299268e-45 | function units | info |
+| flat_slope.bisection.final_relative_residual | `R_root` | 7.006492321624085e-46 | dimensionless | info |
+| flat_slope.bisection.function_evaluations | `N_eval` | 50 | evaluations | info |
+| flat_slope.bisection.warm_wall | `t_wall,warm` | 5.375128239393234e-06 | s | info |
+| flat_slope.safeguarded_hybrid.executed_iterations | `N_iter` | 3 | iterations | info |
+| flat_slope.safeguarded_hybrid.final_absolute_residual | `abs(f(x_star))` | 0.0 | function units | info |
+| flat_slope.safeguarded_hybrid.final_relative_residual | `R_root` | 0.0 | dimensionless | info |
+| flat_slope.safeguarded_hybrid.function_evaluations | `N_eval` | 5 | evaluations | info |
+| flat_slope.safeguarded_hybrid.warm_wall | `t_wall,warm` | 0.00026350002735853195 | s | info |
+| linear.bisection.executed_iterations | `N_iter` | 48 | iterations | info |
+| linear.bisection.final_absolute_residual | `abs(f(x_star))` | 7.105427357601002e-15 | function units | info |
+| linear.bisection.final_relative_residual | `R_root` | 3.552713678800501e-15 | dimensionless | info |
+| linear.bisection.function_evaluations | `N_eval` | 50 | evaluations | info |
+| linear.bisection.warm_wall | `t_wall,warm` | 5.332985892891884e-06 | s | info |
+| linear.safeguarded_hybrid.executed_iterations | `N_iter` | 1 | iterations | info |
+| linear.safeguarded_hybrid.final_absolute_residual | `abs(f(x_star))` | 0.0 | function units | info |
+| linear.safeguarded_hybrid.final_relative_residual | `R_root` | 0.0 | dimensionless | info |
+| linear.safeguarded_hybrid.function_evaluations | `N_eval` | 3 | evaluations | info |
+| linear.safeguarded_hybrid.warm_wall | `t_wall,warm` | 0.0005117498803883791 | s | info |
+| monotone_kink.bisection.executed_iterations | `N_iter` | 48 | iterations | info |
+| monotone_kink.bisection.final_absolute_residual | `abs(f(x_star))` | 2.1094237467877974e-15 | function units | info |
+| monotone_kink.bisection.final_relative_residual | `R_root` | 3.515706244646329e-15 | dimensionless | info |
+| monotone_kink.bisection.function_evaluations | `N_eval` | 50 | evaluations | info |
+| monotone_kink.bisection.warm_wall | `t_wall,warm` | 5.292007699608803e-06 | s | info |
+| monotone_kink.safeguarded_hybrid.executed_iterations | `N_iter` | 48 | iterations | info |
+| monotone_kink.safeguarded_hybrid.final_absolute_residual | `abs(f(x_star))` | 1.6062151608764452e-13 | function units | info |
+| monotone_kink.safeguarded_hybrid.final_relative_residual | `R_root` | 2.6770252681274087e-13 | dimensionless | info |
+| monotone_kink.safeguarded_hybrid.function_evaluations | `N_eval` | 50 | evaluations | info |
+| monotone_kink.safeguarded_hybrid.warm_wall | `t_wall,warm` | 0.0005734579171985388 | s | info |
+| oscillatory_fixed_point_residual.bisection.executed_iterations | `N_iter` | 48 | iterations | info |
+| oscillatory_fixed_point_residual.bisection.final_absolute_residual | `abs(f(x_star))` | 6.661338147750939e-16 | function units | info |
+| oscillatory_fixed_point_residual.bisection.final_relative_residual | `R_root` | 5.124106267500722e-16 | dimensionless | info |
+| oscillatory_fixed_point_residual.bisection.function_evaluations | `N_eval` | 50 | evaluations | info |
 | oscillatory_fixed_point_residual.bisection.warm_wall | `t_wall,warm` | 5.208887159824371e-06 | s | info |
-| oscillatory_fixed_point_residual.safeguarded_hybrid.executed_iterations | `N_iter` | 1 | iterations | pass |
-| oscillatory_fixed_point_residual.safeguarded_hybrid.final_absolute_residual | `abs(f(x_star))` | 0.0 | function units | pass |
-| oscillatory_fixed_point_residual.safeguarded_hybrid.final_relative_residual | `R_root` | 0.0 | dimensionless | pass |
-| oscillatory_fixed_point_residual.safeguarded_hybrid.function_evaluations | `N_eval` | 3 | evaluations | pass |
-| oscillatory_fixed_point_residual.safeguarded_hybrid.warm_wall | `t_wall,warm` | 0.0002910420298576355 | s | info |
-| quadratic.bisection.executed_iterations | `N_iter` | 48 | iterations | pass |
-| quadratic.bisection.final_absolute_residual | `abs(f(x_star))` | 2.220446049250313e-15 | function units | pass |
-| quadratic.bisection.final_relative_residual | `R_root` | 1.1102230246251565e-15 | dimensionless | pass |
-| quadratic.bisection.function_evaluations | `N_eval` | 50 | evaluations | pass |
-| quadratic.bisection.warm_wall | `t_wall,warm` | 5.208887159824371e-06 | s | info |
-| quadratic.safeguarded_hybrid.executed_iterations | `N_iter` | 40 | iterations | pass |
-| quadratic.safeguarded_hybrid.final_absolute_residual | `abs(f(x_star))` | 1.6106786041140528e-15 | function units | pass |
-| quadratic.safeguarded_hybrid.final_relative_residual | `R_root` | 8.053393020570264e-16 | dimensionless | pass |
-| quadratic.safeguarded_hybrid.function_evaluations | `N_eval` | 42 | evaluations | pass |
-| quadratic.safeguarded_hybrid.warm_wall | `t_wall,warm` | 0.0005489580798894167 | s | info |
+| oscillatory_fixed_point_residual.safeguarded_hybrid.executed_iterations | `N_iter` | 1 | iterations | info |
+| oscillatory_fixed_point_residual.safeguarded_hybrid.final_absolute_residual | `abs(f(x_star))` | 0.0 | function units | info |
+| oscillatory_fixed_point_residual.safeguarded_hybrid.final_relative_residual | `R_root` | 0.0 | dimensionless | info |
+| oscillatory_fixed_point_residual.safeguarded_hybrid.function_evaluations | `N_eval` | 3 | evaluations | info |
+| oscillatory_fixed_point_residual.safeguarded_hybrid.warm_wall | `t_wall,warm` | 0.00038466695696115494 | s | info |
+| quadratic.bisection.executed_iterations | `N_iter` | 48 | iterations | info |
+| quadratic.bisection.final_absolute_residual | `abs(f(x_star))` | 2.220446049250313e-15 | function units | info |
+| quadratic.bisection.final_relative_residual | `R_root` | 1.1102230246251565e-15 | dimensionless | info |
+| quadratic.bisection.function_evaluations | `N_eval` | 50 | evaluations | info |
+| quadratic.bisection.warm_wall | `t_wall,warm` | 5.249865353107452e-06 | s | info |
+| quadratic.safeguarded_hybrid.executed_iterations | `N_iter` | 40 | iterations | info |
+| quadratic.safeguarded_hybrid.final_absolute_residual | `abs(f(x_star))` | 1.6106786041140528e-15 | function units | info |
+| quadratic.safeguarded_hybrid.final_relative_residual | `R_root` | 8.053393020570264e-16 | dimensionless | info |
+| quadratic.safeguarded_hybrid.function_evaluations | `N_eval` | 42 | evaluations | info |
+| quadratic.safeguarded_hybrid.warm_wall | `t_wall,warm` | 0.000321083003655076 | s | info |
 
 ## Comparisons
 
@@ -87,7 +87,7 @@ Recorded execution environment; wall metrics are informational.
       ],
       "methods": {
         "bisection": {
-          "converged": true,
+          "converged": null,
           "executed_iterations": {
             "unit": "iterations",
             "value": 48
@@ -107,7 +107,7 @@ Recorded execution environment; wall metrics are informational.
           "status": "fixed_steps",
           "warm_wall": {
             "unit": "s",
-            "value": 5.209119990468025e-06
+            "value": 5.332985892891884e-06
           }
         },
         "safeguarded_hybrid": {
@@ -131,7 +131,7 @@ Recorded execution environment; wall metrics are informational.
           "status": 3,
           "warm_wall": {
             "unit": "s",
-            "value": 0.0005396248307079077
+            "value": 0.0005117498803883791
           }
         }
       },
@@ -144,7 +144,7 @@ Recorded execution environment; wall metrics are informational.
       ],
       "methods": {
         "bisection": {
-          "converged": true,
+          "converged": null,
           "executed_iterations": {
             "unit": "iterations",
             "value": 48
@@ -164,7 +164,7 @@ Recorded execution environment; wall metrics are informational.
           "status": "fixed_steps",
           "warm_wall": {
             "unit": "s",
-            "value": 5.208887159824371e-06
+            "value": 5.249865353107452e-06
           }
         },
         "safeguarded_hybrid": {
@@ -188,7 +188,7 @@ Recorded execution environment; wall metrics are informational.
           "status": 4,
           "warm_wall": {
             "unit": "s",
-            "value": 0.0005489580798894167
+            "value": 0.000321083003655076
           }
         }
       },
@@ -201,7 +201,7 @@ Recorded execution environment; wall metrics are informational.
       ],
       "methods": {
         "bisection": {
-          "converged": true,
+          "converged": null,
           "executed_iterations": {
             "unit": "iterations",
             "value": 48
@@ -221,7 +221,7 @@ Recorded execution environment; wall metrics are informational.
           "status": "fixed_steps",
           "warm_wall": {
             "unit": "s",
-            "value": 5.624955520033836e-06
+            "value": 5.375128239393234e-06
           }
         },
         "safeguarded_hybrid": {
@@ -245,7 +245,7 @@ Recorded execution environment; wall metrics are informational.
           "status": 3,
           "warm_wall": {
             "unit": "s",
-            "value": 0.0003239999059587717
+            "value": 0.00026350002735853195
           }
         }
       },
@@ -258,7 +258,7 @@ Recorded execution environment; wall metrics are informational.
       ],
       "methods": {
         "bisection": {
-          "converged": true,
+          "converged": null,
           "executed_iterations": {
             "unit": "iterations",
             "value": 48
@@ -278,7 +278,7 @@ Recorded execution environment; wall metrics are informational.
           "status": "fixed_steps",
           "warm_wall": {
             "unit": "s",
-            "value": 5.417037755250931e-06
+            "value": 5.292007699608803e-06
           }
         },
         "safeguarded_hybrid": {
@@ -302,7 +302,7 @@ Recorded execution environment; wall metrics are informational.
           "status": 4,
           "warm_wall": {
             "unit": "s",
-            "value": 0.0006698749493807554
+            "value": 0.0005734579171985388
           }
         }
       },
@@ -315,7 +315,7 @@ Recorded execution environment; wall metrics are informational.
       ],
       "methods": {
         "bisection": {
-          "converged": true,
+          "converged": null,
           "executed_iterations": {
             "unit": "iterations",
             "value": 48
@@ -359,7 +359,7 @@ Recorded execution environment; wall metrics are informational.
           "status": 3,
           "warm_wall": {
             "unit": "s",
-            "value": 0.0002910420298576355
+            "value": 0.00038466695696115494
           }
         }
       },
@@ -379,10 +379,10 @@ Recorded execution environment; wall metrics are informational.
   },
   "environment": {
     "device": "cpu:0",
-    "git_revision": "fd28c3a592d9feff5145f4f6d02263af22f2e228",
+    "git_revision": "a3f0d4bd563555e67a3ec0ca8e1ed0e8be671f60",
     "jax_backend": "cpu",
     "jax_version": "0.10.1",
-    "measured_at_utc": "2026-07-13T02:34:53.941963+00:00",
+    "measured_at_utc": "2026-07-13T03:01:33.095776+00:00",
     "platform": "macOS-26.1-arm64-arm-64bit-Mach-O",
     "python_version": "3.13.7",
     "working_tree_dirty": true

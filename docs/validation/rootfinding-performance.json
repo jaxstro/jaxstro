@@ -96,7 +96,7 @@
       ],
       [
         "git_revision",
-        "fd28c3a592d9feff5145f4f6d02263af22f2e228"
+        "a3f0d4bd563555e67a3ec0ca8e1ed0e8be671f60"
       ],
       [
         "jax_backend",
@@ -108,7 +108,7 @@
       ],
       [
         "measured_at_utc",
-        "2026-07-13T02:34:53.941963+00:00"
+        "2026-07-13T03:01:33.095776+00:00"
       ],
       [
         "platform",
@@ -137,7 +137,7 @@
         ],
         "methods": {
           "bisection": {
-            "converged": true,
+            "converged": null,
             "executed_iterations": {
               "unit": "iterations",
               "value": 48
@@ -157,7 +157,7 @@
             "status": "fixed_steps",
             "warm_wall": {
               "unit": "s",
-              "value": 5.209119990468025e-06
+              "value": 5.332985892891884e-06
             }
           },
           "safeguarded_hybrid": {
@@ -181,7 +181,7 @@
             "status": 3,
             "warm_wall": {
               "unit": "s",
-              "value": 0.0005396248307079077
+              "value": 0.0005117498803883791
             }
           }
         },
@@ -194,7 +194,7 @@
         ],
         "methods": {
           "bisection": {
-            "converged": true,
+            "converged": null,
             "executed_iterations": {
               "unit": "iterations",
               "value": 48
@@ -214,7 +214,7 @@
             "status": "fixed_steps",
             "warm_wall": {
               "unit": "s",
-              "value": 5.208887159824371e-06
+              "value": 5.249865353107452e-06
             }
           },
           "safeguarded_hybrid": {
@@ -238,7 +238,7 @@
             "status": 4,
             "warm_wall": {
               "unit": "s",
-              "value": 0.0005489580798894167
+              "value": 0.000321083003655076
             }
           }
         },
@@ -251,7 +251,7 @@
         ],
         "methods": {
           "bisection": {
-            "converged": true,
+            "converged": null,
             "executed_iterations": {
               "unit": "iterations",
               "value": 48
@@ -271,7 +271,7 @@
             "status": "fixed_steps",
             "warm_wall": {
               "unit": "s",
-              "value": 5.624955520033836e-06
+              "value": 5.375128239393234e-06
             }
           },
           "safeguarded_hybrid": {
@@ -295,7 +295,7 @@
             "status": 3,
             "warm_wall": {
               "unit": "s",
-              "value": 0.0003239999059587717
+              "value": 0.00026350002735853195
             }
           }
         },
@@ -308,7 +308,7 @@
         ],
         "methods": {
           "bisection": {
-            "converged": true,
+            "converged": null,
             "executed_iterations": {
               "unit": "iterations",
               "value": 48
@@ -328,7 +328,7 @@
             "status": "fixed_steps",
             "warm_wall": {
               "unit": "s",
-              "value": 5.417037755250931e-06
+              "value": 5.292007699608803e-06
             }
           },
           "safeguarded_hybrid": {
@@ -352,7 +352,7 @@
             "status": 4,
             "warm_wall": {
               "unit": "s",
-              "value": 0.0006698749493807554
+              "value": 0.0005734579171985388
             }
           }
         },
@@ -365,7 +365,7 @@
         ],
         "methods": {
           "bisection": {
-            "converged": true,
+            "converged": null,
             "executed_iterations": {
               "unit": "iterations",
               "value": 48
@@ -409,7 +409,7 @@
             "status": 3,
             "warm_wall": {
               "unit": "s",
-              "value": 0.0002910420298576355
+              "value": 0.00038466695696115494
             }
           }
         },
@@ -429,10 +429,10 @@
     },
     "environment": {
       "device": "cpu:0",
-      "git_revision": "fd28c3a592d9feff5145f4f6d02263af22f2e228",
+      "git_revision": "a3f0d4bd563555e67a3ec0ca8e1ed0e8be671f60",
       "jax_backend": "cpu",
       "jax_version": "0.10.1",
-      "measured_at_utc": "2026-07-13T02:34:53.941963+00:00",
+      "measured_at_utc": "2026-07-13T03:01:33.095776+00:00",
       "platform": "macOS-26.1-arm64-arm-64bit-Mach-O",
       "python_version": "3.13.7",
       "working_tree_dirty": true
@@ -446,7 +446,7 @@
     {
       "identity": "flat_slope.bisection.executed_iterations",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "N_iter",
       "units": "iterations",
       "value": 48
@@ -454,7 +454,7 @@
     {
       "identity": "flat_slope.bisection.final_absolute_residual",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "abs(f(x_star))",
       "units": "function units",
       "value": 5.605193857299268e-45
@@ -462,7 +462,7 @@
     {
       "identity": "flat_slope.bisection.final_relative_residual",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "R_root",
       "units": "dimensionless",
       "value": 7.006492321624085e-46
@@ -470,7 +470,7 @@
     {
       "identity": "flat_slope.bisection.function_evaluations",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "N_eval",
       "units": "evaluations",
       "value": 50
@@ -481,12 +481,12 @@
       "status": "info",
       "symbol": "t_wall,warm",
       "units": "s",
-      "value": 5.624955520033836e-06
+      "value": 5.375128239393234e-06
     },
     {
       "identity": "flat_slope.safeguarded_hybrid.executed_iterations",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "N_iter",
       "units": "iterations",
       "value": 3
@@ -494,7 +494,7 @@
     {
       "identity": "flat_slope.safeguarded_hybrid.final_absolute_residual",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "abs(f(x_star))",
       "units": "function units",
       "value": 0.0
@@ -502,7 +502,7 @@
     {
       "identity": "flat_slope.safeguarded_hybrid.final_relative_residual",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "R_root",
       "units": "dimensionless",
       "value": 0.0
@@ -510,7 +510,7 @@
     {
       "identity": "flat_slope.safeguarded_hybrid.function_evaluations",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "N_eval",
       "units": "evaluations",
       "value": 5
@@ -521,12 +521,12 @@
       "status": "info",
       "symbol": "t_wall,warm",
       "units": "s",
-      "value": 0.0003239999059587717
+      "value": 0.00026350002735853195
     },
     {
       "identity": "linear.bisection.executed_iterations",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "N_iter",
       "units": "iterations",
       "value": 48
@@ -534,7 +534,7 @@
     {
       "identity": "linear.bisection.final_absolute_residual",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "abs(f(x_star))",
       "units": "function units",
       "value": 7.105427357601002e-15
@@ -542,7 +542,7 @@
     {
       "identity": "linear.bisection.final_relative_residual",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "R_root",
       "units": "dimensionless",
       "value": 3.552713678800501e-15
@@ -550,7 +550,7 @@
     {
       "identity": "linear.bisection.function_evaluations",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "N_eval",
       "units": "evaluations",
       "value": 50
@@ -561,12 +561,12 @@
       "status": "info",
       "symbol": "t_wall,warm",
       "units": "s",
-      "value": 5.209119990468025e-06
+      "value": 5.332985892891884e-06
     },
     {
       "identity": "linear.safeguarded_hybrid.executed_iterations",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "N_iter",
       "units": "iterations",
       "value": 1
@@ -574,7 +574,7 @@
     {
       "identity": "linear.safeguarded_hybrid.final_absolute_residual",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "abs(f(x_star))",
       "units": "function units",
       "value": 0.0
@@ -582,7 +582,7 @@
     {
       "identity": "linear.safeguarded_hybrid.final_relative_residual",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "R_root",
       "units": "dimensionless",
       "value": 0.0
@@ -590,7 +590,7 @@
     {
       "identity": "linear.safeguarded_hybrid.function_evaluations",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "N_eval",
       "units": "evaluations",
       "value": 3
@@ -601,12 +601,12 @@
       "status": "info",
       "symbol": "t_wall,warm",
       "units": "s",
-      "value": 0.0005396248307079077
+      "value": 0.0005117498803883791
     },
     {
       "identity": "monotone_kink.bisection.executed_iterations",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "N_iter",
       "units": "iterations",
       "value": 48
@@ -614,7 +614,7 @@
     {
       "identity": "monotone_kink.bisection.final_absolute_residual",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "abs(f(x_star))",
       "units": "function units",
       "value": 2.1094237467877974e-15
@@ -622,7 +622,7 @@
     {
       "identity": "monotone_kink.bisection.final_relative_residual",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "R_root",
       "units": "dimensionless",
       "value": 3.515706244646329e-15
@@ -630,7 +630,7 @@
     {
       "identity": "monotone_kink.bisection.function_evaluations",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "N_eval",
       "units": "evaluations",
       "value": 50
@@ -641,12 +641,12 @@
       "status": "info",
       "symbol": "t_wall,warm",
       "units": "s",
-      "value": 5.417037755250931e-06
+      "value": 5.292007699608803e-06
     },
     {
       "identity": "monotone_kink.safeguarded_hybrid.executed_iterations",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "N_iter",
       "units": "iterations",
       "value": 48
@@ -654,7 +654,7 @@
     {
       "identity": "monotone_kink.safeguarded_hybrid.final_absolute_residual",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "abs(f(x_star))",
       "units": "function units",
       "value": 1.6062151608764452e-13
@@ -662,7 +662,7 @@
     {
       "identity": "monotone_kink.safeguarded_hybrid.final_relative_residual",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "R_root",
       "units": "dimensionless",
       "value": 2.6770252681274087e-13
@@ -670,7 +670,7 @@
     {
       "identity": "monotone_kink.safeguarded_hybrid.function_evaluations",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "N_eval",
       "units": "evaluations",
       "value": 50
@@ -681,12 +681,12 @@
       "status": "info",
       "symbol": "t_wall,warm",
       "units": "s",
-      "value": 0.0006698749493807554
+      "value": 0.0005734579171985388
     },
     {
       "identity": "oscillatory_fixed_point_residual.bisection.executed_iterations",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "N_iter",
       "units": "iterations",
       "value": 48
@@ -694,7 +694,7 @@
     {
       "identity": "oscillatory_fixed_point_residual.bisection.final_absolute_residual",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "abs(f(x_star))",
       "units": "function units",
       "value": 6.661338147750939e-16
@@ -702,7 +702,7 @@
     {
       "identity": "oscillatory_fixed_point_residual.bisection.final_relative_residual",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "R_root",
       "units": "dimensionless",
       "value": 5.124106267500722e-16
@@ -710,7 +710,7 @@
     {
       "identity": "oscillatory_fixed_point_residual.bisection.function_evaluations",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "N_eval",
       "units": "evaluations",
       "value": 50
@@ -726,7 +726,7 @@
     {
       "identity": "oscillatory_fixed_point_residual.safeguarded_hybrid.executed_iterations",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "N_iter",
       "units": "iterations",
       "value": 1
@@ -734,7 +734,7 @@
     {
       "identity": "oscillatory_fixed_point_residual.safeguarded_hybrid.final_absolute_residual",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "abs(f(x_star))",
       "units": "function units",
       "value": 0.0
@@ -742,7 +742,7 @@
     {
       "identity": "oscillatory_fixed_point_residual.safeguarded_hybrid.final_relative_residual",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "R_root",
       "units": "dimensionless",
       "value": 0.0
@@ -750,7 +750,7 @@
     {
       "identity": "oscillatory_fixed_point_residual.safeguarded_hybrid.function_evaluations",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "N_eval",
       "units": "evaluations",
       "value": 3
@@ -761,12 +761,12 @@
       "status": "info",
       "symbol": "t_wall,warm",
       "units": "s",
-      "value": 0.0002910420298576355
+      "value": 0.00038466695696115494
     },
     {
       "identity": "quadratic.bisection.executed_iterations",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "N_iter",
       "units": "iterations",
       "value": 48
@@ -774,7 +774,7 @@
     {
       "identity": "quadratic.bisection.final_absolute_residual",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "abs(f(x_star))",
       "units": "function units",
       "value": 2.220446049250313e-15
@@ -782,7 +782,7 @@
     {
       "identity": "quadratic.bisection.final_relative_residual",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "R_root",
       "units": "dimensionless",
       "value": 1.1102230246251565e-15
@@ -790,7 +790,7 @@
     {
       "identity": "quadratic.bisection.function_evaluations",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "N_eval",
       "units": "evaluations",
       "value": 50
@@ -801,12 +801,12 @@
       "status": "info",
       "symbol": "t_wall,warm",
       "units": "s",
-      "value": 5.208887159824371e-06
+      "value": 5.249865353107452e-06
     },
     {
       "identity": "quadratic.safeguarded_hybrid.executed_iterations",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "N_iter",
       "units": "iterations",
       "value": 40
@@ -814,7 +814,7 @@
     {
       "identity": "quadratic.safeguarded_hybrid.final_absolute_residual",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "abs(f(x_star))",
       "units": "function units",
       "value": 1.6106786041140528e-15
@@ -822,7 +822,7 @@
     {
       "identity": "quadratic.safeguarded_hybrid.final_relative_residual",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "R_root",
       "units": "dimensionless",
       "value": 8.053393020570264e-16
@@ -830,7 +830,7 @@
     {
       "identity": "quadratic.safeguarded_hybrid.function_evaluations",
       "note": "",
-      "status": "pass",
+      "status": "info",
       "symbol": "N_eval",
       "units": "evaluations",
       "value": 42
@@ -841,11 +841,11 @@
       "status": "info",
       "symbol": "t_wall,warm",
       "units": "s",
-      "value": 0.0005489580798894167
+      "value": 0.000321083003655076
     }
   ],
   "package_version": "0.1.0",
   "precision": "float64",
   "schema_version": "1",
-  "source_revision": "fd28c3a592d9feff5145f4f6d02263af22f2e228"
+  "source_revision": "a3f0d4bd563555e67a3ec0ca8e1ed0e8be671f60"
 }

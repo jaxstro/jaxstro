@@ -40,6 +40,47 @@ def artifact_to_json(artifact: EvidenceArtifact) -> str:
 
 def artifact_from_dict(payload: Mapping[str, Any]) -> EvidenceArtifact:
     """Reconstruct and validate an artifact from portable JSON-ready data."""
+    _require_exact_fields(
+        payload,
+        {
+            "schema_version",
+            "artifact_id",
+            "artifact_version",
+            "package_version",
+            "source_revision",
+            "generation_command",
+            "precision",
+            "deterministic_config",
+            "environment",
+            "metrics",
+            "comparisons",
+            "limitations",
+            "method_payload",
+        },
+        "evidence artifact",
+    )
+    for item in payload["metrics"]:
+        _require_exact_fields(
+            item,
+            {"identity", "symbol", "value", "units", "status", "note"},
+            "metric",
+        )
+    for item in payload["comparisons"]:
+        _require_exact_fields(
+            item,
+            {
+                "identity",
+                "metric_id",
+                "relation",
+                "reference",
+                "units",
+                "status",
+                "atol",
+                "rtol",
+                "note",
+            },
+            "comparison",
+        )
     metrics = tuple(
         MetricRecord(
             identity=item["identity"],
@@ -66,6 +107,7 @@ def artifact_from_dict(payload: Mapping[str, Any]) -> EvidenceArtifact:
         for item in payload.get("comparisons", ())
     )
     environment_payload = payload["environment"]
+    _require_exact_fields(environment_payload, {"policy", "values"}, "environment")
     artifact = EvidenceArtifact(
         schema_version=payload["schema_version"],
         artifact_id=payload["artifact_id"],
@@ -90,6 +132,18 @@ def artifact_from_dict(payload: Mapping[str, Any]) -> EvidenceArtifact:
     return artifact
 
 
+def _require_exact_fields(
+    payload: Mapping[str, Any], expected: set[str], identity: str
+) -> None:
+    actual = set(payload)
+    if actual != expected:
+        missing = sorted(expected - actual)
+        extra = sorted(actual - expected)
+        raise ValueError(
+            f"{identity} fields mismatch; missing={missing}, extra={extra}"
+        )
+
+
 def artifact_to_markdown(artifact: EvidenceArtifact) -> str:
     """Render a human-auditable metric and comparison report."""
     validate_artifact(artifact)
@@ -105,8 +159,9 @@ def artifact_to_markdown(artifact: EvidenceArtifact) -> str:
     ]
     for metric in sorted(artifact.metrics, key=lambda item: item.identity):
         lines.append(
-            f"| {metric.identity} | `{metric.symbol}` | {metric.value} | "
-            f"{metric.units} | {metric.status.value} |"
+            f"| {_table_cell(metric.identity)} | `{_table_cell(metric.symbol)}` | "
+            f"{metric.value} | {_table_cell(metric.units)} | "
+            f"{_table_cell(metric.status.value)} |"
         )
     lines.extend(["", "## Comparisons", ""])
     if artifact.comparisons:
@@ -118,9 +173,10 @@ def artifact_to_markdown(artifact: EvidenceArtifact) -> str:
         )
         for item in sorted(artifact.comparisons, key=lambda value: value.identity):
             lines.append(
-                f"| {item.identity} | `{item.metric_id}` | {item.relation.value} | "
-                f"{item.reference} | {item.units} | {item.atol} | {item.rtol} | "
-                f"{item.status.value} | {item.note} |"
+                f"| {_table_cell(item.identity)} | `{_table_cell(item.metric_id)}` | "
+                f"{_table_cell(item.relation.value)} | {item.reference} | "
+                f"{_table_cell(item.units)} | {item.atol} | {item.rtol} | "
+                f"{_table_cell(item.status.value)} | {_table_cell(item.note)} |"
             )
     else:
         lines.append("- none")
@@ -135,6 +191,10 @@ def artifact_to_markdown(artifact: EvidenceArtifact) -> str:
     )
     lines.extend(["```", ""])
     return "\n".join(lines)
+
+
+def _table_cell(value: str) -> str:
+    return value.replace("|", "\\|").replace("\r", " ").replace("\n", " ")
 
 
 def _normalize(value: Any) -> Any:

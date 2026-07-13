@@ -44,7 +44,7 @@ echo "== docs: rendered DOM and route manifest =="
 ) >"$LOG_PATH" 2>&1 &
 SERVER_PID=$!
 
-if ! uv run --no-sync python "$ROOT_DIR/scripts/check_docs_site.py" \
+if ! env -u VIRTUAL_ENV uv run --no-sync python "$ROOT_DIR/scripts/check_docs_site.py" \
   --site "$ROOT_DIR/docs/_build/site" \
   --manifest "$ROOT_DIR/docs/route-manifest.json" \
   --base-url "http://localhost:$APP_PORT" \

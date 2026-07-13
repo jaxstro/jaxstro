@@ -79,6 +79,10 @@ def build_evidence_index(root: str | Path) -> EvidenceIndex:
             raise ValueError(f"evidence target does not exist: {target}")
         content = path.read_bytes()
         digest = "sha256:" + hashlib.sha256(content).hexdigest()
+        if identity == "provenance.cards":
+            digest = _digest_files(
+                tuple(sorted((root_path / "docs/40-api/provenance").glob("*.md")))
+            )
         if evidence_class is EvidenceClass.COMPUTATIONAL:
             artifact = artifact_from_dict(json.loads(content))
             if artifact.artifact_id != identity:
@@ -108,6 +112,17 @@ def build_evidence_index(root: str | Path) -> EvidenceIndex:
     return EvidenceIndex("1", tuple(sorted(entries, key=lambda item: item.id)))
 
 
+def _digest_files(paths: tuple[Path, ...]) -> str:
+    """Hash an ordered file set, including identities and complete contents."""
+    digest = hashlib.sha256()
+    for path in sorted(paths, key=lambda item: item.name):
+        digest.update(path.name.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return "sha256:" + digest.hexdigest()
+
+
 def evidence_index_to_json(index: EvidenceIndex) -> str:
     """Render a deterministic machine-readable evidence index."""
     payload = asdict(index)
@@ -131,10 +146,10 @@ def evidence_index_to_markdown(index: EvidenceIndex) -> str:
         "| --- | --- | --- | --- | --- |",
     ]
     for entry in index.entries:
-        relative = "../" + entry.target.removeprefix("docs/")
+        source_url = "https://github.com/drannarosen/jaxstro/blob/main/" + entry.target
         lines.append(
             f"| `{entry.id}` | {entry.evidence_class.value} | "
-            f"[artifact]({relative}) | `{entry.source_revision}` | "
+            f"[artifact source]({source_url}) | `{entry.source_revision}` | "
             f"{entry.optional_data_policy} |"
         )
     return "\n".join(lines) + "\n"

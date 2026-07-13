@@ -253,9 +253,19 @@ def build_artifact(payload: dict[str, Any]) -> EvidenceArtifact:
                     symbol,
                     measured["value"],
                     measured["unit"],
-                    EvidenceStatus.PASS,
+                    EvidenceStatus.INFO,
                 )
             )
+        certificate_id = f"{case['name']}.certificate"
+        metrics.append(
+            MetricRecord(
+                certificate_id,
+                "I_certified",
+                int(case["certified"]),
+                "dimensionless",
+                EvidenceStatus.INFO,
+            )
+        )
         for name, reference, units in (
             ("absolute_residual", RESIDUAL_LIMIT, "function units"),
             ("bracket_width", WIDTH_LIMIT, "coordinate units"),
@@ -273,6 +283,28 @@ def build_artifact(payload: dict[str, Any]) -> EvidenceArtifact:
                     note="Existing implicit-root validation threshold.",
                 )
             )
+        comparisons.extend(
+            (
+                ComparisonRecord(
+                    f"{case['name']}.slope_magnitude.gate",
+                    f"{case['name']}.slope_magnitude",
+                    ComparisonRelation.GREATER_EQUAL,
+                    SLOPE_FLOOR,
+                    "function units per coordinate unit",
+                    EvidenceStatus.PASS,
+                    note="Implicit derivative requires adequate root-slope conditioning.",
+                ),
+                ComparisonRecord(
+                    f"{case['name']}.certificate.gate",
+                    certificate_id,
+                    ComparisonRelation.EQUAL,
+                    1,
+                    "dimensionless",
+                    EvidenceStatus.PASS,
+                    note="The complete runtime certificate accepted the case.",
+                ),
+            )
+        )
     environment = payload["environment"]
     return EvidenceArtifact(
         schema_version="1",

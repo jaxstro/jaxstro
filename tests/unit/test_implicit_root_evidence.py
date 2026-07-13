@@ -24,6 +24,15 @@ def _payload() -> dict:
     return envelope["method_payload"]
 
 
+def test_implicit_envelope_distinguishes_observations_from_gates() -> None:
+    envelope = json.loads(EVIDENCE.read_text(encoding="utf-8"))
+    assert {metric["status"] for metric in envelope["metrics"]} == {"info"}
+    comparison_ids = {item["identity"] for item in envelope["comparisons"]}
+    for case in ("linear", "quadratic", "exponential"):
+        assert f"{case}.slope_magnitude.gate" in comparison_ids
+        assert f"{case}.certificate.gate" in comparison_ids
+
+
 def test_implicit_root_evidence_has_units_and_passes_claim_bounds() -> None:
     payload = _payload()
 

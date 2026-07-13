@@ -13,7 +13,7 @@
       "target": "docs/validation/atmosphere-interpolation.json"
     },
     {
-      "content_digest": "sha256:102af76268ad0fb81de09e0bdcce9a421dda61c20c19a8d6ce5dce9f0bc74451",
+      "content_digest": "sha256:774565a1ed27d5dc0bdc4c583a0c6e75c338553dfd971aa5b1d434301446dffd",
       "evidence_class": "source_provenance",
       "id": "provenance.cards",
       "limitations": [
@@ -21,11 +21,11 @@
       ],
       "optional_data_policy": "Uses repository-owned source cards; no runtime dataset required.",
       "schema_version": "source-card-v1",
-      "source_revision": "sha256:102af76268ad0fb81de09e0bdcce9a421dda61c20c19a8d6ce5dce9f0bc74451",
+      "source_revision": "sha256:774565a1ed27d5dc0bdc4c583a0c6e75c338553dfd971aa5b1d434301446dffd",
       "target": "docs/40-api/provenance/index.md"
     },
     {
-      "content_digest": "sha256:51951c2518d2496bb2dae027d29a1ce20aa34fc29598d3ca430a2dcaca3959df",
+      "content_digest": "sha256:4404e73d8f0b5bbcf8fd966b9e88ebe4a7096e58e1da589a829dbee2944aa077",
       "evidence_class": "computational",
       "id": "rootfinding.implicit-gradients",
       "limitations": [
@@ -34,11 +34,11 @@
       ],
       "optional_data_policy": "No external data required.",
       "schema_version": "1",
-      "source_revision": "d292b9000ce98f62a512d56d1b3052604adc7f0d",
+      "source_revision": "a3f0d4bd563555e67a3ec0ca8e1ed0e8be671f60",
       "target": "docs/validation/implicit-root-gradients.json"
     },
     {
-      "content_digest": "sha256:b4c300720958340396b4b2760932193c226367c969a52a8ac3490997e15574e2",
+      "content_digest": "sha256:796539af8465257cbe43a9abb510dea78b564dc5570e912a1fce65f1d42154bd",
       "evidence_class": "computational",
       "id": "rootfinding.performance",
       "limitations": [
@@ -46,7 +46,7 @@
       ],
       "optional_data_policy": "No external data required.",
       "schema_version": "1",
-      "source_revision": "fd28c3a592d9feff5145f4f6d02263af22f2e228",
+      "source_revision": "a3f0d4bd563555e67a3ec0ca8e1ed0e8be671f60",
       "target": "docs/validation/rootfinding-performance.json"
     },
     {
