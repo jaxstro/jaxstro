@@ -136,6 +136,7 @@ Each finding records:
 | Evidence | Source, tests, documentation, and consumers |
 | Transform contract | `jit`, `vmap`, differentiation, shapes, and static data |
 | Units contract | Explicit `G`, explicit units, or wrapper default |
+| Test disposition | Keep, rewrite, replace, or stale-candidate with evidence |
 | Risk | Scientific, API, numerical, and dependency risks |
 | Required gates | Exact evidence needed before and after migration |
 | Decision state | Observed through cleanup, with approval recorded |
@@ -244,6 +245,30 @@ After an approved migration but before deletion:
 Cleanup additionally requires recorded evidence, no remaining consumers, and
 Anna's explicit approval.
 
+### Stale-test cleanup
+
+The audit identifies Progenax tests that are coupled only to a superseded local
+implementation, but it does not delete or rewrite them. Each affected test is
+classified as `KEEP`, `REWRITE`, `REPLACE`, or `STALE_CANDIDATE` with the
+scientific or API behavior it protects.
+
+A later approved refactor slice may delete a `STALE_CANDIDATE` only after:
+
+- replacement tests protect the same scientific, numerical, units, public API,
+  and transformation contracts that remain valid;
+- a mutation or deliberate break proves the replacement tests fail when the
+  retained contract is violated;
+- focused and affected Progenax tests pass after the migration;
+- repository-wide searches confirm the old implementation and its private test
+  hooks have no remaining consumers; and
+- Anna explicitly approves the cleanup.
+
+A failing test is never removed merely to make a gate pass. Regression tests
+for still-supported public or scientific behavior remain, even when their
+implementation changes. Obsolete fixtures, helpers, snapshots, and
+implementation-detail assertions are removed in the same approved cleanup
+commit as the superseded path so the suite describes the surviving system.
+
 ## Stop conditions
 
 The audit or later migration stops without cleanup if:
@@ -258,6 +283,8 @@ The audit or later migration stops without cleanup if:
 - a future proposal is mistaken for an existing supported API;
 - released and experimental ownership are mixed without a separate decision;
 - an unreviewed consumer is discovered; or
+- a proposed stale-test deletion lacks replacement contract coverage and a
+  mutation check; or
 - validation evidence is incomplete or ambiguous.
 
 ## Report architecture
@@ -276,7 +303,8 @@ The Jaxstro report contains:
 10. Units and quantity boundary.
 11. Prioritized recommendation queues.
 12. Validation matrix and migration checklist.
-13. Decision register.
+13. Test-disposition and stale-test cleanup checklist.
+14. Decision register.
 
 The report is usable as both a narrative assessment and a symbol-level
 checklist. Its tables use stable finding IDs so the Progenax record and future
@@ -292,6 +320,8 @@ The audit is complete only when:
   registry rather than inferred from a public import alone;
 - each `ADOPT_READY` finding has explicit pre-migration and post-migration
   gates;
+- every affected Progenax test is classified as `KEEP`, `REWRITE`, `REPLACE`,
+  or `STALE_CANDIDATE` without deleting it during the audit;
 - current adoption and future ownership proposals are in separate queues;
 - released, experimental, and inference-policy ownership are not conflated;
 - Startrax and Gravax remain uninspected and unchanged;
