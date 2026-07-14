@@ -1,7 +1,7 @@
 ---
 title: Researcher-first documentation and clean public API design
 date: 2026-07-13
-status: approved architecture; written specification awaiting final review
+status: approved
 ---
 
 # Researcher-first documentation and clean public API design
@@ -116,11 +116,89 @@ than reproducing the whole TOC.
 Source root: `docs/00-start-here/`
 
 - `index.md`: what Jaxstro is, what it owns, and where to begin.
+- `why-jax.md`: why Jaxstro is built on JAX, what program transformations make
+  possible, and when JAX is not the right tool.
+- `jax-from-first-principles.md`: the beginner mental model for arrays,
+  functions, transformations, PyTrees, PRNG keys, tracing, compilation, and
+  control flow.
 - `choose-your-path.md`: routes for computation-first, astronomy-first,
   statistics-first, complete-foundations, and returning researchers.
 - `first-research-calculation.md`: a bounded predict -> compute -> audit example.
-- `how-to-read-the-site.md`: how concept pages, method pages, API pages, and
-  evidence pages relate.
+- `ways-to-use-these-docs.md`: how linear onboarding, question-first lookup,
+  background recovery, method comparison, API lookup, result auditing, group
+  reading, and maintenance routes use the same site.
+
+#### Why JAX?
+
+The `Why JAX?` page assumes no previous JAX experience. It begins with the
+scientific need rather than installation or syntax: researchers often want one
+mathematical program that can be evaluated, batched, compiled, and
+differentiated without maintaining separate implementations.
+
+The page explains:
+
+1. Array programming and accelerator-portable execution.
+2. Composable program transformations, especially `jit`, `vmap`, `grad`,
+   `jvp`, and `vjp`.
+3. Why explicit functions and PyTrees fit scientific models and state.
+4. Why explicit PRNG keys improve reproducibility.
+5. How Jaxstro adds units, numerical contracts, provenance, and evidence that
+   raw JAX does not provide.
+6. The costs: tracing, compilation latency, immutable arrays, static-shape
+   pressure, explicit state, precision choices, and transform-aware control
+   flow.
+7. The claim boundary: JAX does not make an algorithm correct, a derivative
+   scientifically meaningful, or every program faster.
+
+The page closes with a decision table comparing a small NumPy-style research
+script, direct JAX, and Jaxstro. It does not frame JAX as universally superior.
+
+#### JAX from first principles
+
+The beginner introduction develops one coherent mental model:
+
+```text
+array values
+  -> explicit function
+  -> PyTree inputs and outputs
+  -> JAX transformation
+  -> traced program
+  -> compiled or differentiated computation
+```
+
+It introduces `jax.numpy` through familiar array operations before explaining
+tracers or compilation. A single small scientific function is then reused to
+show eager evaluation, batching, compilation, and differentiation. Later
+sections introduce immutable updates, explicit keys, PyTrees, JAX control-flow
+primitives, shape constraints, 64-bit configuration, and common error messages.
+
+The page distinguishes three ideas that beginners often collapse:
+
+- a Python function;
+- the mathematical map the function is intended to represent;
+- the executed program JAX traces and transforms.
+
+It links to Foundations for mathematical meaning and to method pages for deeper
+derivations. It is an orientation, not a duplicate JAX manual.
+
+#### Ways to use these docs
+
+The documentation-orientation page makes the site's optional structure
+explicit. It defines these supported modes:
+
+| Mode | Starting point | Typical path |
+| --- | --- | --- |
+| Complete onboarding | Start here | JAX introduction -> Foundations -> first workflow |
+| Research-question first | Homepage or Methods | question -> method -> API -> evidence |
+| Background recovery | Foundations | concept -> connected method -> worked workflow |
+| API lookup | API reference | owner module -> signature -> contract -> example |
+| Method comparison | Methods landing | assumptions -> alternatives -> evidence |
+| Result audit | Validation | claim -> evidence class -> artifact -> limitation |
+| Group or mentor reading | Any concept page | derivation -> discussion -> bounded computation |
+| Contributor maintenance | Project or API | ownership -> contract -> tests -> evidence |
+
+Every substantial page includes a short **Use this page when** sentence and
+links onward rather than assuming the reader will consume the site linearly.
 
 ### Foundations: the ideas we will not assume
 
@@ -647,6 +725,10 @@ The documentation gate fails when:
 - a new figure lacks alt text, a caption, or a stable label;
 - a new mathematical symbol is written as decorative Unicode rather than
   LaTeX;
+- the beginner JAX pages require unexplained knowledge of tracing, PyTrees,
+  transforms, or functional programming;
+- the `Why JAX?` page implies that JAX guarantees speed, correctness, or
+  scientifically valid derivatives;
 - retired course or instructor framing returns to the published navigation;
 - strict MyST produces unresolved references or content errors.
 
@@ -662,6 +744,8 @@ public site and new source material follow the new research-software contract.
   `docs/route-manifest.json`.
 - Add targeted integration tests for the new TOC groups, planned-capability
   status boxes, retired instructor navigation, and meaningful landing routes.
+- Execute or import-check the beginner JAX examples so the first-run route does
+  not teach stale syntax.
 - Search published sources for obsolete course and instructor framing.
 - Check new pages for Unicode mathematical symbols and decorative icons.
 - Verify equation, figure, table, glossary, and cross-reference rendering in
@@ -716,6 +800,10 @@ The website hardening project is complete when:
 
 - the MyST TOC uses the approved eight-route architecture;
 - source folders use the approved numbering and semantic subsections;
+- Start here includes `Why JAX?`, `JAX from first principles`, and an explicit
+  guide to the supported ways of using the documentation;
+- the beginner JAX route assumes no prior JAX experience and states both the
+  benefits and constraints of transformed array programs;
 - foundations remain complete, optional, and connected;
 - course and instructor framing is absent from the published website;
 - every current method has a clearly grouped conceptual home;
