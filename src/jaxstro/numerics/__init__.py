@@ -118,6 +118,7 @@ from .kepler import (
     KEPLER_STATUS_NONFINITE_ITERATION,
     KEPLER_STATUS_SINGULAR_RADIUS,
     UniversalKeplerResult,
+    universal_kepler_step,
 )
 from .linear_algebra import (
     add_diagonal_jitter,
@@ -288,6 +289,7 @@ __all__ = [
     "KEPLER_STATUS_SINGULAR_RADIUS",
     "KEPLER_STATUS_MAX_STEPS",
     "UniversalKeplerResult",
+    "universal_kepler_step",
     "PROPOSAL_NONE",
     "PROPOSAL_SECANT",
     "PROPOSAL_MIDPOINT",
