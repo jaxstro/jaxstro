@@ -5,12 +5,15 @@ description: Separate a safeguarded root value from a certified implicit derivat
 
 # Root values and sensitivities
 
+Use this page when a computed root value and a parameter sensitivity must be
+audited as separate claims.
+
 **Research question.** When does a computed root value support a parameter
 sensitivity claim?
 
 **Connected foundations.**
-[](../10-foundations/mathematical-objects/what-is-a-derivative.md) and
-[](../10-foundations/models-and-computation/from-relations-to-differentiable-programs.md).
+[](../../10-foundations/mathematical-objects/what-is-a-derivative.md) and
+[](../../10-foundations/models-and-computation/from-relations-to-differentiable-programs.md).
 
 ## Predict
 
@@ -37,8 +40,8 @@ certificate, and the analytic fixture.
 
 Check the analytic square-root identity, signed residual, final bracket width,
 certificate, and analytic implicit derivative independently. Then inspect the
-registered [](../validation/rootfinding-performance.md) and
-[](../validation/implicit-root-gradients.md) evidence.
+registered [](../../validation/rootfinding-performance.md) and
+[](../../validation/implicit-root-gradients.md) evidence.
 
 ## Misconception check
 

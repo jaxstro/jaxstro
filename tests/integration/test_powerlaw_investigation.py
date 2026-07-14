@@ -1,4 +1,4 @@
-"""Executable curriculum contract for the finite power-law removable limit."""
+"""Executable research workflow for the finite power-law removable limit."""
 
 from examples.investigations.powerlaw_removable_limit import run
 

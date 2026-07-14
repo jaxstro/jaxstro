@@ -101,7 +101,7 @@ transforms, and capability boundaries to references, code symbols, validation
 paths, and evidence states. They describe why a public scientific claim is
 trustworthy.
 
-The [runtime artifact manifests](./provenance.md) instead record what a particular
+The [runtime artifact manifests](#workflow-provenance) instead record what a particular
 computation consumed: configuration, environment, seeds, hashes, and method
 identifiers. They make a run reproducible. A card does not replace a manifest,
 and a manifest does not establish the scientific source behind a constant or

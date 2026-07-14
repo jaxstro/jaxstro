@@ -1,12 +1,11 @@
 {
-  "schema_version": "1",
-  "unit_count": 3,
-  "units": [
+  "schema_version": "2",
+  "workflow_count": 3,
+  "workflows": [
     {
       "contract_count": 2,
       "evidence_count": 0,
       "id": "interpolation-boundary-policies",
-      "instructor_route": "docs/80-instructor/teaching-with-jaxstro.md",
       "limitation_count": 2,
       "validation_target_count": 2
     },
@@ -14,7 +13,6 @@
       "contract_count": 3,
       "evidence_count": 0,
       "id": "powerlaw-removable-limit",
-      "instructor_route": "docs/80-instructor/teaching-with-jaxstro.md",
       "limitation_count": 2,
       "validation_target_count": 2
     },
@@ -22,7 +20,6 @@
       "contract_count": 2,
       "evidence_count": 2,
       "id": "root-values-and-sensitivities",
-      "instructor_route": "docs/80-instructor/teaching-with-jaxstro.md",
       "limitation_count": 2,
       "validation_target_count": 2
     }

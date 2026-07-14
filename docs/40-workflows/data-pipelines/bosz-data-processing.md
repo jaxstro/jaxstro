@@ -5,6 +5,9 @@ description: >-
   processed artifacts without vendoring archive data.
 ---
 
+Use this page when rebuilding or validating the local BOSZ processed artifact
+without changing the released resampled columns.
+
 BOSZ spectra are staged as local source data under `data/atmospheres/`. The STScI
 HLSP page labels the archive path as `bosz2024`, but its 2025 Sept. 24 update
 states that the models were recomputed and earlier 2024 files should be

@@ -13,7 +13,7 @@ student-facing foundations, module references, and executable investigations.
   misconceptions, accessibility, and extensions.
 - [](./assessment-rubric.md) evaluates prediction, scientific structure,
   computation, audit, and claim calibration rather than scalar answers alone.
-- [](../70-investigations/investigations.md) is the generated unit registry and
+- [](../40-workflows/investigations/investigations.md) is the generated research-workflow registry and
   coverage map.
 
 The central teaching sequence is
@@ -24,4 +24,3 @@ predict → compute → audit → state the warranted claim
 
 Students should write the prediction before execution and retain the audit even
 when the numerical answer matches expectation.
-

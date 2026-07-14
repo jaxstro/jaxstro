@@ -212,5 +212,5 @@ artifacts exist, but `AtmosphereLibrary.prepare(...)` refuses to present those p
 as supported science.
 
 See [](./atmosphere-capabilities.md),
-[](../../50-howto/query-atmosphere-spectra.md), and
+[](../../40-workflows/data-pipelines/query-atmosphere-spectra.md), and
 [](../../60-validation/index.md) for the product, workflow, and evidence boundaries.

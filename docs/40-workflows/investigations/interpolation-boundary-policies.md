@@ -5,6 +5,9 @@ description: Separate branch-stable interior derivatives from clamp, fill, and r
 
 # Interpolation boundary policies
 
+Use this page when interior interpolation derivatives and boundary policies
+must be tested without conflating their claims.
+
 **Research question.** Which interpolation claims survive when a query crosses
 a knot or leaves the tabulated domain?
 
@@ -27,7 +30,7 @@ affine fixtures and records interior value/derivative errors and boundary events
 
 Compare values and derivatives with the analytic affine map. Exercise all three
 boundary policies deliberately. Then follow the callable contracts in
-[](../40-api/contracts.md) to their validation targets and limitations.
+[](../../40-api/contracts.md) to their validation targets and limitations.
 
 ## Misconception check
 
@@ -39,4 +42,3 @@ boundary policies deliberately. Then follow the callable contracts in
 The affine fixtures validate branch-stable interior values and derivatives plus
 explicit boundary policy behavior. They make no derivative claim at knots or
 policy transitions.
-

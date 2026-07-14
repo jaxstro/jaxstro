@@ -143,7 +143,7 @@ page retains signatures and usage context rather than duplicating that matrix.
     JSON/Markdown rendering.
   - Runtime manifests record a computation; they do not replace scientific
     source cards.
-  - **Implemented.** See [](../20-architecture/provenance.md).
+  - **Implemented.** See [](../40-workflows/reproducible-research/provenance.md).
 * - `jaxstro.jaxconfig`
   - `enable_high_precision()` for float64 and highest matmul precision.
   - Call before constructing arrays or compiling functions whose precision
@@ -478,7 +478,7 @@ The dataset matrix is in
 [](../30-representations/spectra-atmospheres/atmosphere-capabilities.md), the
 ownership and physical semantics are in
 [](../30-representations/spectra-atmospheres/spectra-data-architecture.md), and the
-request recipe is in [](../50-howto/query-atmosphere-spectra.md).
+request recipe is in [](../40-workflows/data-pipelines/query-atmosphere-spectra.md).
 
 ### `jaxstro.testing`
 
@@ -507,4 +507,5 @@ snapshot. `MethodManifest`, `manifest_to_json(...)`, and
 `manifest_to_markdown(...)` provide deterministic method-run records for
 validation reports and downstream workflow logs. These runtime manifests answer
 what a run consumed; they do not establish the source behind a scientific claim.
-The architecture page is [](../20-architecture/provenance.md).
+The reproducible-research page is
+[](../40-workflows/reproducible-research/provenance.md).

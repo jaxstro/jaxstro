@@ -5,6 +5,9 @@ description: Audit values and parameter derivatives through alpha equals minus o
 
 # Finite power-law removable limit
 
+Use this page when a removable singularity must preserve both forward values
+and parameter derivatives.
+
 **Research question.** Can a finite power-law implementation preserve both
 forward probability contracts and exponent sensitivity through a removable
 singularity?
@@ -41,4 +44,3 @@ both support endpoints and the CDF/PPF round trip.
 The tested kernel preserves its finite-support numerical and local derivative
 contracts. This does not establish that a power law is the correct physical
 stellar-mass distribution for a particular population.
-

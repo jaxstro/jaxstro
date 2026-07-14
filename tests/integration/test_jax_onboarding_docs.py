@@ -37,8 +37,8 @@ TASK_1_ROUTED_PAGES = (
     *ONBOARDING_ROUTE,
     "00-start-here/ways-to-use-these-docs.md",
     "10-foundations/foundations.md",
-    "10-theory/science-patterns.md",
-    "50-howto/index.md",
+    "40-workflows/differentiable-research/science-patterns.md",
+    "40-workflows/workflows.md",
     "80-instructor/teaching-with-jaxstro.md",
 )
 

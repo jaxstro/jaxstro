@@ -24,8 +24,8 @@ $RUN python scripts/build_contract_registry.py --check
 echo "== scientific evidence index freshness =="
 $RUN python scripts/build_evidence_index.py --check
 
-echo "== executable curriculum registry freshness =="
-$RUN python scripts/build_curriculum_registry.py --check
+echo "== research workflow registry freshness =="
+$RUN python scripts/build_research_workflow_registry.py --check
 
 echo "== documentation gate =="
 bash scripts/check_docs.sh

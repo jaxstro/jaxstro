@@ -104,7 +104,8 @@ delivered work as a future roadmap.
   - Artifact hashes, environment snapshots, method manifests, and deterministic
     JSON/Markdown rendering.
   - Runtime reproducibility records; scientific source claims belong to the
-    separate provenance-card registry. See [](./provenance.md).
+    separate provenance-card registry. See the
+    [provenance workflow](#workflow-provenance).
 * - `jaxstro.numerics.random`
   - Explicit key streams, seed manifests, and systematic, stratified, and
     residual resampling.

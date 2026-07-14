@@ -5,6 +5,9 @@ description: >-
   processed artifacts without vendoring raw atmosphere data.
 ---
 
+Use this page when rebuilding or validating a local PHOENIX/NewEra processed
+artifact from released low-resolution text spectra.
+
 The local PHOENIX/NewEra low-resolution spectra are source data, not runtime
 artifacts. Each raw text file alternates a short model metadata row with one very
 long flux-vector row. The local extracted cache is large enough that conversion

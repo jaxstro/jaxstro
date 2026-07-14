@@ -1,9 +1,15 @@
 ---
-title: Provenance architecture
+title: Provenance for reproducible research
 description: >-
   How runtime manifests and source-backed cards answer different evidence
-  questions without taking ownership of an entire scientific workflow.
+  questions without taking ownership of downstream scientific claims.
 ---
+
+(workflow-provenance)=
+
+Use this page when a result must preserve what ran while an implementation
+claim must separately preserve which sources, conventions, code, and tests
+support it.
 
 Provenance is not one record. A scientific run needs evidence about what was
 executed, while a public implementation claim needs evidence about the source,
@@ -19,13 +25,13 @@ separate so that neither record can imply more than it proves.
   - Inputs
   - Output
   - Validation
-* - Runtime manifest — `jaxstro.provenance`
+* - Runtime manifest - `jaxstro.provenance`
   - What method ran, with which inputs, parameters, artifacts, and environment?
   - Run-specific values and files selected by the caller.
   - Deterministic JSON or Markdown that travels with a result.
   - Hashing, schema, ordering, rendering, and missing-file behavior in
     `tests/unit/test_runtime_provenance.py`.
-* - Source-backed card — `jaxstro.testing`
+* - Source-backed card - `jaxstro.testing`
   - What source and convention support this bounded implementation claim?
   - An already-parsed mapping containing exact source locators, code references,
     pytest node IDs, status, and deviations.
@@ -52,6 +58,11 @@ separate so that neither record can imply more than it proves.
 changes remain reviewable. These helpers do not execute workflows, upload
 artifacts, sign records, manage credentials, or decide which scientific inputs a
 downstream package must record.
+
+Artifact hashes use an explicit algorithm; the default is SHA-256. A hash binds
+bytes to a record but does not establish that the artifact is scientifically
+adequate, authoritative, or safe. Environment snapshots record only the named
+packages required by the caller rather than scraping an entire machine.
 
 ## Source-backed cards
 
@@ -96,13 +107,38 @@ storage, or reporting policy.
 
 ## Registry and honest gaps
 
-The generated [](../40-api/provenance/index.md) routes to the current families:
+The generated [](../../40-api/provenance/index.md) routes to the current families:
 
-- [](../40-api/provenance/constants.md) — constants and unit conventions;
-- [](../40-api/provenance/transforms.md) — coordinate and astrometric transforms;
-- [](../40-api/provenance/atmospheres.md) — the current atmosphere evidence gap.
+- [](../../40-api/provenance/constants.md) - constants and unit conventions;
+- [](../../40-api/provenance/transforms.md) - coordinate and astrometric transforms;
+- [](../../40-api/provenance/atmospheres.md) - the current atmosphere evidence gap.
 
 Zero registered atmosphere cards do not mean complete atmosphere coverage. The
 empty generated family is an explicit gap while atmosphere backends and their
-source claims remain in progress. The [](../60-validation/index.md) records the
+source claims remain in progress. The [](../../60-validation/index.md) records the
 registry integrity and freshness gates alongside the runtime-manifest tests.
+
+## Deterministic audit procedure
+
+1. Define the method identity, version, sorted inputs, parameters, and artifact
+   paths for the runtime manifest.
+2. Hash every required artifact and fail if a required path is missing.
+3. Record the explicit environment policy and package set.
+4. Render JSON or Markdown twice and require byte-identical output.
+5. Resolve source-card locators, import paths, and assertion-bearing tests.
+6. Keep missing or `needs-check` evidence visible rather than upgrading it from
+   a successful run.
+7. Link the two provenance classes to the evidence artifact and bounded claim.
+
+## Where the claim stops
+
+Deterministic manifests and validated cards make lineage inspectable. They do
+not prove that inputs are representative, a source is authoritative, a
+numerical comparison is sufficient, or a downstream scientific claim is true.
+
+## Connected ideas
+
+See [](../../30-representations/parameters-state/serialization-and-provenance.md),
+[](./random-state-ownership.md),
+[](./evidence-and-claim-boundaries.md), and
+[](../investigations/investigations.md).

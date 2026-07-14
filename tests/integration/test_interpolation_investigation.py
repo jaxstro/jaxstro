@@ -1,4 +1,4 @@
-"""Executable curriculum contract for interpolation boundary policies."""
+"""Executable research workflow for interpolation boundary policies."""
 
 from examples.investigations.interpolation_boundary_policies import run
 

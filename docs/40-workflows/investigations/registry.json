@@ -1,6 +1,6 @@
 {
-  "schema_version": "1",
-  "units": [
+  "schema_version": "2",
+  "workflows": [
     {
       "contract_ids": [
         "numerics.implicit_bracketed_root",
@@ -12,12 +12,11 @@
       ],
       "example": "examples/investigations/root_values_and_sensitivities.py",
       "id": "root-values-and-sensitivities",
-      "instructor_route": "docs/80-instructor/teaching-with-jaxstro.md",
       "limitations": [
         "The analytic quadratic fixture does not establish uniqueness or conditioning for arbitrary residuals.",
         "The value-first solver retains no ideal-root derivative claim."
       ],
-      "page": "docs/70-investigations/root-values-and-sensitivities.md",
+      "page": "docs/40-workflows/investigations/root-values-and-sensitivities.md",
       "prerequisites": [
         "docs/10-foundations/mathematical-objects/what-is-a-derivative.md",
         "docs/10-foundations/models-and-computation/from-relations-to-differentiable-programs.md"
@@ -41,12 +40,11 @@
       "evidence_ids": [],
       "example": "examples/investigations/powerlaw_removable_limit.py",
       "id": "powerlaw-removable-limit",
-      "instructor_route": "docs/80-instructor/teaching-with-jaxstro.md",
       "limitations": [
         "The fixture validates one finite support and does not select a physical stellar-mass model.",
         "Callable validation exists, but no standalone power-law artifact is yet indexed."
       ],
-      "page": "docs/70-investigations/powerlaw-removable-limit.md",
+      "page": "docs/40-workflows/investigations/powerlaw-removable-limit.md",
       "prerequisites": [
         "docs/10-foundations/mathematical-objects/probability-and-distributions.md",
         "docs/10-foundations/mathematical-objects/what-is-a-derivative.md"
@@ -70,12 +68,11 @@
       "evidence_ids": [],
       "example": "examples/investigations/interpolation_boundary_policies.py",
       "id": "interpolation-boundary-policies",
-      "instructor_route": "docs/80-instructor/teaching-with-jaxstro.md",
       "limitations": [
         "Interior affine derivative evidence does not apply at knots or boundary-policy transitions.",
         "Callable validation exists, but no standalone interpolation artifact is yet indexed."
       ],
-      "page": "docs/70-investigations/interpolation-boundary-policies.md",
+      "page": "docs/40-workflows/investigations/interpolation-boundary-policies.md",
       "prerequisites": [
         "docs/10-foundations/mathematical-objects/what-is-a-derivative.md",
         "docs/10-foundations/models-and-computation/from-relations-to-differentiable-programs.md"

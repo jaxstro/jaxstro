@@ -83,7 +83,7 @@ inference. This page is the thesis: ten principles for making those scientific
 contracts explicit, testable, and teachable.
 
 If you are starting from a research question rather than a method name, use
-[](../10-theory/science-patterns.md) to route events, equilibria, integrals, tabulated
+[](../40-workflows/differentiable-research/science-patterns.md) to route events, equilibria, integrals, tabulated
 models, limiting distributions, spatial interactions, and provenance to the
 relevant module and evidence.
 

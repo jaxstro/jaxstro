@@ -5,6 +5,9 @@ description: >-
   backwards-compatible jaxstro.units code.
 ---
 
+Use this page when a project is ready to adopt explicit quantities at public
+boundaries while keeping stable `UnitSystem` kernels unchanged.
+
 Use `jaxstro.quantity` at public boundaries and keep raw arrays inside kernels.
 Do not rewrite a working `UnitSystem` code path just to be modern; migrate where
 dimension checks, config readability, or provenance matter.

@@ -5,13 +5,13 @@ description: >-
   evidence-gated outcomes without hidden extrapolation.
 ---
 
-Use this recipe when a downstream package needs a model-atmosphere **surface
+Use this page when a downstream package needs a model-atmosphere **surface
 spectrum**. The result is not yet an observer flux, magnitude, count rate, or
 image.
 
 ## 1. Choose an exact product
 
-Start from [](../30-representations/spectra-atmospheres/atmosphere-capabilities.md).
+Start from [](../../30-representations/spectra-atmospheres/atmosphere-capabilities.md).
 Product identity
 includes scientifically meaningful choices such as BOSZ resolution, Sonora
 cloud/metallicity/C/O, or TLUSTY composition and C/N state.
@@ -47,7 +47,7 @@ they are not padded with zeros or extrapolated.
 
 ## 3. Prepare on the host
 
-**Execution contract — local processed artifacts required.** Install the `data`
+**Execution contract - local processed artifacts required.** Install the `data`
 extra and point the library at the local data root.
 
 ```python

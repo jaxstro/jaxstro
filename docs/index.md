@@ -109,7 +109,7 @@ reference covers the public modules: `units`, `constants`, `astrometry`,
 
 ## Astro-first, not astro-only
 
-The [](./10-theory/science-patterns.md) page starts from recurring research
+The [](./40-workflows/differentiable-research/science-patterns.md) page starts from recurring research
 questions and routes each one to its generic primitive, transform contract,
 validation evidence, and downstream ownership boundary.
 

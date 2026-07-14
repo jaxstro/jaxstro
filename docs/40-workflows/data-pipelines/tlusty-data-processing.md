@@ -10,7 +10,7 @@ The converter reads `*.flux.gz` members, parses Fortran-style numeric columns,
 and writes local processed artifacts without deleting the source tar files.
 
 Use this page when you need to rebuild or validate the local TLUSTY cache. Use
-[](../30-representations/spectra-atmospheres/atmosphere-capabilities.md) for the
+[](../../30-representations/spectra-atmospheres/atmosphere-capabilities.md) for the
 higher-level capability
 matrix and runtime/backend status.
 

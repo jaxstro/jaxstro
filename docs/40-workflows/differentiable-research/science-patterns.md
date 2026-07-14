@@ -3,13 +3,17 @@ title: Science patterns enabled by Jaxstro
 description: Research questions routed to generic primitives, transform contracts, evidence, and ownership.
 ---
 
-# Science patterns enabled by Jaxstro
+# Science patterns: start from the research question
 
-Modules remain the durable technical units of this site. This page takes the
-other route: start with a research question, then find its equation, primitive,
-transform boundary, evidence, and owner. Use every pattern with
-[](../00-start-here/first-research-calculation.md). Signatures live in
-[](../40-api/index.md), and claims resolve to [](../60-validation/index.md).
+Use this page when the research question is clear but the appropriate method,
+representation, workflow, API owner, or validation evidence is not.
+
+Modules remain durable technical owners, while documentation families provide
+different entry routes. Start with a research question, then find its equation,
+representation, method, transform boundary, workflow, evidence, and owner. Use
+every pattern with
+[](../../00-start-here/first-research-calculation.md). Signatures live in
+[](../../40-api/index.md), and claims resolve to [](../../60-validation/index.md).
 
 ## Locate an event or equilibrium
 
@@ -17,7 +21,7 @@ transform boundary, evidence, and owner. Use every pattern with
 
 **Equation.** $G(x;\theta)=0$.
 
-**Primitive.** [](../20-methods/change-constraints-evolution/rootfinding.md) uses
+**Primitive.** [](../../20-methods/change-constraints-evolution/rootfinding.md) uses
 `safeguarded_bracketed_root` for an auditable value and trace.
 
 **Transform boundary.** Scalar `jit`; value/shape `vmap`; physical-cost `lax.map`.
@@ -32,7 +36,7 @@ transform boundary, evidence, and owner. Use every pattern with
 
 **Equation.** $dx^\star/d\theta=-(\partial_\theta G)/(\partial_x G)$.
 
-**Primitive.** [](../20-methods/change-constraints-evolution/rootfinding.md)
+**Primitive.** [](../../20-methods/change-constraints-evolution/rootfinding.md)
 provides `implicit_bracketed_root` separately from the value solver.
 
 **Transform boundary.** The implicit derivative requires uniqueness and smoothness assertions plus convergence, finiteness, residual, width, and slope gates.
@@ -48,9 +52,9 @@ provides `implicit_bracketed_root` separately from the value solver.
 **Equation.** $Q=\int_a^b q(x)\,dx$.
 
 **Primitive.**
-[](../20-methods/approximation-integration/cumulative-trapz.md),
-[](../20-methods/approximation-integration/quadrature.md), and
-[](../20-methods/discrete-space/meshes.md) cover sampled, fixed-node, and
+[](../../20-methods/approximation-integration/cumulative-trapz.md),
+[](../../20-methods/approximation-integration/quadrature.md), and
+[](../../20-methods/discrete-space/meshes.md) cover sampled, fixed-node, and
 conservative accumulation.
 
 **Transform boundary.** Fixed shapes compose with JAX; node choice and discretization error remain distinct from pathwise derivatives.
@@ -65,9 +69,9 @@ conservative accumulation.
 
 **Equation.** $y(x)$ is reconstructed locally from values, slopes, or grid stencils.
 
-**Primitive.** [](../20-methods/approximation-integration/interpolation.md),
-[](../20-methods/approximation-integration/regular-grid.md), and
-[](../20-methods/approximation-integration/bsplines.md).
+**Primitive.** [](../../20-methods/approximation-integration/interpolation.md),
+[](../../20-methods/approximation-integration/regular-grid.md), and
+[](../../20-methods/approximation-integration/bsplines.md).
 
 **Transform boundary.** Prepared fixed-rank evaluation is JAX-native; topology and policy selection stay discrete.
 
@@ -81,7 +85,7 @@ conservative accumulation.
 
 **Equation.** A finite power law approaches a logarithmic form as $\alpha\rightarrow-1$.
 
-**Primitive.** [](../20-methods/probability-sampling/distributions.md) uses
+**Primitive.** [](../../20-methods/probability-sampling/distributions.md) uses
 smooth kernels in `powerlaw_logpdf`, `powerlaw_cdf`, and `powerlaw_ppf`.
 
 **Transform boundary.** Interior parameter derivatives are smooth through the limit; support boundaries remain explicit.
@@ -96,9 +100,9 @@ smooth kernels in `powerlaw_logpdf`, `powerlaw_cdf`, and `powerlaw_ppf`.
 
 **Equation.** Rotations, dimensional conversions, and density Jacobians preserve named invariants.
 
-**Primitive.** [](../30-representations/units-quantities/quantities.md),
-[](../30-representations/geometry-coordinates/geometry.md), and
-[](../30-representations/spectra-atmospheres/spectra-data-architecture.md).
+**Primitive.** [](../../30-representations/units-quantities/quantities.md),
+[](../../30-representations/geometry-coordinates/geometry.md), and
+[](../../30-representations/spectra-atmospheres/spectra-data-architecture.md).
 
 **Transform boundary.** Smooth transforms support AD away from singularities; parsing and data preparation stay host-side.
 
@@ -112,7 +116,7 @@ smooth kernels in `powerlaw_logpdf`, `powerlaw_cdf`, and `powerlaw_ppf`.
 
 **Equation.** Candidate gathering precedes $\lVert x_i-x_j\rVert\le r$.
 
-**Primitive.** [](../20-methods/discrete-space/spatial.md) separates
+**Primitive.** [](../../20-methods/discrete-space/spatial.md) separates
 conservative recall from exact fixed-radius pairs.
 
 **Transform boundary.** Topology is discrete; fixed-shape pair payloads feed JAX kernels.
@@ -127,7 +131,9 @@ conservative recall from exact fixed-radius pairs.
 
 **Equation.** Bijections map unconstrained vectors to constrained parameters with log-Jacobian terms.
 
-**Primitive.** The parameter bridge in [](../20-architecture/science-general-vision.md) connects PyTrees, vectors, and transforms.
+**Representation.** The parameter bridge in
+[](../../30-representations/parameters-state/parameters-and-transforms.md)
+connects PyTrees, vectors, and transforms.
 
 **Transform boundary.** Selected inexact leaves transform; reconstruction and cached-derived values require explicit ownership.
 
@@ -141,7 +147,8 @@ conservative recall from exact fixed-radius pairs.
 
 **Equation.** Provenance is a graph of artifacts, transformations, assertions, and evidence.
 
-**Primitive.** [](../20-architecture/provenance.md) covers runtime manifests and provenance cards.
+**Workflow.** [](../reproducible-research/provenance.md) distinguishes runtime
+manifests from source-backed provenance cards.
 
 **Transform boundary.** Hashing and registry resolution are host-side; identifiers travel beside JAX computations.
 

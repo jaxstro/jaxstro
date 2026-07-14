@@ -1,4 +1,4 @@
-"""Executable curriculum contract for root values and sensitivities."""
+"""Executable research workflow for root values and sensitivities."""
 
 import math
 

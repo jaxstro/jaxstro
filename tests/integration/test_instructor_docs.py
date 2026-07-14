@@ -13,7 +13,7 @@ def test_instructor_guide_supports_uneven_preparation_and_active_science() -> No
     for phrase in (
         "research students",
         "uneven preparation",
-        "predict → compute → audit → state the warranted claim",
+        "predict -> compute -> audit -> state the warranted claim",
         "common misconception",
         "accessibility",
         "astronomy extension",
@@ -51,5 +51,3 @@ def test_instructor_pages_are_navigable_and_manifest_routes_are_resolved() -> No
     ):
         assert myst.count(f"file: {page}") == 1
         assert routes[page] == route
-    units = json.loads((DOCS / "curriculum/units.json").read_text(encoding="utf-8"))
-    assert all(unit["instructor_route"] for unit in units["units"])
