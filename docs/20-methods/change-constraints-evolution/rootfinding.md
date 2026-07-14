@@ -325,6 +325,8 @@ speed.
 The reproducible evaluation-count report is
 [](../../60-validation/numerical/rootfinding-performance.md). Its primary cost
 is function-evaluation count, not a hardware-dependent timing threshold.
+[](#fig-rootfinding-safeguards) shows the public trace quantities behind that
+value-first audit.
 
 :::{figure} ../../10-theory/figures/rootfinding-value-versus-ift.webp
 :name: fig-rootfinding-value-versus-ift
@@ -334,6 +336,9 @@ The left panel asks what numerical map executed. The right asks how the
 certified root relation moves with its parameter. The flat-root case is a
 rejection, not an estimate.
 :::
+
+[](#fig-rootfinding-value-versus-ift) keeps the executed-map and certified-root
+derivative questions visually separate.
 
 ```{list-table} Measured quadratic implicit-root evidence
 :header-rows: 1

@@ -42,7 +42,9 @@ k=0,\ldots,K-1.
 
 The finite output is $\theta_K$ plus a trace. The trace must identify the batch
 $B_k$, key $\kappa_k$, optimizer-state transition, metric definitions, and any
-nonfinite or rejected update. Early stopping defines a different executed map
+nonfinite or rejected update. The transition sequence in
+[](#eq-ml-training-update) is the load-bearing contract for that trace. Early
+stopping defines a different executed map
 unless the stop decision and resulting length are explicit artifacts.
 
 ## Assumptions and failure boundaries

@@ -23,6 +23,35 @@ Return when an audit exposes a conceptual gap, then rejoin the method or
 workflow that raised the question. Foundations connects mathematical objects,
 executable programs, and warranted scientific claims.
 
+::::{grid} 1 1 2 2
+
+:::{card} What mathematical object is changing?
+:link: ./mathematical-objects/functions-units-scales.md
+
+Connect functions, units, scales, vectors, derivatives, probability, and
+uncertainty before choosing a numerical representation.
+:::
+
+:::{card} What does the executable model mean?
+:link: ./models-and-computation/what-is-a-model.md
+
+Connect physical prediction, measurement, inference, sensitivity,
+conditioning, identifiability, and the finite JAX program.
+:::
+
+::::
+
+:::{note}
+Foundations supplies concepts to the same prediction-to-claim chain used by
+Methods, Workflows, API, and Validation; it is not a separate prerequisite
+track.
+:::
+
+| Family | Status | Primary role |
+| --- | --- | --- |
+| Mathematical objects | Current guidance | Name domains, scales, structures, and uncertainty |
+| Models and computation | Current guidance | Separate scientific relations from executable programs |
+
 ## Mathematical objects
 
 Begin with the objects that scientific programs represent and transform:

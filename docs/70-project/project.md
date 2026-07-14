@@ -13,18 +13,58 @@ solver stacks already maintained elsewhere.
 
 Use this section to inspect why that boundary exists and how it changes:
 
-- [](./direction/architecture.md) explains current package ownership and the
-  one-way ecosystem dependency rule.
-- [](./direction/science-general-vision.md) states the product direction and
-  admission criteria for future work.
-- [](./development/development.md) links current evidence, assessed gaps, and
-  definition-of-done roadmaps.
-- [](./decisions/decisions.md) indexes the architecture decisions. Individual
-  records remain available at their established public routes.
-- [](./release/release.md) and [](./release/checklist.md) separate local
-  qualification from authorized publication actions.
-- [](./bibliography/bibliography.md) records the load-bearing scientific
-  sources behind constants and methods.
+::::{grid} 1 1 2 2
+
+:::{card} What does Jaxstro own?
+:link: ./direction/architecture.md
+
+Inspect the current package map and one-way ecosystem dependency rule.
+:::
+
+:::{card} Which future work belongs here?
+:link: ./direction/science-general-vision.md
+
+Apply the science-general admission criteria before adding a new foundation
+capability.
+:::
+
+:::{card} What evidence and gaps guide development?
+:link: ./development/development.md
+
+Follow assessed gaps, definitions of done, and capability roadmaps.
+:::
+
+:::{card} Why was this architecture chosen?
+:link: ./decisions/decisions.md
+
+Read the decision index; individual records retain their established routes.
+:::
+
+:::{card} What qualifies a release?
+:link: ./release/release.md
+
+Separate local qualification from explicitly authorized publication actions.
+:::
+
+:::{card} Which sources are load-bearing?
+:link: ./bibliography/bibliography.md
+
+Trace constants and methods to the scientific sources that constrain them.
+:::
+
+::::
+
+:::{note}
+Project records preserve the ownership and evidence decisions behind every
+other route; they do not substitute for runtime or scientific validation.
+:::
+
+| Material | Status | Authority |
+| --- | --- | --- |
+| Architecture and decisions | Current | Package ownership and accepted design rationale |
+| Development roadmaps | Planned | Admission and evidence requirements, not schedules |
+| Release records | Current policy | Local qualification remains distinct from publication authorization |
+| Bibliography | Current source record | Scientific provenance, not independent validation |
 
 Project claims follow the same evidence boundary as runtime claims: an
 implemented feature is not automatically validated, and a local verification

@@ -16,7 +16,9 @@ project:
   bibliography:
     - 70-project/bibliography/references.bib
   exclude:
+    - audits/**
     - plans/**
+    - superpowers/**
     - _build/**
   # The ported ADRs (70-project/decisions/) keep their original working-log frontmatter
   # keys (id/status/supersedes/decided_by/last_read) verbatim. MyST's page-
@@ -64,7 +66,7 @@ project:
             - file: 10-foundations/models-and-computation/models-inference-information.md
             - file: 10-foundations/models-and-computation/sensitivity-conditioning-identifiability.md
             - file: 10-foundations/models-and-computation/from-relations-to-differentiable-programs.md
-    - title: Methods
+    - title: Numerical methods
       children:
         - file: 20-methods/methods.md
         - title: Change, constraints, and evolution
@@ -239,7 +241,7 @@ project:
                 - file: 50-api/research-infrastructure/source-provenance/constants.md
                 - file: 50-api/research-infrastructure/source-provenance/transforms.md
                 - file: 50-api/research-infrastructure/source-provenance/atmospheres.md
-    - title: Validation
+    - title: Validation and evidence
       children:
         - file: 60-validation/validation.md
         - file: 60-validation/evidence-index.md
@@ -310,3 +312,4 @@ site:
   options:
     logo_text: jaxstro
     github_url: https://github.com/drannarosen/jaxstro
+    style: site.css

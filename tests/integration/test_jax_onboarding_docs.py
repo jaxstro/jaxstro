@@ -68,21 +68,20 @@ def test_why_jax_does_not_promise_automatic_correctness_or_speed() -> None:
         assert phrase in text
 
 
-def test_public_entry_points_use_one_ordered_beginner_route() -> None:
+def test_start_here_keeps_one_ordered_route_without_expanding_the_homepage() -> None:
     homepage = (ROOT / "docs" / "index.md").read_text(encoding="utf-8")
     start_here = (START_HERE / "start-here.md").read_text(encoding="utf-8")
     usage_router = (START_HERE / "ways-to-use-these-docs.md").read_text(
         encoding="utf-8"
     )
 
-    _assert_links_in_order(
-        homepage,
-        tuple(f"./{page}" for page in ONBOARDING_ROUTE),
-    )
-    _assert_links_in_order(
-        start_here,
-        tuple(f"./{Path(page).name}" for page in ONBOARDING_ROUTE[1:]),
-    )
+    assert "](./00-start-here/start-here.md)" in homepage
+    assert "](./00-start-here/why-jax.md)" in homepage
+    assert "](./00-start-here/jax-from-first-principles.md)" not in homepage
+    card_positions = [
+        start_here.index(f":link: ./{Path(page).name}") for page in ONBOARDING_ROUTE[1:]
+    ]
+    assert card_positions == sorted(card_positions)
     _assert_links_in_order(
         usage_router,
         tuple(f"./{Path(page).name}" for page in ONBOARDING_ROUTE),

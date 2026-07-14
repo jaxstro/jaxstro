@@ -179,6 +179,9 @@ exact-radius predicate with no overflow. This fixture explains the contract but
 is not a population-wide recall benchmark.
 :::
 
+[](#fig-spatial-neighbor-contracts) visualizes why candidate recall and exact
+cutoff filtering are distinct contracts.
+
 ## Where the claim stops
 
 Morton locality does not imply physical distance. Candidate heuristics do not

@@ -43,6 +43,9 @@ I_{\mathrm{validation}}\cap I_{\mathrm{test}}=\varnothing,
 \bigcup_r I_r=\{0,\ldots,N-1\}.
 ```
 
+[](#eq-ml-disjoint-splits) is the auditable split invariant; storing only split
+fractions does not establish it.
+
 For batch size $B$, each executable batch has the same array shape. If the last
 batch contains $m<B$ records, the plan must choose exactly one documented
 policy: drop it, pad it and provide a Boolean mask, or construct a separate

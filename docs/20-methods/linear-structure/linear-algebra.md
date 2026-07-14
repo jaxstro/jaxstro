@@ -210,6 +210,9 @@ The public APIs produce both panels. This fixed fixture demonstrates declared
 weighting and jitter policy; it is not a robust-regression benchmark.
 :::
 
+[](#fig-linear-algebra-contracts) ties the reported fit and jitter diagnostics
+to the concrete fixture used in the audit.
+
 ## Where the claim stops
 
 These helpers do not establish model adequacy, identifiability, robust outlier

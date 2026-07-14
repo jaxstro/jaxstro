@@ -1,0 +1,13 @@
+/* Keep the page outline readable against the book theme's light and dark surfaces. */
+li.myst-outline-item {
+  color: #475569;
+}
+
+.dark li.myst-outline-item {
+  color: #cbd5e1;
+}
+
+/* The theme's heading permalink is transparent by default; expose it to keyboard focus. */
+a[aria-label="Link to this Section"]:focus {
+  opacity: 1;
+}

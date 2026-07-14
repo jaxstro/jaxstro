@@ -55,6 +55,9 @@ z_i=L^{-1}(x_i-\mu),
 
 The factor orientation and covariance normalization are part of the artifact;
 another factorization is valid only when its convention is declared.
+[](#eq-ml-standardization) and [](#eq-ml-whitening) therefore require the
+training subset, normalization, and factor convention to travel with the
+transformed data.
 
 ## Assumptions and failure boundaries
 

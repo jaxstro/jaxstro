@@ -220,6 +220,8 @@ shape preservation are different contracts, not a universal ranking.
 :::
 
 Executable anchors are indexed in [](../../60-validation/validation.md).
+[](#fig-interpolation-shape-contracts) makes the distinction between the two
+interpolant contracts visible on the same samples.
 
 ## Where the claim stops
 

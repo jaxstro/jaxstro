@@ -33,6 +33,9 @@ marks discrete selection and indexing work that is intentionally outside a
 differentiable array kernel.
 :::
 
+[](#fig-jaxstro-foundation) is the compact ownership map for the package
+boundaries described in this section.
+
 The keystone decision is [](../decisions/0001-thin-foundation-posture.md).
 The dependency and packaging decisions are recorded in
 [](../decisions/0002-adopt-equinox-foundation.md),

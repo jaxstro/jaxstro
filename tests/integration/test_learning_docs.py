@@ -24,7 +24,7 @@ def test_learning_page_explains_the_full_reasoning_cycle() -> None:
         assert phrase in text
 
 
-def test_learning_page_is_wired_into_every_entry_surface() -> None:
+def test_learning_page_is_wired_into_start_here_without_expanding_home() -> None:
     myst = (REPO_ROOT / "docs" / "myst.yml").read_text(encoding="utf-8")
     homepage = (REPO_ROOT / "docs" / "index.md").read_text(encoding="utf-8")
     start_here = (REPO_ROOT / "docs" / "00-start-here" / "start-here.md").read_text(
@@ -35,7 +35,8 @@ def test_learning_page_is_wired_into_every_entry_surface() -> None:
     )
 
     assert myst.count("00-start-here/first-research-calculation.md") == 1
-    assert homepage.count("./00-start-here/first-research-calculation.md") == 1
+    assert "./00-start-here/first-research-calculation.md" not in homepage
+    assert "](./00-start-here/start-here.md)" in homepage
     assert start_here.count("./first-research-calculation.md") == 1
     assert manifest["00-start-here/first-research-calculation.md"] == (
         "/first-research-calculation"

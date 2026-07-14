@@ -42,7 +42,8 @@ owner and contract of every component:
 ```
 
 Composition does not transfer ownership: wrapping an Optax update does not make
-the optimizer a Jaxstro algorithm.
+the optimizer a Jaxstro algorithm. [](#eq-ml-ownership-composition) records the
+four separate contracts required by the composed workflow.
 
 ## Assumptions and failure boundaries
 

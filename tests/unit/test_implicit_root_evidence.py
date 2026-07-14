@@ -11,7 +11,13 @@ EVIDENCE = (
     / "validation"
     / "implicit-root-gradients.json"
 )
-REPORT = EVIDENCE.with_suffix(".md")
+REPORT = (
+    Path(__file__).resolve().parents[2]
+    / "docs"
+    / "60-validation"
+    / "numerical"
+    / "implicit-root-gradients.md"
+)
 
 
 def _payload() -> dict:

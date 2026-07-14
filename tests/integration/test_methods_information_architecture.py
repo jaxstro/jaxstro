@@ -148,7 +148,9 @@ def test_methods_landing_uses_semantic_filename_and_family_titles() -> None:
 def test_methods_toc_preserves_family_titles_and_page_order() -> None:
     config = yaml.safe_load((DOCS / "myst.yml").read_text(encoding="utf-8"))
     methods_toc = next(
-        item for item in config["project"]["toc"] if item.get("title") == "Methods"
+        item
+        for item in config["project"]["toc"]
+        if item.get("title") == "Numerical methods"
     )
 
     expected_children = [{"file": "20-methods/methods.md"}]

@@ -74,6 +74,9 @@ local topology, converts vertices to one requested spectral axis, and returns a
 fixed-shape PyTree. Evaluation then uses arrays only.
 :::
 
+[](#fig-spectra-runtime-boundary) identifies the host/runtime handoff that the
+execution-boundary table formalizes.
+
 ```{list-table} Spectra execution and ownership boundaries
 :header-rows: 1
 :label: tbl-spectra-execution-boundaries

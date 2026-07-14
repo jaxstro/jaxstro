@@ -62,9 +62,9 @@ def test_choose_your_path_is_optional_research_routing() -> None:
     )
 
 
-def test_homepage_names_four_routes_without_stale_door_count() -> None:
+def test_homepage_uses_research_questions_without_stale_door_count() -> None:
     homepage = (DOCS / "index.md").read_text(encoding="utf-8")
-    assert "## Choose your route" in homepage
+    assert "## Enter through your research question" in homepage
     assert "## Three doors in" not in homepage
 
 
@@ -78,7 +78,7 @@ def test_foundations_navigation_preserves_module_theory_section() -> None:
         assert myst.count(f"file: {page}") == 1
         assert manifest[page] == route
     assert "/why-this-documentation-works-this-way" not in manifest.values()
-    assert myst.count("title: Methods") == 1
+    assert myst.count("title: Numerical methods") == 1
     assert (
         myst.count("file: 20-methods/change-constraints-evolution/rootfinding.md") == 1
     )

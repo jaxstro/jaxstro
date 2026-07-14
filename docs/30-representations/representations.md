@@ -66,6 +66,18 @@ consumers; these guides promise no module or schedule.
 :::
 ::::
 
+:::{note}
+A method can only support a scientific claim when the representation preserves
+the units, conventions, topology, sampling semantics, and provenance that the
+audit needs.
+:::
+
+| Material | Status | Runtime boundary |
+| --- | --- | --- |
+| Units, coordinates, spectra, atmospheres, parameters, and state | Current | Implemented Jaxstro owners with explicit contracts |
+| Uncertainty propagation | Planned | No `jaxstro.uncertainty` runtime module |
+| Fields and discretized domains | Deferred | Common runtime awaits evidence from two consumers |
+
 ## How to read this section
 
 Each implemented capability page begins with a seven-row representation contract.

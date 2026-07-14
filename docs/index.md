@@ -2,170 +2,70 @@
 title: jaxstro
 subtitle: Evidence-first JAX infrastructure for differentiable science
 description: >-
-  jaxstro is an astro-first, science-general foundation: units, constants,
-  coordinates, geometry, AD-safe numerics, parameter bridges, spatial and
-  atmosphere utilities, provenance, and validation tools for differentiable
-  scientific software.
+  An astro-first, science-general foundation for explicit representations,
+  differentiable computation, independent audits, and bounded claims.
 ---
 
-jaxstro is the evidence-first foundation under the differentiable astrophysics
-ecosystem and a compact scientific JAX standard library. The active sibling
-packages gravax, progenax, fluxax, and startrax build on this foundation;
-stellax remains planned. jaxstro therefore keeps its own dependency surface
-small.
+jaxstro is an **astro-first, science-general, evidence-first** foundation for
+scientific software in JAX. It owns the reusable constants, units,
+representations, numerical primitives, provenance, and validation tools that
+belong beneath domain research packages. It does not own domain simulations,
+scientific acceptance policy, or general solver stacks maintained elsewhere.
 
-Astronomy is the proving ground. The reusable product is broader: **generic,
-differentiable, dependency-light scientific infrastructure** with explicit units,
-clear boundary behavior, and validation hooks that make numerical claims
-auditable. jaxstro owns the primitives that should be shared across scientific
-packages: physical constants in CGS, unit systems, coordinate transforms,
-AD-safe interpolation and integration, local basis functions, small dense linear
-algebra, sampling helpers, parameter-vector bridges, and trust reports. It
-deliberately refuses to absorb solver libraries; those belong one layer up (see
-[](#three-doors), [](./70-project/direction/science-general-vision.md), and
-[](./70-project/decisions/0001-thin-foundation-posture.md)).
+The site follows one scientific chain:
 
-`jaxstro.units` is the current canonical ecosystem contract. `jaxstro.quantity` is implemented
-and available for evaluation, but ecosystem adoption and any replacement cutover are deferred.
-Nothing on this site implies that downstream packages should migrate now.
+```text
+representation -> computation -> audit -> evidence -> claim
+```
 
-This site is the package's single source of truth. It is written for two readers
-at once: a **new graduate student** meeting differentiable scientific computing for
-the first time, and **future-you** trying to remember *why* a function rounds the
-way it does. The theory pages teach the methods; the reference pages let you look
-up the call signature; the decision log records every choice and its trade-offs.
-New research students can follow one ordered beginner route:
+Start with [](./00-start-here/start-here.md) if Jaxstro is new to you. Read
+[](./00-start-here/why-jax.md) before committing a research program to JAX: it
+separates the real benefits of transformations and accelerators from the costs
+of static shapes, compilation, explicit state, and derivative boundaries.
 
-1. [](./00-start-here/start-here.md) for package setup and the package boundary.
-2. [](./00-start-here/why-jax.md) for the benefits, costs, and limits of JAX.
-3. [](./00-start-here/jax-from-first-principles.md) for arrays and transforms.
-4. [](./00-start-here/choose-your-path.md) for optional background recovery.
-5. [](./00-start-here/first-research-calculation.md) to practice the recurring
-   **predict -> compute -> audit** reasoning cycle.
-
-The [](./00-start-here/ways-to-use-these-docs.md) page lists shorter routes for
-readers who do not need complete onboarding.
-The optional [](./10-foundations/foundations.md) route rebuilds the connected ideas
-the site will not assume are currently active.
-
-(three-doors)=
-## Choose your route
+## Enter through your research question
 
 ::::{grid} 1 1 2 2
 
-:::{card} Rebuild the foundations
+:::{card} Which ideas need reconnecting?
 :link: ./10-foundations/foundations.md
 
-Start here if models, parameters, derivatives, linear algebra, probability, or
-inference were taught separately, or simply need reactivation. This is an
-ungraded route, not a placement judgment.
+Rebuild the mathematical bridge among units, models, derivatives,
+conditioning, probability, inference, and executable programs.
 :::
 
-:::{card} Learn the methods
+:::{card} Which numerical method fits?
 :link: ./20-methods/methods.md
 
-Start here if you want to understand *how to write numerics that differentiate
-cleanly*. The theory section opens with a ten-principle thesis on AD-safe
-scientific computing, then fans out into worked method pages: root-finding,
-Newton-Cotes integration, quadrature, and more.
+Choose a method by the question it answers, then inspect its assumptions,
+finite algorithm, JAX behavior, audit, and claim boundary.
 :::
 
-:::{card} Audit the evidence
-:link: ./60-validation/validation.md
+:::{card} How should the research computation proceed?
+:link: ./40-workflows/workflows.md
 
-Start here if you want to know what makes a numerical claim trustworthy. The
-validation section connects public APIs to finite-difference audits, method
-evidence anchors, coverage reports, and deterministic trust summaries.
+Connect a scientific representation to an explicit computation plan,
+execution record, independent audit, evidence, and bounded claim.
 :::
 
-:::{card} Look up the API
+:::{card} What is the current Python owner?
 :link: ./50-api/api.md
 
-Start here if you already know what you want and need the signature. The API
-reference covers the public modules: `units`, `constants`, `astrometry`,
-`coords`, `geometry`, `numerics`, `spatial`, `params`, `atmospheres`,
-`provenance`, `testing`, `jaxconfig`, and the implemented-but-not-adopted
-`quantity` layer. It links implementations to their contracts and evidence.
+Look up the importable owner, signature, transform behavior, failure contract,
+and evidence without mistaking proposed capabilities for current APIs.
+:::
+
+:::{card} What evidence supports the claim?
+:link: ./60-validation/validation.md
+
+Trace a numerical or representation claim to its comparison policy, measured
+quantity, executable anchor, and stated limit.
 :::
 
 ::::
 
-## Scientific capabilities
-
-- **Explicit quantities and conventions.** Keep dimensions, unit systems,
-  coordinate conventions, and representation changes visible in code and
-  validation.
-- **Auditable numerical maps.** Use fixed-shape JAX kernels whose boundary,
-  failure, telemetry, and automatic-differentiation contracts are named.
-- **Events, equilibria, and inverse mappings.** Locate roots robustly, invert
-  monotone relations, and request implicit sensitivities only behind explicit
-  scientific and numerical certificates.
-- **Differentiable tabulated models.** Prepare interpolation topology outside
-  transformed kernels, then evaluate fixed-shape local stencils with tested
-  value and derivative behavior.
-- **Provenance-backed claims.** Connect constants, source artifacts, method
-  manifests, independent checks, and validation tests to the claims they
-  actually support.
-
-## Astro-first, not astro-only
-
-The [](./40-workflows/differentiable-research/science-patterns.md) page starts from recurring research
-questions and routes each one to its generic primitive, transform contract,
-validation evidence, and downstream ownership boundary.
-
-jaxstro is useful outside astronomy wherever a project needs JAX-native
-scientific primitives whose gradient behavior is part of the contract. If you are
-building differentiable models in physics, geoscience, instrumentation,
-engineering, statistics, or simulation-adjacent inference, the same foundation
-rules apply: name units and domains, avoid hidden Python-side state, keep shapes
-static where JAX needs them, validate automatic differentiation against
-independent checks, and separate generic numerics from domain interpretation.
-
-The long-term vision is not to become a replacement for SciPy, NumPyro, Diffrax,
-or domain simulators. It is to be a small, rigorous base layer that makes those
-larger systems easier to trust when an astronomy package, or any differentiable
-science package, needs shared constants, transformations, numerical kernels, and
-evidence.
-
-## Routed paths
-
-- **New here?** Read [](./00-start-here/start-here.md) first; it installs the
-  package, turns on float64, and walks one worked example end to end. Then follow
-  the bridge into [](./20-methods/methods.md).
-- **Evaluating the broader package vision?** Read
-  [](./70-project/direction/science-general-vision.md) for the module boundary, the
-  non-astronomy value proposition, and the checklist for future core modules.
-- **Using units today?** The [](./50-api/physical-representations/units.md) reference documents the
-  current `jaxstro.units` contract. The
-  [quantity representation page](./30-representations/units-quantities/quantity-system.md) describes
-  an implemented evaluation surface, not an approved ecosystem migration.
-- **Evaluating spatial operations?** Start with [](./50-api/discrete-space/spatial.md) for the
-  import surface and [](./60-validation/validation.md) for evidence around neighbor
-  gathering and exact-pair behavior. The
-  [spatial theory chapter](./20-methods/discrete-space/spatial.md) explains candidate recall,
-  capacity, overflow, and exact fixed-radius contracts.
-- **Checking provenance?** The
-  [generated provenance cards](./50-api/research-infrastructure/source-provenance/source-provenance.md) connect registered
-  constants and transforms to their sources, reference values, and validation
-  state.
-- **Porting code from a sibling package?** The [decision log](./70-project/decisions/decisions.md)
-  explains the hoists and reconciliations (`cumulative_trapz`, Newton-PPF, the
-  quadrature factory) that changed call sites.
-- **Working with atmosphere spectra?** Start with
-  [](./30-representations/spectra-atmospheres/atmosphere-capabilities.md) for the
-  local dataset matrix,
-  processed-artifact status, and the boundary between jaxstro spectra and
-  downstream photometry. Atmosphere support is in progress; it does not block
-  the hardened foundation modules.
-- **Auditing a number?** Start with the
-  [constants provenance card](./50-api/research-infrastructure/source-provenance/constants.md), then follow its
-  source and validation links. The [validation](./60-validation/validation.md)
-  section is where numerical claims meet their tests.
-
-## What jaxstro is *not*
-
-It is not a simulation package, not an inference framework, not a generic SciPy
-clone, and not an all-purpose solver stack. It holds no domain physics: no
-stellar tracks, no N-body integrator, no IMF, no filters or photometry semantics.
-Those live in the packages above it. jaxstro stays at the bottom of the
-dependency graph and stays light, because everything depends on it.
+`jaxstro.units` is the current canonical ecosystem contract.
+`jaxstro.quantity` is implemented for evaluation, but ecosystem adoption and any replacement cutover are deferred.
+The broader ownership rationale and
+future admission criteria live in
+[](./70-project/direction/science-general-vision.md).

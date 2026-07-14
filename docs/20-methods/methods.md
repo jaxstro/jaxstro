@@ -67,6 +67,12 @@ representation that gives the inputs meaning, the executed JAX program, an
 independent audit, and the narrowest warranted scientific claim.
 :::
 
+| Material | Status | Where it belongs |
+| --- | --- | --- |
+| Current numerical primitives | Implemented | Jaxstro method and API pages with executable evidence |
+| Delegated solver families | Ecosystem guide | Canonical external owner plus Jaxstro boundary guidance |
+| QMC and signal foundations | Planned | Concept and evidence requirements, without runtime promises |
+
 ## Shared numerical contracts
 
 A function can return the right number and still be wrong. When a gradient is

@@ -182,6 +182,8 @@ the separate clamp and fill contracts. It is not a general error benchmark.
 :::
 
 The assertion-bearing map is in [](../../60-validation/validation.md).
+[](#fig-regular-grid-contracts) shows the measured interior weights and the
+separate boundary-policy outcomes used by this audit.
 
 ## Where the claim stops
 

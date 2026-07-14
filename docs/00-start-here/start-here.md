@@ -18,16 +18,53 @@ numerical primitives, provenance, and validation tools. It does not own domain
 simulations, scientific acceptance policy, or the interpretation supplied by a
 downstream research package.
 
-After setup, follow the beginner route in this order:
+Choose the first route that answers your immediate question:
 
-1. Read [](./why-jax.md) to decide whether JAX fits the research program.
-2. Work through [](./jax-from-first-principles.md) to learn the array and
-   transformation model.
-3. Use [](./choose-your-path.md) to recover only the background you need.
-4. Complete [](./first-research-calculation.md) with the
-   **predict -> compute -> audit** cycle.
+::::{grid} 1 1 2 2
 
-If you already know part of that route, use
+:::{card} Why use JAX here?
+:link: ./why-jax.md
+
+Decide whether transformations, accelerators, and explicit array programs fit
+the research problem and its constraints.
+:::
+
+:::{card} How does JAX execute a program?
+:link: ./jax-from-first-principles.md
+
+Build the array, transformation, PyTree, static-shape, and compilation mental
+model from first principles.
+:::
+
+:::{card} Which background should I recover?
+:link: ./choose-your-path.md
+
+Reconnect only the mathematical and computational ideas the current problem
+needs.
+:::
+
+:::{card} How do I audit a first result?
+:link: ./first-research-calculation.md
+
+Practice the full **predict -> compute -> audit** cycle on one executable
+calculation.
+:::
+
+::::
+
+:::{note}
+The routes converge on the same scientific habit: predict before execution,
+record what JAX computed, audit independently, and limit the resulting claim.
+:::
+
+| Route | Status | Primary use |
+| --- | --- | --- |
+| Why JAX | Current guidance | Decide whether JAX is the right computational model |
+| JAX from first principles | Current and executable | Learn transformations and static program structure |
+| Choose your path | Current guidance | Recover connected background without a fixed sequence |
+| First research calculation | Current and executable | Practice the evidence-first research cycle |
+
+If you already know part of the route, use
 [](./ways-to-use-these-docs.md) to choose a shorter entry path.
 
 ## Prerequisites

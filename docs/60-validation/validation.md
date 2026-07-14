@@ -20,6 +20,42 @@ Read the rows with the corresponding explanations: gradient contracts in
 [](../30-representations/units-quantities/quantities.md), and source-backed registry pages in
 [](../50-api/research-infrastructure/source-provenance/source-provenance.md).
 
+::::{grid} 1 1 3 3
+
+:::{card} Does the numerical method meet its contract?
+:link: ./numerical/rootfinding-performance.md
+
+Inspect deterministic comparison policies, measured quantities, tolerances,
+and assertion-bearing numerical anchors.
+:::
+
+:::{card} Does the scientific data path preserve meaning?
+:link: ./data/spectra-performance.md
+
+Inspect representation, source, transformation, coverage, and performance
+evidence without promoting diagnostics into physical validation.
+:::
+
+:::{card} How should a new audit be designed?
+:link: ./methods/validation-methods.md
+
+Choose independent references, convergence checks, finite differences,
+invariants, and claim boundaries appropriate to the question.
+:::
+
+::::
+
+:::{note}
+Validation closes the research chain only for the property actually measured;
+it does not inherit model adequacy or scientific acceptance from a passing test.
+:::
+
+| Evidence family | Status | Claim boundary |
+| --- | --- | --- |
+| Numerical and transform contracts | Current and executable | Bounded to documented domains, tolerances, and derivative semantics |
+| Source and data evidence | Current where registered | Source fidelity is distinct from model validity |
+| Scientific acceptance policy | Downstream-owned | Not established by Jaxstro validation artifacts |
+
 ## Validation anchors
 
 | Property | Tolerance | Measured | Anchor |

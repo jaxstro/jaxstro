@@ -9,6 +9,42 @@ Use this reference when you know the operation you need and want its current
 Python owner, records, transform behavior, failure contract, and evidence. The
 groups below are documentation routes; they do not create Python namespaces.
 
+::::{grid} 1 1 3 3
+
+:::{card} Which method owns the operation?
+:link: ./change-constraints/rootfinding.md
+
+Find change, approximation, linear, random, and discrete-space owners by the
+kind of numerical operation they perform.
+:::
+
+:::{card} Which representation owns the data?
+:link: ./physical-representations/units.md
+
+Find physical representations and scientific-data owners without hiding
+units, coordinates, sampling semantics, or provenance.
+:::
+
+:::{card} Which infrastructure records trust?
+:link: ./research-infrastructure/contracts.md
+
+Find checks, configuration, scientific contracts, evidence, provenance, and
+testing owners.
+:::
+
+::::
+
+:::{note}
+API pages answer what is importable now. Concept pages and ecosystem guides do
+not become runtime promises merely because they are linked from the same site.
+:::
+
+| Surface | Status | Documentation rule |
+| --- | --- | --- |
+| Owner-qualified module APIs | Current | Canonical reference path |
+| Flat `jaxstro.numerics` callable re-exports | Current legacy inventory | Remain importable until the Project 2 hard cut |
+| Proposed or delegated capabilities | Planned or ecosystem-owned | Remain outside API reference until an owner and contracts exist |
+
 ## Canonical import policy
 
 Import a coherent module and qualify the call:

@@ -207,6 +207,8 @@ selection.
 :::
 
 Measured anchors are indexed in [](../../60-validation/validation.md).
+[](#fig-bspline-local-support) is the visual check for the local-support and
+partition-of-unity behavior described above.
 
 ## Where the claim stops
 
