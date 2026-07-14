@@ -69,9 +69,7 @@ def test_universal_kepler_fixed_route_jvp_and_vjp_match_central_difference(
     _, pullback = jax.vjp(objective, state)
     vjp_gradient = pullback(jnp.array(1.0))[0]
     vjp_derivative = jnp.dot(vjp_gradient, direction)
-    finite_difference = (
-        objective(plus_state) - objective(minus_state)
-    ) / (2.0 * step)
+    finite_difference = (objective(plus_state) - objective(minus_state)) / (2.0 * step)
     scale = jnp.maximum(jnp.abs(finite_difference), 1.0e-12)
 
     assert float(jnp.abs(jvp_derivative - finite_difference) / scale) <= 1.0e-5

@@ -69,7 +69,9 @@ def _outer_stumpff_pair(z: jax.Array) -> tuple[jax.Array, jax.Array]:
         (jnp.cosh(root) - 1.0) / (-z),
         (jnp.sinh(root) - root) / root**3,
     )
-    return jax.tree.map(lambda pos, neg: jnp.where(z > 0.0, pos, neg), positive, negative)
+    return jax.tree.map(
+        lambda pos, neg: jnp.where(z > 0.0, pos, neg), positive, negative
+    )
 
 
 @pytest.mark.parametrize("boundary", [1.0, -1.0])
@@ -158,9 +160,7 @@ def _reverse_state_error(
 def test_universal_kepler_closes_eccentric_ellipse() -> None:
     eccentricity = 0.6
     r0 = jnp.array([1.0 - eccentricity, 0.0, 0.0])
-    v0 = jnp.array(
-        [0.0, jnp.sqrt((1.0 + eccentricity) / (1.0 - eccentricity)), 0.0]
-    )
+    v0 = jnp.array([0.0, jnp.sqrt((1.0 + eccentricity) / (1.0 - eccentricity)), 0.0])
 
     result = universal_kepler_step(r0, v0, jnp.array(1.0), jnp.array(2.0 * jnp.pi))
 
@@ -287,7 +287,9 @@ def test_universal_kepler_types_nonfinite_iteration() -> None:
     assert jnp.array_equal(result.velocity, v0)
 
 
-def test_universal_kepler_fails_closed_when_radial_collision_root_is_unresolved() -> None:
+def test_universal_kepler_fails_closed_when_radial_collision_root_is_unresolved() -> (
+    None
+):
     r0 = jnp.array([1.0, 0.0, 0.0])
     v0 = jnp.zeros(3)
     free_fall_collision_time = jnp.pi / (2.0 * jnp.sqrt(2.0))

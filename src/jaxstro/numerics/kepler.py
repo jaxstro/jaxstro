@@ -71,16 +71,12 @@ def _stumpff_pair(z: Array) -> tuple[Array, Array]:
     positive_z = jnp.where(z > threshold, z, jnp.ones_like(z))
     positive_root = jnp.sqrt(positive_z)
     c_positive = (1.0 - jnp.cos(positive_root)) / positive_z
-    s_positive = (
-        positive_root - jnp.sin(positive_root)
-    ) / positive_root**3
+    s_positive = (positive_root - jnp.sin(positive_root)) / positive_root**3
 
     negative_abs_z = jnp.where(z < -threshold, -z, jnp.ones_like(z))
     negative_root = jnp.sqrt(negative_abs_z)
     c_negative = (jnp.cosh(negative_root) - 1.0) / negative_abs_z
-    s_negative = (
-        jnp.sinh(negative_root) - negative_root
-    ) / negative_root**3
+    s_negative = (jnp.sinh(negative_root) - negative_root) / negative_root**3
 
     c_outer = jnp.where(z > 0.0, c_positive, c_negative)
     s_outer = jnp.where(z > 0.0, s_positive, s_negative)
@@ -101,17 +97,9 @@ def _tof_residual_and_radius(
     z = alpha_bar * anomaly**2
     c, s = _stumpff_pair(z)
     residual = (
-        rv_bar * anomaly**2 * c
-        + (1.0 - alpha_bar) * anomaly**3 * s
-        + anomaly
-        - tau
+        rv_bar * anomaly**2 * c + (1.0 - alpha_bar) * anomaly**3 * s + anomaly - tau
     )
-    radius = (
-        anomaly**2 * c
-        + rv_bar * anomaly * (1.0 - z * s)
-        + 1.0
-        - z * c
-    )
+    radius = anomaly**2 * c + rv_bar * anomaly * (1.0 - z * s) + 1.0 - z * c
     return residual, radius
 
 
@@ -245,7 +233,9 @@ def universal_kepler_step(
         rv_bar,
         tau,
     )
-    guess_valid = jnp.isfinite(anomaly) & jnp.isfinite(residual) & (radius > radius_floor)
+    guess_valid = (
+        jnp.isfinite(anomaly) & jnp.isfinite(residual) & (radius > radius_floor)
+    )
     fallback_residual, fallback_radius = _tof_residual_and_radius(
         tau,
         alpha_bar,
@@ -256,7 +246,12 @@ def universal_kepler_step(
     residual = jnp.where(guess_valid, residual, fallback_residual)
     radius = jnp.where(guess_valid, radius, fallback_radius)
 
-    finite = input_valid & jnp.isfinite(anomaly) & jnp.isfinite(residual) & jnp.isfinite(radius)
+    finite = (
+        input_valid
+        & jnp.isfinite(anomaly)
+        & jnp.isfinite(residual)
+        & jnp.isfinite(radius)
+    )
     singular = input_valid & finite & (radius <= radius_floor)
     residual_bound = tolerance * jnp.maximum(1.0, jnp.abs(tau))
     converged = finite & ~singular & (jnp.abs(residual) <= residual_bound)
@@ -300,9 +295,7 @@ def universal_kepler_step(
         finite_out = carry.finite & (~execute | proposal_finite)
         singular_out = carry.singular | next_singular
         converged_out = carry.converged | (
-            accepted
-            & ~next_singular
-            & (jnp.abs(next_residual) <= residual_bound)
+            accepted & ~next_singular & (jnp.abs(next_residual) <= residual_bound)
         )
         iterations_out = carry.iterations + jnp.asarray(
             accepted,
@@ -334,9 +327,9 @@ def universal_kepler_step(
         final_radius_bar,
         jnp.ones_like(final_radius_bar),
     )
-    fdot = (
-        alpha_bar * final.anomaly**3 * s - final.anomaly
-    ) / (time_scale * safe_final_radius_bar)
+    fdot = (alpha_bar * final.anomaly**3 * s - final.anomaly) / (
+        time_scale * safe_final_radius_bar
+    )
     gdot = 1.0 - final.anomaly**2 * c / safe_final_radius_bar
     candidate_velocity = fdot * safe_position + gdot * safe_velocity
 
@@ -349,12 +342,7 @@ def universal_kepler_step(
     singular_out = final.singular | (
         final.converged & reconstruction_finite & (final_radius_bar <= radius_floor)
     )
-    converged_out = (
-        input_valid
-        & final.converged
-        & finite_out
-        & ~singular_out
-    )
+    converged_out = input_valid & final.converged & finite_out & ~singular_out
 
     status = _terminal_status(
         input_valid=input_valid,
