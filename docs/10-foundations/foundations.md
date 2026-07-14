@@ -13,6 +13,11 @@ not prerequisites to pass. They keep the scientific standard high while making
 the reasoning behind units, models, derivatives, probability, inference, and
 JAX programs available when it becomes useful.
 
+Researchers often encounter calculus, statistics, linear algebra, programming,
+physical modeling, and inference separately. Prior exposure does not guarantee
+that those concepts are active and connected for a new research problem.
+Reconnecting them is substantive scientific work, not remediation.
+
 You may proceed linearly through both groups or enter from any method page.
 Return when an audit exposes a conceptual gap, then rejoin the method or
 workflow that raised the question. Foundations connects mathematical objects,

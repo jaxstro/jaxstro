@@ -23,6 +23,16 @@ def test_foundations_and_usage_router_explain_the_evidence_first_structure() -> 
     ):
         assert phrase in text
 
+    landing_prose = " ".join(landing.split())
+    for phrase in (
+        "Prior exposure does not guarantee that those concepts are active and "
+        "connected for a new research problem",
+        "calculus, statistics, linear algebra, programming, physical modeling, "
+        "and inference separately",
+        "Reconnecting them is substantive scientific work, not remediation",
+    ):
+        assert phrase in landing_prose
+
 
 def test_choose_your_path_is_optional_research_routing() -> None:
     index = (DOCS / "10-foundations" / "foundations.md").read_text(encoding="utf-8")
