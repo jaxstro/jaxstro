@@ -5,6 +5,9 @@ description: Change, local linear maps, sensitivity, and evidence in differentia
 
 # What is a derivative?
 
+Use this page when a gradient or sensitivity needs a precise mathematical and
+scientific interpretation.
+
 A derivative is one idea seen from several scientific viewpoints. It is a
 **local rate of change**, the **best local linear map** approximating a function,
 and a **scientific sensitivity** describing how a stated output responds to a
@@ -19,10 +22,10 @@ For a scalar function, the derivative at $x$ is the limiting ratio
 f'(x)=\lim_{h\to0}\frac{f(x+h)-f(x)}{h}.
 ```
 
-This says more than “slope on a graph.” It names which input changes, which
+This says more than "slope on a graph." It names which input changes, which
 output changes, their units, and the local point. For Newtonian gravity,
 derivatives with respect to mass and separation answer different scientific
-questions. For Stefan–Boltzmann luminosity, temperature sensitivity carries
+questions. For Stefan-Boltzmann luminosity, temperature sensitivity carries
 luminosity-per-temperature units.
 
 ## View 2: the best local linear map
@@ -104,8 +107,8 @@ Probe both sides of suspected boundaries and monitor conditioning.
 
 ## State the warranted claim
 
-State “the AD derivative of this represented smooth map agrees with this
-independent check on this domain.” Claim an ideal implicit sensitivity only when
+State "the AD derivative of this represented smooth map agrees with this
+independent check on this domain." Claim an ideal implicit sensitivity only when
 uniqueness and smoothness are independently justified and declared, and the
 runtime convergence, finiteness, residual, width, and slope gates pass.
 
@@ -115,6 +118,8 @@ runtime convergence, finiteness, residual, width, and slope gates pass.
 > `grad`. It is a local linear claim about a specified map. A correct derivative
 > of an inadequate model remains a correct derivative of an inadequate model.
 
-Continue to [](./sensitivity-conditioning-identifiability.md),
-[](./from-relations-to-differentiable-programs.md), or Jaxstro's
-[](../10-theory/autodiff.md) and [](../10-theory/rootfinding.md) chapters.
+Continue to
+[](../models-and-computation/sensitivity-conditioning-identifiability.md),
+[](../models-and-computation/from-relations-to-differentiable-programs.md), or
+Jaxstro's [](../../10-theory/autodiff.md) and
+[](../../10-theory/rootfinding.md) chapters.

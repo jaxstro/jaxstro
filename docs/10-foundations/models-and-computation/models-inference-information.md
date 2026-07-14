@@ -5,6 +5,9 @@ description: Connect physical predictions to measurements, probability, and boun
 
 # Models, inference, and information
 
+Use this page when a path from physical parameters to recorded data and an
+inference claim needs to be audited link by link.
+
 Inference reasons from observations toward unknown quantities through a chain
 of assumptions. Keeping each link visible prevents a good optimizer from being
 mistaken for a good scientific explanation.
@@ -73,8 +76,8 @@ Test whether conclusions survive scientifically plausible model changes.
 ## State the warranted claim
 
 State conclusions conditional on the model, measurement process, prior,
-selection, and validated computational procedure. Separate “identified by the
-likelihood” from “constrained after the prior.”
+selection, and validated computational procedure. Separate "identified by the
+likelihood" from "constrained after the prior."
 
 ## Misconception check
 
@@ -84,4 +87,3 @@ likelihood” from “constrained after the prior.”
 
 Continue to [](./sensitivity-conditioning-identifiability.md) and
 [](./what-is-a-model.md).
-

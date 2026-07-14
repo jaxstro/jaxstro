@@ -212,7 +212,7 @@ When an error appears, ask:
 4. Is the transformed program still the scientific map you intend?
 
 Next, connect this orientation to the
-[](../05-foundations/foundations.md) route for mathematical meaning, read the
+[](../10-foundations/foundations.md) route for mathematical meaning, read the
 [](../10-theory/autodiff.md) chapter for deeper derivative-product contracts,
 or use [](./first-research-calculation.md) to place a JAX computation inside the
 full **predict -> compute -> audit** cycle.

@@ -34,7 +34,7 @@ at once: a **new graduate student** meeting differentiable scientific computing 
 the first time, and **future-you** trying to remember *why* a function rounds the
 way it does. The theory pages teach the methods; the reference pages let you look
 up the call signature; the decision log records every choice and its trade-offs.
-Research students and course learners can follow one ordered beginner route:
+New research students can follow one ordered beginner route:
 
 1. [](./00-start-here/start-here.md) for package setup and the package boundary.
 2. [](./00-start-here/why-jax.md) for the benefits, costs, and limits of JAX.
@@ -45,7 +45,7 @@ Research students and course learners can follow one ordered beginner route:
 
 The [](./00-start-here/ways-to-use-these-docs.md) page lists shorter routes for
 readers who do not need complete onboarding.
-The optional [](./05-foundations/foundations.md) route rebuilds the connected ideas
+The optional [](./10-foundations/foundations.md) route rebuilds the connected ideas
 the site will not assume are currently active.
 
 (three-doors)=
@@ -54,7 +54,7 @@ the site will not assume are currently active.
 ::::{grid} 1 1 2 2
 
 :::{card} Rebuild the foundations
-:link: ./05-foundations/foundations.md
+:link: ./10-foundations/foundations.md
 
 Start here if models, parameters, derivatives, linear algebra, probability, or
 inference were taught separately, or simply need reactivation. This is an

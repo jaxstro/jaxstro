@@ -1,26 +1,28 @@
 ---
 title: Choose your foundations path
-description: An ungraded, task-routed refresher for uneven preparation.
+description: A task-routed refresher for connected mathematical and scientific ideas.
 ---
 
 # Choose your foundations path
 
-This is **ungraded** and **not a placement test**. It does not decide whether you
-belong in a course or research project. Use it to locate the idea that would
-make today's work easier, then return whenever you need it.
+This is a route finder, not a gate. Use it to locate the idea that would make
+today's research work easier, then return whenever you need it.
 
 ## If you are computation-first
 
 You may already write Python and JAX but want the mathematical meaning behind
-the code. Start with [](../05-foundations/linear-algebra-language-of-change.md)
-and [](../05-foundations/what-is-a-derivative.md), then connect control flow to
-the derivative of the executed program. Ask: *what mathematical object does this
-array represent, and which claim does this transform support?*
+the code. Start with
+[](../10-foundations/mathematical-objects/linear-algebra-language-of-change.md)
+and [](../10-foundations/mathematical-objects/what-is-a-derivative.md), then
+connect control flow to the derivative of the executed program. Ask: *what
+mathematical object does this array represent, and which claim does this
+transform support?*
 
 ## If astronomy is your strongest language
 
-Start with [](../05-foundations/functions-units-scales.md) and
-[](../05-foundations/what-is-a-model.md).
+Start with
+[](../10-foundations/mathematical-objects/functions-units-scales.md) and
+[](../10-foundations/models-and-computation/what-is-a-model.md).
 Newtonian gravity, luminosity,
 parallax, spectra, and stellar-mass distributions supply familiar physical
 questions while we make parameter space, probability, and sensitivity explicit.
@@ -29,16 +31,18 @@ science-general.
 
 ## If statistics and inference are your strongest language
 
-Start with [](../05-foundations/probability-and-distributions.md), then
-[](../05-foundations/models-inference-information.md). Connect a gradient of a
-log likelihood to the broader meaning of a derivative as a local linear
-sensitivity. Keep the physical model, measurement model, and inferential
-assumptions separate.
+Start with
+[](../10-foundations/mathematical-objects/probability-and-distributions.md),
+then
+[](../10-foundations/models-and-computation/models-inference-information.md).
+Connect a gradient of a log likelihood to the broader meaning of a derivative
+as a local linear sensitivity. Keep the physical model, measurement model, and
+inferential assumptions separate.
 
 ## If you want the complete first-principles path
 
 You do not need to identify with a strongest-language category. Read
-[](../05-foundations/foundations.md), then follow its sequence from functions
+[](../10-foundations/foundations.md), then follow its sequence from functions
 and models through linear algebra, derivatives, probability, inference,
 conditioning, and programs.
 
@@ -47,15 +51,15 @@ conditioning, and programs.
 Choose by the failure you are facing:
 
 - units or scales feel unstable ->
-  [](../05-foundations/functions-units-scales.md);
+  [](../10-foundations/mathematical-objects/functions-units-scales.md);
 - too many parameters behave alike ->
-  [](../05-foundations/sensitivity-conditioning-identifiability.md);
+  [](../10-foundations/models-and-computation/sensitivity-conditioning-identifiability.md);
 - AD and finite differences disagree ->
-  [](../05-foundations/what-is-a-derivative.md);
+  [](../10-foundations/mathematical-objects/what-is-a-derivative.md);
 - a precise fit feels scientifically wrong ->
-  [](../05-foundations/models-inference-information.md);
+  [](../10-foundations/models-and-computation/models-inference-information.md);
 - JAX returns a surprising gradient ->
-  [](../05-foundations/from-relations-to-differentiable-programs.md).
+  [](../10-foundations/models-and-computation/from-relations-to-differentiable-programs.md).
 
 ## A five-minute self-check
 

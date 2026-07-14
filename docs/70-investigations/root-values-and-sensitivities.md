@@ -8,8 +8,9 @@ description: Separate a safeguarded root value from a certified implicit derivat
 **Research question.** When does a computed root value support a parameter
 sensitivity claim?
 
-**Prerequisites.** [](../05-foundations/what-is-a-derivative.md) and
-[](../05-foundations/from-relations-to-differentiable-programs.md).
+**Connected foundations.**
+[](../10-foundations/mathematical-objects/what-is-a-derivative.md) and
+[](../10-foundations/models-and-computation/from-relations-to-differentiable-programs.md).
 
 ## Predict
 

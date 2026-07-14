@@ -7,10 +7,9 @@ description: >-
 
 # How to learn with Jaxstro: predict, compute, audit
 
-Jaxstro's documentation is designed for research students and computational-
-science courses. It does not ask you to trust an answer because the code ran or
-because automatic differentiation returned a finite number. Instead, every
-substantial example can be read as a recurring cycle:
+Jaxstro's documentation does not ask you to trust an answer because the code
+ran or because automatic differentiation returned a finite number. Instead,
+every substantial example can be read as a recurring cycle:
 
 ```{math}
 \text{predict} \longrightarrow \text{compute} \longrightarrow \text{audit}
@@ -22,11 +21,10 @@ connects a mathematical model to the algorithm that actually executed. Auditing
 separates evidence from plausibility and narrows the claim to what the method,
 data, and checks support.
 
-The rationale for this structure, including why optional prerequisite recovery
-is rigorous rather than remedial, is in
-[](../05-foundations/why-this-documentation-works-this-way.md). Use the
-[](./choose-your-path.md) page whenever a concept needs
-reactivation before you continue.
+The rationale for this structure, including why optional background recovery is
+rigorous rather than remedial, is in [](../10-foundations/foundations.md). Use
+the [](./choose-your-path.md) page whenever a concept needs reactivation before
+you continue.
 
 ## Predict
 
@@ -112,11 +110,11 @@ giving the wrong derivative with respect to $\alpha$.
 See [](../10-theory/distributions.md) for the derivation and the
 [](../40-api/index.md) page for public signatures.
 
-## Use this cycle in research and class
+## Use this cycle in research
 
 When reading a module chapter, pause at each Predict, Compute, and Audit block.
-In a course, write the prediction before executing the notebook or test. In
-research, save the audit evidence with the method configuration and provenance.
+Write the prediction before executing the notebook or test, then save the audit
+evidence with the method configuration and provenance.
 
 The goal is not to make every calculation elaborate. It is to make the strength
 of the claim proportional to the evidence behind it.

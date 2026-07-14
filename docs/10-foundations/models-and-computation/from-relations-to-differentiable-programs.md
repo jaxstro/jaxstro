@@ -5,6 +5,9 @@ description: What JAX differentiates, how program structure matters, and where s
 
 # From mathematical relations to differentiable programs
 
+Use this page when the derivative of an executed JAX program must be separated
+from the derivative of an ideal mathematical relation.
+
 A **mathematical relation** states how ideal quantities are connected. A
 computational method approximates or evaluates that relation. An **executed
 program** additionally contains data representation, finite precision, control
@@ -72,13 +75,13 @@ behavior.
 
 Name whether the evidence supports a value, finite-map derivative, certified
 implicit sensitivity, transform compatibility, or physical conclusion. Do not
-let one passing class silently stand in for another.
+let one passing evidence category silently stand in for another.
 
 ## Misconception check
 
-> “Differentiable” does not mean smooth everywhere, physically correct, or
+> "Differentiable" does not mean smooth everywhere, physically correct, or
 > differentiable with respect to every captured value. Compilation is not
 > validation, and a finite gradient is not an implicit function theorem proof.
 
-Continue to the [](../10-theory/index.md) module chapters and the generated
-[](../40-api/contracts.md) contract registry.
+Continue to the [](../../10-theory/index.md) module chapters and the generated
+[](../../40-api/contracts.md) contract registry.

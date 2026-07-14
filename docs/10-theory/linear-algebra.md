@@ -7,7 +7,8 @@ description: >-
 
 For a first-principles account of vectors as perturbations, linear maps,
 geometry, null directions, and conditioning, begin with
-[](../05-foundations/linear-algebra-language-of-change.md). This chapter remains
+[](../10-foundations/mathematical-objects/linear-algebra-language-of-change.md).
+This chapter remains
 the numerical-method and public-API reference.
 
 Linear algebra is where many scientific workflows quietly become numerically

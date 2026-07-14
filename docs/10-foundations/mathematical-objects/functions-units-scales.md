@@ -5,6 +5,9 @@ description: Read scientific functions as unit-carrying maps before computing th
 
 # Functions, units, and scales
 
+Use this page when units, scales, or limiting behavior need to be made explicit
+before a scientific calculation.
+
 A scientific function is a promise about a map: which inputs are admitted,
 which output is produced, and how units, signs, and scales transform. The same
 algebraic symbols can describe different physical questions if those promises
@@ -23,7 +26,7 @@ mass doubles the force; increasing separation weakens it as an inverse square.
 The vector force additionally needs a direction convention. A correct scalar
 magnitude with the wrong direction is not a correct force model.
 
-The Stefan–Boltzmann relation
+The Stefan-Boltzmann relation
 
 ```{math}
 L(R,T) = 4\pi R^2 \sigma T^4
@@ -74,9 +77,9 @@ coverage rather than accepting a finite value alone.
 
 ## State the warranted claim
 
-“The implementation preserves this relation and its unit contract on the tested
-domain” is warranted by algebraic and numerical checks. “The relation adequately
-describes this star” requires observational and model evidence that this page
+"The implementation preserves this relation and its unit contract on the tested
+domain" is warranted by algebraic and numerical checks. "The relation adequately
+describes this star" requires observational and model evidence that this page
 does not provide.
 
 ## Misconception check
@@ -85,6 +88,5 @@ does not provide.
 > Making variables order unity can improve a computation, but it does not add
 > missing physics or make an ill-posed inverse problem identifiable.
 
-Continue to [](./what-is-a-model.md) or the numerical
-[](../10-theory/quantities.md) module page.
-
+Continue to [](../models-and-computation/what-is-a-model.md) or the numerical
+[](../../10-theory/quantities.md) module page.

@@ -49,18 +49,21 @@ project:
         - file: 00-start-here/choose-your-path.md
         - file: 00-start-here/first-research-calculation.md
         - file: 00-start-here/ways-to-use-these-docs.md
-    - title: "Foundations: the ideas we will not assume"
+    - title: Foundations
       children:
-        - file: 05-foundations/foundations.md
-        - file: 05-foundations/why-this-documentation-works-this-way.md
-        - file: 05-foundations/functions-units-scales.md
-        - file: 05-foundations/what-is-a-model.md
-        - file: 05-foundations/linear-algebra-language-of-change.md
-        - file: 05-foundations/what-is-a-derivative.md
-        - file: 05-foundations/probability-and-distributions.md
-        - file: 05-foundations/models-inference-information.md
-        - file: 05-foundations/sensitivity-conditioning-identifiability.md
-        - file: 05-foundations/from-relations-to-differentiable-programs.md
+        - file: 10-foundations/foundations.md
+        - title: Mathematical objects
+          children:
+            - file: 10-foundations/mathematical-objects/functions-units-scales.md
+            - file: 10-foundations/mathematical-objects/linear-algebra-language-of-change.md
+            - file: 10-foundations/mathematical-objects/what-is-a-derivative.md
+            - file: 10-foundations/mathematical-objects/probability-and-distributions.md
+        - title: Models and computation
+          children:
+            - file: 10-foundations/models-and-computation/what-is-a-model.md
+            - file: 10-foundations/models-and-computation/models-inference-information.md
+            - file: 10-foundations/models-and-computation/sensitivity-conditioning-identifiability.md
+            - file: 10-foundations/models-and-computation/from-relations-to-differentiable-programs.md
     - title: Theory — AD-safe numerics
       children:
         - file: 10-theory/index.md

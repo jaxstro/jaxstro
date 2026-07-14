@@ -19,8 +19,8 @@
       ],
       "page": "docs/70-investigations/root-values-and-sensitivities.md",
       "prerequisites": [
-        "docs/05-foundations/what-is-a-derivative.md",
-        "docs/05-foundations/from-relations-to-differentiable-programs.md"
+        "docs/10-foundations/mathematical-objects/what-is-a-derivative.md",
+        "docs/10-foundations/models-and-computation/from-relations-to-differentiable-programs.md"
       ],
       "public_apis": [
         "jaxstro.numerics.implicit_bracketed_root",
@@ -48,8 +48,8 @@
       ],
       "page": "docs/70-investigations/powerlaw-removable-limit.md",
       "prerequisites": [
-        "docs/05-foundations/probability-and-distributions.md",
-        "docs/05-foundations/what-is-a-derivative.md"
+        "docs/10-foundations/mathematical-objects/probability-and-distributions.md",
+        "docs/10-foundations/mathematical-objects/what-is-a-derivative.md"
       ],
       "public_apis": [
         "jaxstro.numerics.powerlaw_cdf",
@@ -77,8 +77,8 @@
       ],
       "page": "docs/70-investigations/interpolation-boundary-policies.md",
       "prerequisites": [
-        "docs/05-foundations/what-is-a-derivative.md",
-        "docs/05-foundations/from-relations-to-differentiable-programs.md"
+        "docs/10-foundations/mathematical-objects/what-is-a-derivative.md",
+        "docs/10-foundations/models-and-computation/from-relations-to-differentiable-programs.md"
       ],
       "public_apis": [
         "jaxstro.numerics.interpolation.interp1d",

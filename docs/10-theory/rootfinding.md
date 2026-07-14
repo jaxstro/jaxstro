@@ -7,7 +7,8 @@ description: >-
 ---
 
 The conceptual distinction among local change, finite-map AD, and implicit
-sensitivities is developed in [](../05-foundations/what-is-a-derivative.md).
+sensitivities is developed in
+[](../10-foundations/mathematical-objects/what-is-a-derivative.md).
 This chapter applies that distinction to concrete root algorithms and evidence.
 
 You have a scalar equation $f(x) = 0$ and you want the root — and you want to

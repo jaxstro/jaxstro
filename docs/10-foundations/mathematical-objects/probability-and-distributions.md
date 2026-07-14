@@ -5,6 +5,9 @@ description: Support, density, expectation, covariance, conditioning, and uncert
 
 # Probability and distributions
 
+Use this page when probability, uncertainty, or a distribution's support needs
+to be stated before an inference or sampling calculation.
+
 Probability supplies a language for uncertainty and variation. It does not say
 why a system is uncertain until we specify the experiment, model, and state of
 knowledge.
@@ -75,9 +78,8 @@ stellar population or measurement process.
 ## Misconception check
 
 > A density can exceed one because it is not probability mass. A random draw is
-> not evidence that a model is random “in reality,” and a normalized likelihood
+> not evidence that a model is random "in reality," and a normalized likelihood
 > over data is not automatically a normalized posterior over parameters.
 
-Continue to [](./models-inference-information.md) or Jaxstro's
-[](../10-theory/distributions.md) chapter.
-
+Continue to [](../models-and-computation/models-inference-information.md) or
+Jaxstro's [](../../10-theory/distributions.md) chapter.

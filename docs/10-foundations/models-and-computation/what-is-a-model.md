@@ -5,6 +5,9 @@ description: Models as question-dependent representations and information compre
 
 # What is a model?
 
+Use this page when a scientific model's purpose, assumptions, or discarded
+information needs to be made explicit.
+
 A model is a deliberately incomplete representation that connects assumptions
 and inputs to predictions about selected aspects of a system. Its usefulness is
 question-dependent: omitting microscopic detail may be exactly right for one
@@ -35,7 +38,7 @@ directly observed. **Observables** are connected to measurements. A
 **nuisance parameter** affects the data model but is not the scientific target.
 These roles depend on the question, not only on the variable's name.
 
-In the Stefan–Boltzmann relation, radius and temperature can be inputs used to
+In the Stefan-Boltzmann relation, radius and temperature can be inputs used to
 predict luminosity. In an inference problem, luminosity and temperature might
 be observed while radius becomes a parameter. The equation is unchanged; the
 direction of scientific reasoning is not.
@@ -97,10 +100,9 @@ claim or turn a small residual into proof that the model is physically complete.
 
 ## Misconception check
 
-> A model is not “the truth with noise added.” It is a purposeful representation.
+> A model is not "the truth with noise added." It is a purposeful representation.
 > More parameters do not guarantee more scientific information, and fewer data
 > columns do not automatically mean less relevant information.
 
-Continue to [](./linear-algebra-language-of-change.md) and
+Continue to [](../mathematical-objects/linear-algebra-language-of-change.md) and
 [](./models-inference-information.md).
-

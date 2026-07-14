@@ -36,7 +36,7 @@ TASK_1_ROUTED_PAGES = (
     "index.md",
     *ONBOARDING_ROUTE,
     "00-start-here/ways-to-use-these-docs.md",
-    "05-foundations/foundations.md",
+    "10-foundations/foundations.md",
     "10-theory/science-patterns.md",
     "50-howto/index.md",
     "80-instructor/teaching-with-jaxstro.md",
@@ -183,7 +183,7 @@ def test_substantial_beginner_pages_route_readers_onward() -> None:
     first_principles = (START_HERE / "jax-from-first-principles.md").read_text(
         encoding="utf-8"
     )
-    assert "](../05-foundations/foundations.md)" in first_principles
+    assert "](../10-foundations/foundations.md)" in first_principles
     assert "](../10-theory/autodiff.md)" in first_principles
 
 

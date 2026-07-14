@@ -37,7 +37,7 @@ def test_homepage_names_scientific_capabilities_and_all_entry_routes() -> None:
         "Provenance-backed claims",
         "## Choose your route",
         "Rebuild the foundations",
-        "./05-foundations/foundations.md",
+        "./10-foundations/foundations.md",
         "Learn the methods",
         "./10-theory/index.md",
         "Audit the evidence",

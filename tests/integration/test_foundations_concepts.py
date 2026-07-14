@@ -6,16 +6,16 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DOCS = ROOT / "docs"
-FOUNDATIONS = DOCS / "05-foundations"
+FOUNDATIONS = DOCS / "10-foundations"
 
 PAGES = {
-    "functions-units-scales.md": (
+    "mathematical-objects/functions-units-scales.md": (
         "Newtonian gravity",
-        "Stefan–Boltzmann",
+        "Stefan-Boltzmann",
         "dimensionless",
         "order of magnitude",
     ),
-    "what-is-a-model.md": (
+    "models-and-computation/what-is-a-model.md": (
         "conceptual model",
         "mathematical model",
         "computational model",
@@ -26,7 +26,7 @@ PAGES = {
         "parameter-space dimension",
         "intrinsic dimension",
     ),
-    "linear-algebra-language-of-change.md": (
+    "mathematical-objects/linear-algebra-language-of-change.md": (
         "vectors as perturbations",
         "linear map",
         "basis",
@@ -34,7 +34,7 @@ PAGES = {
         "condition number",
         "Hessian",
     ),
-    "what-is-a-derivative.md": (
+    "mathematical-objects/what-is-a-derivative.md": (
         "local rate of change",
         "best local linear map",
         "scientific sensitivity",
@@ -45,7 +45,7 @@ PAGES = {
         "implicit sensitivity",
         "executed program",
     ),
-    "probability-and-distributions.md": (
+    "mathematical-objects/probability-and-distributions.md": (
         "probability mass",
         "probability density",
         "support",
@@ -55,7 +55,7 @@ PAGES = {
         "aleatoric",
         "epistemic",
     ),
-    "models-inference-information.md": (
+    "models-and-computation/models-inference-information.md": (
         "measurement model",
         "likelihood",
         "prior",
@@ -66,7 +66,7 @@ PAGES = {
         "discarded information",
         "misspecified model",
     ),
-    "sensitivity-conditioning-identifiability.md": (
+    "models-and-computation/sensitivity-conditioning-identifiability.md": (
         "conditioning",
         "identifiability",
         "degeneracy",
@@ -74,7 +74,7 @@ PAGES = {
         "finite differences",
         "automatic differentiation",
     ),
-    "from-relations-to-differentiable-programs.md": (
+    "models-and-computation/from-relations-to-differentiable-programs.md": (
         "mathematical relation",
         "executed program",
         "control flow",
@@ -110,7 +110,7 @@ def test_foundation_pages_are_navigable_without_replacing_module_pages() -> None
     myst = (DOCS / "myst.yml").read_text(encoding="utf-8")
     manifest = json.loads((DOCS / "route-manifest.json").read_text(encoding="utf-8"))
     for filename in PAGES:
-        page = f"05-foundations/{filename}"
+        page = f"10-foundations/{filename}"
         assert myst.count(f"file: {page}") == 1
         assert manifest[page].startswith("/")
     assert "file: 10-theory/linear-algebra.md" in myst

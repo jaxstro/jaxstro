@@ -5,6 +5,9 @@ description: Distinguish derivative magnitude, numerical stability, and learnabl
 
 # Sensitivity, conditioning, and identifiability
 
+Use this page when a changing output, unstable computation, or parameter
+degeneracy needs to be diagnosed without conflating those problems.
+
 Sensitivity, conditioning, and identifiability all ask how conclusions respond
 to change, but they are not synonyms.
 
@@ -71,8 +74,8 @@ test whether added observations constrain the predicted null directions.
 
 ## State the warranted claim
 
-Distinguish “this derivative is numerically validated,” “this inverse is locally
-well-conditioned,” and “these parameters are identifiable under this experiment.”
+Distinguish "this derivative is numerically validated," "this inverse is locally
+well-conditioned," and "these parameters are identifiable under this experiment."
 Evidence for one statement does not automatically support the others.
 
 ## Misconception check
@@ -82,4 +85,3 @@ Evidence for one statement does not automatically support the others.
 > digits. A prior-constrained parameter is not necessarily data-identified.
 
 Continue to [](./from-relations-to-differentiable-programs.md).
-

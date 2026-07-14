@@ -10,10 +10,16 @@ description: >-
 Use this page when you know what kind of help you need and want the shortest
 connected route through Jaxstro's concepts, APIs, and evidence.
 
-This site is not one compulsory linear course. Every route uses the same habit:
+This site is not one compulsory linear sequence. Every route uses the same habit:
 **predict -> compute -> audit -> state the warranted claim**, but starts from a
 different need. Choose the smallest route that answers today's question, then
 follow links outward when the audit exposes a missing concept or contract.
+
+The routes remain separate because they answer different questions. Foundations
+asks what an idea means. A method page explains the finite algorithm and its
+boundaries. The API reference records the exact supported surface. Validation
+links a bounded claim to independent evidence. Keeping those roles visible
+prevents a successful execution from being mistaken for scientific validation.
 
 ## Complete onboarding
 
@@ -32,11 +38,12 @@ Start from the scientific object you want: a root, integral, interpolation,
 distribution, coordinate transformation, spectrum, or other observable. Use
 the theory section to identify the mathematical and algorithmic contract, the
 API reference for the callable surface, and validation for executable evidence.
-Return to foundations only when a term or relationship is blocking the question.
+Return to [](../10-foundations/foundations.md) only when a term or relationship
+is blocking the question.
 
 ## Background recovery
 
-Use [](./choose-your-path.md) as an ungraded router. Select by the idea you need
+Use [](./choose-your-path.md) as a research router. Select by the idea you need
 today: units and scales, models and parameters, linear maps and derivatives,
 probability and inference, or conditioning and identifiability. Rejoin the
 research page as soon as the missing connection is active again.

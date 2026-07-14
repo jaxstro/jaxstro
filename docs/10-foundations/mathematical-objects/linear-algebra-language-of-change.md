@@ -5,6 +5,9 @@ description: Vectors, linear maps, geometry, and conditioning before matrix reci
 
 # Linear algebra as the language of change
 
+Use this page when vectors, matrices, or conditioning need to be interpreted as
+scientific maps rather than calculation recipes.
+
 Linear algebra is the language we use to describe many simultaneous changes.
 Begin with **vectors as perturbations** and a **linear map** that transforms
 them. A matrix is the coordinate representation of that map after choosing a
@@ -72,7 +75,7 @@ explicit dense case.
 
 ## State the warranted claim
 
-“This solve is stable for the tested matrix and scaling” does not imply that the
+"This solve is stable for the tested matrix and scaling" does not imply that the
 physical parameters are globally identifiable. State the represented map,
 domain, rank tolerance, and observed conditioning.
 
@@ -83,5 +86,4 @@ domain, rank tolerance, and observed conditioning.
 > automatically a well-conditioned scientific inverse.
 
 Continue to [](./what-is-a-derivative.md). For Jaxstro's numerical helpers, see
-[](../10-theory/linear-algebra.md).
-
+[](../../10-theory/linear-algebra.md).
