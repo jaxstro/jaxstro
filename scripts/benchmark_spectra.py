@@ -42,7 +42,7 @@ from jaxstro.spectra import (  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = REPO_ROOT / "docs" / "validation" / "spectra-performance.json"
-REPORT = OUTPUT.with_suffix(".md")
+REPORT = REPO_ROOT / "docs" / "60-validation" / "data" / "spectra-performance.md"
 PRODUCT_ID = "newera-v3-lowres"
 SPECTRAL_BINS = 64
 BATCH_SIZE = 8

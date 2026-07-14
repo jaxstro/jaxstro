@@ -36,7 +36,7 @@ not infer sparsity, conditioning, or solver policy.
 ## Contract and evidence links
 
 See [](../../20-methods/linear-structure/operators.md) and
-[](../../60-validation/index.md).
+[](../../60-validation/validation.md).
 
 ## Canonical import example
 

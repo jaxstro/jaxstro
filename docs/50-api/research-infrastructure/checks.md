@@ -37,7 +37,7 @@ cannot be converted to a host boolean are not falsely certified.
 
 ## Contract and evidence links
 
-See [](../../60-validation/index.md) and [](./testing.md).
+See [](../../60-validation/validation.md) and [](./testing.md).
 
 ## Canonical import example
 

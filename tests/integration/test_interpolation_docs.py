@@ -11,7 +11,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 INTERPOLATION_PAGE = (
     REPO_ROOT / "docs" / "20-methods" / "approximation-integration" / "interpolation.md"
 )
-BIBLIOGRAPHY = REPO_ROOT / "docs" / "99-bibliography" / "references.bib"
+BIBLIOGRAPHY = REPO_ROOT / "docs" / "70-project" / "bibliography" / "references.bib"
 DESIGN_RECORD = (
     REPO_ROOT
     / "laboratory"
@@ -102,5 +102,5 @@ def test_interpolation_page_embeds_figure_and_evidence_routes() -> None:
     ) in text
     assert DESIGN_RECORD.is_file()
     assert "[](../../50-api/approximation-integration/interpolation.md)" in text
-    assert "[](../../60-validation/index.md)" in text
+    assert "[](../../60-validation/validation.md)" in text
     assert "[](../methods.md#gradient-contracts)" in text

@@ -36,7 +36,7 @@ does not rerun model initialization, so cached derived leaves may remain stale.
 ## Contract and evidence links
 
 See [](../../30-representations/parameters-state/parameters-and-transforms.md)
-and [](../../30-decisions/0009-jaxstro-params-selective-inference.md).
+and [](../../70-project/decisions/0009-jaxstro-params-selective-inference.md).
 
 ## Canonical import example
 

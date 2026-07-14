@@ -41,7 +41,7 @@ public contract; no surrogate finite gradient is invented.
 
 See [](../../30-representations/geometry-coordinates/coordinate-transformations.md),
 the [source-backed cards](../research-infrastructure/source-provenance/transforms.md),
-and [](../../60-validation/index.md).
+and [](../../60-validation/validation.md).
 
 ## Canonical import example
 

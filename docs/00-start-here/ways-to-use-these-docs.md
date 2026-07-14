@@ -64,7 +64,7 @@ investigations for worked comparisons where available.
 
 ## Result audit
 
-Begin at [](../60-validation/index.md). Identify the exact claim, then find the
+Begin at [](../60-validation/validation.md). Identify the exact claim, then find the
 analytic identity, limiting case, independent numerical check, convergence
 study, source card, or runtime manifest that supports it. If evidence is absent,
 weaken the claim or add the missing audit before treating the output as a result.

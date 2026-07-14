@@ -10,7 +10,9 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CHECKER_PATH = REPO_ROOT / "scripts" / "check_docs_site.py"
-BIBLIOGRAPHY_PAGE = REPO_ROOT / "docs" / "99-bibliography" / "index.md"
+BIBLIOGRAPHY_PAGE = (
+    REPO_ROOT / "docs" / "70-project" / "bibliography" / "bibliography.md"
+)
 
 
 def _load_checker():
@@ -47,8 +49,8 @@ def test_xref_rejects_duplicate_page_routes(tmp_path: Path) -> None:
 
 def test_route_manifest_rejects_root_flat_slug_drift() -> None:
     checker = _load_checker()
-    expected = {"20-architecture/index.md": "/index-3"}
-    actual = {"20-architecture/index.md": "/index-4"}
+    expected = {"70-project/direction/architecture.md": "/architecture"}
+    actual = {"70-project/direction/architecture.md": "/architecture-drift"}
 
     with pytest.raises(checker.DocsGateError, match="route manifest drift"):
         checker.validate_route_manifest(actual, expected)

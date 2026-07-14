@@ -57,8 +57,8 @@ certificates return NaN values and derivatives rather than an invented result.
 ## Contract and evidence links
 
 See [](../../20-methods/change-constraints-evolution/rootfinding.md),
-[](../../60-validation/index.md), [](../../validation/rootfinding-performance.md),
-and [](../../validation/implicit-root-gradients.md).
+[](../../60-validation/validation.md), [](../../60-validation/numerical/rootfinding-performance.md),
+and [](../../60-validation/numerical/implicit-root-gradients.md).
 
 ## Canonical import example
 

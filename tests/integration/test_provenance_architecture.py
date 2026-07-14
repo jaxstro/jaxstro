@@ -77,7 +77,7 @@ def test_provenance_page_routes_generated_families_and_honest_gaps() -> None:
         "../../50-api/research-infrastructure/source-provenance/constants.md",
         "../../50-api/research-infrastructure/source-provenance/transforms.md",
         "../../50-api/research-infrastructure/source-provenance/atmospheres.md",
-        "../../60-validation/index.md",
+        "../../60-validation/validation.md",
     ):
         assert f"[]({route})" in text
 

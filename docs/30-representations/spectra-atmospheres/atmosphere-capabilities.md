@@ -95,7 +95,7 @@ axis, and records that operation in provenance.
 
 The generated policy manifest is stored in source at
 `docs/validation/atmosphere-interpolation.json`. See the
-[validation overview](../../60-validation/index.md) for how policy evidence is
+[validation overview](../../60-validation/validation.md) for how policy evidence is
 organized and bounded.
 See [](./source-artifacts-and-adapters.md) for artifact mechanics and
 [](./spectra-data-architecture.md) for the runtime ownership chain.

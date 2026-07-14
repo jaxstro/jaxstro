@@ -239,5 +239,5 @@ construction, not a knot-optimization algorithm.
 ## From explanation to evidence
 
 Use the [](../../50-api/approximation-integration/splines.md) for signatures and
-ownership, the [](../../60-validation/index.md) for measured spline anchors, and
+ownership, the [](../../60-validation/validation.md) for measured spline anchors, and
 the [](../methods.md#gradient-contracts) for the package-wide contract taxonomy.

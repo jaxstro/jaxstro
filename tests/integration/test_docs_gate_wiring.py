@@ -31,7 +31,7 @@ def test_docs_gate_is_reused_by_local_and_full_ci_gates() -> None:
     assert "uv sync --locked --extra dev" in docs_job
 
 
-def test_committed_route_manifest_matches_all_authored_pages() -> None:
+def test_committed_route_manifest_matches_authored_navigation_routes() -> None:
     manifest_path = REPO_ROOT / "docs" / "route-manifest.json"
     assert manifest_path.is_file()
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -43,14 +43,18 @@ def test_committed_route_manifest_matches_all_authored_pages() -> None:
     assert manifest[
         "30-representations/spectra-atmospheres/spectra-data-architecture.md"
     ] == ("/spectra-data-architecture")
-    assert manifest["95-release/checklist.md"] == "/checklist"
-    assert manifest["99-bibliography/index.md"] == "/index-6"
+    assert manifest["60-validation/validation.md"] == "/validation"
+    assert manifest["70-project/project.md"] == "/project"
+    assert manifest["70-project/release/checklist.md"] == "/checklist"
+    assert manifest["70-project/bibliography/bibliography.md"] == "/bibliography"
     assert manifest["60-validation/evidence-index.md"] == "/evidence-index"
-    assert manifest["validation/rootfinding-performance.md"] == (
+    assert manifest["60-validation/numerical/rootfinding-performance.md"] == (
         "/rootfinding-performance"
     )
-    assert manifest["validation/implicit-root-gradients.md"] == (
+    assert manifest["60-validation/numerical/implicit-root-gradients.md"] == (
         "/implicit-root-gradients"
     )
-    assert manifest["validation/spectra-performance.md"] == "/spectra-performance"
+    assert manifest["60-validation/data/spectra-performance.md"] == (
+        "/spectra-performance"
+    )
     assert len(manifest.values()) == len(set(manifest.values()))

@@ -219,8 +219,8 @@ __marimo__/
 
 # Repository-local figure laboratory: masters stay local; the site WebP is tracked.
 laboratory/jaxtroviz/plots/
-docs/20-architecture/figures/*.pdf
-docs/20-architecture/figures/*.png
+docs/70-project/direction/figures/*.pdf
+docs/70-project/direction/figures/*.png
 docs/10-theory/figures/*.pdf
 docs/10-theory/figures/*.png
 

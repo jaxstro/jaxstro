@@ -1,20 +1,20 @@
 ---
-title: Newton–Cotes integration
+title: Newton-Cotes integration
 short_title: Cumulative trapz
 description: >-
   The trapezoidal rule, why the uniform path multiplies by dx outside the cumsum,
   and the ~1-ulp parity that ordering choice reconciles across the ecosystem.
 ---
 
-You have a function sampled on a grid and you want its integral — or its running
+You have a function sampled on a grid and you want its integral - or its running
 integral, a CDF from a PDF. That is the trapezoidal rule, the simplest member of
-the Newton–Cotes family. It looks trivial, and it almost is, except for one
+the Newton-Cotes family. It looks trivial, and it almost is, except for one
 ordering choice that decides whether jaxstro and progenax agree to the last bit.
 This page explains the method, the choice, and why it matters.
 
 ## The trapezoidal rule
 
-Newton–Cotes rules approximate $\int f\,dx$ by fitting a low-degree polynomial
+Newton-Cotes rules approximate $\int f\,dx$ by fitting a low-degree polynomial
 through equally weighted samples. The trapezoidal rule is the degree-1 case: connect
 adjacent samples with straight lines and sum the trapezoids. For samples
 $y_0,\dots,y_{n-1}$ at spacing $h$,
@@ -25,7 +25,7 @@ $y_0,\dots,y_{n-1}$ at spacing $h$,
 ```
 
 The **cumulative** form keeps the running sum instead of the total, giving a result
-the same length as the input with a leading zero — exactly what you need to turn a
+the same length as the input with a leading zero - exactly what you need to turn a
 density into a CDF. jaxstro provides both `trapz` (the total) and `cumulative_trapz`
 (the running integral). Both are pure `jax.numpy`, so they differentiate through the
 **values** $y_i$ (principle [7](../methods.md#p7-quadrature)); the grid is data, not a
@@ -36,9 +36,9 @@ parameter you backprop through.
 `cumulative_trapz` has two paths, and which one runs depends on whether you pass
 the grid:
 
-- **Uniform** — you omit `x` and optionally pass a scalar `dx` (default `1.0`).
+- **Uniform** - you omit `x` and optionally pass a scalar `dx` (default `1.0`).
   Every trapezoid has the same width, so the width factors out of the sum.
-- **Non-uniform** — you pass the grid `x`, and the spacing $\mathrm{diff}(x)$ varies
+- **Non-uniform** - you pass the grid `x`, and the spacing $\mathrm{diff}(x)$ varies
   per interval. There is no single width to factor out; `dx` is ignored.
 
 ## The dx-outside ordering (uniform path)
@@ -78,7 +78,7 @@ Two reasons drive the choice:
 Migrating a former dx-inside call site to this function can shift its result by ~1
 ulp. That is the rounding difference between [](#eq-dx-inside) and
 [](#eq-dx-outside), not a bug. The affected progenax sites carry test budgets that
-allow it. See [](../../95-release/index.md) for the reconciliation note.
+allow it. See [](../../70-project/release/release.md) for the reconciliation note.
 :::
 
 The non-uniform path cannot use this trick: each increment carries its own width
@@ -87,18 +87,18 @@ to factor out.
 
 ## A note on Simpson's rule
 
-The same module ships `simpson`, the degree-2 Newton–Cotes rule, which assumes
+The same module ships `simpson`, the degree-2 Newton-Cotes rule, which assumes
 **uniform spacing** and an odd number of samples. Because a non-uniform grid would
 be silently mis-integrated, the Python wrapper raises on a concrete non-uniform grid
-*before* the jitted core runs — but under `jit` the grid is a tracer and the check
+*before* the jitted core runs - but under `jit` the grid is a tracer and the check
 cannot fire, so callers inside `jit` must pass a uniform grid themselves. This is
 principle [9](../methods.md#p9-correctness): fail loudly where you can, document the
 contract where you cannot.
 
 ## What we just established
 
-The trapezoidal rule is degree-1 Newton–Cotes; the only subtlety is *when* you
-multiply by the spacing, and the answer — dx-outside — is the one that keeps jaxstro
+The trapezoidal rule is degree-1 Newton-Cotes; the only subtlety is *when* you
+multiply by the spacing, and the answer - dx-outside - is the one that keeps jaxstro
 and progenax bit-identical. For exact integration of polynomials at far fewer
 points, Gaussian quadrature is the next step up; see the API entry for the
 quadrature factory in [](../../50-api/approximation-integration/quadrature.md). The call signatures for `trapz`,

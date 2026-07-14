@@ -7,7 +7,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = REPO_ROOT / "docs" / "validation" / "spectra-performance.json"
-REPORT = MANIFEST.with_suffix(".md")
+REPORT = REPO_ROOT / "docs" / "60-validation" / "data" / "spectra-performance.md"
 
 
 def test_spectra_benchmark_manifest_has_separate_bounded_timings() -> None:

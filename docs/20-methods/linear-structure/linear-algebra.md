@@ -226,5 +226,5 @@ dense primitives whose numerical boundaries can be stated and tested.
 
 For signatures and ownership, see
 [](../../50-api/linear-structure/linear-algebra.md). The assertion-bearing
-evidence map is in [](../../60-validation/index.md). The five package-wide gradient
+evidence map is in [](../../60-validation/validation.md). The five package-wide gradient
 labels are defined in [](../methods.md#gradient-contracts).

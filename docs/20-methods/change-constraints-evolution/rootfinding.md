@@ -11,7 +11,7 @@ sensitivities is developed in
 [](../../10-foundations/mathematical-objects/what-is-a-derivative.md).
 This chapter applies that distinction to concrete root algorithms and evidence.
 
-You have a scalar equation $f(x) = 0$ and you want the root — and you want to
+You have a scalar equation $f(x) = 0$ and you want the root - and you want to
 differentiate that root with respect to whatever parameters $f$ closes over. This
 page explains the solvers jaxstro ships, what each one's gradient actually does,
 and the one trap that catches everyone.
@@ -40,11 +40,11 @@ evaluations after convergence.
 You pay for the static trace and buy a computation that composes with `jit` and
 `vmap`. That transformability is not itself a gradient claim; each solver's AD
 contract below remains authoritative. The numbers are forgiving. Bisection halves the bracket each step,
-so 50 steps reach $2^{-50} \approx 8.9\times10^{-16}$ — full float64 precision.
-Newton converges quadratically near a smooth root, so 20–30 steps over-converge
+so 50 steps reach $2^{-50} \approx 8.9\times10^{-16}$ - full float64 precision.
+Newton converges quadratically near a smooth root, so 20-30 steps over-converge
 from a reasonable guess.
 
-## `bracket_expand` — fixed-count sign discovery
+## `bracket_expand` - fixed-count sign discovery
 
 `bracket_expand(f, x0, step=1, growth=2, max_steps=32)` expands a symmetric
 interval around an initial point:
@@ -64,7 +64,7 @@ selection of the first valid bracket depends on sign predicates, so treat the
 returned bracket as value evidence, not as a smooth function of model
 parameters.
 
-## `bisect` and `bisect_many` — robust values, branchy gradients
+## `bisect` and `bisect_many` - robust values, branchy gradients
 
 `bisect(f, a, b)` assumes a sign change in $[a, b]$ and halves it 50 times. It is
 the robust choice: it cannot diverge after a valid bracket, and it needs no
@@ -75,7 +75,7 @@ readable when each element carries its own bracket.
 
 But here is the trap. **The gradient of the bisection result with respect to the
 function parameters is structurally zero.** The *comparison* that decides which
-half to keep — `sign(f_a) * sign(f_m) <= 0` — is a non-differentiable predicate
+half to keep - `sign(f_a) * sign(f_m) <= 0` - is a non-differentiable predicate
 (principle [6](../methods.md#p6-non-diff-ops)). Parameters captured inside `f` only
 affect those sign decisions, so $\partial x^\star/\partial\theta$ comes back as
 zero even though the true root plainly depends on $\theta$. The value is right;
@@ -97,7 +97,7 @@ certificate. Reserve `bracket_expand` and `bisect` for forward solve
 reliability, initialization, and validation masks.
 :::
 
-## Safeguarded bracket primitives — the downstream integration surface
+## Safeguarded bracket primitives - the downstream integration surface
 
 `initialize_bracket(lo, hi, f_lo, f_hi)` constructs a `BracketState` from
 already-evaluated endpoint evidence. A bracket is verified only when its
@@ -147,7 +147,7 @@ bracket, history, and status exactly.
   - Three-point inverse-quadratic interpolation passed every guard
 ```
 
-## `safeguarded_bracketed_root` — fixed trace, guarded evaluations
+## `safeguarded_bracketed_root` - fixed trace, guarded evaluations
 
 The high-level wrapper evaluates both endpoints, verifies the bracket, and runs
 a fixed-length scan. Each active slot evaluates `f` inside `lax.cond`; missing-
@@ -209,7 +209,7 @@ telemetry, not universal speed for every residual.
 
 The reproducible evaluation-count and warm-timing comparison with fixed-count
 bisection is available as a
-[human-readable evidence report](../../validation/rootfinding-performance.md) and
+[human-readable evidence report](../../60-validation/numerical/rootfinding-performance.md) and
 [machine-readable envelope](https://github.com/drannarosen/jaxstro/blob/main/docs/validation/rootfinding-performance.json). The
 benchmark treats function-evaluation count as the primary algorithmic cost and
 does not impose a hardware-dependent wall-time threshold. The ratified gate
@@ -231,7 +231,7 @@ conditioning. Rejection returns NaN for both the derivative-facing value and an
 attempted gradient while retaining the nested primal diagnostics.
 :::
 
-### Predict → compute → audit: which derivative are you asking for?
+### Predict -> compute -> audit: which derivative are you asking for?
 
 **Predict.** Decide whether the desired quantity is the sensitivity of the
 finite executed algorithm or of a unique, smooth mathematical root. Write down
@@ -286,12 +286,12 @@ rejection, not as a derivative estimate.
 
 These values are copied from the
 [machine-readable envelope](https://github.com/drannarosen/jaxstro/blob/main/docs/validation/implicit-root-gradients.json), with a
-[human-readable evidence report](../../validation/implicit-root-gradients.md), both
+[human-readable evidence report](../../60-validation/numerical/implicit-root-gradients.md), both
 generated and freshness-checked by `scripts/benchmark_implicit_root.py`. A
 documentation test requires the table to match that artifact; the JSON and
 numerical tests remain the primary executable evidence.
 
-## `newton` and `newton_with_grad` — smooth iterates, finite-map gradients
+## `newton` and `newton_with_grad` - smooth iterates, finite-map gradients
 
 `newton(f, x0)` runs the update $x_{k+1} = x_k - f(x_k)/f'(x_k)$ for a fixed 30
 steps, taking $f'$ from `jax.grad(f)` automatically. Because every step is a smooth
@@ -312,7 +312,7 @@ and a non-vanishing derivative along the path. Bracket first with knowledge of t
 problem, then refine.
 
 (newton-ppf)=
-## `newton_ppf` — the inverse-CDF solver, and the clip-to-support caveat
+## `newton_ppf` - the inverse-CDF solver, and the clip-to-support caveat
 
 Reparameterized sampling needs the percent-point function (the inverse CDF): given
 a uniform draw $u \in (0,1)$, return the quantile $x = F^{-1}(u)$ solving
@@ -324,7 +324,7 @@ derivative is exactly the density, $g'(x) = F'(x) = \mathrm{pdf}(x)$:
 x_{k+1} = x_k - \frac{F(x_k) - u}{\mathrm{pdf}(x_k)}.
 ```
 
-It is deliberately distribution-agnostic — you pass your own `cdf` (closing over the
+It is deliberately distribution-agnostic - you pass your own `cdf` (closing over the
 distribution's parameters), an initial guess, and the support bounds `[lo, hi]`. The
 PDF comes from your `pdf` argument or, failing that, from `jax.grad(cdf)`. The
 finite executed iteration can carry sensitivities **both** with respect to $u$
@@ -339,17 +339,17 @@ Two guards deserve a note, and they connect back to the principles:
   ([principle 3](../methods.md#p3-guard-singularities)): additive, never a `where` on
   the result.
 - **Clipping to the support saturates the gradient there.** Each iterate is clipped
-  to `[lo, hi]` so it never leaves the support — but a quantile pinned at a bound
+  to `[lo, hi]` so it never leaves the support - but a quantile pinned at a bound
   has zero gradient with respect to your parameters at that bound
   ([principle 4](../methods.md#p4-saturation)). For interior quantiles this never
   fires; if you are fitting parameters that push a quantile against `lo` or `hi`,
   that is where the gradient quietly dies.
 
 The PPF is validated against the analytic exponential inverse,
-$F^{-1}(u) = -\ln(1-u)/\lambda$, by an FD-vs-AD grad-check — value and gradient both
-([](../../60-validation/index.md)).
+$F^{-1}(u) = -\ln(1-u)/\lambda$, by an FD-vs-AD grad-check - value and gradient both
+([](../../60-validation/validation.md)).
 
-## `monotone_inverse_interp` — inverse lookup for table-defined CDFs
+## `monotone_inverse_interp` - inverse lookup for table-defined CDFs
 
 `monotone_inverse_interp(x, y, y_new)` is the table-first inverse path. It assumes
 `x` and `y` are one-dimensional, same-length, strictly increasing arrays, then
@@ -377,7 +377,7 @@ once and keep the monotonicity contract explicit.
   - Differentiable w.r.t. parameters?
 * - a point near an unknown sign-changing root
   - `bracket_expand`
-  - No — sign-discovery utility
+  - No - sign-discovery utility
 * - a sign-bracketed root, robustness matters
   - `bisect`
   - No w.r.t. function parameters
@@ -406,4 +406,4 @@ once and keep the monotonicity contract explicit.
 
 Signatures and defaults are in [](../../50-api/change-constraints/rootfinding.md); the design rationale for
 hoisting the generic Newton-PPF into the foundation is
-[](../../30-decisions/0009-jaxstro-params-selective-inference.md).
+[](../../70-project/decisions/0009-jaxstro-params-selective-inference.md).

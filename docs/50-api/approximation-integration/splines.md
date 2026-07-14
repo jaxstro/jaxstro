@@ -40,7 +40,7 @@ concrete inputs. Fitting exposes the underlying linear-solve behavior.
 ## Contract and evidence links
 
 See [](../../20-methods/approximation-integration/bsplines.md) and
-[](../../60-validation/index.md).
+[](../../60-validation/validation.md).
 
 ## Canonical import example
 

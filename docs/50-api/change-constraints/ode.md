@@ -36,7 +36,7 @@ retry, stiffness detection, or scientific acceptance policy.
 ## Contract and evidence links
 
 See [](../../20-methods/change-constraints-evolution/ode.md) and
-[](../../60-validation/index.md).
+[](../../60-validation/validation.md).
 
 ## Canonical import example
 

@@ -6,7 +6,9 @@ import importlib
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-VISION_PAGE = REPO_ROOT / "docs" / "20-architecture" / "science-general-vision.md"
+VISION_PAGE = (
+    REPO_ROOT / "docs" / "70-project" / "direction" / "science-general-vision.md"
+)
 
 
 def _vision_text() -> str:
@@ -57,6 +59,6 @@ def test_vision_reuses_architecture_evidence_without_duplicate_figure() -> None:
     text = _vision_text()
     normalized = " ".join(text.split())
 
-    assert "./index.md#fig-jaxstro-foundation" in text
+    assert "./architecture.md#fig-jaxstro-foundation" in text
     assert ":::{figure}" not in text
     assert "only where each method documents that transform" in normalized

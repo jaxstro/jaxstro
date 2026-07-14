@@ -9,7 +9,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = REPO_ROOT / "docs" / "validation" / "rootfinding-performance.json"
-REPORT = REPO_ROOT / "docs" / "validation" / "rootfinding-performance.md"
+REPORT = (
+    REPO_ROOT / "docs" / "60-validation" / "numerical" / "rootfinding-performance.md"
+)
 
 
 def test_rootfinding_benchmark_manifest_has_required_metrics_and_units() -> None:

@@ -22,8 +22,8 @@ packages: physical constants in CGS, unit systems, coordinate transforms,
 AD-safe interpolation and integration, local basis functions, small dense linear
 algebra, sampling helpers, parameter-vector bridges, and trust reports. It
 deliberately refuses to absorb solver libraries; those belong one layer up (see
-[](#three-doors), [](./20-architecture/science-general-vision.md), and
-[](./30-decisions/0001-thin-foundation-posture.md)).
+[](#three-doors), [](./70-project/direction/science-general-vision.md), and
+[](./70-project/decisions/0001-thin-foundation-posture.md)).
 
 `jaxstro.units` is the current canonical ecosystem contract. `jaxstro.quantity` is implemented
 and available for evaluation, but ecosystem adoption and any replacement cutover are deferred.
@@ -71,7 +71,7 @@ Newton-Cotes integration, quadrature, and more.
 :::
 
 :::{card} Audit the evidence
-:link: ./60-validation/index.md
+:link: ./60-validation/validation.md
 
 Start here if you want to know what makes a numerical claim trustworthy. The
 validation section connects public APIs to finite-difference audits, method
@@ -133,14 +133,14 @@ evidence.
   package, turns on float64, and walks one worked example end to end. Then follow
   the bridge into [](./20-methods/methods.md).
 - **Evaluating the broader package vision?** Read
-  [](./20-architecture/science-general-vision.md) for the module boundary, the
+  [](./70-project/direction/science-general-vision.md) for the module boundary, the
   non-astronomy value proposition, and the checklist for future core modules.
 - **Using units today?** The [](./50-api/physical-representations/units.md) reference documents the
   current `jaxstro.units` contract. The
   [quantity representation page](./30-representations/units-quantities/quantity-system.md) describes
   an implemented evaluation surface, not an approved ecosystem migration.
 - **Evaluating spatial operations?** Start with [](./50-api/discrete-space/spatial.md) for the
-  import surface and [](./60-validation/index.md) for evidence around neighbor
+  import surface and [](./60-validation/validation.md) for evidence around neighbor
   gathering and exact-pair behavior. The
   [spatial theory chapter](./20-methods/discrete-space/spatial.md) explains candidate recall,
   capacity, overflow, and exact fixed-radius contracts.
@@ -148,7 +148,7 @@ evidence.
   [generated provenance cards](./50-api/research-infrastructure/source-provenance/source-provenance.md) connect registered
   constants and transforms to their sources, reference values, and validation
   state.
-- **Porting code from a sibling package?** The [decision log](./30-decisions/index.md)
+- **Porting code from a sibling package?** The [decision log](./70-project/decisions/decisions.md)
   explains the hoists and reconciliations (`cumulative_trapz`, Newton-PPF, the
   quadrature factory) that changed call sites.
 - **Working with atmosphere spectra?** Start with
@@ -159,7 +159,7 @@ evidence.
   the hardened foundation modules.
 - **Auditing a number?** Start with the
   [constants provenance card](./50-api/research-infrastructure/source-provenance/constants.md), then follow its
-  source and validation links. The [validation](./60-validation/index.md)
+  source and validation links. The [validation](./60-validation/validation.md)
   section is where numerical claims meet their tests.
 
 ## What jaxstro is *not*

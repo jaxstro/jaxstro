@@ -39,7 +39,6 @@ TASK_1_ROUTED_PAGES = (
     "10-foundations/foundations.md",
     "40-workflows/differentiable-research/science-patterns.md",
     "40-workflows/workflows.md",
-    "80-instructor/teaching-with-jaxstro.md",
 )
 
 

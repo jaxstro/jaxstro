@@ -13,7 +13,7 @@ different entry routes. Start with a research question, then find its equation,
 representation, method, transform boundary, workflow, evidence, and owner. Use
 every pattern with
 [](../../00-start-here/first-research-calculation.md). Signatures live in
-[](../../50-api/api.md), and claims resolve to [](../../60-validation/index.md).
+[](../../50-api/api.md), and claims resolve to [](../../60-validation/validation.md).
 
 ## Locate an event or equilibrium
 

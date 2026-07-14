@@ -16,7 +16,7 @@ After this chapter, you should be able to audit support and normalization,
 explain why a correct equality branch can still have a wrong parameter
 derivative, and verify CDF/PPF consistency through a removable singularity.
 
-### Predict → compute → audit: cross a limiting exponent
+### Predict -> compute -> audit: cross a limiting exponent
 
 Predict the logarithmic limit and derivative as $\alpha\rightarrow-1$. Compute
 with the smooth kernels, then audit normalization, round trips, analytic limits,

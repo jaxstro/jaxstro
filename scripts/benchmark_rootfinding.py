@@ -47,7 +47,9 @@ RTOL = 1.0e-12
 SAFEGUARD_FRACTION = 0.1
 REPO_ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = REPO_ROOT / "docs" / "validation" / "rootfinding-performance.json"
-REPORT = REPO_ROOT / "docs" / "validation" / "rootfinding-performance.md"
+REPORT = (
+    REPO_ROOT / "docs" / "60-validation" / "numerical" / "rootfinding-performance.md"
+)
 
 
 class Case(NamedTuple):

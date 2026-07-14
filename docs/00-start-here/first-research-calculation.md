@@ -81,7 +81,7 @@ includes whether the bracket remained valid and why the algorithm stopped.
 ```
 
 The [](../20-methods/change-constraints-evolution/rootfinding.md) chapter develops this example. The
-[](../60-validation/index.md) page links its claims to executable tests and
+[](../60-validation/validation.md) page links its claims to executable tests and
 evidence artifacts.
 
 ## Example 2: a removable distribution limit

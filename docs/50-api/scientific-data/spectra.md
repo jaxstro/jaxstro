@@ -44,7 +44,7 @@ filters, photometry, instruments, or model validity.
 
 See [](../../30-representations/spectra-atmospheres/spectra-data-architecture.md),
 [](../../30-representations/spectra-atmospheres/conservative-spectral-resampling.md),
-and [](../../validation/spectra-performance.md).
+and [](../../60-validation/data/spectra-performance.md).
 
 ## Canonical import example
 

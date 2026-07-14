@@ -33,7 +33,7 @@ Runtime numerical kernels are designed for `jax.jit` and `jax.vmap`.
 Differentiability is a per-method contract: smooth paths are checked against
 finite differences, while discrete spatial preprocessing, hard boundaries, and
 singular geometries are documented rather than assigned invented gradients. See
-the [validation anchors](docs/60-validation/index.md).
+the [validation anchors](docs/60-validation/validation.md).
 
 ---
 

@@ -35,7 +35,7 @@ integrated totals only over the overlapping domain.
 ## Contract and evidence links
 
 See [](../../20-methods/discrete-space/grids.md) and
-[](../../60-validation/index.md).
+[](../../60-validation/validation.md).
 
 ## Canonical import example
 

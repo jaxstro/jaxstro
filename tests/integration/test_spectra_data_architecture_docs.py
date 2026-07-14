@@ -84,6 +84,6 @@ def test_page_embeds_registered_figure_and_evidence_routes() -> None:
         "preparation through a JAX-ready local grid to downstream observables"
     ) in text
     assert DESIGN_RECORD.is_file()
-    assert "[](../../60-validation/index.md)" in text
+    assert "[](../../60-validation/validation.md)" in text
     assert "[](./atmosphere-capabilities.md)" in text
     assert "[](../../40-workflows/data-pipelines/query-atmosphere-spectra.md)" in text

@@ -37,7 +37,7 @@ comparisons raise or return explicit failed reports.
 
 ## Contract and evidence links
 
-See [](../../60-validation/index.md), the generated [](./contracts.md), and the
+See [](../../60-validation/validation.md), the generated [](./contracts.md), and the
 [source-backed provenance cards](./source-provenance/source-provenance.md).
 
 ## Canonical import example

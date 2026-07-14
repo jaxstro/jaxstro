@@ -6,7 +6,7 @@ import importlib
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-ARCHITECTURE_PAGE = REPO_ROOT / "docs" / "20-architecture" / "index.md"
+ARCHITECTURE_PAGE = REPO_ROOT / "docs" / "70-project" / "direction" / "architecture.md"
 
 
 def _architecture_text() -> str:
@@ -53,10 +53,10 @@ def test_architecture_distinguishes_two_provenance_surfaces() -> None:
     assert "source-backed provenance cards" in text
     assert "runtime artifact manifests" in text
     assert (
-        "../50-api/research-infrastructure/source-provenance/source-provenance.md"
+        "../../50-api/research-infrastructure/source-provenance/source-provenance.md"
         in text
     )
-    assert "../50-api/research-infrastructure/provenance.md" in text
+    assert "../../50-api/research-infrastructure/provenance.md" in text
 
 
 def test_architecture_embeds_accessible_registered_figure() -> None:

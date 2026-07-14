@@ -183,5 +183,5 @@ modules.
 
 For signatures and payload ownership, see
 [](../../50-api/approximation-integration/regular-grid.md). The assertion-bearing test
-map is in [](../../60-validation/index.md). The five package-wide differentiation
+map is in [](../../60-validation/validation.md). The five package-wide differentiation
 labels are defined in [](../methods.md#gradient-contracts).

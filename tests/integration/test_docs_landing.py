@@ -56,7 +56,7 @@ def test_landing_routes_and_ecosystem_status_are_current() -> None:
         "./50-api/research-infrastructure/source-provenance/source-provenance.md"
         in text
     )
-    assert "./60-validation/index.md" in text
+    assert "./60-validation/validation.md" in text
     assert "./20-methods/discrete-space/spatial.md" in text
     assert "./30-representations/spectra-atmospheres/atmosphere-capabilities.md" in text
     assert "spatial" in text.lower()

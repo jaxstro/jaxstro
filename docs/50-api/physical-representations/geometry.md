@@ -37,7 +37,7 @@ composition order is not inferred.
 ## Contract and evidence links
 
 See [](../../30-representations/geometry-coordinates/geometry.md) and
-[](../../60-validation/index.md).
+[](../../60-validation/validation.md).
 
 ## Canonical import example
 

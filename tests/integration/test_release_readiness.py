@@ -67,7 +67,7 @@ def test_active_workflows_use_node24_action_releases() -> None:
 
 
 def test_release_checklist_preserves_irreversible_stop_gates() -> None:
-    checklist_path = REPO_ROOT / "docs" / "95-release" / "checklist.md"
+    checklist_path = REPO_ROOT / "docs" / "70-project" / "release" / "checklist.md"
     assert checklist_path.is_file()
     checklist = checklist_path.read_text(encoding="utf-8")
 
@@ -98,11 +98,11 @@ def test_release_metadata_is_public_and_navigation_includes_checklist() -> None:
     assert 'license: "Apache-2.0"' in citation
     assert "bash scripts/check.sh" in contributing
     assert "bash scripts/check_docs.sh" in contributing
-    assert "file: 95-release/checklist.md" in myst
+    assert "file: 70-project/release/checklist.md" in myst
 
-    release_index = (REPO_ROOT / "docs" / "95-release" / "index.md").read_text(
-        encoding="utf-8"
-    )
+    release_index = (
+        REPO_ROOT / "docs" / "70-project" / "release" / "release.md"
+    ).read_text(encoding="utf-8")
     assert "[](./checklist.md)" in release_index
     assert "This section will hold" not in release_index
 

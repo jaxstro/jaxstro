@@ -8,7 +8,7 @@ from pathlib import Path
 from jaxstro.testing import resolve_node_ids
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-VALIDATION_PAGE = REPO_ROOT / "docs" / "60-validation" / "index.md"
+VALIDATION_PAGE = REPO_ROOT / "docs" / "60-validation" / "validation.md"
 
 
 def _validation_text() -> str:

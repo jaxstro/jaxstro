@@ -11,7 +11,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 BSPLINE_PAGE = (
     REPO_ROOT / "docs" / "20-methods" / "approximation-integration" / "bsplines.md"
 )
-BIBLIOGRAPHY = REPO_ROOT / "docs" / "99-bibliography" / "references.bib"
+BIBLIOGRAPHY = REPO_ROOT / "docs" / "70-project" / "bibliography" / "references.bib"
 DESIGN_RECORD = (
     REPO_ROOT
     / "laboratory"
@@ -91,5 +91,5 @@ def test_bspline_page_routes_to_api_validation_and_contract_taxonomy() -> None:
     text = _page_text()
 
     assert "[](../../50-api/approximation-integration/splines.md)" in text
-    assert "[](../../60-validation/index.md)" in text
+    assert "[](../../60-validation/validation.md)" in text
     assert "[](../methods.md#gradient-contracts)" in text

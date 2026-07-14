@@ -86,6 +86,6 @@ manifests, fixed output shapes, and JIT compatibility where the static-count
 contract applies. The example above is executed by the documentation tests.
 
 For signatures, see [](../../50-api/randomness/random.md). For the
-assertion-bearing evidence map, see [](../../60-validation/index.md). The
+assertion-bearing evidence map, see [](../../60-validation/validation.md). The
 package's differentiation labels, including `validation_only`, are defined in
 [](../methods.md#gradient-contracts).

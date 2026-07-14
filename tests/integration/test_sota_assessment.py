@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-PAGE = REPO_ROOT / "docs" / "90-development-log" / "sota-assessment.md"
+PAGE = REPO_ROOT / "docs" / "70-project/development" / "sota-assessment.md"
 
 
 def test_sota_assessment_covers_package_and_website_dimensions() -> None:
@@ -28,7 +28,8 @@ def test_sota_assessment_covers_package_and_website_dimensions() -> None:
         "Performance and compilation evidence",
         "Evidence freshness",
         "Provenance",
-        "Curriculum quality",
+        "Research workflow coverage",
+        "Limitation coverage",
         "Accessibility",
         "Discoverability",
         "Downstream reuse",
@@ -57,17 +58,32 @@ def test_sota_assessment_is_navigable() -> None:
         (REPO_ROOT / "docs" / "route-manifest.json").read_text(encoding="utf-8")
     )
 
-    assert myst.count("90-development-log/sota-assessment.md") == 1
-    assert manifest["90-development-log/sota-assessment.md"] == "/sota-assessment"
+    assert myst.count("70-project/development/sota-assessment.md") == 1
+    assert manifest["70-project/development/sota-assessment.md"] == "/sota-assessment"
 
 
 def test_sota_assessment_calibrates_unfinished_infrastructure() -> None:
     text = PAGE.read_text(encoding="utf-8")
 
     assert "| Serialization | implemented |" in text
-    assert "no public root round-trip/replay serializer is yet validated" in text
+    assert "no public root-result replay serializer is validated" in text
     assert "| Downstream reuse | implemented |" in text
-    assert "pinned adoption and compatibility evidence is not yet" in text
-    assert "First deliver the planned transform-contract or maturity\nregistry" in text
-    assert "established specialized solvers as the default\nowner" in text
-    assert "specialized libraries cannot own the solver" not in text
+    assert "pinned adoption and compatibility evidence is not yet generated" in text
+    assert "Lineax owns general iterative linear solving" in text
+    assert "Optimistix owns general nonlinear" in text
+    assert "Quadax owns adaptive quadrature" in text
+    assert "Diffrax owns adaptive differential" in text
+
+
+def test_sota_assessment_uses_the_approved_future_runtime_priority() -> None:
+    text = PAGE.read_text(encoding="utf-8")
+    priorities = (
+        "1. `jaxstro.ml`",
+        "2. `jaxstro.numerics.qmc`",
+        "3. `jaxstro.uncertainty`",
+        "4. `jaxstro.signal`",
+        "5. consumer-driven ecosystem adapters",
+        "6. fields only after two consumers",
+    )
+    positions = [text.index(priority) for priority in priorities]
+    assert positions == sorted(positions)

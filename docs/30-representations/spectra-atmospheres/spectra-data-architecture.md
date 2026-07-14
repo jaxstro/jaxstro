@@ -213,4 +213,4 @@ as supported science.
 
 See [](./atmosphere-capabilities.md),
 [](../../40-workflows/data-pipelines/query-atmosphere-spectra.md), and
-[](../../60-validation/index.md) for the product, workflow, and evidence boundaries.
+[](../../60-validation/validation.md) for the product, workflow, and evidence boundaries.

@@ -79,4 +79,4 @@ Status labels separate implemented Jaxstro capabilities from planned propagation
 work and deferred field abstractions. Numerical algorithms live under
 [](../20-methods/methods.md), research workflows remain at their current published
 locations until their dedicated migration, and validation anchors live in
-[](../60-validation/index.md).
+[](../60-validation/validation.md).

@@ -36,7 +36,7 @@ discretization error or certify convergence.
 
 See [](../../20-methods/approximation-integration/cumulative-trapz.md),
 [](../../20-methods/approximation-integration/quadrature.md), and
-[](../../60-validation/index.md).
+[](../../60-validation/validation.md).
 
 ## Canonical import example
 

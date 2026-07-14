@@ -40,8 +40,8 @@ certificate, and the analytic fixture.
 
 Check the analytic square-root identity, signed residual, final bracket width,
 certificate, and analytic implicit derivative independently. Then inspect the
-registered [](../../validation/rootfinding-performance.md) and
-[](../../validation/implicit-root-gradients.md) evidence.
+registered [](../../60-validation/numerical/rootfinding-performance.md) and
+[](../../60-validation/numerical/implicit-root-gradients.md) evidence.
 
 ## Misconception check
 

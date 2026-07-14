@@ -62,7 +62,7 @@ density = (mass / radius**3).to(q.g / q.cm**3)
 
 The system is additive. Existing `jaxstro.units` behavior remains stable while
 downstream packages evaluate quantity migration at their own boundaries. The in-house
-design rationale is recorded in [](../../30-decisions/0006-build-own-quantity-not-unxt.md).
+design rationale is recorded in [](../../70-project/decisions/0006-build-own-quantity-not-unxt.md).
 
 ## Quantity data model
 

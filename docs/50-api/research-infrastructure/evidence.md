@@ -38,7 +38,7 @@ set method-specific scientific thresholds or replace source provenance.
 
 ## Contract and evidence links
 
-See [](../../60-validation/index.md), [](../../60-validation/evidence-index.md),
+See [](../../60-validation/validation.md), [](../../60-validation/evidence-index.md),
 and the generated [](./contracts.md) module contract.
 
 ## Canonical import example

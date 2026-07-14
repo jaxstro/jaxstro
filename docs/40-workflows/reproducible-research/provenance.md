@@ -115,7 +115,7 @@ The generated [](../../50-api/research-infrastructure/source-provenance/source-p
 
 Zero registered atmosphere cards do not mean complete atmosphere coverage. The
 empty generated family is an explicit gap while atmosphere backends and their
-source claims remain in progress. The [](../../60-validation/index.md) records the
+source claims remain in progress. The [](../../60-validation/validation.md) records the
 registry integrity and freshness gates alongside the runtime-manifest tests.
 
 ## Deterministic audit procedure

@@ -40,7 +40,7 @@ cutover announcement.
 
 See [](../../30-representations/units-quantities/quantity-system.md),
 [](../../30-representations/units-quantities/quantities.md), and
-[](../../30-decisions/0006-build-own-quantity-not-unxt.md).
+[](../../70-project/decisions/0006-build-own-quantity-not-unxt.md).
 
 ## Canonical import example
 

@@ -37,7 +37,7 @@ constants; convenience wrappers may resolve `units=None` to CGS.
 ## Contract and evidence links
 
 See [](../../30-representations/units-quantities/quantities.md),
-[](../../30-decisions/0007-cgs-as-default-units.md), and the
+[](../../70-project/decisions/0007-cgs-as-default-units.md), and the
 [source-backed cards](../research-infrastructure/source-provenance/constants.md).
 
 ## Canonical import example

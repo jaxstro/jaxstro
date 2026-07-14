@@ -22,8 +22,8 @@ FIGURES: dict[str, FigureSpec] = {
             name="jaxstro-foundation",
             builder=build_jaxstro_foundation,
             stem="jaxstro-foundation",
-            page="20-architecture/index.md",
-            site_path="docs/20-architecture/figures/jaxstro-foundation.webp",
+            page="70-project/direction/architecture.md",
+            site_path="docs/70-project/direction/figures/jaxstro-foundation.webp",
             seed=0,
             caption=(
                 "One-way package dependencies and the current jaxstro ownership, "

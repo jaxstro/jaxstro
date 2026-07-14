@@ -39,7 +39,9 @@ from jaxstro.numerics import (  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = REPO_ROOT / "docs" / "validation" / "implicit-root-gradients.json"
-REPORT = REPO_ROOT / "docs" / "validation" / "implicit-root-gradients.md"
+REPORT = (
+    REPO_ROOT / "docs" / "60-validation" / "numerical" / "implicit-root-gradients.md"
+)
 FD_STEP = 1.0e-5
 RESIDUAL_LIMIT = 1.0e-12
 WIDTH_LIMIT = 1.0e-12

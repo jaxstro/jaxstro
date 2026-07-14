@@ -11,7 +11,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 REGULAR_GRID_PAGE = (
     REPO_ROOT / "docs" / "20-methods" / "approximation-integration" / "regular-grid.md"
 )
-BIBLIOGRAPHY = REPO_ROOT / "docs" / "99-bibliography" / "references.bib"
+BIBLIOGRAPHY = REPO_ROOT / "docs" / "70-project" / "bibliography" / "references.bib"
 DESIGN_RECORD = (
     REPO_ROOT
     / "laboratory"
@@ -92,5 +92,5 @@ def test_regular_grid_page_embeds_registered_figure_and_evidence_routes() -> Non
     ) in text
     assert DESIGN_RECORD.is_file()
     assert "[](../../50-api/approximation-integration/regular-grid.md)" in text
-    assert "[](../../60-validation/index.md)" in text
+    assert "[](../../60-validation/validation.md)" in text
     assert "[](../methods.md#gradient-contracts)" in text

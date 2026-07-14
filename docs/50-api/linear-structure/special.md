@@ -36,7 +36,7 @@ invent finite values outside their mathematical domains.
 ## Contract and evidence links
 
 See [](../../20-methods/linear-structure/special-functions.md) and
-[](../../60-validation/index.md).
+[](../../60-validation/validation.md).
 
 ## Canonical import example
 

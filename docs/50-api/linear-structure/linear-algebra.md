@@ -40,7 +40,7 @@ infinity, never NaN.
 ## Contract and evidence links
 
 See [](../../20-methods/linear-structure/linear-algebra.md) and
-[](../../60-validation/index.md).
+[](../../60-validation/validation.md).
 
 ## Canonical import example
 

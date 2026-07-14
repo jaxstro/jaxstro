@@ -21,14 +21,15 @@ from laboratory.jaxtroviz.style import render_webp_bytes  # noqa: E402
 def test_architecture_figure_is_registered_for_the_approved_page() -> None:
     spec = FIGURES["jaxstro-foundation"]
 
-    assert spec.page == "20-architecture/index.md"
+    assert spec.page == "70-project/direction/architecture.md"
     assert spec.seed == 0
     assert spec.stem == "jaxstro-foundation"
-    assert spec.site_path == "docs/20-architecture/figures/jaxstro-foundation.webp"
+    assert spec.site_path == "docs/70-project/direction/figures/jaxstro-foundation.webp"
     assert spec.site_webp == (
         Path(__file__).resolve().parents[2]
         / "docs"
-        / "20-architecture"
+        / "70-project"
+        / "direction"
         / "figures"
         / "jaxstro-foundation.webp"
     )

@@ -14,15 +14,15 @@ project:
     - numerics
     - units
   bibliography:
-    - 99-bibliography/references.bib
+    - 70-project/bibliography/references.bib
   exclude:
     - plans/**
     - _build/**
-  # The ported ADRs (30-decisions/) keep their original working-log frontmatter
+  # The ported ADRs (70-project/decisions/) keep their original working-log frontmatter
   # keys (id/status/supersedes/decided_by/last_read) verbatim. MyST's page-
   # frontmatter schema does not know these keys; silence the resulting per-page
   # warning rather than strip the provenance. (Documented pattern for custom ADR
-  # frontmatter — myst-projects-and-workflows.)
+  # frontmatter - myst-projects-and-workflows.)
   error_rules:
     - rule: valid-page-frontmatter
       severity: ignore
@@ -176,32 +176,6 @@ project:
             - file: 40-workflows/investigations/root-values-and-sensitivities.md
             - file: 40-workflows/investigations/powerlaw-removable-limit.md
             - file: 40-workflows/investigations/interpolation-boundary-policies.md
-    - title: Instructor resources
-      children:
-        - file: 80-instructor/instructor-resources.md
-        - file: 80-instructor/teaching-with-jaxstro.md
-        - file: 80-instructor/assessment-rubric.md
-    - title: Architecture
-      children:
-        - file: 20-architecture/index.md
-        - file: 20-architecture/science-general-vision.md
-    - title: Decisions (ADRs)
-      children:
-        - file: 30-decisions/index.md
-        - file: 30-decisions/0001-thin-foundation-posture.md
-        - file: 30-decisions/0002-adopt-equinox-foundation.md
-        - file: 30-decisions/0003-standalone-uv-hatchling-project.md
-        - file: 30-decisions/0004-apache-2-0-license.md
-        - file: 30-decisions/0005-diataxis-docs-with-adr-meta.md
-        - file: 30-decisions/0006-build-own-quantity-not-unxt.md
-        - file: 30-decisions/0007-cgs-as-default-units.md
-        - file: 30-decisions/0008-reject-ift-from-core.md
-        - file: 30-decisions/0009-jaxstro-params-selective-inference.md
-        - file: 30-decisions/0010-ecosystem-config-architecture.md
-        - file: 30-decisions/0011-apache-2-0-standardization.md
-        - file: 30-decisions/0012-ecosystem-multi-package-maintenance.md
-        - file: 30-decisions/0013-distribute-as-siblings-defer-namespace.md
-        - file: 30-decisions/0014-provenance-registry-hoist.md
     - title: API reference
       children:
         - file: 50-api/api.md
@@ -267,25 +241,70 @@ project:
                 - file: 50-api/research-infrastructure/source-provenance/atmospheres.md
     - title: Validation
       children:
-        - file: 60-validation/index.md
+        - file: 60-validation/validation.md
         - file: 60-validation/evidence-index.md
-        - file: validation/rootfinding-performance.md
-        - file: validation/implicit-root-gradients.md
-        - file: validation/spectra-performance.md
-    - title: Development log
+        - title: Numerical evidence
+          children:
+            - file: 60-validation/numerical/rootfinding-performance.md
+            - file: 60-validation/numerical/implicit-root-gradients.md
+        - title: Data evidence
+          children:
+            - file: 60-validation/data/spectra-performance.md
+        - title: Reusable methods
+          children:
+            - file: 60-validation/methods/validation-methods.md
+    - title: Project
       children:
-        - file: 90-development-log/index.md
-        - file: 90-development-log/future-capabilities-roadmap.md
-        - file: 90-development-log/numerical-methods-roadmap.md
-        - file: 90-development-log/sota-assessment.md
-        - file: 90-development-log/package-assessment-scorecard.md
-    - title: Release notes
-      children:
-        - file: 95-release/index.md
-        - file: 95-release/checklist.md
-    - title: Bibliography
-      children:
-        - file: 99-bibliography/index.md
+        - file: 70-project/project.md
+        - title: Direction
+          children:
+            - file: 70-project/direction/architecture.md
+            - file: 70-project/direction/science-general-vision.md
+        - title: Development
+          children:
+            - file: 70-project/development/development.md
+            - file: 70-project/development/future-capabilities-roadmap.md
+            - file: 70-project/development/numerical-methods-roadmap.md
+            - file: 70-project/development/sota-assessment.md
+            - file: 70-project/development/package-assessment-scorecard.md
+        - title: Decisions
+          children:
+            - file: 70-project/decisions/decisions.md
+            - file: 70-project/decisions/0001-thin-foundation-posture.md
+              hidden: true
+            - file: 70-project/decisions/0002-adopt-equinox-foundation.md
+              hidden: true
+            - file: 70-project/decisions/0003-standalone-uv-hatchling-project.md
+              hidden: true
+            - file: 70-project/decisions/0004-apache-2-0-license.md
+              hidden: true
+            - file: 70-project/decisions/0005-diataxis-docs-with-adr-meta.md
+              hidden: true
+            - file: 70-project/decisions/0006-build-own-quantity-not-unxt.md
+              hidden: true
+            - file: 70-project/decisions/0007-cgs-as-default-units.md
+              hidden: true
+            - file: 70-project/decisions/0008-reject-ift-from-core.md
+              hidden: true
+            - file: 70-project/decisions/0009-jaxstro-params-selective-inference.md
+              hidden: true
+            - file: 70-project/decisions/0010-ecosystem-config-architecture.md
+              hidden: true
+            - file: 70-project/decisions/0011-apache-2-0-standardization.md
+              hidden: true
+            - file: 70-project/decisions/0012-ecosystem-multi-package-maintenance.md
+              hidden: true
+            - file: 70-project/decisions/0013-distribute-as-siblings-defer-namespace.md
+              hidden: true
+            - file: 70-project/decisions/0014-provenance-registry-hoist.md
+              hidden: true
+        - title: Release
+          children:
+            - file: 70-project/release/release.md
+            - file: 70-project/release/checklist.md
+        - title: Bibliography
+          children:
+            - file: 70-project/bibliography/bibliography.md
 site:
   template: book-theme
   options:

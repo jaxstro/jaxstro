@@ -282,7 +282,7 @@ def test_atmosphere_manifest_path_and_validation_link_are_distinct() -> None:
     assert "`docs/validation/atmosphere-interpolation.json`" in text
     assert link is not None
     target = (page.parent / link.group(1)).resolve()
-    assert target == DOCS / "60-validation" / "index.md"
+    assert target == DOCS / "60-validation" / "validation.md"
     manifest = json.loads((DOCS / "route-manifest.json").read_text(encoding="utf-8"))
     assert manifest[target.relative_to(DOCS).as_posix()].startswith("/")
     assert not re.search(

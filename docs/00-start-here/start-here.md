@@ -34,7 +34,7 @@ If you already know part of that route, use
 
 You need Python 3.11 or newer and [uv](https://docs.astral.sh/uv/). jaxstro
 depends only on JAX, jaxlib, jaxtyping, and equinox: no astropy, no scipy, no
-solver libraries (see [](../30-decisions/0001-thin-foundation-posture.md)). A
+solver libraries (see [](../70-project/decisions/0001-thin-foundation-posture.md)). A
 working knowledge of `jax.numpy` helps but is not assumed.
 
 ## Install

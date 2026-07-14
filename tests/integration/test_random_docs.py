@@ -12,7 +12,7 @@ RANDOM_PAGE = REPO_ROOT / "docs" / "20-methods" / "probability-sampling" / "rand
 SAMPLING_PAGE = (
     REPO_ROOT / "docs" / "20-methods" / "probability-sampling" / "sampling.md"
 )
-BIBLIOGRAPHY = REPO_ROOT / "docs" / "99-bibliography" / "references.bib"
+BIBLIOGRAPHY = REPO_ROOT / "docs" / "70-project" / "bibliography" / "references.bib"
 
 
 def _page_text() -> str:
@@ -109,5 +109,5 @@ def test_random_claims_have_primary_provenance() -> None:
 def test_random_page_routes_to_api_validation_and_contract_taxonomy() -> None:
     for text in (_page_text(), _sampling_text()):
         assert "[](../../50-api/randomness/random.md)" in text
-        assert "[](../../60-validation/index.md)" in text
+        assert "[](../../60-validation/validation.md)" in text
         assert "[](../methods.md#gradient-contracts)" in text

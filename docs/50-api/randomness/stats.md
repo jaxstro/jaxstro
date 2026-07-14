@@ -37,7 +37,7 @@ not turn those numerical policies into scientific validity claims.
 ## Contract and evidence links
 
 See [](../../20-methods/probability-sampling/distributions.md) and
-[](../../60-validation/index.md).
+[](../../60-validation/validation.md).
 
 ## Canonical import example
 

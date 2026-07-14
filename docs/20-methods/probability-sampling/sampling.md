@@ -104,6 +104,6 @@ compatibility with static sample counts. The example above is executed by the
 documentation test.
 
 For signatures, see [](../../50-api/randomness/random.md). For the
-assertion-bearing evidence map, see [](../../60-validation/index.md). The
+assertion-bearing evidence map, see [](../../60-validation/validation.md). The
 package's differentiation labels, including `validation_only`, are defined in
 [](../methods.md#gradient-contracts).

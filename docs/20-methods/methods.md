@@ -157,7 +157,7 @@ an expected-zero sensitivity, a stopped gradient, a surrogate, and a discrete
 index builder require different evidence. For `smooth_pathwise` and
 `known_zero`, the audit computes both AD and an independent finite-difference
 estimate. Other contracts fail closed for inference and carry only the narrower
-claim they name. See [](../60-validation/index.md) for the measured audit.
+claim they name. See [](../60-validation/validation.md) for the measured audit.
 
 (p2-fixed-iteration)=
 ## 2. Fixed iteration is necessary, not sufficient
@@ -263,7 +263,7 @@ analytic result or a known answer. "It converged" and "it's elegant" are not
 evidence. The radiation constant in this package is $a = 7.565733250\times10^{-15}\,
 \erg\,\mathrm{cm}^{-3}\,\mathrm{K}^{-4}$ precisely because it is derived as
 $4\sigma_\mathrm{SB}/c$ from the CODATA values, not rounded independently
-(see [](../95-release/index.md)).
+(see [](../70-project/release/release.md)).
 
 (p10-vectorize)=
 ## 10. Vectorize and compose
@@ -344,4 +344,4 @@ boundaries in specific methods. Read on:
   [10](#p10-vectorize)).
 
 Then map principles to call signatures in [](../50-api/api.md), and the design
-*choices* behind them in [](../30-decisions/index.md).
+*choices* behind them in [](../70-project/decisions/decisions.md).

@@ -27,7 +27,7 @@ Before substantial changes, inspect:
 - `STATUS.md`
 - `pyproject.toml`
 - the relevant source, tests, theory page, API reference, and validation anchors
-- applicable ADRs under `docs/30-decisions/`
+- applicable ADRs under `docs/70-project/decisions/`
 
 ## Current package map
 

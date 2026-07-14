@@ -39,7 +39,7 @@ Approximate candidates are not silently promoted to exact neighbor results.
 ## Contract and evidence links
 
 See [](../../20-methods/discrete-space/spatial.md), the generated
-[](../research-infrastructure/contracts.md), and [](../../60-validation/index.md).
+[](../research-infrastructure/contracts.md), and [](../../60-validation/validation.md).
 
 ## Canonical import example
 

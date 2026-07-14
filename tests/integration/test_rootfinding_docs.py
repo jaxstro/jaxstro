@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-ADR = REPO_ROOT / "docs" / "30-decisions" / "0008-reject-ift-from-core.md"
+ADR = REPO_ROOT / "docs" / "70-project" / "decisions" / "0008-reject-ift-from-core.md"
 ROOTFINDING = (
     REPO_ROOT
     / "docs"
@@ -35,7 +35,7 @@ def test_numerical_pages_expand_implicit_function_theorem_before_ift() -> None:
     paths = (
         ROOTFINDING,
         REPO_ROOT / "docs" / "50-api" / "change-constraints" / "rootfinding.md",
-        REPO_ROOT / "docs" / "60-validation" / "index.md",
+        REPO_ROOT / "docs" / "60-validation" / "validation.md",
     )
     for path in paths:
         text = path.read_text(encoding="utf-8")
@@ -48,7 +48,7 @@ def test_rootfinding_page_embeds_accessible_evidence_figures_and_activity() -> N
     assert "../../10-theory/figures/rootfinding-safeguards.webp" in text
     assert "../../10-theory/figures/rootfinding-value-versus-ift.webp" in text
     assert text.count(":alt:") >= 2
-    assert "Predict → compute → audit: which derivative are you asking for?" in text
+    assert "Predict -> compute -> audit: which derivative are you asking for?" in text
     assert "Metric identity" in text
     assert "Central-FD root sensitivity" in text
 

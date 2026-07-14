@@ -182,10 +182,10 @@ this preprocessing layer.
   - Public path
   - Required check
 * - Morton-ordered grouping on a cubic power-of-two grid
-  - `assign_particles_to_bins` → `fill_bins` or `fill_bins_exact`
+  - `assign_particles_to_bins` -> `fill_bins` or `fill_bins_exact`
   - Capacity and boundary-clamping policy
 * - Arbitrary dense grid dimensions
-  - `assign_to_cells_linear` → `fill_bins_exact`
+  - `assign_to_cells_linear` -> `fill_bins_exact`
   - Dense cell-count and capacity bounds
 * - Bounded approximate kNN candidates
   - `approx_knn_candidates`
@@ -196,4 +196,4 @@ this preprocessing layer.
 ```
 
 The public ownership map is in [](../../50-api/discrete-space/spatial.md), and quantitative evidence
-belongs in [](../../60-validation/index.md).
+belongs in [](../../60-validation/validation.md).
