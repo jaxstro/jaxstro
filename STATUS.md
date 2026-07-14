@@ -1,6 +1,8 @@
 # jaxstro — status
 
-next: Design a contract-derived foundations figure and learner-evaluation slice covering derivative maps, model/parameter geometry, evidence classes, accessibility, and misconception transfer. Keep callable contract expansion and downstream adoption as separate package roadmap work.
+next: Review and approve the researcher-first Start Here and connected Foundations routes, then begin the numerical-method family migration. The MyST preview is staged at the first approved user review gate; Task 3 has not started.
+
+previous: Researcher-first documentation Tasks 1 and 2 completed on local main (2026-07-13). Start Here now includes beginner JAX orientation, first-principles transformed-program examples, a neutral NumPy/JAX/Jaxstro decision table, documentation-use routes, and an executable luminosity map. Foundations now uses semantic Mathematical objects and Models and computation groups with stable public routes, tailored use-case openings, research-only language, ASCII prose plus LaTeX math, and explicit non-deficit readiness framing. Both slices passed focused and affected tests, isolated strict MyST/rendered-route gates, and independent review with no remaining findings.
 
 previous: Added a living future modules and capabilities roadmap to the public Development Log (2026-07-12). It inventories implemented numerical and infrastructure families, preserves the Jaxstro-versus-Informax ownership boundary, and converts the proposed scientific-ML, iterative-solver, nonlinear-system, quasi-Monte-Carlo, adaptive-quadrature, signal, uncertainty-propagation, and field-method expansions into definition-of-done checklists. Focused documentation contracts and the strict rendered-site gate passed.
 
@@ -37,7 +39,7 @@ in 8 s. Live verification returned 200 for the homepage, release checklist, and 
 CSS. The first run's 404 exposed and permanently ratcheted the `_build/site` versus `_build/html`
 artifact boundary.
 
-blocker: None. The website is live. Tag/PyPI work is deferred.
+blocker: Awaiting Anna's review-gate approval before Methods migration. The shared full docs gate also reports Kepler-owned generated contract artifacts stale; the exact documentation slices pass in isolation.
 due:
 
 ## Phase C — DONE (2026-06-17, branch feature/phase-c-release-hardening, HEAD 40f936e)
