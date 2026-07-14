@@ -41,8 +41,7 @@ stellar-model policy, and data packages own their archive-specific schemas.
   log-weight helpers, and orthogonal polynomial bases without owning downstream
   domain semantics.
 - [x] **Sampling and grid utilities.** Log grids, geometric bin centers/edges,
-  conservative binning, stratified sampling, and carefully validated
-  quasi-random sequences if they can be added without a dependency.
+  conservative binning, and stratified sampling.
 - [x] **Provenance and trust reports.** Deterministic JSON/Markdown summaries
   that connect numerical methods to their validation anchors.
 - [x] **Optimization helpers, first slice.** Robust residual losses,

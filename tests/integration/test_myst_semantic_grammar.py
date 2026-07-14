@@ -354,6 +354,54 @@ def _manifest() -> dict[str, str]:
     return json.loads((DOCS / "route-manifest.json").read_text(encoding="utf-8"))
 
 
+def _toc_page_descendants(node: object) -> int:
+    if isinstance(node, list):
+        return sum(_toc_page_descendants(item) for item in node)
+    if not isinstance(node, dict):
+        return 0
+    return int("file" in node) + _toc_page_descendants(node.get("children", []))
+
+
+def _toc_structure_errors(
+    nodes: object, *, title_depth: int = 0, ancestry: tuple[str, ...] = ()
+) -> list[str]:
+    """Return semantic-depth and subsection-size violations recursively."""
+    if isinstance(nodes, list):
+        return [
+            error
+            for node in nodes
+            for error in _toc_structure_errors(
+                node, title_depth=title_depth, ancestry=ancestry
+            )
+        ]
+    if not isinstance(nodes, dict):
+        return []
+
+    title = nodes.get("title")
+    node_title_depth = title_depth + int(title is not None)
+    node_ancestry = ancestry + ((str(title),) if title is not None else ())
+    errors: list[str] = []
+    if title is not None and node_title_depth > 2:
+        errors.append(f"TOC title is too deep: {' > '.join(node_ancestry)}")
+    if (
+        title is not None
+        and node_title_depth == 2
+        and not nodes.get("hidden", False)
+        and _toc_page_descendants(nodes) < 3
+    ):
+        errors.append(
+            f"TOC subsection has fewer than 3 pages: {' > '.join(node_ancestry)}"
+        )
+    errors.extend(
+        _toc_structure_errors(
+            nodes.get("children", []),
+            title_depth=node_title_depth,
+            ancestry=node_ancestry,
+        )
+    )
+    return errors
+
+
 def _routed_markdown() -> dict[str, str]:
     return {
         relative: (DOCS / relative).read_text(encoding="utf-8")
@@ -377,6 +425,49 @@ def test_final_toc_has_implicit_home_and_exact_eight_visible_groups() -> None:
     assert tuple(item["title"] for item in toc[1:]) == TOP_LEVEL
     assert all("hidden" not in item for item in toc[1:])
     assert config["site"]["options"]["style"] == "site.css"
+
+
+def test_visible_toc_respects_semantic_depth_and_minimum_subsection_size() -> None:
+    config = yaml.safe_load((DOCS / "myst.yml").read_text(encoding="utf-8"))
+
+    assert _toc_structure_errors(config["project"]["toc"]) == []
+
+
+def test_toc_structure_check_recurses_through_nested_mutations() -> None:
+    undersized = [
+        {
+            "title": "Top",
+            "children": [
+                {
+                    "title": "Small",
+                    "children": [{"file": "one.md"}, {"file": "two.md"}],
+                }
+            ],
+        }
+    ]
+    overdeep = [
+        {
+            "title": "Top",
+            "children": [
+                {
+                    "title": "Large",
+                    "children": [
+                        {"file": "one.md"},
+                        {"file": "two.md"},
+                        {
+                            "title": "Nested",
+                            "children": [{"file": "three.md"}],
+                        },
+                    ],
+                }
+            ],
+        }
+    ]
+
+    assert any(
+        "fewer than 3 pages" in error for error in _toc_structure_errors(undersized)
+    )
+    assert any("too deep" in error for error in _toc_structure_errors(overdeep))
 
 
 def test_final_routes_are_semantic_and_internal_sources_are_excluded() -> None:

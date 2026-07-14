@@ -222,10 +222,8 @@ project:
             - file: 50-api/physical-representations/geometry.md
             - file: 50-api/physical-representations/astrometry.md
             - file: 50-api/physical-representations/params.md
-        - title: Scientific data
-          children:
-            - file: 50-api/scientific-data/spectra.md
-            - file: 50-api/scientific-data/atmospheres-api.md
+        - file: 50-api/scientific-data/spectra.md
+        - file: 50-api/scientific-data/atmospheres-api.md
         - title: Research infrastructure
           children:
             - file: 50-api/research-infrastructure/checks.md
@@ -235,33 +233,23 @@ project:
             - file: 50-api/research-infrastructure/evidence.md
             - file: 50-api/research-infrastructure/provenance.md
             - file: 50-api/research-infrastructure/testing.md
-            - title: Source-backed provenance cards
-              children:
-                - file: 50-api/research-infrastructure/source-provenance/source-provenance.md
-                - file: 50-api/research-infrastructure/source-provenance/constants.md
-                - file: 50-api/research-infrastructure/source-provenance/transforms.md
-                - file: 50-api/research-infrastructure/source-provenance/atmospheres.md
+            - file: 50-api/research-infrastructure/source-provenance/source-provenance.md
+            - file: 50-api/research-infrastructure/source-provenance/constants.md
+            - file: 50-api/research-infrastructure/source-provenance/transforms.md
+            - file: 50-api/research-infrastructure/source-provenance/atmospheres.md
     - title: Validation and evidence
       children:
         - file: 60-validation/validation.md
         - file: 60-validation/evidence-index.md
-        - title: Numerical evidence
-          children:
-            - file: 60-validation/numerical/rootfinding-performance.md
-            - file: 60-validation/numerical/implicit-root-gradients.md
-        - title: Data evidence
-          children:
-            - file: 60-validation/data/spectra-performance.md
-        - title: Reusable methods
-          children:
-            - file: 60-validation/methods/validation-methods.md
+        - file: 60-validation/numerical/rootfinding-performance.md
+        - file: 60-validation/numerical/implicit-root-gradients.md
+        - file: 60-validation/data/spectra-performance.md
+        - file: 60-validation/methods/validation-methods.md
     - title: Project
       children:
         - file: 70-project/project.md
-        - title: Direction
-          children:
-            - file: 70-project/direction/architecture.md
-            - file: 70-project/direction/science-general-vision.md
+        - file: 70-project/direction/architecture.md
+        - file: 70-project/direction/science-general-vision.md
         - title: Development
           children:
             - file: 70-project/development/development.md
@@ -300,13 +288,9 @@ project:
               hidden: true
             - file: 70-project/decisions/0014-provenance-registry-hoist.md
               hidden: true
-        - title: Release
-          children:
-            - file: 70-project/release/release.md
-            - file: 70-project/release/checklist.md
-        - title: Bibliography
-          children:
-            - file: 70-project/bibliography/bibliography.md
+        - file: 70-project/release/release.md
+        - file: 70-project/release/checklist.md
+        - file: 70-project/bibliography/bibliography.md
 site:
   template: book-theme
   options:
