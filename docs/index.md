@@ -137,7 +137,7 @@ evidence.
   non-astronomy value proposition, and the checklist for future core modules.
 - **Using units today?** The [](./40-api/index.md) reference documents the
   current `jaxstro.units` contract. The
-  [quantity architecture page](./20-architecture/quantity-system.md) describes
+  [quantity representation page](./30-representations/units-quantities/quantity-system.md) describes
   an implemented evaluation surface, not an approved ecosystem migration.
 - **Evaluating spatial operations?** Start with [](./40-api/index.md) for the
   import surface and [](./60-validation/index.md) for evidence around neighbor
@@ -152,7 +152,8 @@ evidence.
   explains the hoists and reconciliations (`cumulative_trapz`, Newton-PPF, the
   quadrature factory) that changed call sites.
 - **Working with atmosphere spectra?** Start with
-  [](./20-architecture/atmosphere-capabilities.md) for the local dataset matrix,
+  [](./30-representations/spectra-atmospheres/atmosphere-capabilities.md) for the
+  local dataset matrix,
   processed-artifact status, and the boundary between jaxstro spectra and
   downstream photometry. Atmosphere support is in progress; it does not block
   the hardened foundation modules.

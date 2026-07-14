@@ -40,9 +40,9 @@ def test_committed_route_manifest_matches_all_authored_pages() -> None:
     authored = set(re.findall(r"^\s*- file:\s+(.+\.md)\s*$", myst, re.MULTILINE))
     assert set(manifest) == authored
     assert manifest["index.md"] == "/"
-    assert manifest["20-architecture/spectra-data-architecture.md"] == (
-        "/spectra-data-architecture"
-    )
+    assert manifest[
+        "30-representations/spectra-atmospheres/spectra-data-architecture.md"
+    ] == ("/spectra-data-architecture")
     assert manifest["95-release/checklist.md"] == "/checklist"
     assert manifest["99-bibliography/index.md"] == "/index-10"
     assert manifest["60-validation/evidence-index.md"] == "/evidence-index"

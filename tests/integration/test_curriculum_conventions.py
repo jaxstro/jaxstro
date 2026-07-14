@@ -13,18 +13,22 @@ CHAPTERS = (
     "docs/20-methods/discrete-space/spatial.md",
     "docs/20-methods/change-constraints-evolution/ode.md",
     "docs/20-methods/approximation-integration/quadrature.md",
-    "docs/10-theory/quantities.md",
-    "docs/20-architecture/spectra-data-architecture.md",
+    "docs/30-representations/units-quantities/quantities.md",
+    "docs/30-representations/spectra-atmospheres/spectra-data-architecture.md",
 )
 
 
 def test_substantial_chapters_state_objectives_and_active_learning_prompt() -> None:
     for relative_path in CHAPTERS:
         text = (REPO_ROOT / relative_path).read_text(encoding="utf-8")
-        assert "## Learning objectives" in text, relative_path
-        assert ("Predict → compute → audit" in text) or ("Concept check" in text), (
-            relative_path
-        )
+        if "30-representations" in relative_path:
+            assert "## Representation contract" in text, relative_path
+            assert "Use this page when" in text, relative_path
+        else:
+            assert "## Learning objectives" in text, relative_path
+            assert ("Predict → compute → audit" in text) or ("Concept check" in text), (
+                relative_path
+            )
 
 
 def test_homepage_names_scientific_capabilities_and_all_entry_routes() -> None:

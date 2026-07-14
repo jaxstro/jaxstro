@@ -66,7 +66,8 @@ page retains signatures and usage context rather than duplicating that matrix.
   - Values are JAX-compatible; unit objects and dimensional checks remain static
     metadata at traced boundaries.
   - **Implemented; ecosystem adoption deferred.** See
-    [](../10-theory/quantities.md) and [](../20-architecture/quantity-system.md).
+    [](../30-representations/units-quantities/quantities.md) and
+    [](../30-representations/units-quantities/quantity-system.md).
 * - `jaxstro.constants`
   - CGS physical, nominal-conversion, and photometric constants.
   - Frozen scalar values; no runtime source lookup.
@@ -90,7 +91,8 @@ page retains signatures and usage context rather than duplicating that matrix.
   - Normalization, angular distance, rotations, quaternions, and rigid
     transforms.
   - Smooth away from named zero-vector, coincident, and branch boundaries.
-  - **Implemented.** See [](../10-theory/geometry.md).
+  - **Implemented.** See
+    [](../30-representations/geometry-coordinates/geometry.md).
 * - `jaxstro.numerics`
   - Kernels for interpolation, roots, integration, splines, linear algebra,
     autodiff products, distributions, optimization, ODEs, operators, meshes,
@@ -118,7 +120,7 @@ page retains signatures and usage context rather than duplicating that matrix.
   - Catalog selection and artifact loading are host-side; prepared interpolation
     is JAX-side only where an interpolation policy has passed its evidence gate.
   - **Implemented with explicit policy gaps.** See
-    [](../20-architecture/atmosphere-capabilities.md) and the
+    [](../30-representations/spectra-atmospheres/atmosphere-capabilities.md) and the
     [atmosphere cards](./provenance/atmospheres.md).
 * - `jaxstro.spectra`
   - Generic spectral axes, semantics, provenance, transformations, resampling,
@@ -126,7 +128,7 @@ page retains signatures and usage context rather than duplicating that matrix.
   - Fixed-shape array evaluation supports JAX transforms; product selection,
     artifact I/O, and topology changes remain host-side.
   - **Canonical spectral owner.** See
-    [](../20-architecture/spectra-data-architecture.md) and
+    [](../30-representations/spectra-atmospheres/spectra-data-architecture.md) and
     [](../60-validation/index.md).
 * - `jaxstro.testing`
   - Gradient audits, finite-difference diagnostics, evidence reports, numeric
@@ -377,7 +379,7 @@ helpers over JAX primitives. The method page is [](../20-methods/change-constrai
 `quaternion_rotate(...)` cover axis-angle and quaternion rotations.
 `rigid_transform(...)`, `invert_rigid(...)`, and `compose_rigid(...)` cover
 3D rigid transforms with explicit composition order. The method page is
-[](../10-theory/geometry.md).
+[](../30-representations/geometry-coordinates/geometry.md).
 
 ### `jaxstro.numerics.optimization`
 
@@ -473,8 +475,9 @@ evidence-selected `FluxInterpolation` policy. There is no
 `jaxstro.atmospheres.spectra` compatibility alias.
 
 The dataset matrix is in
-[](../20-architecture/atmosphere-capabilities.md), the ownership and physical
-semantics are in [](../20-architecture/spectra-data-architecture.md), and the
+[](../30-representations/spectra-atmospheres/atmosphere-capabilities.md), the
+ownership and physical semantics are in
+[](../30-representations/spectra-atmospheres/spectra-data-architecture.md), and the
 request recipe is in [](../50-howto/query-atmosphere-spectra.md).
 
 ### `jaxstro.testing`

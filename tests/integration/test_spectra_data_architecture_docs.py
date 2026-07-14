@@ -11,7 +11,13 @@ import pytest
 from jaxstro.spectra import SpectrumStatusCode
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-PAGE = REPO_ROOT / "docs" / "20-architecture" / "spectra-data-architecture.md"
+PAGE = (
+    REPO_ROOT
+    / "docs"
+    / "30-representations"
+    / "spectra-atmospheres"
+    / "spectra-data-architecture.md"
+)
 DESIGN_RECORD = (
     REPO_ROOT
     / "laboratory"
@@ -53,7 +59,7 @@ def test_page_classifies_every_nonportable_fence_and_ownership_boundary() -> Non
 
     assert "```{code-block} text\n:caption: Interface notation, not Python" in text
     assert (
-        text.count("**Execution contract — local processed artifacts required.**") == 1
+        text.count("**Execution contract - local processed artifacts required.**") == 1
     )
     assert "```{list-table} Spectra execution and ownership boundaries" in text
     assert ":label: tbl-spectra-execution-boundaries" in text
@@ -78,6 +84,6 @@ def test_page_embeds_registered_figure_and_evidence_routes() -> None:
         "preparation through a JAX-ready local grid to downstream observables"
     ) in text
     assert DESIGN_RECORD.is_file()
-    assert "[](../60-validation/index.md)" in text
+    assert "[](../../60-validation/index.md)" in text
     assert "[](./atmosphere-capabilities.md)" in text
-    assert "[](../50-howto/query-atmosphere-spectra.md)" in text
+    assert "[](../../50-howto/query-atmosphere-spectra.md)" in text

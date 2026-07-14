@@ -51,7 +51,7 @@ def test_validation_page_routes_claims_to_their_explanations() -> None:
 
     assert "[](../20-methods/methods.md)" in text
     assert "[](../20-methods/discrete-space/spatial.md)" in text
-    assert "[](../10-theory/quantities.md)" in text
+    assert "[](../30-representations/units-quantities/quantities.md)" in text
     assert "[](../40-api/provenance/index.md)" in text
 
 

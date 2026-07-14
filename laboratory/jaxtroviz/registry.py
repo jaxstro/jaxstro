@@ -134,8 +134,13 @@ FIGURES: dict[str, FigureSpec] = {
             name="spectra-runtime-boundary",
             builder=build_spectra_runtime_boundary,
             stem="spectra-runtime-boundary",
-            page="20-architecture/spectra-data-architecture.md",
-            site_path=("docs/20-architecture/figures/spectra-runtime-boundary.webp"),
+            page=(
+                "30-representations/spectra-atmospheres/spectra-data-architecture.md"
+            ),
+            site_path=(
+                "docs/30-representations/spectra-atmospheres/figures/"
+                "spectra-runtime-boundary.webp"
+            ),
             seed=0,
             caption=(
                 "The host-to-JAX spectra boundary with portable measured "

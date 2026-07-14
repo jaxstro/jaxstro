@@ -1,14 +1,57 @@
 ---
-title: Spectra data architecture
+title: Spectral coordinates, densities, and prepared evaluation
 description: >-
-  How jaxstro turns local atmosphere products into explicit, differentiable
-  spectral arrays without taking ownership of observables.
+  Explicit spectral axes, density semantics, provenance, host-side preparation, and
+  fixed-topology JAX evaluation.
 ---
 
-A spectrum is not just an array of brightness values. Its coordinate, sampling,
-physical meaning, provenance, and valid interpolation region all affect what a
-downstream model is allowed to do. Jaxstro makes those pieces explicit before a
-spectrum enters JAX.
+Use this page when an array of spectral values must retain its coordinate, sampling,
+density semantic, provenance, and interpolation boundary before it enters a compiled
+calculation.
+
+:::{important} Implemented Jaxstro capability
+`jaxstro.spectra` owns generic spectral representations, transformations, resampling,
+statuses, and prepared stencils. `jaxstro.atmospheres` prepares source-specific local
+products for that runtime surface.
+:::
+
+## Representation contract
+
+| Contract field | Current representation |
+| --- | --- |
+| Mathematical object | A one-dimensional `Spectrum` pairs values with a `SpectralAxis`, `SpectralSemantic`, mandatory `SpectrumProvenance`, and structured status. |
+| Physical convention | The spectral coordinate, unit, point or bin sampling, and density semantic are explicit; canonical atmosphere preparation uses increasing wavelength in nm and named CGS density units. |
+| Runtime owner | `jaxstro.spectra` owns generic types and array operations; `jaxstro.atmospheres` owns host-side source preparation. |
+| Shape and unit policy | Axis values and spectrum values are one-dimensional and shape-matched; prepared topology arrays have fixed shapes, while units and semantics are static metadata. |
+| Transform boundary | Prepared array evaluation supports `jit`, `vmap`, and local pathwise AD inside a fixed topology; lookup, artifact I/O, topology selection, and policy choice remain host-side. |
+| Evidence | Spectra unit and validation tests cover semantic transforms, fail-closed resampling, prepared stencils, AD-vs-FD, artifacts, and policy manifests. |
+| Downstream interpretation boundary | Filters, extinction, instruments, distance and radius policy, detector counts, images, likelihoods, and model validity remain downstream. |
+
+## Why a spectrum is more than an array
+
+A wavelength density and a frequency density represent different derivatives of the
+same flux. For point-sampled values they satisfy
+
+```{math}
+:label: eq-spectra-density-jacobian
+
+F_{\lambda}
+=
+F_{\nu}\left|\frac{d\nu}{d\lambda}\right|
+=
+F_{\nu}\frac{c}{\lambda^2}.
+```
+
+Changing only the coordinate values would violate the density relation in
+[](#eq-spectra-density-jacobian). `to_flux_lambda` and `to_flux_nu` transform the
+axis, values, semantic, and provenance together. These transforms currently require
+point samples and canonical nm or Hz axes.
+
+Point samples, bin averages, and bin integrals are also distinct. A point sample is a
+value at one coordinate. A binned value represents an interval and therefore requires
+edges. `SpectralAxis.sampling` makes that distinction explicit.
+
+## Host preparation and runtime evaluation
 
 `jaxstro.atmospheres` owns the host-side request:
 
@@ -18,32 +61,18 @@ spectrum enters JAX.
 AtmosphereQuery -> PreparationResult[PreparedAtmosphere]
 ```
 
-`jaxstro.spectra` owns the generic array types, transformations, resampling, and
-prepared interpolation stencils. Fluxax keeps ownership of extinction, filters,
-instruments, counts, magnitudes, PSFs, images, and likelihood-facing observables.
+`jaxstro.spectra` owns the fixed-shape array surface. Fluxax keeps ownership of
+extinction, filters, instruments, counts, magnitudes, PSFs, images, and
+likelihood-facing observables.
 
 :::{figure} ./figures/spectra-runtime-boundary.webp
 :name: fig-spectra-runtime-boundary
 :alt: Three-stage spectra workflow from host-side catalog and artifact preparation through a JAX-ready local grid to downstream observables
 
-The filesystem boundary is one-way. Host code selects an exact product and a
-complete local topology, converts its vertices to one requested spectral axis,
-and returns a fixed-shape PyTree. Evaluation then uses arrays only.
+The filesystem boundary is one-way. Host code selects an exact product and complete
+local topology, converts vertices to one requested spectral axis, and returns a
+fixed-shape PyTree. Evaluation then uses arrays only.
 :::
-
-## Learning objectives
-
-After this chapter, you should be able to separate source semantics, host-side
-preparation, and JAX evaluation; trace a spectral-density conversion; and state
-which evidence supports a prepared interpolation policy.
-
-### Concept check: what crosses the runtime boundary?
-
-Predict which metadata and topology decisions must be resolved before `jit`.
-Compute a prepared stencil evaluation, then audit units, coverage status,
-interpolation evidence, and the source-to-observable ownership chain.
-
-## Three execution layers
 
 ```{list-table} Spectra execution and ownership boundaries
 :header-rows: 1
@@ -69,32 +98,6 @@ interpolation evidence, and the source-to-observable ownership chain.
   - Fluxax and domain packages own distance scaling, attenuation, passbands,
     detector response, images, and likelihood semantics.
 ```
-
-## Read the physical semantic before the numbers
-
-Atmosphere products return **surface flux density**. An observer flux density is
-a different semantic and generally requires geometry such as a radius and
-distance. Jaxstro does not silently apply that geometry.
-
-The density coordinate matters too. `F_lambda` is per wavelength interval;
-`F_nu` is per frequency interval. They satisfy
-
-```{math}
-F_\lambda = F_\nu\left|\frac{d\nu}{d\lambda}\right|
-          = F_\nu\frac{c}{\lambda^2}.
-```
-
-TLUSTY publishes Eddington flux `H_nu`, so its source-specific path first uses
-`F_nu = 4 pi H_nu`. That factor is not universal: it belongs to the definition
-of the released TLUSTY column. NewEra and Sonora publish different density
-semantics and therefore use different conversions. The provenance attached to
-every `Spectrum` records the native coordinate, density, unit, conversion, and
-source.
-
-Point samples and bin values are also different contracts. A point sample is a
-value at one coordinate. A bin average or bin integral represents an interval
-and requires edges. `SpectralAxis.sampling` records which meaning applies;
-resampling never silently swaps one for another.
 
 ## Portable JAX-side example
 
@@ -163,13 +166,13 @@ assert jnp.all(jnp.isnan(outside.spectrum.values))
 assert jnp.isclose(local_slope, 0.002)
 ```
 
-The derivative is local to one fixed cell. Catalog ranking, artifact I/O,
-topology changes, and interpolation-policy selection are discrete host-side
-operations and are not advertised as differentiable.
+The derivative is local to one fixed cell. Catalog ranking, artifact I/O, topology
+changes, and interpolation-policy selection are discrete host operations and are not
+advertised as differentiable.
 
 ## Query a local atmosphere library
 
-**Execution contract — local processed artifacts required.** This recipe also
+**Execution contract - local processed artifacts required.** This recipe also
 requires the `data` optional dependencies.
 
 ```python
@@ -197,20 +200,17 @@ if preparation.prepared is not None:
     result = preparation.prepared.evaluate(query.params)
 ```
 
-Expected scientific gaps return a `SpectrumStatusCode`, including no exact
-dataset, no complete cell, outside-convex-hull requests, unsupported spectral
-windows, and policies that have not passed validation. Corrupt artifacts and
-broken invariants raise exceptions instead of masquerading as coverage gaps.
+Expected scientific gaps return a `SpectrumStatusCode`. Corrupt artifacts and broken
+invariants raise exceptions instead of masquerading as coverage gaps.
 
 ## Current evidence boundary
 
 Real-artifact holdouts currently accept positive-log parameter interpolation for
-NewEra and linear interpolation for the BOSZ resampled product and OSTAR2002.
-Sonora Diamondback and both BSTAR modes remain `POLICY_NOT_VALIDATED`: their
-linear and positive-log errors trade off under the declared selection rule.
-Those adapters and artifacts exist, but `AtmosphereLibrary.prepare(...)` refuses
-to present the unratified paths as supported science.
+NewEra and linear interpolation for the BOSZ resampled product and OSTAR2002. Sonora Diamondback and both BSTAR modes remain `POLICY_NOT_VALIDATED`: their measured linear
+and positive-log errors trade off under the declared selection rule. The adapters and
+artifacts exist, but `AtmosphereLibrary.prepare(...)` refuses to present those paths
+as supported science.
 
-See [](./atmosphere-capabilities.md) for the product matrix,
-[](../50-howto/query-atmosphere-spectra.md) for the step-by-step recipe, and
-[](../60-validation/index.md) for measured evidence.
+See [](./atmosphere-capabilities.md),
+[](../../50-howto/query-atmosphere-spectra.md), and
+[](../../60-validation/index.md) for the product, workflow, and evidence boundaries.

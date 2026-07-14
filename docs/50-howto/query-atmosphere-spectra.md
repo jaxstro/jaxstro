@@ -11,7 +11,8 @@ image.
 
 ## 1. Choose an exact product
 
-Start from [](../20-architecture/atmosphere-capabilities.md). Product identity
+Start from [](../30-representations/spectra-atmospheres/atmosphere-capabilities.md).
+Product identity
 includes scientifically meaningful choices such as BOSZ resolution, Sonora
 cloud/metallicity/C/O, or TLUSTY composition and C/N state.
 

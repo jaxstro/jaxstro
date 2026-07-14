@@ -196,10 +196,13 @@ def test_linear_algebra_figure_is_registered_and_uses_public_results() -> None:
 def test_spectra_runtime_figure_is_registered_and_uses_public_results() -> None:
     spec = FIGURES["spectra-runtime-boundary"]
 
-    assert spec.page == "20-architecture/spectra-data-architecture.md"
+    assert spec.page == (
+        "30-representations/spectra-atmospheres/spectra-data-architecture.md"
+    )
     assert spec.seed == 0
     assert spec.site_path == (
-        "docs/20-architecture/figures/spectra-runtime-boundary.webp"
+        "docs/30-representations/spectra-atmospheres/figures/"
+        "spectra-runtime-boundary.webp"
     )
 
     from laboratory.jaxtroviz.spectra import spectra_runtime_results

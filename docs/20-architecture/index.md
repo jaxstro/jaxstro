@@ -69,7 +69,8 @@ The broader product vision and future-module map are in
 `jaxstro.quantity` layer is implemented: it provides concrete units,
 dimension-safe arithmetic, exact parser/serialization, role-aware bases,
 versioned constants, and explicit equivalencies. However, ecosystem adoption and any replacement cutover remain deferred.
-The architecture is documented in [](./quantity-system.md), but that page is an
+The representation contract is documented in
+[](../30-representations/units-quantities/quantity-system.md), but that page is an
 evaluation surface rather than a migration instruction. It extends the decision recorded in
 [](../30-decisions/0006-build-own-quantity-not-unxt.md).
 
@@ -143,10 +144,12 @@ a decision record that explains why the boundary exists.
 ## Spectra data architecture
 
 The local atmosphere capability map is in
-[](./atmosphere-capabilities.md). It explains which libraries are processed,
+[](../30-representations/spectra-atmospheres/atmosphere-capabilities.md). It explains
+which libraries are processed,
 which have runtime backends, and why TLUSTY uses ragged frequency-grid subgroups.
 
-The runtime boundary is documented in [](./spectra-data-architecture.md). It
+The runtime boundary is documented in
+[](../30-representations/spectra-atmospheres/spectra-data-architecture.md). It
 defines the host-side `AtmosphereQuery -> PreparationResult` path, the generic
 `jaxstro.spectra` owner, and fixed-topology JAX evaluation. It also explains why
 surface versus observer flux, `F_lambda` versus `F_nu`, and point versus bin

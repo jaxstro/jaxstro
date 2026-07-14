@@ -163,15 +163,23 @@ def test_methods_toc_preserves_family_titles_and_page_order() -> None:
     assert methods_toc["children"] == expected_children
 
 
-def test_migration_retires_only_the_old_method_sources() -> None:
+def test_migration_retires_old_method_and_representation_sources() -> None:
     old_theory = DOCS / "10-theory"
     for pages in FAMILIES.values():
         for page in pages:
             assert not (old_theory / f"{page}.md").exists(), page
 
-    for deferred in ("quantities.md", "geometry.md", "science-patterns.md"):
-        assert (old_theory / deferred).is_file(), deferred
-        assert not any(METHODS.rglob(deferred)), deferred
+    assert (old_theory / "science-patterns.md").is_file()
+    assert not (old_theory / "quantities.md").exists()
+    assert not (old_theory / "geometry.md").exists()
+    assert (
+        DOCS / "30-representations" / "units-quantities" / "quantities.md"
+    ).is_file()
+    assert (
+        DOCS / "30-representations" / "geometry-coordinates" / "geometry.md"
+    ).is_file()
+    for representation in ("quantities.md", "geometry.md"):
+        assert not any(METHODS.rglob(representation)), representation
 
 
 def test_random_computation_and_sampling_have_distinct_scopes() -> None:

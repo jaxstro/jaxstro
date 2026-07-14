@@ -18,10 +18,11 @@ Current recipes:
 - [](./tlusty-data-processing.md)
 - [](./query-atmosphere-spectra.md)
 
-For atmosphere work, read [](../20-architecture/atmosphere-capabilities.md) first
+For atmosphere work, read
+[](../30-representations/spectra-atmospheres/atmosphere-capabilities.md) first
 if you need the dataset matrix and backend status. Then use the how-to pages here
 for the exact local conversion, query, and validation commands. Use
-[](../20-architecture/spectra-data-architecture.md) for the runtime spectra
+[](../30-representations/spectra-atmospheres/spectra-data-architecture.md) for the runtime spectra
 boundary and backend design.
 
 For broader package setup, start with [](../00-start-here/start-here.md). For

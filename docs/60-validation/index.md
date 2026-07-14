@@ -17,7 +17,7 @@ absence from this table is not evidence of validation.
 Read the rows with the corresponding explanations: gradient contracts in
 [](../20-methods/methods.md), discrete and exact neighbor contracts in
 [](../20-methods/discrete-space/spatial.md), implemented quantity semantics in
-[](../10-theory/quantities.md), and source-backed registry pages in
+[](../30-representations/units-quantities/quantities.md), and source-backed registry pages in
 [](../40-api/provenance/index.md).
 
 ## Validation anchors

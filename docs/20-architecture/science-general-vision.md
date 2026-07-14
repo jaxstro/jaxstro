@@ -94,7 +94,7 @@ delivered work as a future roadmap.
   - Vector normalization, angular distance, axis-angle rotation, quaternions,
     and rigid-transform composition/inversion.
   - Generic geometry without domain coordinate interpretation. See
-    [](../10-theory/geometry.md).
+    [](../30-representations/geometry-coordinates/geometry.md).
 * - `jaxstro.numerics.autodiff`
   - JVP, VJP, HVP, Gauss–Newton, and empirical-Fisher products.
   - Thin products over JAX primitives, not a differentiation framework or a
@@ -121,7 +121,8 @@ delivered work as a future roadmap.
 `jaxstro.units` remains the current ecosystem contract. `jaxstro.quantity` is implemented
 and available for evaluation, but ecosystem adoption and any replacement cutover remain deferred.
 The quantity architecture therefore documents a real implementation without
-instructing sibling packages to migrate. See [](./quantity-system.md).
+instructing sibling packages to migrate. See
+[](../30-representations/units-quantities/quantity-system.md).
 
 ## Admission criteria for future work
 

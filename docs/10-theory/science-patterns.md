@@ -96,7 +96,9 @@ smooth kernels in `powerlaw_logpdf`, `powerlaw_cdf`, and `powerlaw_ppf`.
 
 **Equation.** Rotations, dimensional conversions, and density Jacobians preserve named invariants.
 
-**Primitive.** [](./quantities.md), [](./geometry.md), and [](../20-architecture/spectra-data-architecture.md).
+**Primitive.** [](../30-representations/units-quantities/quantities.md),
+[](../30-representations/geometry-coordinates/geometry.md), and
+[](../30-representations/spectra-atmospheres/spectra-data-architecture.md).
 
 **Transform boundary.** Smooth transforms support AD away from singularities; parsing and data preparation stay host-side.
 

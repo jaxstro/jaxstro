@@ -10,7 +10,8 @@ The converter reads the staged `spectra.zip` archive and writes local
 Zarr/Parquet artifacts without deleting the source zip.
 
 Use this page when you need to rebuild or validate the local Sonora cache. Use
-[](../20-architecture/atmosphere-capabilities.md) when you want the broader
+[](../30-representations/spectra-atmospheres/atmosphere-capabilities.md) when you
+want the broader
 "which atmosphere libraries are available?" map.
 
 ## Local layout

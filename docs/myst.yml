@@ -106,11 +106,34 @@ project:
             - file: 20-methods/signals/windows-spectral-leakage.md
             - file: 20-methods/signals/spectral-estimation.md
             - file: 20-methods/signals/phase-and-delay.md
-    - title: Representations and workflows (current locations)
+    - title: Scientific representations
+      children:
+        - file: 30-representations/representations.md
+        - title: Units and quantities
+          children:
+            - file: 30-representations/units-quantities/constants-and-conventions.md
+            - file: 30-representations/units-quantities/quantity-system.md
+            - file: 30-representations/units-quantities/quantities.md
+            - file: 30-representations/units-quantities/equivalencies.md
+        - title: Geometry and coordinates
+          children:
+            - file: 30-representations/geometry-coordinates/coordinate-transformations.md
+            - file: 30-representations/geometry-coordinates/geometry.md
+            - file: 30-representations/geometry-coordinates/astrometry.md
+        - title: Spectra and atmospheres
+          children:
+            - file: 30-representations/spectra-atmospheres/spectra-data-architecture.md
+            - file: 30-representations/spectra-atmospheres/conservative-spectral-resampling.md
+            - file: 30-representations/spectra-atmospheres/atmosphere-capabilities.md
+            - file: 30-representations/spectra-atmospheres/source-artifacts-and-adapters.md
+        - title: Parameters and scientific state
+          children:
+            - file: 30-representations/parameters-state/parameters-and-transforms.md
+            - file: 30-representations/parameters-state/pytrees-as-scientific-state.md
+            - file: 30-representations/parameters-state/serialization-and-provenance.md
+    - title: Research workflows (current locations)
       children:
         - file: 10-theory/science-patterns.md
-        - file: 10-theory/quantities.md
-        - file: 10-theory/geometry.md
     - title: Research investigations
       children:
         - file: 70-investigations/investigations.md
@@ -126,10 +149,7 @@ project:
       children:
         - file: 20-architecture/index.md
         - file: 20-architecture/science-general-vision.md
-        - file: 20-architecture/quantity-system.md
         - file: 20-architecture/provenance.md
-        - file: 20-architecture/atmosphere-capabilities.md
-        - file: 20-architecture/spectra-data-architecture.md
     - title: Decisions (ADRs)
       children:
         - file: 30-decisions/index.md

@@ -97,7 +97,8 @@ The dense helper layer for small fits and covariance diagnostics is
 [](./linear-structure/linear-algebra.md), objective helpers live in [](./change-constraints-evolution/optimization.md),
 fixed-step ODE helpers live in [](./change-constraints-evolution/ode.md), and generic special-function kernels
 live in [](./linear-structure/special-functions.md). Generic distribution kernels live in
-[](./probability-sampling/distributions.md), vector geometry lives in [](../10-theory/geometry.md), and
+[](./probability-sampling/distributions.md), vector geometry lives in
+[](../30-representations/geometry-coordinates/geometry.md), and
 matrix-free algebra helpers live in
 [](./linear-structure/operators.md). Autodiff product helpers live in [](./change-constraints-evolution/autodiff.md). Grid
 construction, conservative rebinning, and stratified uniforms are in
@@ -105,7 +106,8 @@ construction, conservative rebinning, and stratified uniforms are in
 PRNG streams are in [](./probability-sampling/random.md). Sampling
 and resampling decisions are in
 [](./probability-sampling/sampling.md). Quantity semantics
-and boundary conversion live in [](../10-theory/quantities.md). Spatial indexing,
+and boundary conversion live in
+[](../30-representations/units-quantities/quantities.md). Spatial indexing,
 candidate recall, and exact fixed-radius pairs are in [](./discrete-space/spatial.md).
 :::
 
@@ -301,7 +303,8 @@ boundaries in specific methods. Read on:
 - [](./change-constraints-evolution/autodiff.md) - JVP, VJP, HVP, Gauss-Newton, and empirical Fisher-style
   products as named JAX-native helpers (principles [1](#p1-differentiability),
   [9](#p9-correctness), [10](#p10-vectorize)).
-- [](../10-theory/geometry.md) - vector normalization, angular distances, rotations,
+- [](../30-representations/geometry-coordinates/geometry.md) - vector normalization,
+  angular distances, rotations,
   quaternions, rigid transforms, and explicit composition helpers (principles
   [1](#p1-differentiability), [9](#p9-correctness), [10](#p10-vectorize)).
 - [](./discrete-space/spatial.md) - Morton and linear cells, capacity/overflow, approximate
@@ -334,7 +337,8 @@ boundaries in specific methods. Read on:
 - [](./discrete-space/meshes.md) - structured 1D cell/face geometry, finite-volume stencils,
   and conservative cell-average remapping (principles [7](#p7-quadrature),
   [9](#p9-correctness), [10](#p10-vectorize)).
-- [](../10-theory/quantities.md) - exact dimensions, JAX PyTree quantities, parser
+- [](../30-representations/units-quantities/quantities.md) - exact dimensions, JAX
+  PyTree quantities, parser
   canonicalization, bases, constants, equivalencies, and the raw-array boundary
   pattern (principles [1](#p1-differentiability), [9](#p9-correctness),
   [10](#p10-vectorize)).
