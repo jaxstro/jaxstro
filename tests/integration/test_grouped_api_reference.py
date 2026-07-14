@@ -3,8 +3,14 @@
 from __future__ import annotations
 
 import importlib
+import inspect
 import json
+import pkgutil
+from collections import Counter
 from pathlib import Path
+
+from jaxstro import numerics
+from jaxstro.numerics.sampling import inverse_cdf_draw, stratified_uniform
 
 ROOT = Path(__file__).resolve().parents[2]
 DOCS = ROOT / "docs"
@@ -33,7 +39,7 @@ API_OWNERS = {
     "discrete-space/grids.md": "jaxstro.numerics.grids",
     "discrete-space/meshes.md": "jaxstro.numerics.meshes",
     "discrete-space/spatial.md": "jaxstro.spatial",
-    "physical-representations/constants.md": "jaxstro.constants",
+    "physical-representations/constants-api.md": "jaxstro.constants",
     "physical-representations/units.md": "jaxstro.units",
     "physical-representations/quantity.md": "jaxstro.quantity",
     "physical-representations/coords.md": "jaxstro.coords",
@@ -41,13 +47,22 @@ API_OWNERS = {
     "physical-representations/astrometry.md": "jaxstro.astrometry",
     "physical-representations/params.md": "jaxstro.params",
     "scientific-data/spectra.md": "jaxstro.spectra",
-    "scientific-data/atmospheres.md": "jaxstro.atmospheres",
+    "scientific-data/atmospheres-api.md": "jaxstro.atmospheres",
     "research-infrastructure/checks.md": "jaxstro.numerics.checks",
+    "research-infrastructure/types.md": "jaxstro.numerics.types",
     "research-infrastructure/jaxconfig.md": "jaxstro.jaxconfig",
     "research-infrastructure/contracts.md": "jaxstro.contracts",
     "research-infrastructure/evidence.md": "jaxstro.evidence",
     "research-infrastructure/provenance.md": "jaxstro.provenance",
     "research-infrastructure/testing.md": "jaxstro.testing",
+}
+
+PRIVATE_NUMERICS_MODULE_EXCLUSIONS = {
+    # Internal contract-registration helpers; public contracts are documented
+    # through jaxstro.contracts and the generated contract registry.
+    "_contracts": "private contract registration implementation",
+    # Internal custom-root machinery owned by the public rootfinding module.
+    "_implicit_root": "private rootfinding implementation",
 }
 
 REQUIRED_SECTIONS = (
@@ -70,6 +85,21 @@ def test_every_api_page_names_an_importable_owner_and_complete_contract() -> Non
         assert f"from {owner} import" in text, relative
         for section in REQUIRED_SECTIONS:
             assert section in text, f"{relative}: missing {section}"
+
+
+def test_every_public_numerics_module_has_exactly_one_owner_page() -> None:
+    discovered = {module.name for module in pkgutil.iter_modules(numerics.__path__)}
+    private = {name for name in discovered if name.startswith("_")}
+    assert private == set(PRIVATE_NUMERICS_MODULE_EXCLUSIONS)
+
+    public_owners = {
+        f"jaxstro.numerics.{name}" for name in discovered if not name.startswith("_")
+    }
+    owner_counts = Counter(API_OWNERS.values())
+    assert len(owner_counts) == len(API_OWNERS), "each owner must appear exactly once"
+    assert {
+        owner for owner in owner_counts if owner.startswith("jaxstro.numerics.")
+    } == public_owners
 
 
 def test_api_landing_teaches_route_first_owner_qualified_imports() -> None:
@@ -99,6 +129,18 @@ def test_grouped_api_pages_are_navigable_with_canonical_routes() -> None:
         if source.startswith("50-api/")
     )
 
+    assert routes["50-api/research-infrastructure/source-provenance/constants.md"] == (
+        "/constants"
+    )
+    assert (
+        routes["50-api/research-infrastructure/source-provenance/atmospheres.md"]
+        == "/atmospheres"
+    )
+    assert routes["50-api/physical-representations/constants-api.md"] == (
+        "/constants-api"
+    )
+    assert routes["50-api/scientific-data/atmospheres-api.md"] == ("/atmospheres-api")
+
 
 def test_interpolation_symbol_descriptions_are_not_duplicated() -> None:
     texts = [
@@ -118,3 +160,56 @@ def test_api_sources_use_ascii_prose() -> None:
         if not path.read_text(encoding="utf-8").isascii()
     ]
     assert not non_ascii, f"non-ASCII API sources: {non_ascii}"
+
+
+def test_sampling_reference_matches_runtime_signatures_and_contracts() -> None:
+    inverse_signature = inspect.signature(inverse_cdf_draw)
+    assert tuple(inverse_signature.parameters) == ("weight", "grid", "unif", "reg")
+    assert inverse_signature.parameters["reg"].default == 1e-30
+
+    stratified_signature = inspect.signature(stratified_uniform)
+    assert tuple(stratified_signature.parameters) == (
+        "key",
+        "n",
+        "minval",
+        "maxval",
+    )
+    assert stratified_signature.parameters["minval"].default == 0.0
+    assert stratified_signature.parameters["maxval"].default == 1.0
+
+    text = (API_ROOT / "randomness/sampling.md").read_text(encoding="utf-8")
+    normalized = " ".join(text.split())
+    for phrase in (
+        "`weight` and `grid` are one-dimensional floating arrays with matching shape",
+        "`unif` is a scalar floating deviate",
+        "uniformly spaced",
+        "`cdf[-1] + reg`",
+        "zero-total",
+        "`grid[-1]`",
+        "differentiable with respect to `weight` and `unif`",
+        "`n` is a positive static integer",
+        "caller owns the key",
+    ):
+        assert phrase in normalized
+
+    assert "PPF callback" not in text
+    assert "does not normalize" not in text
+
+
+def test_random_reference_documents_zero_weight_and_tracing_boundaries() -> None:
+    text = (API_ROOT / "randomness/random.md").read_text(encoding="utf-8")
+    normalized = " ".join(text.split())
+    for phrase in (
+        "All-zero weights are valid",
+        "uniform distribution",
+        "Concrete eager inputs reject",
+        "Value-dependent finite and nonnegative checks are skipped under tracing",
+    ):
+        assert phrase in normalized
+    assert "non-normalizable weights raise" not in text
+
+
+def test_status_counts_the_corrected_api_surface() -> None:
+    text = (ROOT / "STATUS.md").read_text(encoding="utf-8")
+    assert "38 current owner pages, including `jaxstro.numerics.types`" in text
+    assert "164 unique routes" in text

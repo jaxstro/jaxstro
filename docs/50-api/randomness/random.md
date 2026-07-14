@@ -27,12 +27,16 @@ floating array; returned ancestor indices are integer arrays of fixed size.
 ## JAX transforms and AD classification
 
 Stream and resampling mechanics compose with JIT where sizes are static.
-Resampling choices are discrete and make no AD claim.
+Resampling choices are discrete and make no AD claim. Value-dependent finite
+and nonnegative checks are skipped under tracing, so transformed callers own
+those preconditions.
 
 ## Failure behavior
 
-Concrete invalid or non-normalizable weights raise. No hidden key or seed is
-created.
+Concrete eager inputs reject non-one-dimensional or empty weights, nonpositive
+sample counts, non-finite values, and negative values. All-zero weights are
+valid: normalization deliberately falls back to a uniform distribution. No
+hidden key or seed is created.
 
 ## Contract and evidence links
 

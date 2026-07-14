@@ -51,7 +51,7 @@ This reference does not change runtime exports.
 
 ## Representation and data owners
 
-- **Physical representations:** [](./physical-representations/constants.md),
+- **Physical representations:** [](./physical-representations/constants-api.md),
   [](./physical-representations/units.md),
   [](./physical-representations/quantity.md),
   [](./physical-representations/coords.md),
@@ -59,11 +59,12 @@ This reference does not change runtime exports.
   [](./physical-representations/astrometry.md), and
   [](./physical-representations/params.md).
 - **Scientific data:** [](./scientific-data/spectra.md) and
-  [](./scientific-data/atmospheres.md).
+  [](./scientific-data/atmospheres-api.md).
 
 ## Research infrastructure owners
 
 See [](./research-infrastructure/checks.md),
+[](./research-infrastructure/types.md),
 [](./research-infrastructure/jaxconfig.md),
 [](./research-infrastructure/contracts.md),
 [](./research-infrastructure/evidence.md),
