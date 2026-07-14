@@ -1,22 +1,39 @@
 ---
 title: Start here
 description: >-
-  Install jaxstro with uv, turn on float64, and run one worked example —
-  safe math plus a differentiable root-find — before you trust anything else.
+  Install jaxstro with uv, turn on float64, and run one worked example:
+  safe math plus a differentiable root-find before you trust anything else.
 ---
+
+Use this page when you need to set up Jaxstro and identify what belongs in its
+foundation layer before beginning a research calculation.
 
 This is the page you open first. By the end of it you will have jaxstro
 installed, float64 enabled, and one small example running that exercises the two
 habits everything else in the package depends on: **guard your arithmetic** and
 **verify solver gradients independently**.
 
-For the reasoning pattern used throughout the site and in course activities,
-continue to [](./first-research-calculation.md): **predict → compute → audit**.
+Jaxstro owns reusable scientific foundations: constants, units, coordinates,
+numerical primitives, provenance, and validation tools. It does not own domain
+simulations, scientific acceptance policy, or the interpretation supplied by a
+downstream research package.
+
+After setup, follow the beginner route in this order:
+
+1. Read [](./why-jax.md) to decide whether JAX fits the research program.
+2. Work through [](./jax-from-first-principles.md) to learn the array and
+   transformation model.
+3. Use [](./choose-your-path.md) to recover only the background you need.
+4. Complete [](./first-research-calculation.md) with the
+   **predict -> compute -> audit** cycle.
+
+If you already know part of that route, use
+[](./ways-to-use-these-docs.md) to choose a shorter entry path.
 
 ## Prerequisites
 
 You need Python 3.11 or newer and [uv](https://docs.astral.sh/uv/). jaxstro
-depends only on JAX, jaxlib, jaxtyping, and equinox — no astropy, no scipy, no
+depends only on JAX, jaxlib, jaxtyping, and equinox: no astropy, no scipy, no
 solver libraries (see [](../30-decisions/0001-thin-foundation-posture.md)). A
 working knowledge of `jax.numpy` helps but is not assumed.
 
@@ -59,9 +76,9 @@ other import that might touch JAX.
 
 ## A first worked example: safe math + a root-find
 
-Here is the whole habit in one example. We solve a tiny physical equation —
+Here is the whole habit in one example. We solve a tiny physical equation:
 "how many scale heights does an isothermal density profile need to fall to a
-chosen fraction of its central density?" — and verify that the answer is
+chosen fraction of its central density?" We then verify that the answer is
 **differentiable** with respect to that fraction.
 
 The density profile is $\rho(r) = \rho_0 e^{-r/h}$ with scale height $h$. Define
@@ -138,7 +155,7 @@ improves a solve*, *why fixed iteration does not by itself prove a derivative*,
 and *why `safe_log` guards the analytic check*. These are developed in the
 theory section.
 
-- Read [](../10-theory/index.md) — the ten-principle thesis on AD-safe numerics.
+- Read [](../10-theory/index.md), the ten-principle thesis on AD-safe numerics.
 - Then [](../10-theory/rootfinding.md) explains the distinct value and gradient
   contracts for `bisect`, `newton`, and `newton_ppf`.
 - When you need a call signature, jump to [](../40-api/index.md).

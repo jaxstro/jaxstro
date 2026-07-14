@@ -34,10 +34,17 @@ at once: a **new graduate student** meeting differentiable scientific computing 
 the first time, and **future-you** trying to remember *why* a function rounds the
 way it does. The theory pages teach the methods; the reference pages let you look
 up the call signature; the decision log records every choice and its trade-offs.
-Research students and course learners should begin with
-[](./00-start-here/start-here.md), then use
-[](./00-start-here/first-research-calculation.md) to practice the site's
-recurring **predict → compute → audit** reasoning cycle.
+Research students and course learners can follow one ordered beginner route:
+
+1. [](./00-start-here/start-here.md) for package setup and the package boundary.
+2. [](./00-start-here/why-jax.md) for the benefits, costs, and limits of JAX.
+3. [](./00-start-here/jax-from-first-principles.md) for arrays and transforms.
+4. [](./00-start-here/choose-your-path.md) for optional background recovery.
+5. [](./00-start-here/first-research-calculation.md) to practice the recurring
+   **predict -> compute -> audit** reasoning cycle.
+
+The [](./00-start-here/ways-to-use-these-docs.md) page lists shorter routes for
+readers who do not need complete onboarding.
 The optional [](./05-foundations/foundations.md) route rebuilds the connected ideas
 the site will not assume are currently active.
 
@@ -50,7 +57,7 @@ the site will not assume are currently active.
 :link: ./05-foundations/foundations.md
 
 Start here if models, parameters, derivatives, linear algebra, probability, or
-inference were taught separately—or simply need reactivation. This is an
+inference were taught separately, or simply need reactivation. This is an
 ungraded route, not a placement judgment.
 :::
 
@@ -59,8 +66,8 @@ ungraded route, not a placement judgment.
 
 Start here if you want to understand *how to write numerics that differentiate
 cleanly*. The theory section opens with a ten-principle thesis on AD-safe
-scientific computing, then fans out into worked method pages — root-finding,
-Newton–Cotes integration, quadrature, and more.
+scientific computing, then fans out into worked method pages: root-finding,
+Newton-Cotes integration, quadrature, and more.
 :::
 
 :::{card} Audit the evidence
@@ -122,7 +129,7 @@ evidence.
 
 ## Routed paths
 
-- **New here?** Read [](./00-start-here/start-here.md) first — it installs the
+- **New here?** Read [](./00-start-here/start-here.md) first; it installs the
   package, turns on float64, and walks one worked example end to end. Then follow
   the bridge into [](./10-theory/index.md).
 - **Evaluating the broader package vision?** Read
@@ -157,7 +164,7 @@ evidence.
 ## What jaxstro is *not*
 
 It is not a simulation package, not an inference framework, not a generic SciPy
-clone, and not an all-purpose solver stack. It holds no domain physics — no
+clone, and not an all-purpose solver stack. It holds no domain physics: no
 stellar tracks, no N-body integrator, no IMF, no filters or photometry semantics.
 Those live in the packages above it. jaxstro stays at the bottom of the
 dependency graph and stays light, because everything depends on it.

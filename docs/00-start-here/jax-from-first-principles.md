@@ -7,6 +7,9 @@ description: >-
 
 # JAX from first principles
 
+Use this page when you need a beginner mental model for how JAX transforms one
+explicit scientific function without changing the question that function asks.
+
 JAX becomes easier to reason about when you separate three things: the
 mathematical map you intend, the Python function that expresses it, and the
 traced program a transformation sees. This page develops that distinction from
@@ -17,9 +20,33 @@ The official [quickstart](https://docs.jax.dev/en/latest/quickstart.html) and
 broader introduction. Here the goal is narrower: learn enough to predict what a
 scientific transform will do, compute it, and audit the result.
 
+## Choose 64-bit precision before creating arrays
+
+JAX commonly defaults to 32-bit values. Jaxstro makes the scientific precision
+choice explicit, and that choice must happen before importing the executable
+map or creating any JAX arrays:
+
+```python
+from jaxstro.jaxconfig import enable_high_precision
+
+enable_high_precision()
+
+import jax
+import jax.numpy as jnp
+from examples.onboarding.first_jax_map import (
+    batched_scaled_luminosity,
+    compiled_scaled_luminosity,
+    scaled_luminosity,
+)
+```
+
+More bits do not fix a bad algorithm, but insufficient precision can erase a
+small residual or corrupt a cancellation-sensitive audit. State the precision
+used and test whether the conclusion is stable under an appropriate alternative.
+
 ## A Python function, a mathematical map, and a traced program
 
-For a star compared with a reference star, the Stefan–Boltzmann scaling is
+For a star compared with a reference star, the Stefan-Boltzmann scaling is
 
 ```{math}
 \frac{L}{L_\mathrm{ref}}
@@ -28,14 +55,10 @@ For a star compared with a reference star, the Stefan–Boltzmann scaling is
 \left(\frac{T}{T_\mathrm{ref}}\right)^4.
 ```
 
-The executable example in `examples/onboarding/first_jax_map.py` expresses that
-map directly:
+The imported executable example in `examples/onboarding/first_jax_map.py`
+expresses that map directly:
 
 ```python
-import jax
-import jax.numpy as jnp
-
-
 def scaled_luminosity(radius_ratio, temperature_ratio):
     radius = jnp.asarray(radius_ratio)
     temperature = jnp.asarray(temperature_ratio)
@@ -180,25 +203,10 @@ def capped_scaled_luminosity(radius_ratio, temperature_ratio, cap):
 Both branches must return compatible structures, shapes, and dtypes. Also ask
 whether the branch creates a scientifically meaningful derivative boundary.
 
-## Choose 64-bit precision before creating arrays
-
-JAX commonly defaults to 32-bit values. Jaxstro makes the scientific precision
-choice explicit:
-
-```python
-from jaxstro.jaxconfig import enable_high_precision
-
-enable_high_precision()  # call before creating JAX arrays
-```
-
-More bits do not fix a bad algorithm, but insufficient precision can erase a
-small residual or corrupt a cancellation-sensitive audit. State the precision
-used and test whether the conclusion is stable under an appropriate alternative.
-
 ## Common tracing errors
 
 Typical failures occur when traced values are used where Python requires a
-concrete value—for example, converting a tracer to `float`, using it as a list
+concrete value, for example, converting a tracer to `float`, using it as a list
 index, branching with a Python `if`, or choosing a dynamic array shape. The
 official [errors guide](https://docs.jax.dev/en/latest/errors.html) names these
 failures and shows their transform-aware replacements.
@@ -210,5 +218,8 @@ When an error appears, ask:
 3. Can the program use fixed shapes and JAX control flow?
 4. Is the transformed program still the scientific map you intend?
 
-Next, use [](./first-research-calculation.md) to place a JAX computation inside
-the full **predict → compute → audit** cycle.
+Next, connect this orientation to the
+[](../05-foundations/foundations.md) route for mathematical meaning, read the
+[](../10-theory/autodiff.md) chapter for deeper derivative-product contracts,
+or use [](./first-research-calculation.md) to place a JAX computation inside the
+full **predict -> compute -> audit** cycle.

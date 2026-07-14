@@ -2,10 +2,13 @@
 title: Why JAX?
 description: >-
   Why one scientific map that evaluates, batches, compiles, and differentiates
-  is useful—and what JAX does not promise.
+  is useful, and what JAX does not promise.
 ---
 
 # Why JAX?
+
+Use this page when you are deciding whether program transformations belong in
+your research workflow and which layer should own the scientific contracts.
 
 Scientific programs rarely need only one number. We often want to evaluate the
 same model for many systems, accelerate it after its structure is stable, and
@@ -105,6 +108,49 @@ Choose JAX when the scientific map is naturally array-oriented and repeated
 evaluation, batching, compilation, or differentiation earns the additional
 constraints. Choose a simpler tool when those transformations are not part of
 the research question.
+
+## Choose the smallest sufficient layer
+
+The options below solve different problems. Moving right adds transformation
+and scientific-contract machinery, but it also adds constraints that a small
+one-off calculation may not need.
+
+```{list-table} Choosing a research-programming layer
+:header-rows: 1
+
+* - Decision
+  - NumPy-style script
+  - Direct JAX
+  - Jaxstro
+* - Program transformations
+  - Ordinary eager array evaluation; batching and derivatives are separate
+    implementations or external tools.
+  - Composable `jit`, `vmap`, JVP, VJP, and gradient transformations.
+  - Direct JAX transformations plus transform-aware scientific primitives.
+* - State and compilation constraints
+  - Mutable state and dynamic host control flow are natural; there is no JAX
+    compilation contract.
+  - Explicit state, immutable arrays, traceable control flow, and stable shapes
+    are often required.
+  - The direct-JAX constraints remain and are documented at package boundaries.
+* - Units and conventions
+  - The research script must define and enforce them.
+  - JAX does not supply physical units or domain conventions.
+  - Jaxstro supplies shared units, constants, coordinates, and explicit
+    convention boundaries.
+* - Derivative and evidence contracts
+  - The script author chooses and records independent checks.
+  - JAX differentiates the executed program but does not certify scientific
+    meaning.
+  - Jaxstro names derivative boundaries and connects claims to independent
+    audits, provenance, and validation evidence.
+* - Best fit
+  - Small, irregular, or one-off analyses that do not need transformations.
+  - Array-oriented research programs whose authors want to own all scientific
+    conventions and audits directly.
+  - Shared differentiable-science infrastructure that benefits from reusable
+    conventions, numerical contracts, and evidence.
+```
 
 Continue to [](./jax-from-first-principles.md) to apply these ideas to one small
 map before using them in a larger calculation.

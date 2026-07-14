@@ -46,15 +46,15 @@ conditioning, and programs.
 
 Choose by the failure you are facing:
 
-- units or scales feel unstable →
+- units or scales feel unstable ->
   [](../05-foundations/functions-units-scales.md);
-- too many parameters behave alike →
+- too many parameters behave alike ->
   [](../05-foundations/sensitivity-conditioning-identifiability.md);
-- AD and finite differences disagree →
+- AD and finite differences disagree ->
   [](../05-foundations/what-is-a-derivative.md);
-- a precise fit feels scientifically wrong →
+- a precise fit feels scientifically wrong ->
   [](../05-foundations/models-inference-information.md);
-- JAX returns a surprising gradient →
+- JAX returns a surprising gradient ->
   [](../05-foundations/from-relations-to-differentiable-programs.md).
 
 ## A five-minute self-check

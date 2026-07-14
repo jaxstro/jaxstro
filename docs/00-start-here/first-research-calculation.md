@@ -65,7 +65,7 @@ Suppose a continuous signed residual $G(x)$ changes sign on an interval. The
 mathematical question is where $G(x)=0$; the computational question also
 includes whether the bracket remained valid and why the algorithm stopped.
 
-```{list-table} Predict → compute → audit for a scalar root
+```{list-table} Predict -> compute -> audit for a scalar root
 :header-rows: 1
 
 * - Stage
@@ -92,7 +92,7 @@ A finite power law contains a removable singularity at $\alpha=-1$. A direct
 formula and an exact-value branch can give correct forward values while still
 giving the wrong derivative with respect to $\alpha$.
 
-```{list-table} Predict → compute → audit for a limiting distribution
+```{list-table} Predict -> compute -> audit for a limiting distribution
 :header-rows: 1
 
 * - Stage

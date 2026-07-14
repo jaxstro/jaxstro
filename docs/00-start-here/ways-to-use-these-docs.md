@@ -7,8 +7,11 @@ description: >-
 
 # Ways to use these docs
 
-This site is not one compulsory linear course. Every route uses the same habit—
-**predict → compute → audit → state the warranted claim**—but starts from a
+Use this page when you know what kind of help you need and want the shortest
+connected route through Jaxstro's concepts, APIs, and evidence.
+
+This site is not one compulsory linear course. Every route uses the same habit:
+**predict -> compute -> audit -> state the warranted claim**, but starts from a
 different need. Choose the smallest route that answers today's question, then
 follow links outward when the audit exposes a missing concept or contract.
 
@@ -16,10 +19,11 @@ follow links outward when the audit exposes a missing concept or contract.
 
 Use this route if JAX or differentiable scientific computing is new to you.
 
-1. Read [](./why-jax.md) for the benefits, costs, and claim boundaries.
-2. Work through [](./jax-from-first-principles.md) and run the executable map.
-3. Use [](./choose-your-path.md) to reactivate any background you need.
-4. Complete [](./first-research-calculation.md) with your prediction written
+1. Begin at [](./start-here.md) for package setup, precision, and ownership.
+2. Read [](./why-jax.md) for the benefits, costs, and claim boundaries.
+3. Work through [](./jax-from-first-principles.md) and run the executable map.
+4. Use [](./choose-your-path.md) to reactivate any background you need.
+5. Complete [](./first-research-calculation.md) with your prediction written
    before you run the code.
 
 ## Research-question first
@@ -33,7 +37,7 @@ Return to foundations only when a term or relationship is blocking the question.
 ## Background recovery
 
 Use [](./choose-your-path.md) as an ungraded router. Select by the idea you need
-today—units and scales, models and parameters, linear maps and derivatives,
+today: units and scales, models and parameters, linear maps and derivatives,
 probability and inference, or conditioning and identifiability. Rejoin the
 research page as soon as the missing connection is active again.
 
@@ -48,7 +52,7 @@ approximation whose meaning is not already clear.
 
 Open the relevant theory pages side by side. Compare the mathematical target,
 executed algorithm, transform support, failure behavior, telemetry, and audit
-requirements—not only speed or a successful return value. Use the research
+requirements, not only speed or a successful return value. Use the research
 investigations for worked comparisons where available.
 
 ## Result audit

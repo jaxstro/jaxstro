@@ -39,7 +39,7 @@ algorithms and public APIs.
 Every substantial unit follows
 
 ```text
-predict → compute → audit → state the warranted claim
+predict -> compute -> audit -> state the warranted claim
 ```
 
 Prediction names expected structure before results can bias the story.

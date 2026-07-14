@@ -12,7 +12,7 @@ for today's scientific task available while preserving a high evidence standard.
 
 ## The instructional cycle
 
-Use **predict → compute → audit → state the warranted claim** as epistemic work,
+Use **predict -> compute -> audit -> state the warranted claim** as epistemic work,
 not a four-step worksheet ritual.
 
 1. Collect predictions before code execution.
@@ -30,9 +30,9 @@ language. Do not publicly classify students by route. A student may need a
 probability refresher for one unit and lead the class on linear algebra in the
 next.
 
-Use short retrieval prompts before adding explanation: “What are the units?”,
-“Which quantity is held fixed?”, “What would make this inverse insensitive?”,
-or “Which check is independent?” This reveals the missing connection without
+Use short retrieval prompts before adding explanation: "What are the units?",
+"Which quantity is held fixed?", "What would make this inverse insensitive?",
+or "Which check is independent?" This reveals the missing connection without
 turning a prerequisite into a gatekeeping device.
 
 ## Investigation notes
@@ -85,7 +85,7 @@ recovered in each cell but has a derivative discontinuity at a knot.
   and physical-validation cards and ask which claim each supports.
 - **Failure-first variation:** deliberately break a bracket, support, or
   boundary contract before showing the successful case.
-- **Claim ladder:** move from “finite output” to numerical contract to model
+- **Claim ladder:** move from "finite output" to numerical contract to model
   adequacy, stopping when evidence runs out.
 
 ## Accessibility
