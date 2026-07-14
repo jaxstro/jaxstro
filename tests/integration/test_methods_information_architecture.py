@@ -192,10 +192,13 @@ def test_random_computation_and_sampling_have_distinct_scopes() -> None:
         encoding="utf-8"
     )
 
-    assert "## Scope: random computation" in random_text
-    assert "## Scope: sampling and resampling" not in random_text
-    assert "## Scope: sampling and resampling" in sampling_text
-    assert "## Scope: random computation" not in sampling_text
+    assert "Explicit PRNG key ownership" in random_text
+    assert "`key_stream(key, num)`" in random_text
+    assert "`inverse_cdf_draw(weight, grid, unif" not in random_text
+
+    assert "continuous inverse-CDF draw" in sampling_text
+    assert "`inverse_cdf_draw(weight, grid, unif" in sampling_text
+    assert "Systematic, stratified, and residual resamplers" in sampling_text
 
 
 def test_new_landing_and_sampling_page_use_ascii_punctuation() -> None:

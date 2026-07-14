@@ -1,28 +1,107 @@
 ---
 title: Random computation
 description: >-
-  Explicit PRNG key ownership, deterministic stream construction, and seed
-  metadata for reproducible JAX computations.
+  Explicit PRNG key ownership, deterministic stream construction, and bounded
+  reproducibility claims.
 ---
 
-Randomness is part of a numerical method's state, even when it is not stored in
-a mutable object. JAX makes that state explicit through splittable keys: a draw
-uses the key value it receives, but it does not mutate that value or advance a
-hidden global generator. This functional splitting model supports reproducible,
-parallelizable execution {cite:t}`JAXJEP263`.
+## The question this method answers
 
-## Scope: random computation
+How can a researcher make random state explicit, replayable, and safe to divide
+among concurrent computations? JAX uses pseudo-random number generator (PRNG)
+keys as immutable array values rather than a hidden mutable global generator
+{cite:t}`JAXJEP263`.
 
-This page owns explicit PRNG key management and deterministic random-stream
-construction. It does not own the statistical meaning of a sampling algorithm
-or the discrete choice made by a resampler. Those decisions belong on
-[](./sampling.md).
+:::{important}
+A key is numerical state. Using a key does not mutate it, so the caller must
+return, store, or derive the key for every later operation.
+:::
 
-## Key streams
+## Before computation: what should be true?
 
-`key_stream(key, num)` returns one key for the caller's future work and `num`
-keys for the current operation. In the example below, the caller owns
-`next_key`; each current operation receives a distinct subkey.
+Choose one owner for each parent key and a deterministic rule for assigning
+subkeys to replicas, objects, steps, or named operations. Record the integer
+seed and stream meaning. Never pass the same key to two draws merely because the
+calls occur in different functions.
+
+:::{warning}
+Deterministic replay establishes that the same inputs reproduce the same key
+stream. It does not establish statistical independence, unbiasedness, or a
+sufficient effective sample size.
+:::
+
+## Define the mathematical objects
+
+A PRNG maps a finite key and counter-like state to deterministic bits that are
+designed to behave like random draws under specified tests. A JAX key is an
+array token for this state. `split` derives multiple child keys; `fold_in`
+combines a key with an integer identity. Neither operation consumes or mutates
+the original key value.
+
+A seed manifest is host metadata describing how a root key was initialized. It
+is not the key itself and does not capture the full software, device, or
+floating-point environment.
+
+## Derive the method
+
+Jaxstro's stream helper reserves one child for the caller's future work and
+returns the remaining children for the current operation:
+
+```{math}
+:label: eq-key-split
+(K_{\mathrm{next}},K_1,\ldots,K_m)=\operatorname{split}(K,m+1).
+```
+
+When an integer identity owns a stream, folding that identity into a shared
+parent gives
+
+```{math}
+:label: eq-key-fold-in
+K_i=\operatorname{fold\_in}(K,s+i),
+\qquad i=0,\ldots,m-1,
+```
+
+where $s$ is the requested starting index. The mapping is deterministic, so an
+identity-to-key rule can be reconstructed without depending on loop order.
+
+## What the algorithm actually does
+
+`key_stream(key, num)` calls `jax.random.split(key, num + 1)` and returns a key
+of shape `(2,)` plus subkeys of shape `(num, 2)` for legacy `PRNGKey` inputs.
+`fold_in_stream(key, num, start=0)` vmaps `jax.random.fold_in` over consecutive
+integer indices. `num` and `start` are static, so changing them changes output
+shape or traced program structure and can recompile.
+
+`seed_manifest(seed, stream="default", algorithm="jax.random")` returns a host
+dictionary. It is not JIT-oriented random state and performs no key-reuse audit.
+
+## What JAX differentiates
+
+Keys and folded integer identities are discrete values. Splitting, folding, and
+seed metadata are `validation_only` operations with no pathwise derivative.
+Downstream transformations can differentiate a smooth function of a random draw
+with respect to floating parameters when an appropriate pathwise construction
+exists, but that is a property of the sampling algorithm, not of key splitting.
+
+```{list-table} Random-computation contracts
+:header-rows: 1
+:label: tbl-random-computation-contracts
+
+* - Surface
+  - Execution contract
+  - Gradient class
+* - `key_stream`
+  - The caller owns `next_key`; `num` is static.
+  - `validation_only`
+* - `fold_in_stream`
+  - Integer identities and static `num` and `start` determine the stream.
+  - `validation_only`
+* - `seed_manifest`
+  - Returns host metadata rather than traced random state.
+  - `validation_only`
+```
+
+## Using it in Jaxstro
 
 ```python
 import jax.random as jrandom
@@ -35,57 +114,45 @@ next_key, subkeys = key_stream(key, 3)
 folded = fold_in_stream(key, 3, start=100)
 manifest = seed_manifest(seed, stream="particle-filter")
 
-# Recreating and splitting the same seed reproduces the same keys.
 replay_next_key, replay_subkeys = key_stream(jrandom.PRNGKey(seed), 3)
 
 assert (replay_next_key == next_key).all()
 assert (replay_subkeys == subkeys).all()
+assert not (subkeys[0] == subkeys[1]).all()
+assert manifest["seed"] == seed
 ```
 
-`fold_in_stream(key, num, start=...)` derives a deterministic stream by folding
-in consecutive integer indices. It is useful when an integer identity such as a
-replica, object, or step number owns the stream. It is not an automatic key-reuse
-detector.
+## How to audit the result
 
-`seed_manifest(seed, stream=...)` returns a small deterministic dictionary for
-logs and provenance records. It is metadata, not a random generator, and it does
-not capture the full software or hardware environment.
+1. Draw a key-ownership tree before running concurrent or nested random work.
+2. Recreate the root key and compare every derived key exactly.
+3. Check output shapes and verify sibling subkeys differ on the fixture.
+4. Run split and fold-in helpers under JIT with the documented static counts.
+5. Record seed, stream names, identity ranges, package version, and environment.
+6. Audit statistical properties separately with a method-appropriate test.
 
-## Execution and differentiation boundaries
+:::{tip}
+Fold stable object or replica identifiers into a parent key when execution order
+may change. Split sequentially when the algorithm itself owns an ordered stream.
+Document which rule you chose.
+:::
 
-```{list-table} Random-computation contracts
-:header-rows: 1
-:label: tbl-random-computation-contracts
+## Where the claim stops
 
-* - Surface
-  - Contract
-  - JAX boundary
-  - Gradient class
-* - `key_stream`
-  - The caller owns `next_key`; current operations receive distinct subkeys.
-  - `num` is static, and keys remain explicit array values.
-  - `validation_only`: key splitting is discrete state construction.
-* - `fold_in_stream`
-  - Consecutive integer identities are folded into one parent key.
-  - `num` and `start` are static.
-  - `validation_only`: integer identities and keys have no pathwise derivative.
-* - `seed_manifest`
-  - The integer seed and stream label are recorded deterministically.
-  - The result is host metadata rather than traced random state.
-  - `validation_only`: provenance metadata is not a differentiable quantity.
-```
+Explicit key ownership prevents hidden generator mutation and enables exact
+replay of key construction. It does not detect every accidental key reuse,
+guarantee independence, validate a resampler, or quantify Monte Carlo error.
+Seed metadata alone is not a complete provenance record.
 
-Explicit keys make ownership and replay testable. They do not prove that a
-sampling scheme is unbiased, that Monte Carlo error is small, or that a sampled
-integer decision has a pathwise derivative.
+## Connected ideas
 
-## Validation
-
-Unit tests check deterministic stream construction, fold-in identities, seed
-manifests, fixed output shapes, and JIT compatibility where the static-count
-contract applies. The example above is executed by the documentation tests.
-
-For signatures, see [](../../50-api/randomness/random.md). For the
-assertion-bearing evidence map, see [](../../60-validation/validation.md). The
-package's differentiation labels, including `validation_only`, are defined in
+:::{seealso}
+Review probability state in
+[](../../10-foundations/mathematical-objects/probability-and-distributions.md),
+connect keys to explicit scientific state in
+[](../../30-representations/parameters-state/pytrees-as-scientific-state.md), and
+follow [](../../40-workflows/reproducible-research/random-state-ownership.md).
+Signatures are in [](../../50-api/randomness/random.md), and evidence routes
+through [](../../60-validation/validation.md). The gradient taxonomy is in
 [](../methods.md#gradient-contracts).
+:::

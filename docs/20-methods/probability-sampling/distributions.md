@@ -1,108 +1,203 @@
 ---
 title: Distribution kernels
 description: >-
-  Stable logpdf, CDF, and inverse-CDF helpers for common generic distributions
-  without turning jaxstro into a probabilistic programming package.
+  Support-aware log densities, CDFs, and inverse CDFs with a smooth finite
+  power-law limit.
 ---
 
-`jaxstro.numerics.distributions` provides small probability kernels that are
-useful in scientific code: log densities, cumulative distribution functions, and
-inverse CDFs. It does not own model syntax, samplers, traces, priors, or
-probabilistic programming workflows.
+## The question this method answers
 
-## Learning objectives
+How can scientific code evaluate a probability law, accumulate probability up
+to a threshold, or map a unit-uniform value into that law? Jaxstro supplies
+small distribution kernels without owning probabilistic-program syntax, priors,
+samplers, or inference policy.
 
-After this chapter, you should be able to audit support and normalization,
-explain why a correct equality branch can still have a wrong parameter
-derivative, and verify CDF/PPF consistency through a removable singularity.
+:::{important}
+A normalized formula is a mathematical probability law only on its stated
+support and for valid parameters. A finite runtime value does not certify those
+conditions.
+:::
 
-### Predict -> compute -> audit: cross a limiting exponent
+## Before computation: what should be true?
 
-Predict the logarithmic limit and derivative as $\alpha\rightarrow-1$. Compute
-with the smooth kernels, then audit normalization, round trips, analytic limits,
-and central finite differences against AD on both sides of the limit.
+Choose a valid parameter domain: positive normal scale, positive lognormal
+coordinates, ordered truncation bounds, and `0 < xmin < xmax` for a finite power
+law. Pass probabilities $u$ in $[0,1]$ to inverse CDFs. Decide whether endpoint
+infinities for unbounded distributions are acceptable.
 
-## Included families
+:::{warning}
+The distribution kernels do not validate parameter domains. Invalid scale,
+bounds, support, or probability values can return `NaN`, infinity, or a value
+outside the intended law in both eager and traced execution.
+:::
 
-The first slice includes:
+## Define the mathematical objects
 
-- Normal: `normal_logpdf`, `normal_cdf`, `normal_ppf`
-- Lognormal: `lognormal_logpdf`, `lognormal_cdf`, `lognormal_ppf`
-- Finite power law: `powerlaw_logpdf`, `powerlaw_cdf`, `powerlaw_ppf`
-- Truncated normal: `truncated_normal_logpdf`, `truncated_normal_cdf`,
-  `truncated_normal_ppf`
-
-The power-law helper uses the convention `p(x) proportional to x**alpha` on
-`[xmin, xmax]`. Its `alpha = -1` log-uniform limit is part of one smooth
-expression rather than a branch with a different derivative.
-
-## Finite power law through `alpha = -1`
-
-Let $e = \alpha + 1$ and $D = \log(x_\mathrm{hi})-\log(x_\mathrm{lo})$.
-The segment integral is evaluated as
+The support $\mathcal{S}$ is the set of allowed values. A probability density
+$p(x)$ is nonnegative and normalized:
 
 ```{math}
-I(x_\mathrm{lo},x_\mathrm{hi},e)
-= x_\mathrm{lo}^{e} D\,\phi(eD),
+\int_{\mathcal{S}}p(x)\,dx=1.
+```
+
+The cumulative distribution function (CDF) is the probability at or below a
+threshold:
+
+```{math}
+F(x)=\int_{-\infty}^{x}p(t)\,dt.
+```
+
+The percent-point function (PPF), or inverse CDF, returns a quantile $x$ whose
+cumulative probability is $u$. For a continuous strictly increasing CDF,
+$F(F^{-1}(u))=u$ for $0<u<1$.
+
+## Derive the method
+
+Probability normalization and cumulative mass are
+
+```{math}
+:label: eq-density-normalization
+\int_{\mathcal{S}}p(x)\,dx=1.
+```
+
+```{math}
+:label: eq-cdf-definition
+F(x)=\int_{-\infty}^{x}p(t)\,dt.
+```
+
+For an interior probability on a continuous strictly increasing branch, the
+inverse relation to audit is
+
+```{math}
+F(F^{-1}(u))=u.
+```
+
+### A finite power law through the logarithmic limit
+
+For $p(x)\propto x^\alpha$ on $[x_{\min},x_{\max}]$, let
+$e=\alpha+1$ and $D=\log(x_{\mathrm{hi}})-\log(x_{\mathrm{lo}})$. A stable
+segment integral is
+
+```{math}
+:label: eq-powerlaw-integral
+I(x_{\mathrm{lo}},x_{\mathrm{hi}},e)
+=x_{\mathrm{lo}}^eD\,\phi(eD),
 \qquad
 \phi(z)=\frac{\operatorname{expm1}(z)}{z}.
 ```
 
-At $z=0$, `phi` uses its Taylor series
-$1+z/2+z^2/6$. The inverse uses the sibling kernel
-$\psi(z)=\log(1+z)/z$, with Taylor series $1-z/2+z^2/3$:
+At $z=0$, $\phi(z)=1+z/2+z^2/6+O(z^3)$. The inverse uses
+$\psi(z)=\log(1+z)/z=1-z/2+z^2/3+O(z^3)$:
 
 ```{math}
-x = \exp\!\left[\log(x_\mathrm{lo}) + s\,\psi(es)\right],
+x=\exp\!\left[\log(x_{\mathrm{lo}})+s\,\psi(es)\right],
 \qquad
-s = t x_\mathrm{lo}^{-e}.
+s=t x_{\mathrm{lo}}^{-e}.
 ```
 
-These finite masked branches sanitize the dangerous denominator before
-division, so values and derivatives remain smooth at $e=0$. Normalization is
-$1/I(x_{\min},x_{\max},e)$; the CDF is the ratio of partial to total integrals; and
-the PPF applies the smooth inverse to $t=uI$.
+The normalizer is $I(x_{\min},x_{\max},e)^{-1}$, the CDF is a partial-to-total
+integral ratio, and the PPF applies the inverse at $t=uI$. The Taylor branches
+sanitize the dangerous denominator before selection, so the value and parameter
+derivative remain smooth through $\alpha=-1$.
 
-For an independent limit check, define $A=\log x_{\min}$, $B=\log x_{\max}$,
-$L=B-A$, $\ell=\log(x/x_{\min})$, and
-$x_u=x_{\min}\exp(uL)$. At $\alpha=-1$,
+At the exact limit, with $A=\log x_{\min}$, $B=\log x_{\max}$,
+$L=B-A$, $\ell=\log(x/x_{\min})$, and $x_u=x_{\min}\exp(uL)$,
 
 ```{math}
-\frac{\partial\log p(x)}{\partial\alpha}
-= \log x - \frac{A+B}{2},\qquad
-\frac{\partial F(x)}{\partial\alpha}
-= \frac{\ell(\ell-L)}{2L},\qquad
-\frac{\partial F^{-1}(u)}{\partial\alpha}
-= \frac{x_uL^2u(1-u)}{2}.
+\frac{\partial\log p(x)}{\partial\alpha}=\log x-\frac{A+B}{2},
+\quad
+\frac{\partial F(x)}{\partial\alpha}=\frac{\ell(\ell-L)}{2L},
+\quad
+\frac{\partial F^{-1}(u)}{\partial\alpha}=\frac{x_uL^2u(1-u)}{2}.
 ```
 
-The following float64 measurements use
-`xmin=2`, `xmax=5`, `x=3`, `u=0.3`, and central-FD step `1e-5`.
+## What the algorithm actually does
 
-| Metric identity | Symbol | Value | Units |
-| --- | --- | ---: | --- |
-| Logpdf alpha derivative by AD | `d logp / d alpha` | -0.05268025782891306 | dimensionless |
-| Logpdf alpha derivative by central FD | `d logp / d alpha` | -0.05268025782267926 | dimensionless |
-| CDF alpha derivative by AD | `dF / d alpha` | -0.11302196975246964 | dimensionless |
-| CDF alpha derivative by central FD | `dF / d alpha` | -0.1130219697442758 | dimensionless |
-| PPF alpha derivative by AD | `dx_u / d alpha` | 0.2320961224346652 | x units |
-| PPF alpha derivative by central FD | `dx_u / d alpha` | 0.2320961224100415 | x units |
-| Numerical normalization absolute error | `abs(integral(p)-1)` | 1.6008394609912102e-10 | dimensionless |
-| CDF/PPF maximum round-trip error | `max(abs(F(F^-1(u))-u))` | 2.220446049250313e-16 | dimensionless |
+The module includes normal, lognormal, finite power-law, and truncated-normal
+`logpdf`, `cdf`, and `ppf` families. Array inputs broadcast with parameters.
+Lognormal and power-law log densities return negative infinity outside support;
+their unsafe logarithm operands are replaced before `where` selection. Their
+CDFs clamp below and above finite support. PPF functions assume, but do not
+check, $u\in[0,1]$.
 
-## Support behavior
+The truncated-normal normalizer is a difference of two normal CDF values. Very
+narrow or tail truncations can lose precision or yield a zero denominator. The
+current kernel has no specialized log-difference fallback for that regime.
 
-Support is explicit. Log densities return `-inf` outside support; CDFs clamp to
-the interval endpoints where appropriate; inverse-CDF helpers map `u` values in
-`[0, 1]` onto the distribution support.
+## What JAX differentiates
 
-For lognormal and power-law kernels, unsafe operands are sanitized before
-evaluating logarithms so out-of-support values do not introduce avoidable `NaN`s
-in the forward pass.
+Inside a smooth support region with valid parameters, JAX differentiates the
+executed log-density, CDF, and PPF formulas. The finite power-law implementation
+supports smooth derivatives through $\alpha=-1$.
 
-## Validation
+Support masks, CDF clipping, and endpoint choices are branch boundaries. The
+log-density derivative with respect to $x$ is not meaningful at a hard support
+edge, and normal/lognormal PPF sensitivities diverge near $u=0$ or $1$.
+CDF/PPF round-trip parity checks values; it does not by itself validate an AD
+claim at boundaries.
 
-Unit tests check normalization by numerical integration, monotone CDF behavior,
-inverse-CDF round trips, support edges, float64, and JAX transform compatibility.
-Validation tests compare analytic limiting derivatives and central FD against AD
-at and on both sides of `alpha = -1`.
+## Using it in Jaxstro
+
+```python
+import jax
+import jax.numpy as jnp
+
+from jaxstro.numerics.distributions import (
+    powerlaw_cdf,
+    powerlaw_logpdf,
+    powerlaw_ppf,
+)
+
+x = jnp.array([1.0, 2.0, 4.0])
+u = jnp.array([0.1, 0.5, 0.9])
+log_density = powerlaw_logpdf(x, alpha=-1.0, xmin=1.0, xmax=4.0)
+quantiles = powerlaw_ppf(u, alpha=-1.0, xmin=1.0, xmax=4.0)
+round_trip = powerlaw_cdf(quantiles, alpha=-1.0, xmin=1.0, xmax=4.0)
+alpha_gradient = jax.grad(
+    lambda alpha: powerlaw_logpdf(2.0, alpha=alpha, xmin=1.0, xmax=4.0)
+)(-1.0)
+
+assert jnp.all(jnp.isfinite(log_density))
+assert jnp.isneginf(powerlaw_logpdf(0.5, xmin=1.0, xmax=4.0))
+assert jnp.allclose(round_trip, u)
+assert jnp.isfinite(alpha_gradient)
+```
+
+## How to audit the result
+
+1. Numerically integrate each density over its support and compare with one.
+2. Check support values, CDF monotonicity, and endpoint behavior.
+3. Evaluate `cdf(ppf(u))` on interior probabilities, including near tails.
+4. Compare the power-law value and analytic derivatives at $\alpha=-1$.
+5. Compare AD with independent central differences on both sides of the limit.
+6. Record dtype, grid resolution, integration error, and maximum round-trip error.
+
+:::{tip}
+Separate a normalization audit from a round-trip audit. Two mutually consistent
+formulas can round-trip while sharing the same wrong normalization.
+:::
+
+For `xmin=2`, `xmax=5`, `x=3`, `u=0.3`, and float64 central-difference step
+`1e-5`, the established evidence records maximum CDF/PPF round-trip error
+$2.22\times10^{-16}$ and numerical normalization error
+$1.60\times10^{-10}$. These are fixture measurements, not universal bounds.
+
+## Where the claim stops
+
+These kernels do not validate data-generating assumptions, fit parameters,
+construct priors, supply random draws, or establish Monte Carlo accuracy.
+Support behavior does not make a masked boundary differentiable. Truncated-tail
+accuracy and parameter domains remain caller responsibilities.
+
+## Connected ideas
+
+:::{seealso}
+Build probability vocabulary in
+[](../../10-foundations/mathematical-objects/probability-and-distributions.md),
+connect probability to model state in
+[](../../30-representations/uncertainty/what-uncertainty-represents.md), and use
+the removable-limit audit pattern in
+[](../../40-workflows/investigations/powerlaw-removable-limit.md).
+The grouped API is [](../../50-api/randomness/distributions.md), and numerical
+evidence belongs in [](../../60-validation/validation.md).
+:::

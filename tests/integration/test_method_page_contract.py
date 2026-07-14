@@ -84,6 +84,51 @@ PAGE_SPECS = {
             "eq-standard-normal-hermite",
         ),
     ),
+    "linear-structure/linear-algebra.md": (
+        "jaxstro.numerics.linear_algebra",
+        "../../50-api/linear-structure/linear-algebra.md",
+        ("eq-covariance-estimator", "eq-weighted-least-squares"),
+    ),
+    "linear-structure/operators.md": (
+        "jaxstro.numerics.operators",
+        "../../50-api/linear-structure/operators.md",
+        ("eq-linear-operator", "eq-operator-composition", "eq-operator-adjoint"),
+    ),
+    "linear-structure/special-functions.md": (
+        "jaxstro.numerics.special",
+        "../../50-api/linear-structure/special.md",
+        ("eq-planck-lambda", "eq-planck-coordinate-change", "eq-legendre-recurrence"),
+    ),
+    "probability-sampling/distributions.md": (
+        "jaxstro.numerics.distributions",
+        "../../50-api/randomness/distributions.md",
+        ("eq-density-normalization", "eq-cdf-definition", "eq-powerlaw-integral"),
+    ),
+    "probability-sampling/random.md": (
+        "jaxstro.numerics.random",
+        "../../50-api/randomness/random.md",
+        ("eq-key-split", "eq-key-fold-in"),
+    ),
+    "probability-sampling/sampling.md": (
+        "jaxstro.numerics.sampling",
+        "../../50-api/randomness/sampling.md",
+        ("eq-inverse-cdf-sampling", "eq-stratified-uniform", "eq-residual-counts"),
+    ),
+    "discrete-space/grids.md": (
+        "jaxstro.numerics.grids",
+        "../../50-api/discrete-space/grids.md",
+        ("eq-grid-overlap", "eq-conservative-rebin"),
+    ),
+    "discrete-space/meshes.md": (
+        "jaxstro.numerics.meshes",
+        "../../50-api/discrete-space/meshes.md",
+        ("eq-finite-volume-divergence", "eq-mesh-telescoping", "eq-conservative-remap"),
+    ),
+    "discrete-space/spatial.md": (
+        "jaxstro.spatial",
+        "../../50-api/discrete-space/spatial.md",
+        ("eq-morton-interleave", "eq-fixed-radius-set"),
+    ),
 }
 
 EXACT_RELATIONS = {
@@ -100,6 +145,33 @@ EXACT_RELATIONS = {
     ),
     "approximation-integration/quadrature.md": (
         r"\widetilde{w}_i=\frac{w_i}{\sqrt{\pi}}",
+    ),
+    "linear-structure/linear-algebra.md": (
+        r"C=\frac{1}{n-\mathrm{ddof}}\sum_{i=1}^{n}(x_i-\bar{x})(x_i-\bar{x})^\mathsf{T}",
+        r"(X^\mathsf{T}WX)\widehat{\beta}=X^\mathsf{T}Wy",
+    ),
+    "linear-structure/operators.md": (
+        r"(A\circB)x=A(Bx)",
+        r"\langley,Ax\rangle=\langleA^\mathsf{T}y,x\rangle",
+    ),
+    "linear-structure/special-functions.md": (
+        r"B_\nu=B_\lambda\left|\frac{d\lambda}{d\nu}\right|=B_\lambda\frac{\lambda^2}{c}",
+    ),
+    "probability-sampling/distributions.md": (
+        r"\int_{\mathcal{S}}p(x)\,dx=1",
+        r"F(F^{-1}(u))=u",
+    ),
+    "probability-sampling/random.md": (
+        r"(K_{\mathrm{next}},K_1,\ldots,K_m)=\operatorname{split}(K,m+1)",
+    ),
+    "probability-sampling/sampling.md": (
+        r"X=F^{-1}(U)",
+        r"U_i=\frac{i+V_i}{n}",
+    ),
+    "discrete-space/grids.md": (r"v'_j=\sum_iv_i\frac{\ell_{ji}}{e_{i+1}-e_i}",),
+    "discrete-space/meshes.md": (r"\sum_i\Deltax_i(\nabla\cdotF)_i=F_{N+1/2}-F_{1/2}",),
+    "discrete-space/spatial.md": (
+        r"\mathcal{N}_i=\{j:0<\lVertx_i-x_j\rVert_2\ler_{\mathrm{cut}}\}",
     ),
 }
 
@@ -121,6 +193,37 @@ RELATION_MUTATIONS = {
     ),
     EXACT_RELATIONS["approximation-integration/quadrature.md"][0]: (
         r"\widetilde{w}_i=w_i\sqrt{\pi}"
+    ),
+    EXACT_RELATIONS["linear-structure/linear-algebra.md"][0]: (
+        r"C=\frac{1}{n+\mathrm{ddof}}\sum_{i=1}^{n}(x_i-\bar{x})(x_i-\bar{x})^\mathsf{T}"
+    ),
+    EXACT_RELATIONS["linear-structure/linear-algebra.md"][1]: (
+        r"(X^\mathsf{T}WX)\widehat{\beta}=XWy"
+    ),
+    EXACT_RELATIONS["linear-structure/operators.md"][0]: r"(A\circB)x=B(Ax)",
+    EXACT_RELATIONS["linear-structure/operators.md"][1]: (
+        r"\langley,Ax\rangle=\langleAy,x\rangle"
+    ),
+    EXACT_RELATIONS["linear-structure/special-functions.md"][0]: (
+        r"B_\nu=B_\lambda\left|\frac{d\lambda}{d\nu}\right|=B_\lambda\frac{c}{\lambda^2}"
+    ),
+    EXACT_RELATIONS["probability-sampling/distributions.md"][0]: (
+        r"\int_{\mathcal{S}}p(x)\,dx=0"
+    ),
+    EXACT_RELATIONS["probability-sampling/distributions.md"][1]: r"F(F^{-1}(u))=x",
+    EXACT_RELATIONS["probability-sampling/random.md"][0]: (
+        r"(K_{\mathrm{next}},K_1,\ldots,K_m)=\operatorname{split}(K,m)"
+    ),
+    EXACT_RELATIONS["probability-sampling/sampling.md"][0]: r"X=F(U)",
+    EXACT_RELATIONS["probability-sampling/sampling.md"][1]: r"U_i=\frac{i-V_i}{n}",
+    EXACT_RELATIONS["discrete-space/grids.md"][0]: (
+        r"v'_j=\sum_iv_i\ell_{ji}(e_{i+1}-e_i)"
+    ),
+    EXACT_RELATIONS["discrete-space/meshes.md"][0]: (
+        r"\sum_i\Deltax_i(\nabla\cdotF)_i=F_{1/2}-F_{N+1/2}"
+    ),
+    EXACT_RELATIONS["discrete-space/spatial.md"][0]: (
+        r"\mathcal{N}_i=\{j:0\le\lVertx_i-x_j\rVert_2<r_{\mathrm{cut}}\}"
     ),
 }
 
@@ -239,6 +342,42 @@ def test_derivations_protect_the_scientific_relations_not_only_section_names() -
             r"\\sum_\{i=1\}\^n w_i p\(x_i\).*\\int.*p\(x\).*\\omega\(x\)",
             r"\\sqrt\{2\}.*z_i.*\\sqrt\{\\pi\}",
         ),
+        "linear-structure/linear-algebra.md": (
+            r"C.*\\sum.*\(x_i-\\bar\{x\}\).*\(x_i-\\bar\{x\}\)\^\\mathsf\{T\}",
+            r"X\^\\mathsf\{T\}WX.*\\widehat\{\\beta\}.*X\^\\mathsf\{T\}Wy",
+        ),
+        "linear-structure/operators.md": (
+            r"A\(\\alpha x\+\\beta z\).*\\alpha A\(x\)\+\\beta A\(z\)",
+            r"A\(Bx\).*=.*\(AB\)x",
+        ),
+        "linear-structure/special-functions.md": (
+            r"B_\\lambda.*\\frac\{2hc\^2\}\{\\lambda\^5\}",
+            r"B_\\nu.*B_\\lambda.*\\frac\{\\lambda\^2\}\{c\}",
+        ),
+        "probability-sampling/distributions.md": (
+            r"\\int_\{\\mathcal\{S\}\}p\(x\).*dx.*=.*1",
+            r"F\(x\).*\\int.*p\(t\).*dt",
+        ),
+        "probability-sampling/random.md": (
+            r"K_\{\\mathrm\{next\}\}.*K_1.*K_m.*\\operatorname\{split\}",
+            r"K_i.*\\operatorname\{fold\\_in\}",
+        ),
+        "probability-sampling/sampling.md": (
+            r"X.*F\^\{-1\}\(U\)",
+            r"N_i.*\\lfloor.*\\bar\{w\}_i.*\\rfloor",
+        ),
+        "discrete-space/grids.md": (
+            r"\\ell_\{ji\}.*\\max.*\\min",
+            r"v'_j.*\\sum_i.*v_i",
+        ),
+        "discrete-space/meshes.md": (
+            r"\\frac\{F_\{i\+1/2\}-F_\{i-1/2\}\}\{\\Delta x_i\}",
+            r"\\sum_i.*\\Delta x_i.*\\nabla\\cdot F",
+        ),
+        "discrete-space/spatial.md": (
+            r"m.*x.*y.*z",
+            r"\\mathcal\{N\}_i.*0<.*\\lVert x_i-x_j\\rVert_2.*\\le",
+        ),
     }
 
     for relative, patterns in expected_relations.items():
@@ -325,24 +464,97 @@ def test_reviewed_runtime_boundaries_are_stated_explicitly() -> None:
     assert "second-order velocity-Verlet surface" in ode
     assert "separable conservative system" in ode
 
+    linear = " ".join(_page("linear-structure/linear-algebra.md").split())
+    assert (
+        "value-dependent eager validation is skipped while inputs are traced" in linear
+    )
+    assert "`rowvar` and `ddof` are static" in linear
+    assert "zero variance" in linear
+
+    operators = " ".join(_page("linear-structure/operators.md").split())
+    assert "Python structure is static" in operators
+    assert "PyTree leaves" in operators
+    assert "shape checks happen eagerly" in operators
+
+    special = " ".join(_page("linear-structure/special-functions.md").split())
+    assert "`degree` and `axis` are static" in special
+    assert "value-dependent eager positivity checks are skipped while traced" in special
+
+    distributions = " ".join(_page("probability-sampling/distributions.md").split())
+    assert "do not validate parameter domains" in distributions
+    assert "outside support" in distributions
+    assert "CDF/PPF" in distributions
+
+    random_page = " ".join(_page("probability-sampling/random.md").split())
+    assert "`num` and `start` are static" in random_page
+    assert "does not establish statistical independence" in random_page
+
+    sampling = " ".join(_page("probability-sampling/sampling.md").split())
+    assert "zero-total fallback" in sampling
+    assert "eager validation is skipped while weights are traced" in sampling
+    assert "integer indices" in sampling
+
+    grids = " ".join(_page("discrete-space/grids.md").split())
+    assert "value-dependent eager validation is skipped while traced" in grids
+    assert "integrated bin totals" in grids
+
+    meshes = " ".join(_page("discrete-space/meshes.md").split())
+    assert "`n_cells` is static" in meshes
+    assert "cell averages" in meshes
+
+    spatial = " ".join(_page("discrete-space/spatial.md").split())
+    assert "exact only when `did_overflow` is false" in spatial
+    assert "host-side, discrete preprocessing" in spatial
+    assert "under `jit`, `dims`" in spatial
+
 
 def _run_runtime_shape_status_and_failure_probes() -> None:
     import jax
     import jax.numpy as jnp
+    import jax.random as jrandom
 
+    from jaxstro import constants
     from jaxstro.numerics.autodiff import jvp, vjp
+    from jaxstro.numerics.distributions import (
+        powerlaw_cdf,
+        powerlaw_logpdf,
+        powerlaw_ppf,
+    )
+    from jaxstro.numerics.grids import conservative_rebin
     from jaxstro.numerics.integration import cumulative_trapz, trapz
     from jaxstro.numerics.interpolation import (
         cubic_hermite_interp,
         monotone_cubic_interp,
         natural_cubic_spline_coeffs,
     )
+    from jaxstro.numerics.linear_algebra import (
+        covariance_matrix,
+        weighted_lstsq,
+    )
+    from jaxstro.numerics.meshes import (
+        conservative_remap_1d,
+        divergence_1d,
+    )
     from jaxstro.numerics.ode import solve_fixed_step, velocity_verlet
+    from jaxstro.numerics.operators import DenseOperator, compose
     from jaxstro.numerics.optimization import armijo_backtracking
     from jaxstro.numerics.quadrature import gauss_laguerre_nodes
+    from jaxstro.numerics.random import (
+        key_stream,
+        residual_resample,
+        systematic_resample,
+    )
     from jaxstro.numerics.regular_grid import regular_grid_interp
     from jaxstro.numerics.rootfinding import safeguarded_bracketed_root
+    from jaxstro.numerics.sampling import inverse_cdf_draw
+    from jaxstro.numerics.special import (
+        legendre_basis,
+        normalize_log_weights,
+        planck_lambda_cgs,
+        planck_nu_cgs,
+    )
     from jaxstro.numerics.splines import bspline_eval, open_uniform_knots
+    from jaxstro.spatial import gather_pairs_within_radius
 
     x = jnp.array([0.4, -0.2])
     tangent = jnp.array([0.3, 0.7])
@@ -429,6 +641,122 @@ def _run_runtime_shape_status_and_failure_probes() -> None:
     assert nodes.shape == weights.shape == (4,)
     with pytest.raises(ValueError, match="n >= 1"):
         gauss_laguerre_nodes(0)
+
+    observations = jnp.array([[1.0, 2.0], [3.0, 4.0], [5.0, 8.0]])
+    centered = observations - jnp.mean(observations, axis=0)
+    covariance = covariance_matrix(observations, ddof=1)
+    assert jnp.allclose(covariance, centered.T @ centered / 2.0)
+    design = jnp.array([[1.0, 0.0], [1.0, 1.0], [1.0, 2.0]])
+    response = jnp.array([1.0, 3.0, 5.0])
+    weights = jnp.array([1.0, 2.0, 1.0])
+    beta = weighted_lstsq(design, response, weights)
+    residual = design @ beta - response
+    assert jnp.allclose(design.T @ (weights * residual), 0.0, atol=1e-5)
+
+    left_matrix = jnp.array([[1.0, 2.0], [0.0, 1.0]])
+    right_matrix = jnp.array([[2.0, 0.0], [1.0, 3.0]])
+    operator = compose(DenseOperator(left_matrix), DenseOperator(right_matrix))
+    vector = jnp.array([0.5, -1.0])
+    cotangent = jnp.array([1.5, 0.25])
+    assert jnp.allclose(operator.matvec(vector), left_matrix @ right_matrix @ vector)
+    assert jnp.allclose(
+        jnp.vdot(cotangent, operator.matvec(vector)),
+        jnp.vdot(operator.rmatvec(cotangent), vector),
+    )
+
+    wavelength = jnp.array(5.0e-5)
+    temperature = jnp.array(5800.0)
+    frequency = constants.C_CGS / wavelength
+    b_lambda = planck_lambda_cgs(wavelength, temperature)
+    b_nu = planck_nu_cgs(frequency, temperature)
+    assert jnp.allclose(b_nu, b_lambda * wavelength**2 / constants.C_CGS)
+    probabilities = normalize_log_weights(jnp.array([3.0, 2.0, 1.0]))
+    assert jnp.allclose(jnp.sum(probabilities), 1.0)
+    basis = legendre_basis(jnp.array([0.2, 0.4]), degree=3)
+    assert basis.shape == (2, 4)
+    assert jnp.allclose(
+        3.0 * basis[:, 3], 5.0 * basis[:, 1] * basis[:, 2] - 2.0 * basis[:, 1]
+    )
+
+    x_power = jnp.array([1.0, 2.0, 4.0])
+    log_density = powerlaw_logpdf(x_power, alpha=-1.0, xmin=1.0, xmax=4.0)
+    assert jnp.all(jnp.isfinite(log_density))
+    assert jnp.isneginf(powerlaw_logpdf(jnp.array(0.5), xmin=1.0, xmax=4.0))
+    probabilities = jnp.array([0.1, 0.5, 0.9])
+    quantiles = powerlaw_ppf(probabilities, alpha=-1.0, xmin=1.0, xmax=4.0)
+    assert jnp.allclose(
+        powerlaw_cdf(quantiles, alpha=-1.0, xmin=1.0, xmax=4.0),
+        probabilities,
+    )
+
+    key = jrandom.PRNGKey(23)
+    next_key, subkeys = key_stream(key, 3)
+    replay_next, replay_subkeys = key_stream(jrandom.PRNGKey(23), 3)
+    assert subkeys.shape == (3, 2)
+    assert jnp.array_equal(next_key, replay_next)
+    assert jnp.array_equal(subkeys, replay_subkeys)
+    assert not jnp.array_equal(subkeys[0], subkeys[1])
+
+    tabulated_weight = jnp.ones(5)
+    tabulated_grid = jnp.linspace(0.0, 1.0, 5)
+    draw = inverse_cdf_draw(tabulated_weight, tabulated_grid, jnp.array(0.4))
+    assert jnp.isfinite(draw)
+    assert jnp.isfinite(
+        jax.grad(
+            lambda uniform: inverse_cdf_draw(tabulated_weight, tabulated_grid, uniform)
+        )(jnp.array(0.4))
+    )
+    fallback = systematic_resample(key, jnp.zeros(3), num_samples=6)
+    assert fallback.shape == (6,)
+    assert jnp.all((fallback >= 0) & (fallback < 3))
+    residual_indices = residual_resample(key, jnp.array([0.4, 0.4, 0.2]), num_samples=5)
+    assert jnp.array_equal(
+        jnp.bincount(residual_indices, length=3), jnp.array([2, 2, 1])
+    )
+
+    old_edges = jnp.array([0.0, 1.0, 3.0])
+    old_totals = jnp.array([2.0, 6.0])
+    new_edges = jnp.array([0.0, 0.5, 2.0, 3.0])
+    new_totals = conservative_rebin(old_edges, old_totals, new_edges)
+    assert jnp.allclose(jnp.sum(new_totals), jnp.sum(old_totals))
+    assert jnp.allclose(new_totals, jnp.array([1.0, 4.0, 3.0]))
+
+    face_flux = jnp.array([1.0, 3.0, 2.0, 5.0])
+    mesh_edges = jnp.array([0.0, 0.5, 2.0, 4.0])
+    divergence = divergence_1d(face_flux, mesh_edges)
+    assert jnp.allclose(
+        jnp.sum(jnp.diff(mesh_edges) * divergence), face_flux[-1] - face_flux[0]
+    )
+    old_averages = jnp.array([2.0, 4.0])
+    remapped = conservative_remap_1d(
+        jnp.array([0.0, 1.0, 3.0]), old_averages, new_edges
+    )
+    assert jnp.allclose(
+        jnp.sum(remapped * jnp.diff(new_edges)),
+        jnp.sum(old_averages * jnp.array([1.0, 2.0])),
+    )
+
+    positions = jnp.array(
+        [[0.0, 0.0, 0.0], [0.2, 0.0, 0.0], [0.5, 0.0, 0.0], [1.1, 0.0, 0.0]]
+    )
+    cutoff = 0.5
+    neighbors, mask, overflow = gather_pairs_within_radius(
+        positions,
+        origin=jnp.array([0.0, -0.5, -0.5]),
+        cell_size=cutoff,
+        cutoff=cutoff,
+        k_max=3,
+        Bcap=4,
+        dims=(4, 2, 2),
+    )
+    assert not bool(overflow)
+    for index in range(positions.shape[0]):
+        distances = jnp.linalg.norm(positions - positions[index], axis=1)
+        expected = set(
+            map(int, jnp.where((distances > 0.0) & (distances <= cutoff))[0].tolist())
+        )
+        actual = set(map(int, neighbors[index][mask[index]].tolist()))
+        assert actual == expected
 
 
 def test_runtime_shape_status_and_failure_probes_match_the_pages() -> None:

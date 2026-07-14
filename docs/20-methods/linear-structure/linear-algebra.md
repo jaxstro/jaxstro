@@ -1,29 +1,145 @@
 ---
 title: Linear algebra helpers
 description: >-
-  Weighted least squares, QR/SVD solves, covariance/correlation helpers, and
-  positive-definite jitter with explicit numerical and differentiation contracts.
+  Covariance, least squares, conditioning, and positive-definite repair with
+  explicit numerical and differentiation contracts.
 ---
 
-For a first-principles account of vectors as perturbations, linear maps,
-geometry, null directions, and conditioning, begin with
-[](../../10-foundations/mathematical-objects/linear-algebra-language-of-change.md).
-This chapter remains
-the numerical-method and public-API reference.
+## The question this method answers
 
-Linear algebra is where many scientific workflows quietly become numerically
-fragile. A fit is "just" a matrix solve until the design loses rank. A covariance
-is "just" centered data until its normalization denominator vanishes. A kernel
-matrix is "just" positive definite until roundoff moves an eigenvalue through
-zero.
+How can a researcher summarize coupled variation, fit a linear model, or solve
+a dense system without hiding rank and conditioning assumptions? Linear algebra
+turns vectors of measurements into geometric questions about directions,
+projections, and sensitivity.
 
-jaxstro keeps this layer deliberately small. The following example exercises its
-four main responsibilities without hiding the numerical policy:
+:::{important}
+A returned coefficient vector is evidence that an algorithm ran. It is not by
+itself evidence that the design identifies the coefficients or that the fitted
+model is scientifically appropriate.
+:::
+
+## Before computation: what should be true?
+
+State the shapes and units first. For $n$ observations and $p$ features, a
+design matrix has shape $(n,p)$ and a response has leading shape $(n,)$. A
+weighted fit needs finite nonnegative weights of shape $(n,)$. Covariance needs
+at least `ddof + 1` effective observations, and a solve needs a rank assumption
+or an explicit singular-value cutoff.
+
+:::{warning}
+`weighted_lstsq` and covariance helpers reject invalid concrete weights, but
+value-dependent eager validation is skipped while inputs are traced. A compiled
+caller still owns finiteness, nonnegativity, and a positive covariance
+normalization denominator.
+:::
+
+## Define the mathematical objects
+
+A vector is an ordered collection of scalars. Its Euclidean norm is
+$\lVert x\rVert_2=(\sum_j x_j^2)^{1/2}$. A matrix is a linear map between
+vector spaces. Its singular values measure how strongly it stretches different
+directions; the 2-norm condition number is
+$\kappa_2(A)=\sigma_{\max}/\sigma_{\min}$. Large conditioning means small input
+changes can produce large solution changes.
+
+Covariance measures joint centered variation. If row $i$ is observation $x_i$
+and $\bar{x}$ is the sample mean, the unweighted estimator is
+
+```{math}
+C=\frac{1}{n-\mathrm{ddof}}\sum_{i=1}^{n}(x_i-\bar{x})(x_i-\bar{x})^\mathsf{T}.
+```
+
+The diagonal contains variances. Correlation divides $C_{jk}$ by the two
+standard deviations, making it dimensionless. A zero variance means that
+normalization is undefined; Jaxstro returns finite zeros for that row and
+column rather than inventing a correlation.
+
+## Derive the method
+
+The covariance estimator follows directly from centered outer products:
+
+```{math}
+:label: eq-covariance-estimator
+C=\frac{1}{n-\mathrm{ddof}}\sum_{i=1}^{n}(x_i-\bar{x})(x_i-\bar{x})^\mathsf{T}.
+```
+
+Weighted least squares chooses coefficients $\beta$ to minimize squared
+residuals $r=X\beta-y$:
+
+```{math}
+:label: eq-weighted-least-squares
+J(\beta)=r^\mathsf{T}Wr,
+\qquad
+\nabla_\beta J=2X^\mathsf{T}W(X\beta-y)=0,
+\qquad
+(X^\mathsf{T}WX)\widehat{\beta}=X^\mathsf{T}Wy.
+```
+
+The implementation does not form the normal equations. It multiplies each row
+of $X$ and $y$ by $\sqrt{w_i}$ and delegates to JAX least squares, avoiding the
+extra conditioning penalty of explicitly forming $X^\mathsf{T}WX$. The normal
+equation is still a useful audit: $X^\mathsf{T}W\widehat{r}$ should be near zero.
+
+QR factors a tall matrix as $A=QR$ with orthonormal columns in $Q$, then solves
+$R\beta=Q^\mathsf{T}y$. SVD writes $A=U\Sigma V^\mathsf{T}$ and inverts only
+singular values above the chosen cutoff.
+
+## What the algorithm actually does
+
+`covariance_matrix(samples, weights=None, rowvar=False, ddof=1)` treats rows as
+observations by default. `rowvar` and `ddof` are static in its compiled core.
+`weighted_lstsq` accepts scalar or array-valued responses with the same leading
+sample axis. `qr_solve` requires rows greater than or equal to columns;
+`svd_solve` zeroes inverse singular values at or below `rcond * max(s)`.
+
+`positive_definite_jitter` scans a fixed geometric sequence of diagonal shifts
+and returns `(shifted, jitter, success)`. It returns the first successful tested
+shift, not the smallest possible perturbation or a nearest positive-definite
+matrix {cite:t}`ChengHigham1998`.
+
+## What JAX differentiates
+
+JAX differentiates the executed dense algebra. Smooth derivatives are useful
+while rank, SVD cutoff membership, and the declared zero-weight pattern stay
+fixed. A zero weight gives that observation known-zero local sensitivity.
+Rank changes, cutoff crossings, zero-norm branches, zero variance, first-success
+jitter selection, and coincident singular values are nonsmooth boundaries.
+`condition_number` is a diagnostic, not an inference objective; exact
+singularity returns positive infinity.
+
+```{list-table} Linear-algebra differentiation contracts
+:header-rows: 1
+:label: tbl-linear-algebra-contracts
+
+* - Operation
+  - Supported derivative claim
+  - Boundary
+* - Norm and projection at regular points
+  - `smooth_pathwise`
+  - The active norm or denominator stays nonzero.
+* - Weighted least squares with fixed full-rank design
+  - `smooth_pathwise`
+  - Rank and the weight pattern stay fixed.
+* - Zero-weight observation
+  - `known_zero`
+  - This is declared exclusion, not robust inference.
+* - QR/SVD solve inside a fixed full-rank/cutoff regime
+  - `smooth_pathwise`
+  - No rank or retained-subspace transition occurs.
+* - Rank changes, SVD cutoff crossings, and condition numbers
+  - `validation_only`
+  - Residuals, ranks, and condition diagnostics are audited instead.
+* - Zero variance and jitter selection
+  - `validation_only`
+  - Guards and first-success selection are branch boundaries.
+```
+
+## Using it in Jaxstro
 
 ```python
 from jaxstro.jaxconfig import enable_high_precision
 
-enable_high_precision()  # before creating JAX arrays
+enable_high_precision()
 
 import jax.numpy as jnp
 
@@ -47,184 +163,64 @@ qr_coeffs = qr_solve(design[:3], observations[:3])
 svd_coeffs = svd_solve(design[:3], observations[:3])
 
 samples = jnp.array(
-    [
-        [1.0, 2.0, 5.0],
-        [2.0, 4.0, 5.0],
-        [3.0, 6.0, 5.0],
-        [4.0, 8.0, 5.0],
-    ]
+    [[1.0, 2.0, 5.0], [2.0, 4.0, 5.0], [3.0, 6.0, 5.0], [4.0, 8.0, 5.0]]
 )
 covariance = covariance_matrix(samples)
 correlation = correlation_from_covariance(covariance)
 
 matrix = jnp.diag(jnp.array([-0.03, 2.0]))
 shifted, jitter, success = positive_definite_jitter(
-    matrix,
-    initial_jitter=1.0e-3,
-    growth=10.0,
-    max_steps=4,
+    matrix, initial_jitter=1.0e-3, growth=10.0, max_steps=4
 )
 
 assert jnp.allclose(unweighted_coeffs, jnp.array([-1.6, 5.9]))
 assert jnp.allclose(weighted_coeffs, jnp.array([1.0, 2.0]))
 assert jnp.allclose(qr_coeffs, svd_coeffs)
 assert jnp.all(jnp.isfinite(correlation))
-assert jnp.allclose(correlation[2], 0.0)  # constant third variable
+assert jnp.allclose(correlation[2], 0.0)
 assert success and jnp.isclose(jitter, 0.1)
 assert jnp.linalg.eigvalsh(shifted).min() > 0.0
 ```
 
-The zero weight is a declared modeling choice: it removes the final observation
-from the objective. It is not an automatic outlier detector. Likewise, the
-returned jitter is the first successful member of the requested geometric
-sequence, not the smallest possible matrix perturbation.
+## How to audit the result
+
+1. Check shapes, units, weight domains, and the effective covariance denominator.
+2. Compare $X^\mathsf{T}W\widehat{r}$ with zero and report residuals by observation.
+3. Compare QR and SVD in a well-conditioned full-rank fixture {cite:t}`GolubVanLoan2013`.
+4. Perturb $y$ independently and compare central differences with AD while rank is fixed.
+5. Report singular values, the SVD cutoff, selected jitter, and `success`.
+
+:::{tip}
+Scale columns to comparable numerical ranges before interpreting a condition
+number. Record the scaling so the audit is reproducible.
+:::
 
 :::{figure} ../../10-theory/figures/linear-algebra-contracts.webp
 :name: fig-linear-algebra-contracts
 :alt: Four regression observations with an outlier and measured weighted and unweighted fits, beside matrix eigenvalues before and after selected diagonal jitter
 
-Both panels are computed from public jaxstro APIs. The weighted fit ignores the
-declared zero-weight observation and recovers `(1, 2)`. The diagonal shift moves
-the smallest eigenvalue from `-0.03` to `0.07`. This fixed example demonstrates
-API policy; it is not a robust-regression or nearest-matrix benchmark.
+The public APIs produce both panels. This fixed fixture demonstrates declared
+weighting and jitter policy; it is not a robust-regression benchmark.
 :::
 
-## Learning objectives
+## Where the claim stops
 
-After this chapter, you should be able to state the objective solved by weighted
-least squares, recognize conditioning evidence, and interpret diagonal jitter
-as an explicit numerical intervention rather than hidden model physics.
+These helpers do not establish model adequacy, identifiability, robust outlier
+policy, or uncertainty calibration. Jaxstro does not own sparse or iterative
+linear solves here; the delegated Lineax guide remains separate. A finite
+correlation matrix is not proof that an arbitrary input was symmetric or
+positive semidefinite.
 
-### Concept check: what did the weights change?
+## Connected ideas
 
-Predict which observations dominate a weighted fit. Compute weighted and
-unweighted solutions, then audit residuals, matrix conditioning, and units
-before claiming one fit is scientifically preferable.
-
-## Weighted least squares
-
-`weighted_lstsq(design, y, weights=None, rcond=None)` solves
-
-```{math}
-\min_\beta \sum_i w_i\,\left\lVert (X\beta)_i-y_i\right\rVert^2.
-```
-
-The implementation multiplies each design row and matching observation by
-`sqrt(weights[i])`, then calls JAX's least-squares routine. This is the standard
-weighted reduction to ordinary least squares; QR, SVD, conditioning, and
-full-rank least-squares foundations are treated by
-{cite:t}`GolubVanLoan2013`.
-
-Concrete weights must be one-dimensional, finite, nonnegative, and aligned with
-the observations. A zero weight gives that observation exactly zero local
-sensitivity. A negative or non-finite value is not silently converted into a
-statistical policy.
-
-## QR and SVD solve wrappers
-
-`qr_solve(A, b)` solves square or tall full-rank systems through reduced QR. For
-a tall matrix it returns the least-squares solution without forming normal
-equations.
-
-`svd_solve(A, b, rcond=None)` constructs a truncated pseudoinverse. Singular
-values at or below `rcond * max(s)` are discarded. This makes the regularization
-boundary explicit, but it also makes the solve only piecewise smooth: a singular
-value crossing the cutoff changes the retained subspace.
-
-Neither wrapper estimates whether its mathematical preconditions are
-scientifically appropriate. `qr_solve` assumes full column rank. `svd_solve`
-requires the caller to interpret its cutoff rather than treating a returned
-array as proof that the inverse problem is identifiable.
-
-## Covariance and correlation
-
-`covariance_matrix(samples, weights=None, rowvar=False, ddof=1)` treats rows as
-observations and columns as variables by default. The unweighted normalization is
-`n_observations - ddof`; the weighted normalization is `sum(weights) - ddof`.
-Concrete calls reject a nonpositive denominator instead of returning a plausible
-zero matrix from an undefined estimate.
-
-`correlation_from_covariance(covariance)` divides by the standard deviations on
-both axes. Its public boundary rejects a non-square matrix, non-finite elements,
-or a negative diagonal. A zero variance is guarded before division, so the
-corresponding correlation row and column are finite zeros. This guard does not
-certify that an arbitrary input is symmetric or positive semidefinite; callers
-still own those covariance semantics.
-
-These value-dependent eager checks cannot execute on unknown tracers. In all
-three weighted/correlation surfaces, value-dependent eager validation is skipped while inputs are traced; compiled callers must supply finite weights, a positive
-normalization denominator, and a valid covariance diagonal.
-
-## Positive-definite jitter
-
-`positive_definite_jitter(A, initial_jitter, growth, max_steps)` evaluates a
-fixed geometric sequence of diagonal shifts and returns
-`(A + jitter I, jitter, success)`. An already-positive-definite matrix returns
-zero jitter. Otherwise, `success` identifies whether any tested shift made the
-symmetrized matrix positive definite.
-
-Diagonal perturbations are one broad strategy for obtaining a positive-definite
-matrix. Modified Cholesky methods instead construct and control a matrix
-perturbation during factorization; {cite:t}`ChengHigham1998` analyze that more
-sophisticated problem. jaxstro's helper is intentionally narrower: a transparent
-fixed candidate search, not a modified-Cholesky implementation and not a nearest
-positive-definite projection.
-
-## Differentiation and execution boundaries
-
-Dense linear algebra does not have one universal derivative contract:
-
-```{list-table} Linear-algebra differentiation contracts
-:header-rows: 1
-:label: tbl-linear-algebra-contracts
-
-* - Operation
-  - Contract
-  - Supported claim
-  - Boundary
-* - Norm and projection at regular points
-  - `smooth_pathwise`
-  - AD agrees with central finite differences away from zero norm/denominator.
-  - The active formula remains nonsingular.
-* - Weighted least squares with fixed full-rank design
-  - `smooth_pathwise`
-  - AD through observations agrees with finite differences.
-  - Rank and the declared weight pattern remain fixed.
-* - Zero-weight observation
-  - `known_zero`
-  - The fitted coefficients are locally insensitive to that observation.
-  - This records an explicit modeling exclusion, not robust inference.
-* - QR/SVD solve inside a fixed full-rank/cutoff regime
-  - `smooth_pathwise`
-  - Right-hand-side sensitivities are meaningful while the retained subspace is
-    unchanged.
-  - The matrix remains away from rank and singular-value cutoff transitions.
-* - Rank changes, SVD cutoff crossings, and condition numbers
-  - `validation_only`
-  - Values, residuals, retained ranks, and condition diagnostics can be checked.
-  - No universal derivative is claimed at degeneracy or a cutoff crossing.
-* - Zero variance and jitter selection
-  - `validation_only`
-  - Finite guarded correlations and the selected jitter/success state are tested.
-  - Zero-variance guards and first-success selection are branch boundaries.
-```
-
-The validation suite checks smooth `norm2`, projection, weighted least squares,
-SVD right-hand-side, covariance, and positive-variance correlation cases against
-independent central finite differences. `condition_number(...)` remains a
-diagnostic: exact singularity returns positive infinity, and coincident singular
-values are not an inference gradient.
-
-## What is deliberately not here
-
-jaxstro does not own sparse solves, iterative Krylov methods, robust-regression
-policy, nearest-correlation projection, matrix-free operators, or custom implicit
-differentiation. Those deserve specialized libraries. This module provides small
-dense primitives whose numerical boundaries can be stated and tested.
-
-## From explanation to evidence
-
-For signatures and ownership, see
-[](../../50-api/linear-structure/linear-algebra.md). The assertion-bearing
-evidence map is in [](../../60-validation/validation.md). The five package-wide gradient
-labels are defined in [](../methods.md#gradient-contracts).
+:::{seealso}
+Build the geometric language in
+[](../../10-foundations/mathematical-objects/linear-algebra-language-of-change.md),
+represent array state with
+[](../../30-representations/parameters-state/pytrees-as-scientific-state.md), and
+audit sensitivities through
+[](../../40-workflows/differentiable-research/auditing-derivatives.md).
+Signatures live in [](../../50-api/linear-structure/linear-algebra.md), while
+assertion-bearing evidence belongs in [](../../60-validation/validation.md).
+The shared gradient labels are in [](../methods.md#gradient-contracts).
+:::

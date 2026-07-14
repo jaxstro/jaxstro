@@ -1,140 +1,114 @@
 ---
 title: Spatial indexing and neighbor contracts
 description: >-
-  How jaxstro turns positions into fixed-shape spatial bins, approximate
-  candidate pools, and exact fixed-radius neighbors without hiding overflow or
-  differentiability boundaries.
+  Fixed-shape bins, candidate neighborhoods, and exact fixed-radius pairs with
+  explicit overflow and topology boundaries.
 ---
 
-Spatial acceleration begins with a change of question. Instead of comparing
-every particle with every other particle, first ask which particles *could* be
-nearby. That first answer is a candidate pool. It becomes an exact geometric
-answer only after an explicit distance filter and a successful capacity check.
+## The question this method answers
 
-:::{admonition} Observable first: what did the query return?
-:class: important
+How can a researcher avoid comparing every point with every other point while
+still knowing whether a reported neighbor set is complete? Spatial indexing
+first groups points into cells, gathers a bounded candidate neighborhood, and
+then applies the physical distance criterion.
 
-- A **candidate query** returns indices worth checking. It may include distant
-  particles and can lose recall if a fixed-capacity bin overflows.
-- An **exact fixed-radius query** returns every index satisfying its distance
-  contract only when `did_overflow` is false.
+:::{important}
+Candidate does not mean neighbor. A candidate set can contain false positives;
+an exact fixed-radius set is complete only when its geometric preconditions hold
+and `did_overflow` is false.
 :::
 
-## Learning objectives
+## Before computation: what should be true?
 
-After this chapter, you should be able to separate candidate recall from exact
-geometry, interpret capacity and overflow evidence, and identify why topology
-construction is a discrete boundary rather than a differentiable interaction.
+Define the coordinate frame, boundary convention, cell size, cutoff, and fixed
+capacities. For the exact query, `cell_size >= cutoff`, `Bcap` must hold every
+searched cell, and `k_max` must hold every accepted neighbor per particle. The
+current geometry is open and clamped, not periodic.
 
-### Concept check: candidate is not neighbor
+Morton binning requires `Nbins_per_dim` to be a positive power of two no larger
+than 1024. Dense linear cells accept arbitrary positive dimensions and are the
+owner used by exact fixed-radius gathering.
 
-Predict which grid candidates fail the exact radius test. Compute both sets,
-then audit recall, symmetry, cutoff inclusion, and overflow independently.
-
-## The pipeline
-
-```text
-positions
-   -> host-side cell assignment and ordering
-fixed-capacity cells or Morton bins
-   -> stencil gather
-candidate pool
-   -> distance filter + overflow check
-exact fixed-radius neighbors
-```
-
-The boxes and masks in this pipeline have static shapes that compose well with
-JAX. Choosing bins, sorting integer IDs, truncating capacity, and deciding which
-stencil to inspect remain host-side, discrete preprocessing rather than a
-smooth map from positions to neighbor identity.
-
-## Morton bins: locality, not distance
-
-A Morton or Z-order code interleaves the bits of integer cell coordinates into
-one integer {cite:t}`Morton1966`. Nearby grid cells often remain near one another
-in that ordering, which is useful for grouping and memory access. The code is
-not a metric: subtracting two Morton IDs does not give a physical distance.
-
-`assign_particles_to_bins(...)` maps a symmetric cubic box to Morton-ordered
-bins. Its `Nbins_per_dim` contract is a positive power of two, no larger than
-1024. This restriction makes the Morton IDs dense in
-`[0, Nbins_per_dim**3)`. For arbitrary dense dimensions, use
-`assign_to_cells_linear(...)`, which owns row-major cell IDs rather than Morton
-ordering.
-
-Particles outside the configured box clamp to boundary bins. Clamping keeps
-indices valid; it does not create periodic boundaries.
-
-## Capacity is part of the result
-
-JAX kernels benefit from fixed shapes, so a cell array has a configured
-capacity `Bcap` and unused slots carry a sentinel plus a Boolean mask.
-
-- `fill_bins(...)` deterministically selects `Bcap` members when a bin is too
-  full, but it returns no overflow flag. `fill_bins` cannot certify full recall after capacity overflow.
-- `fill_bins_exact(...)` returns `did_overflow` along with the members and mask.
-  "Exact" here means exact grouping when capacity is sufficient; it does not
-  make a too-small `Bcap` lossless.
-
-Never infer completeness from a full-looking fixed-shape array. Propagate the
-overflow result or choose a configuration whose capacity is independently
-validated for the point distribution.
-
-## Candidate does not mean neighbor
-
-`gather_candidates_from_bins(...)`,
-`gather_candidates_with_stencil(...)`,
-`gather_candidates_two_stencil(...)`, and
-`approx_knn_candidates(...)` search nearby grid cells and return bounded
-candidate arrays. The arrays can contain false positives because a cell stencil
-covers a box-like region rather than the final physical criterion. Their
-project-local keep counts and fallback thresholds are fixed-shape heuristics,
-not a proof of exact k-nearest-neighbor recall for every distribution.
-
-A consumer should:
-
-1. mask sentinels;
-2. compute the needed distances or other physical predicate;
-3. apply the final filter or ranking; and
-4. validate recall on representative uniform, boundary, and clustered clouds.
-
-:::{figure} ../../10-theory/figures/spatial-neighbor-contracts.webp
-:name: fig-spatial-neighbor-contracts
-:alt: Two-panel spatial-neighbor diagram comparing a grid candidate pool with exact cutoff-filtered neighbors
-
-The left panel is the real candidate set returned for focal particle 0 in the
-JaxtroViz fixture; orange edges include false positives. The right panel applies
-the public exact-radius query to the same positions. Only particles 1 and 2 meet
-the cutoff, and the displayed overflow state is false. This one cloud explains
-the contract; it is not a population-wide recall benchmark.
+:::{warning}
+Fixed output shapes can truncate information. `fill_bins` cannot certify full recall after capacity overflow because it returns no overflow flag. Use
+`fill_bins_exact` and propagate its status when completeness matters.
 :::
 
-## Exact fixed-radius neighbors
+## Define the mathematical objects
 
-`gather_pairs_within_radius(...)` owns a stronger contract:
+A cell is a bounded spatial region assigned an integer ID. A neighborhood is a
+set of nearby cells inspected for possible interactions. Topology describes
+which cell or point identities are connected; it can change discontinuously
+when a point crosses a cell face or distance cutoff.
 
-```text
-{j : 0 < |x_i - x_j| <= cutoff}
+A Morton or Z-order code interleaves integer coordinate bits into one integer
+{cite:t}`Morton1966`. It often preserves locality in memory, but it is not a
+distance metric. A mask marks which slots in a fixed-capacity array hold real
+indices; a sentinel occupies unused slots. An overflow flag says that capacity
+was insufficient and the stored set may be incomplete.
+
+## Derive the method
+
+If coordinate bits are $x_b,y_b,z_b\in\{0,1\}$, a three-dimensional Morton code
+interleaves them as
+
+```{math}
+:label: eq-morton-interleave
+m=\sum_{b=0}^{B-1}\left(x_b2^{3b}+y_b2^{3b+1}+z_b2^{3b+2}\right).
 ```
 
-The lower bound excludes self-indices and coincident particles. The upper bound
-includes a pair exactly on the cutoff. The query is exact only when `did_overflow` is false.
-Its other preconditions are load-bearing:
+The exact fixed-radius target for focal point $i$ is
 
-- `cell_size >= cutoff`, so the 27-cell stencil covers the cutoff sphere;
-- `k_max` can hold every accepted neighbor per particle;
-- `Bcap` can hold every member of a searched cell; and
-- under `jit`, `dims` is supplied explicitly as static grid structure.
+```{math}
+:label: eq-fixed-radius-set
+\mathcal{N}_i=\{j:0<\lVert x_i-x_j\rVert_2\le r_{\mathrm{cut}}\}.
+```
 
-The current implementation uses open, clamped boundaries rather than periodic
-wrapping. An exact result is exact for that stated geometry, not for a different
-boundary convention.
+With cubic cells at least as wide as the cutoff, any point in
+$\mathcal{N}_i$ lies in the focal cell or one of its 26 adjacent cells. Gathering
+that 27-cell stencil, masking invalid slots, and applying the exact distance test
+therefore reproduces the brute-force set when neither cell nor neighbor capacity
+overflows. The lower strict inequality excludes self and coincident points; the
+upper inclusive inequality keeps points exactly on the cutoff.
 
-## Worked exact-radius example
+## What the algorithm actually does
 
-This standalone example checks three easy-to-confuse boundaries: a particle at
-exactly `cutoff` is included, a coincident particle is excluded, and capacity is
-sufficient.
+`assign_particles_to_bins` maps a symmetric cube to Morton IDs and clamps
+off-box positions to boundary bins. `assign_to_cells_linear` produces dense
+row-major IDs for arbitrary `(nx, ny, nz)`. Clamping keeps indices valid but does
+not create periodic boundaries.
+
+`fill_bins` deterministically retains `Bcap` hash-ranked members per cell.
+`fill_bins_exact` stores the same fixed shape and also returns `did_overflow`.
+`gather_candidates_from_bins`, stencil variants, and
+`approx_knn_candidates` return bounded candidates that still require a physical
+filter and recall audit.
+
+`gather_pairs_within_radius` assigns dense cells, gathers a masked 27-cell
+stencil, computes distances, and returns `(neighbors, mask, did_overflow)` with
+shapes `(N, k_max)`, `(N, k_max)`, and `()`. It is exact only when
+`did_overflow` is false and all stated preconditions hold. Its `dims=None` path
+reads positions on the host and is eager-only; under `jit`, `dims` must be
+provided explicitly as static grid structure. `k_max`, `Bcap`, dimensions, and
+the concrete `cell_size >= cutoff` guard also determine traced structure or
+host-side checks.
+
+The result is exact only when `did_overflow` is false and those geometry and
+capacity conditions all hold.
+
+## What JAX differentiates
+
+Cell assignment uses floor, clipping, integer encoding, sorting, masks, and
+top-k selection. These are host-side, discrete preprocessing or discrete JAX
+operations, not a smooth map from positions to neighbor identity. A JIT-compatible
+spatial query does not thereby have a meaningful topology derivative.
+
+Once a neighbor set is fixed, a downstream smooth distance, force, or density
+kernel can be differentiated with respect to floating positions or values. That
+conditional derivative excludes points where cell membership, cutoff inclusion,
+ranking, or capacity status changes.
+
+## Using it in Jaxstro
 
 ```python
 import jax.numpy as jnp
@@ -145,10 +119,10 @@ positions = jnp.array(
     [
         [0.0, 0.0, 0.0],
         [0.25, 0.0, 0.0],
-        [0.5, 0.0, 0.0],   # exactly at cutoff
+        [0.5, 0.0, 0.0],
         [1.25, 0.0, 0.0],
-        [0.0, 0.5, 0.0],   # exactly at cutoff
-        [0.0, 0.0, 0.0],   # coincident: excluded by r > 0
+        [0.0, 0.5, 0.0],
+        [0.0, 0.0, 0.0],
     ]
 )
 
@@ -167,33 +141,49 @@ assert focal_neighbors == {1, 2, 4}
 assert not bool(did_overflow)
 ```
 
-The result is a discrete index set. Differentiating downstream force or density
-kernels with respect to values at a *fixed* neighbor set may be meaningful;
-differentiating through the change in neighbor identity is not the contract of
-this preprocessing layer.
+## How to audit the result
 
-## Choosing the public path
+1. Compute all pairwise distances for a small cloud and compare every returned
+   row with the brute-force set `0 < |x_i - x_j| <= cutoff`.
+2. Include coincident points, exact-cutoff points, boundaries, and empty cells.
+3. Check neighbor symmetry when the scientific relation should be symmetric.
+4. Force cell overflow and neighbor overflow, then verify `did_overflow` changes.
+5. Compare approximate candidate recall with brute-force neighbors on uniform,
+   boundary-heavy, and clustered clouds.
+6. Record boundary convention, cell size, dimensions, `Bcap`, and `k_max`.
 
-```{list-table} Spatial query decision table
-:header-rows: 1
-:label: tbl-spatial-query-choice
+:::{tip}
+Treat `did_overflow == False` as evidence attached to a particular cloud and
+configuration. Re-audit capacity when the population or spatial concentration
+changes.
+:::
 
-* - Need
-  - Public path
-  - Required check
-* - Morton-ordered grouping on a cubic power-of-two grid
-  - `assign_particles_to_bins` -> `fill_bins` or `fill_bins_exact`
-  - Capacity and boundary-clamping policy
-* - Arbitrary dense grid dimensions
-  - `assign_to_cells_linear` -> `fill_bins_exact`
-  - Dense cell-count and capacity bounds
-* - Bounded approximate kNN candidates
-  - `approx_knn_candidates`
-  - Recall against exact kNN on representative clouds
-* - Exact open-boundary fixed-radius neighbors
-  - `gather_pairs_within_radius`
-  - Preconditions plus `did_overflow == False`
-```
+:::{figure} ../../10-theory/figures/spatial-neighbor-contracts.webp
+:name: fig-spatial-neighbor-contracts
+:alt: Two-panel spatial-neighbor diagram comparing a grid candidate pool with exact cutoff-filtered neighbors
 
-The public ownership map is in [](../../50-api/discrete-space/spatial.md), and quantitative evidence
-belongs in [](../../60-validation/validation.md).
+The left panel shows candidate false positives; the right applies the public
+exact-radius predicate with no overflow. This fixture explains the contract but
+is not a population-wide recall benchmark.
+:::
+
+## Where the claim stops
+
+Morton locality does not imply physical distance. Candidate heuristics do not
+guarantee exact k-nearest-neighbor recall. Fixed-radius exactness is conditional
+on open clamped geometry, stencil coverage, and both capacities. None of these
+queries defines periodic wrapping, differentiable topology, or a complete
+many-body interaction model.
+
+## Connected ideas
+
+:::{seealso}
+Review norms in
+[](../../10-foundations/mathematical-objects/linear-algebra-language-of-change.md),
+connect cells and topology to
+[](../../30-representations/fields/topology-and-discretization.md), and use the
+claim-boundary workflow in
+[](../../40-workflows/reproducible-research/evidence-and-claim-boundaries.md).
+The public owner map is [](../../50-api/discrete-space/spatial.md), and
+quantitative evidence belongs in [](../../60-validation/validation.md).
+:::
