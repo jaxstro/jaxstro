@@ -171,6 +171,11 @@ def test_linearized_formula_centers_about_the_input_mean() -> None:
 
 def test_weighted_adjoint_has_an_exact_inner_product_identity() -> None:
     text = _compact_math(_read("fields/field-operators.md"))
+    prose = _normalized_prose(_read("fields/field-operators.md")).lower()
+    assert (
+        "symmetric positive-definite mass matrices $\\mathbf{m}_0$ and "
+        "$\\mathbf{m}_1$, which are therefore invertible" in prose
+    )
     assert r"G^{*}=\mathbf{M}_{0}^{-1}G^{\mathsf{T}}\mathbf{M}_{1}" in text
     assert (
         r"\langleG\phi,q\rangle_{\mathbf{M}_{1}}"

@@ -72,8 +72,9 @@ to test. It depends on consistent incidence, geometry, and boundary accounting; 
 does not follow merely because a stencil resembles a continuum derivative.
 
 An algebraic adjoint $G^{\mathsf{T}}$ is defined by an unweighted Euclidean inner
-product. For invertible mass matrices $\mathbf{M}_0$ and $\mathbf{M}_1$, the
-weighted algebraic adjoint and its exact inner-product identity are
+product. For symmetric positive-definite mass matrices $\mathbf{M}_0$ and
+$\mathbf{M}_1$, which are therefore invertible, the weighted algebraic adjoint
+and its exact inner-product identity are
 
 ```{math}
 :label: eq-weighted-field-adjoint
