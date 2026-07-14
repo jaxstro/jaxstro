@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[2]
 DOCS = ROOT / "docs"
 METHODS = DOCS / "20-methods"
@@ -30,6 +32,14 @@ FAMILIES = {
         "sampling",
     ),
     "discrete-space": ("grids", "meshes", "spatial"),
+}
+
+FAMILY_TITLES = {
+    "change-constraints-evolution": "Change, constraints, and evolution",
+    "approximation-integration": "Approximation from finite information",
+    "linear-structure": "Linear structure and reusable operators",
+    "probability-sampling": "Randomness as a computational object",
+    "discrete-space": "Discrete worlds: grids, meshes, and neighborhoods",
 }
 
 ROUTES = {
@@ -90,6 +100,24 @@ def test_methods_landing_uses_semantic_filename_and_family_titles() -> None:
     assert myst.count("file: 20-methods/methods.md") == 1
     assert manifest["20-methods/methods.md"] == "/methods"
     assert "10-theory/index.md" not in manifest
+
+
+def test_methods_toc_preserves_family_titles_and_page_order() -> None:
+    config = yaml.safe_load((DOCS / "myst.yml").read_text(encoding="utf-8"))
+    methods_toc = next(
+        item for item in config["project"]["toc"] if item.get("title") == "Methods"
+    )
+
+    expected_children = [{"file": "20-methods/methods.md"}]
+    expected_children.extend(
+        {
+            "title": FAMILY_TITLES[family],
+            "children": [{"file": f"20-methods/{family}/{page}.md"} for page in pages],
+        }
+        for family, pages in FAMILIES.items()
+    )
+
+    assert methods_toc["children"] == expected_children
 
 
 def test_migration_retires_only_the_old_method_sources() -> None:

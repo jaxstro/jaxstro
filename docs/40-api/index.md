@@ -426,12 +426,14 @@ with deterministic shape. The method pages are [](../20-methods/change-constrain
 ### `jaxstro.numerics.random`
 
 `key_stream(...)` and `fold_in_stream(...)` make JAX PRNG key flow explicit.
-`seed_manifest(...)` renders deterministic seed metadata.
+`seed_manifest(...)` renders deterministic seed metadata. Their method page is
+[](../20-methods/probability-sampling/random.md).
+
 `systematic_resample(...)`, `stratified_resample(...)`, and
 `residual_resample(...)` return shape-stable resampled indices from nonnegative
 weights. Their public wrappers reject invalid concrete eager inputs; traced
-callers own the finite/nonnegative value precondition. The method page is
-[](../20-methods/probability-sampling/random.md).
+callers own the finite/nonnegative value precondition. Their method page is
+[](../20-methods/probability-sampling/sampling.md).
 
 :::{note} Per-symbol reference pages are planned
 A complete, auto-generated per-module symbol reference (signatures, parameters,

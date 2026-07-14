@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -16,6 +17,17 @@ API_PAGE = REPO_ROOT / "docs" / "40-api" / "index.md"
 
 def _api_text() -> str:
     return API_PAGE.read_text(encoding="utf-8")
+
+
+def _api_section(module: str) -> str:
+    text = _api_text()
+    match = re.search(
+        rf"^### `{re.escape(module)}`\n(?P<body>.*?)(?=^### |\Z)",
+        text,
+        re.MULTILINE | re.DOTALL,
+    )
+    assert match is not None, f"missing API section for {module}"
+    return match.group("body")
 
 
 def test_spatial_is_an_eager_top_level_public_module_in_a_clean_process() -> None:
@@ -80,6 +92,29 @@ def test_api_reference_exposes_provenance_card_tooling_and_routes() -> None:
     assert "./provenance/index.md" in text
     assert "source-backed provenance cards" in text
     assert "runtime manifests" in text
+
+
+def test_random_api_section_links_each_symbol_family_to_its_method_scope() -> None:
+    section = _api_section("jaxstro.numerics.random")
+    paragraphs = [paragraph for paragraph in section.split("\n\n") if paragraph]
+
+    prng_paragraph = next(
+        paragraph for paragraph in paragraphs if "`key_stream(...)`" in paragraph
+    )
+    assert "`fold_in_stream(...)`" in prng_paragraph
+    assert "`seed_manifest(...)`" in prng_paragraph
+    assert "../20-methods/probability-sampling/random.md" in prng_paragraph
+    assert "../20-methods/probability-sampling/sampling.md" not in prng_paragraph
+
+    resampling_paragraph = next(
+        paragraph
+        for paragraph in paragraphs
+        if "`systematic_resample(...)`" in paragraph
+    )
+    assert "`stratified_resample(...)`" in resampling_paragraph
+    assert "`residual_resample(...)`" in resampling_paragraph
+    assert "../20-methods/probability-sampling/sampling.md" in resampling_paragraph
+    assert "../20-methods/probability-sampling/random.md" not in resampling_paragraph
 
 
 def test_interpolation_reference_does_not_duplicate_symbol_descriptions() -> None:
