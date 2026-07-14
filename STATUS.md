@@ -1,6 +1,8 @@
 # jaxstro — status
 
-next: Review and approve the researcher-first Start Here and connected Foundations routes, then begin the numerical-method family migration. The MyST preview is staged at the first approved user review gate; Task 3 has not started.
+next: Review and approve the researcher-first Methods, Representations, and Research workflows routes at Gate 2. After approval, begin the grouped, owner-qualified API reference; Task 8 has not started.
+
+previous: Researcher-first documentation Tasks 3 through 7 completed on local main (2026-07-13). Numerical methods now separate current Jaxstro owners from delegated ecosystem methods and planned QMC/signal capabilities; scientific representations separate current units, geometry, spectra, and parameter/state owners from planned uncertainty and deferred field abstractions; research workflows organize scientific ML, data pipelines, differentiable research, reproducible research, and executable investigations around representation -> computation plan -> execution -> audit -> evidence -> claim. Task 7 hard-cut the teaching-oriented executable registry to a deterministic schema-2 research-workflow registry with no aliases. The combined affected suite passed 60 tests, the strict MyST build rendered 127 pages, the exact route/link/accessibility audit passed, and independent review found no remaining findings.
 
 previous: Researcher-first documentation Tasks 1 and 2 completed on local main (2026-07-13). Start Here now includes beginner JAX orientation, first-principles transformed-program examples, a neutral NumPy/JAX/Jaxstro decision table, documentation-use routes, and an executable luminosity map. Foundations now uses semantic Mathematical objects and Models and computation groups with stable public routes, tailored use-case openings, research-only language, ASCII prose plus LaTeX math, and explicit non-deficit readiness framing. Both slices passed focused and affected tests, isolated strict MyST/rendered-route gates, and independent review with no remaining findings.
 
@@ -39,7 +41,7 @@ in 8 s. Live verification returned 200 for the homepage, release checklist, and 
 CSS. The first run's 404 exposed and permanently ratcheted the `_build/site` versus `_build/html`
 artifact boundary.
 
-blocker: Awaiting Anna's review-gate approval before Methods migration. The shared full docs gate also reports Kepler-owned generated contract artifacts stale; the exact documentation slices pass in isolation.
+blocker: Awaiting Anna's Gate 2 approval before grouped API work. The shared full docs gate also reports Kepler-owned generated contract artifacts stale; the exact documentation slices pass in isolation.
 due:
 
 ## Phase C — DONE (2026-06-17, branch feature/phase-c-release-hardening, HEAD 40f936e)
