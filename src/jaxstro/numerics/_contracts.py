@@ -197,6 +197,73 @@ ROOT_CALLABLES += (
     ),
 )
 
+_kepler_value_evidence = EvidenceReference(
+    "numerics.universal_kepler_step.value",
+    EvidenceKind.UNIT_TEST,
+    "tests/unit/test_kepler.py",
+    "Elliptic, near-parabolic, hyperbolic, reverse, scale, transform, and typed-failure behavior.",
+)
+_kepler_gradient_evidence = EvidenceReference(
+    "numerics.universal_kepler_step.fixed_route_ad",
+    EvidenceKind.VALIDATION_TEST,
+    "tests/validation/test_kepler_gradients.py",
+    "Fixed-route JVP and VJP directional derivatives agree with central finite differences.",
+)
+_kepler_fixed_route = (
+    "Continuous state on one converged route with fixed shape, iteration budget, "
+    "status path, and Stumpff branch."
+)
+KEPLER_CALLABLES: tuple[CallableContract, ...] = (
+    CallableContract(
+        id="numerics.universal_kepler_step",
+        import_path="jaxstro.numerics.universal_kepler_step",
+        purpose="Propagate a relative Cartesian two-body state across any Newtonian conic.",
+        domain="Finite relative Cartesian vectors, positive mu, signed finite dt, and mutually consistent caller-owned units.",
+        outputs="UniversalKeplerResult with Cartesian state, residual, iteration count, and exhaustive status.",
+        ad_semantics=ADSemantics.SMOOTH_PATHWISE,
+        precision="float32 and float64; invariant and derivative validation uses float64.",
+        maturity=MaturityLevel.VALIDATED,
+        transforms=(
+            TransformContract(
+                "jit",
+                SupportLevel.SUPPORTED,
+                evidence_ids=(_kepler_value_evidence.id,),
+            ),
+            TransformContract(
+                "vmap",
+                SupportLevel.SUPPORTED,
+                evidence_ids=(_kepler_value_evidence.id,),
+            ),
+            TransformContract(
+                "jvp",
+                SupportLevel.CONDITIONAL,
+                conditions=_kepler_fixed_route,
+                evidence_ids=(_kepler_gradient_evidence.id,),
+            ),
+            TransformContract(
+                "vjp",
+                SupportLevel.CONDITIONAL,
+                conditions=_kepler_fixed_route,
+                evidence_ids=(_kepler_gradient_evidence.id,),
+            ),
+        ),
+        boundaries=(
+            BoundaryContract(
+                "Invalid input, nonfinite iteration, singular radius, or exhausted iteration budget.",
+                FailureMode.STRUCTURED_RESULT,
+                (_kepler_value_evidence.id,),
+            ),
+        ),
+        evidence=(_kepler_value_evidence, _kepler_gradient_evidence),
+        limitations=(
+            "No derivative claim across status, iteration-count, Stumpff-route, conic-label, or collision boundaries.",
+            "No implicit-root derivative claim; AD follows the finite executed Newton map.",
+            "Units, object identity, encounter selection, and state-commit policy belong to callers.",
+        ),
+        cost_notes="Runs a fixed 12-slot Newton scan by default; converged lanes freeze numerically.",
+    ),
+)
+
 
 def _smooth_callable(
     name: str,
@@ -316,5 +383,6 @@ MODULE_CONTRACT = module_contract(
     "Caller-owned units; each callable declares dimensional behavior.",
 )
 MODULE_CONTRACT = replace(
-    MODULE_CONTRACT, callables=ROOT_CALLABLES + EXEMPLAR_CALLABLES
+    MODULE_CONTRACT,
+    callables=ROOT_CALLABLES + KEPLER_CALLABLES + EXEMPLAR_CALLABLES,
 )

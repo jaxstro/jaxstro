@@ -313,3 +313,55 @@ def test_terminal_status_types_positive_singular_radius_evidence() -> None:
         converged=jnp.asarray(False),
     )
     assert int(status) == KEPLER_STATUS_SINGULAR_RADIUS
+
+
+def test_universal_kepler_jit_matches_eager_status_and_state() -> None:
+    r0 = jnp.array([1.0, 0.0, 0.0])
+    v0 = jnp.array([0.0, 1.6, 0.0])
+    eager = universal_kepler_step(r0, v0, jnp.array(1.0), jnp.array(0.75))
+
+    compiled = jax.jit(universal_kepler_step)(
+        r0,
+        v0,
+        jnp.array(1.0),
+        jnp.array(0.75),
+    )
+
+    assert int(compiled.status) == int(eager.status)
+    assert int(compiled.iterations) == int(eager.iterations)
+    assert jnp.allclose(compiled.position, eager.position, rtol=0.0, atol=1.0e-13)
+    assert jnp.allclose(compiled.velocity, eager.velocity, rtol=0.0, atol=1.0e-13)
+
+
+def test_universal_kepler_vmap_matches_scalar_lanes() -> None:
+    positions = jnp.array([[1.0, 0.0, 0.0], [0.4, 0.0, 0.0]])
+    velocities = jnp.array([[0.0, 1.6, 0.0], [0.0, 2.0, 0.0]])
+    mus = jnp.ones(2)
+    dts = jnp.array([0.75, 0.4])
+
+    batched = jax.vmap(universal_kepler_step)(positions, velocities, mus, dts)
+    scalar = [
+        universal_kepler_step(positions[i], velocities[i], mus[i], dts[i])
+        for i in range(2)
+    ]
+
+    assert jnp.array_equal(
+        batched.status,
+        jnp.stack([result.status for result in scalar]),
+    )
+    assert jnp.array_equal(
+        batched.iterations,
+        jnp.stack([result.iterations for result in scalar]),
+    )
+    assert jnp.allclose(
+        batched.position,
+        jnp.stack([result.position for result in scalar]),
+        rtol=0.0,
+        atol=1.0e-13,
+    )
+    assert jnp.allclose(
+        batched.velocity,
+        jnp.stack([result.velocity for result in scalar]),
+        rtol=0.0,
+        atol=1.0e-13,
+    )

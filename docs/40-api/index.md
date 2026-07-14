@@ -252,6 +252,23 @@ fields are `proposal`, `residual`, `lo`, `hi`, `f_lo`, `f_hi`,
 `BracketedRootResult` fields are `root`, `residual`, `status`, `converged`,
 `bracketed`, `n_evaluations`, `residual_scale`, `final_bracket`, and `trace`.
 
+### `jaxstro.numerics.kepler`
+
+`universal_kepler_step(...) -> UniversalKeplerResult` propagates one relative
+Cartesian two-body state with a nondimensional universal-variable solve. One
+equation covers elliptic, parabolic-limit, and hyperbolic conics. Units remain
+caller-owned: `position`, `velocity`, `mu`, and `dt` must be mutually
+consistent.
+
+The exhaustive terminal identifiers are `KEPLER_STATUS_CONVERGED`,
+`KEPLER_STATUS_INVALID_INPUT`, `KEPLER_STATUS_NONFINITE_ITERATION`,
+`KEPLER_STATUS_SINGULAR_RADIUS`, and `KEPLER_STATUS_MAX_STEPS`. A failed
+`UniversalKeplerResult` retains the original Cartesian state. `jit` and `vmap`
+are supported. JVP/VJP evidence applies only to a fixed successful numerical
+route: shape, iteration budget, status path, Stumpff branch, and conic regime
+must remain unchanged. This is pathwise AD through the finite executed Newton
+map, not an implicit-root derivative.
+
 ### `jaxstro.numerics.interpolation`
 
 `interp1d(...)` is the clamped linear baseline. `cubic_hermite_interp(...)`

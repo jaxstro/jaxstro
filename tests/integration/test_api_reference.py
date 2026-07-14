@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 import jaxstro
+from jaxstro.contracts import ADSemantics, SupportLevel, get_callable_contract
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 API_PAGE = REPO_ROOT / "docs" / "40-api" / "index.md"
@@ -138,3 +139,31 @@ def test_safeguarded_rootfinding_public_surface_is_documented_and_executable() -
 
     assert "value-first" in text
     assert "implicit-root derivative" in text
+
+
+def test_universal_kepler_public_surface_is_documented_and_contracted() -> None:
+    symbols = (
+        "KEPLER_STATUS_CONVERGED",
+        "KEPLER_STATUS_INVALID_INPUT",
+        "KEPLER_STATUS_NONFINITE_ITERATION",
+        "KEPLER_STATUS_SINGULAR_RADIUS",
+        "KEPLER_STATUS_MAX_STEPS",
+        "UniversalKeplerResult",
+        "universal_kepler_step",
+    )
+    text = _api_text()
+
+    for symbol in symbols:
+        assert getattr(jaxstro.numerics, symbol) is not None
+        assert symbol in jaxstro.numerics.__all__
+        assert f"`{symbol}" in text
+
+    contract = get_callable_contract("jaxstro.numerics.universal_kepler_step")
+    transforms = {item.transform: item for item in contract.transforms}
+    assert contract.ad_semantics is ADSemantics.SMOOTH_PATHWISE
+    assert transforms["jit"].support is SupportLevel.SUPPORTED
+    assert transforms["vmap"].support is SupportLevel.SUPPORTED
+    assert transforms["jvp"].support is SupportLevel.CONDITIONAL
+    assert transforms["vjp"].support is SupportLevel.CONDITIONAL
+    assert "fixed" in transforms["jvp"].conditions.lower()
+    assert "fixed" in transforms["vjp"].conditions.lower()
