@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Inject the site-level navigation accessibility hook into built MyST HTML."""
+"""Inject the site-level navigation accessibility hook into built MyST HTML.
+
+The inline hook is a fixed, repository-owned string: it contains no user or
+document interpolation, changes only ``aria-label`` attributes, and uses no URL,
+so it is base-path independent. The current Pages workflow defines no CSP that
+would block this inline script.
+"""
 
 from __future__ import annotations
 
@@ -9,7 +15,7 @@ from pathlib import Path
 HOOK_MARKER = "jaxstro-docs-disclosure-labels-start"
 HOOK_END_MARKER = "jaxstro-docs-disclosure-labels-end"
 ACCESSIBILITY_HOOK = f"""<!-- {HOOK_MARKER} -->
-<script>
+<script id="jaxstro-docs-disclosure-labels">
 (() => {{
   const disclosureSelector =
     ".myst-primary-sidebar .myst-toc-item > button[aria-controls]";

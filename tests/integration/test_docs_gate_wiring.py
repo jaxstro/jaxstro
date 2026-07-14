@@ -24,6 +24,9 @@ def test_docs_gate_is_reused_by_local_and_full_ci_gates() -> None:
     assert script_text.index(
         '"$ROOT_DIR/scripts/inject_docs_accessibility.py"'
     ) < script_text.index("exec myst start")
+    assert script_text.index(
+        '"$ROOT_DIR/scripts/inject_docs_accessibility.py"'
+    ) < script_text.index('"$ROOT_DIR/scripts/check_docs_site.py"')
 
     local_gate = (REPO_ROOT / "scripts" / "check.sh").read_text(encoding="utf-8")
     full_gate = (REPO_ROOT / ".github" / "workflows" / "full-gate.yml").read_text(
@@ -44,6 +47,7 @@ def test_docs_gate_is_reused_by_local_and_full_ci_gates() -> None:
         "uses: actions/upload-pages-artifact@v5"
     )
     assert "path: docs/_build/html" in pages
+    assert '- "scripts/inject_docs_accessibility.py"' in pages
 
 
 def test_committed_route_manifest_matches_authored_navigation_routes() -> None:

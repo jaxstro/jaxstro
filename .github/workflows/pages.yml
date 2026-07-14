@@ -12,6 +12,7 @@ on:
       - "docs/**"
       - "scripts/check_docs.sh"
       - "scripts/check_docs_site.py"
+      - "scripts/inject_docs_accessibility.py"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 

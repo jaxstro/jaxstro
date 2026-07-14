@@ -20,6 +20,7 @@ def test_injected_hook_is_scoped_contextual_and_idempotent() -> None:
     patched = module.inject_accessibility_hook(source)
 
     assert module.HOOK_MARKER in patched
+    assert '<script id="jaxstro-docs-disclosure-labels">' in patched
     assert ".myst-primary-sidebar .myst-toc-item > button[aria-controls]" in patched
     assert ":scope > [title]" in patched
     assert 'button.getAttribute("aria-expanded") === "true" ? "Close" : "Open"' in (
