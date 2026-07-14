@@ -1,78 +1,178 @@
 ---
 title: Fixed-node quadrature
 description: >-
-  Gaussian, Clenshaw-Curtis, and cumulative Simpson rules with explicit AD
-  contracts for differentiable scientific integration.
+  Gaussian and Clenshaw-Curtis rules with explicit polynomial exactness,
+  standard-normal convention, and fixed-node AD boundaries.
 ---
 
-Quadrature rules turn an integral into a weighted sum:
+## The question this method answers
+
+How can an integral be approximated by evaluating an integrand at a small,
+carefully chosen set of fixed nodes? Fixed-node quadrature replaces integration
+against a known weight function by a weighted sum. Jaxstro owns deterministic
+node factories and Hermite expansion helpers, not adaptive error control.
+
+:::{tip}
+Match the rule to the domain and weight: Legendre for unit weight on $[-1,1]$,
+Laguerre for $e^{-x}$ on $[0,\infty)$, and Jaxstro's probabilists' Hermite rule
+for expectations under a standard normal density.
+:::
+
+## Before computation: what should be true?
+
+Define the integration domain, weight $\omega(x)$, integrand units, and required
+accuracy. Choose a concrete positive node count. Determine whether polynomial
+exactness or empirical convergence on a non-polynomial integrand is the relevant
+audit. Treat nodes and weights as setup constants, not inferred parameters.
+
+:::{important}
+The statement "exact through degree $2n-1$" applies to the matched Gaussian
+weight and polynomial class. It is not an error estimate for an arbitrary
+integrand.
+:::
+
+Probability-weighted integrals connect to
+[](../../10-foundations/mathematical-objects/probability-and-distributions.md)
+and coordinate/quantity semantics to
+[](../../30-representations/units-quantities/quantities.md).
+
+## Define the mathematical objects
+
+Let $I[f]=\int_D f(x)\omega(x)\,dx$. A rule contains nodes
+$x_i\in D$ and scalar weights $w_i$. Its approximation is
+$Q_n[f]=\sum_{i=1}^n w_i f(x_i)$. Polynomial exactness of degree $q$ means
+$Q_n[p]=I[p]$ for every polynomial $p$ with degree at most $q$.
+
+Gaussian nodes are roots of the orthogonal polynomial associated with
+$\omega$. Clenshaw-Curtis instead uses Chebyshev-Lobatto nodes including the
+endpoints of $[-1,1]$.
+
+## Derive the method
+
+An $n$-node Gaussian rule chooses $2n$ node and weight degrees of freedom so
+that the first $2n$ weighted moments match. The resulting exactness statement is
 
 ```{math}
-\int f(x)\,\omega(x)\,dx \approx \sum_i w_i f(x_i).
+:label: eq-gaussian-exactness
+\sum_{i=1}^n w_i p(x_i)
+=\int_D p(x)\omega(x)\,dx,
+\qquad \deg p\le2n-1.
 ```
 
-jaxstro treats the nodes and weights as setup constants. They may be generated on
-the host, but the differentiable part is the same JAX expression every time:
-evaluate the integrand at fixed nodes and sum weighted values. This is why
-gradients flow through `f(x_i)` and not through node construction.
-
-## Learning objectives
-
-After this chapter, you should be able to match a quadrature rule to its weight
-function, state its polynomial exactness, and distinguish exactness evidence
-from convergence evidence on a non-polynomial integrand.
-
-### Concept check: count moments, not nodes alone
-
-Predict the highest polynomial degree integrated exactly by a Gaussian rule.
-Compute its moments, then audit the first degree where the exactness guarantee
-no longer applies.
-
-## Gaussian Rules
-
-The Gaussian rules are exact for polynomials through degree `2n - 1` when using
-`n` nodes:
-
-- `gauss_legendre_nodes(n)` integrates on `[-1, 1]` with unit weight.
-- `gauss_laguerre_nodes(n)` integrates on `[0, \infty)` with weight `exp(-x)`.
-- `gauss_hermite_nodes(n)` computes expectations under a standard normal
-  density, using the probabilists' Hermite convention.
-
-The nodes and weights are generated with NumPy's polynomial routines using the
-classical Golub-Welsch construction, then frozen as JAX arrays. They are not
-model parameters.
-
-## Clenshaw-Curtis
-
-`clenshaw_curtis_nodes(n)` places nodes at Chebyshev-Lobatto points:
+For a general integrand the same nodes define the approximation
 
 ```{math}
-x_i = \cos\left(\frac{i\pi}{n-1}\right).
+:label: eq-fixed-node-quadrature
+I[f]=\int_D f(x)\omega(x)\,dx
+\approx Q_n[f]=\sum_{i=1}^n w_i f(x_i).
 ```
 
-The weights come from the standard cosine-series construction. Clenshaw-Curtis is
-often competitive with Gaussian quadrature for smooth functions and has useful
-endpoint behavior because it includes `-1` and `1`.
+NumPy supplies the physicists' Hermite rule
+$\int e^{-z^2}f(z)\,dz\approx\sum_i w_i f(z_i)$. Substituting
+$g=\sqrt{2}z$ and normalizing the Gaussian density gives Jaxstro's standard-
+normal rule:
 
-## Cumulative Simpson
+```{math}
+:label: eq-standard-normal-hermite
+g_i=\sqrt{2}\,z_i,\qquad
+\widetilde{w}_i=\frac{w_i}{\sqrt{\pi}},\qquad
+\mathbb{E}_{g\sim\mathcal{N}(0,1)}[f(g)]
+\approx\sum_i\widetilde{w}_i f(g_i).
+```
 
-`cumulative_simpson(y, x=None, dx=1, axis=-1)` lives with the integration helpers
-because it integrates sampled values on a uniform grid. Its shape contract is
-explicit: it returns cumulative values only at Simpson panel endpoints. If the
-input has `n` samples along the integration axis, `n` must be odd and the output
-axis has length `(n + 1) // 2`.
+Thus the returned Hermite weights sum to one and reproduce standard-normal
+moments through degree $2n-1$.
 
-That contract avoids pretending Simpson's three-point panel gives trustworthy
-cumulative values at every individual sample. Use `cumulative_trapz` when every
-sample needs a cumulative value.
+Clenshaw-Curtis uses
+$x_i=\cos(i\pi/(n-1))$ and cosine-series weights. Its exactness pattern differs
+from Gaussian quadrature, so convergence must be tested rather than inferred
+from [](#eq-gaussian-exactness).
 
-## Differentiability
+## What the algorithm actually does
 
-For fixed nodes, all quadrature outputs are linear combinations of integrand
-values. For fixed sampled grids, Simpson and cumulative Simpson are linear
-combinations of `y`. The validation suite checks finite-difference versus AD
-gradients through those values.
+`gauss_legendre_nodes`, `gauss_laguerre_nodes`, and `gauss_hermite_nodes` call
+NumPy polynomial factories on the host and freeze the one-dimensional results
+as JAX arrays. Laguerre and Clenshaw-Curtis explicitly reject `n < 1`; invalid
+Legendre and Hermite orders propagate their NumPy factory errors.
 
-Node generation and shape choices are intentionally static. Adaptive quadrature
-and convergence-loop integration are deferred because their data-dependent
-control flow needs a separate AD policy.
+`clenshaw_curtis_nodes(1)` returns node zero with weight two. Larger rules return
+nodes ordered from one to minus one. `hermite_e_basis(g, n_max)` uses the
+probabilists' recurrence
+$He_{n+1}(g)=gHe_n(g)-nHe_{n-1}(g)$ and returns shape
+`(n_max + 1, q)`. `hermite_coefficients(map_fn, n_max, n_quad=256)` returns
+$c_n=\mathbb{E}[map\_fn(g)He_n(g)]$ for $n=0,\ldots,n_{\max}$.
+
+Node count and expansion order are concrete Python integers. No factory adapts
+order, returns a runtime error estimate, or owns a stopping policy.
+
+## What JAX differentiates
+
+Node generation is host-side setup and is neither traced nor differentiated.
+Once nodes and weights exist, JAX differentiates the weighted sum through
+integrand values and any parameters closed over by the integrand.
+`hermite_e_basis` is pure JAX arithmetic and differentiable with respect to its
+input points. `hermite_coefficients` carries derivatives through `map_fn` values,
+not through `n_quad` or node construction.
+
+:::{warning}
+Fixed nodes do not make a nonsmooth or singular integrand smooth. A finite AD
+result is the derivative of the fixed weighted sum, which approximates the
+derivative of the integral only when differentiation and integration may be
+interchanged and quadrature error is controlled for that derivative integrand.
+:::
+
+## Using it in Jaxstro
+
+```python
+import jax.numpy as jnp
+
+from jaxstro.numerics.quadrature import (
+    gauss_hermite_nodes,
+    gauss_legendre_nodes,
+)
+
+legendre_x, legendre_w = gauss_legendre_nodes(8)
+poly_integral = jnp.sum(legendre_w * legendre_x**6)
+
+normal_x, normal_w = gauss_hermite_nodes(8)
+normal_second_moment = jnp.sum(normal_w * normal_x**2)
+
+assert jnp.allclose(poly_integral, 2.0 / 7.0)
+assert jnp.allclose(jnp.sum(normal_w), 1.0)
+assert jnp.allclose(normal_second_moment, 1.0)
+```
+
+The returned node and weight arrays both have shape `(n,)`. Their default dtype
+follows the active JAX precision policy when NumPy results are converted.
+
+## How to audit the result
+
+For Gaussian rules, verify every moment from degree zero through $2n-1$ against
+an analytic value and confirm the first degree beyond the guarantee is not
+silently described as exact. Check weight sums: two for Legendre and Clenshaw-
+Curtis on $[-1,1]$, one for Laguerre's $e^{-x}$ measure, and one for the normalized
+Hermite rule. For a non-polynomial integrand, compare increasing node counts and
+an independent high-accuracy reference. Audit parameter gradients against
+central finite differences while holding nodes fixed.
+
+Executable evidence is indexed in [](../../60-validation/validation.md).
+
+## Where the claim stops
+
+These factories do not detect singularities, transform arbitrary domains,
+estimate error, choose order, or adapt nodes. Polynomial moment tests validate
+the rule convention and implementation; they do not establish convergence for
+a new integrand. Hermite expansion coefficients do not by themselves establish
+that a truncated expansion is scientifically adequate.
+
+## Connected ideas
+
+:::{seealso}
+Connect weighted integrals to
+[](../../10-foundations/mathematical-objects/probability-and-distributions.md),
+units to [](../../30-representations/units-quantities/quantities.md), owner
+signatures to [](../../50-api/approximation-integration/quadrature.md), and
+evidence to [](../../60-validation/validation.md). Sampled Newton-Cotes rules are
+in [](./cumulative-trapz.md); delegated adaptive methods are described in
+[](./adaptive-quadrature.md).
+:::

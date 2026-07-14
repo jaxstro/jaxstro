@@ -1,6 +1,8 @@
 # jaxstro — status
 
-next: Review the semantic Validation and Project ownership migration. Do not begin Task 10 until Task 9 is accepted.
+next: Review the layered change and approximation method chapters. Do not begin Task 11 until Task 10 is accepted.
+
+previous: Researcher-first documentation Task 10 completed on local main (2026-07-14). The nine current change and approximation method pages now share the ten-stage question-to-claim narrative, visible labeled derivations, owner-qualified runtime examples, explicit shape/static/failure/AD contracts, concrete audit procedures, calibrated claim boundaries, and connected Foundations, Representations, API, and Validation routes. Delegated ecosystem guides and runtime exports remain unchanged. The focused documentation suite passed 56 tests, all nine examples executed, the full integration suite passed 283 tests with 7 expected optional-dependency skips, and the strict docs gate built and audited 163 unique routes.
 
 previous: Researcher-first documentation Task 9 completed on local main (2026-07-14). Public validation evidence now lives under semantic numerical, data, and reusable-method groups; project direction, development, decisions, release, and bibliography now share one Project owner. All 14 ADRs retain stable public routes while remaining hidden from primary navigation, and the public Instructor section was retired. Routed research-software prose is ASCII-clean and free of course-facing framing except for four exact, file-scoped `Diátaxis` proper-name occurrences enforced by the language ratchet. The SOTA assessment and scorecard now audit research workflow, contracts, evidence, limitations, and prioritized capability ownership. The full integration suite passed 254 tests, and the strict docs gate built and audited 163 unique routes.
 

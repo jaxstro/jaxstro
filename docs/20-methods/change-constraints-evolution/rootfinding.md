@@ -1,125 +1,161 @@
 ---
 title: Root-finding
 description: >-
-  Why jaxstro's solvers run a fixed number of lax.scan steps, how bracketing
-  and inverse interpolation behave under AD, and when to reach for newton or
-  newton_ppf instead.
+  Sign brackets, safeguarded scalar solves, fixed executed maps, and certified
+  implicit derivatives with explicit evidence boundaries.
 ---
 
-The conceptual distinction among local change, finite-map AD, and implicit
-sensitivities is developed in
-[](../../10-foundations/mathematical-objects/what-is-a-derivative.md).
-This chapter applies that distinction to concrete root algorithms and evidence.
+## The question this method answers
 
-You have a scalar equation $f(x) = 0$ and you want the root - and you want to
-differentiate that root with respect to whatever parameters $f$ closes over. This
-page explains the solvers jaxstro ships, what each one's gradient actually does,
-and the one trap that catches everyone.
+Given a scalar relation $f(x;\theta)=0$, what value of $x$ satisfies it, and
+which derivative of that answer is scientifically meaningful? A robust root
+value, the sensitivity of a finite executed solver, and the sensitivity of a
+unique smooth mathematical root are different objects.
 
-This is principle [2](../methods.md#p2-fixed-iteration) made concrete: a solver that
-loops "until converged" cannot be cleanly differentiated, so every solver here
-runs a **fixed** number of steps under `lax.scan`.
+The derivative distinction begins in
+[](../../10-foundations/mathematical-objects/what-is-a-derivative.md). Parameter
+and state representations are connected in
+[](../../30-representations/parameters-state/parameters-and-transforms.md).
 
-## Learning objectives
-
-After this chapter, you should be able to distinguish a sign-bracket guarantee
-from a plausible root estimate, interpret fixed-shape solver telemetry, and
-decide when a branch-selected value map or certified implicit derivative answers
-the scientific question.
-
-## `lax.scan` with a fixed count, never `while_loop`
-
-A convergence loop asks "are we close enough yet?" and stops when the answer is
-yes. The trip count then depends on the input values, which JAX cannot trace
-through for differentiation, and `lax.while_loop` is not reverse-mode
-differentiable at all. The alternative is to pick a static maximum and run
-exactly that many `lax.scan` slots. A solver may still mask inactive slots with
-`lax.cond`, so a fixed trace shape does not require repeated expensive function
-evaluations after convergence.
-
-You pay for the static trace and buy a computation that composes with `jit` and
-`vmap`. That transformability is not itself a gradient claim; each solver's AD
-contract below remains authoritative. The numbers are forgiving. Bisection halves the bracket each step,
-so 50 steps reach $2^{-50} \approx 8.9\times10^{-16}$ - full float64 precision.
-Newton converges quadratically near a smooth root, so 20-30 steps over-converge
-from a reasonable guess.
-
-## `bracket_expand` - fixed-count sign discovery
-
-`bracket_expand(f, x0, step=1, growth=2, max_steps=32)` expands a symmetric
-interval around an initial point:
-
-```{math}
-[x_0 - s g^k,\; x_0 + s g^k],
-```
-
-for a fixed number of scan steps. It returns `(lo, hi, found)`, where `found` is
-a boolean mask indicating whether a sign-changing bracket was found. If no
-bracket is found, the endpoints are the last expanded interval. That makes the
-failure mode explicit and transform-friendly: callers can decide whether to
-refine, mask, or fail closed.
-
-This is a **forward bracketing utility**, not a differentiable solver. The
-selection of the first valid bracket depends on sign predicates, so treat the
-returned bracket as value evidence, not as a smooth function of model
-parameters.
-
-## `bisect` and `bisect_many` - robust values, branchy gradients
-
-`bisect(f, a, b)` assumes a sign change in $[a, b]$ and halves it 50 times. It is
-the robust choice: it cannot diverge after a valid bracket, and it needs no
-derivative of $f$. It selects the half containing the root branchlessly with
-`jnp.where`, so the forward pass is clean. `bisect_many(...)` is the explicit
-array-shaped wrapper for independent brackets; it exists to make vectorized use
-readable when each element carries its own bracket.
-
-But here is the trap. **The gradient of the bisection result with respect to the
-function parameters is structurally zero.** The *comparison* that decides which
-half to keep - `sign(f_a) * sign(f_m) <= 0` - is a non-differentiable predicate
-(principle [6](../methods.md#p6-non-diff-ops)). Parameters captured inside `f` only
-affect those sign decisions, so $\partial x^\star/\partial\theta$ comes back as
-zero even though the true root plainly depends on $\theta$. The value is right;
-that gradient is a lie.
-
-The bracket endpoints enter the arithmetic midpoints directly, so a truncated
-fixed-count bisection can have endpoint sensitivities. Those are implementation
-sensitivities of the finite iteration, not a scientifically meaningful implicit
-root derivative.
-
-:::{warning} Do not differentiate a bisection root w.r.t. function parameters
-If you need $\partial x^\star/\partial\theta$ for a parameter $\theta$ inside $f$,
-`bisect` can hand you zeros, not an error. Use `newton` only when you want the
-sensitivity of its smooth finite executed iteration. Use
-`implicit_bracketed_root` when the scientific target is the derivative of a
-unique smooth mathematical root and its validation gates pass. `newton_ppf` is
-a specialized inverse-CDF construction, not a generic implicit-root
-certificate. Reserve `bracket_expand` and `bisect` for forward solve
-reliability, initialization, and validation masks.
+:::{tip}
+Choose the derivative target before the solver. Use a bracketed method for
+reliable values, Newton for the sensitivity of its smooth finite executed iteration,
+and `implicit_bracketed_root` only for a certified mathematical-root sensitivity.
 :::
 
-## Safeguarded bracket primitives - the downstream integration surface
+## Before computation: what should be true?
 
-`initialize_bracket(lo, hi, f_lo, f_hi)` constructs a `BracketState` from
-already-evaluated endpoint evidence. A bracket is verified only when its
-endpoints and residuals are finite, `lo <= hi`, and the residuals have opposite
-sign bits or an endpoint is exactly zero. Sign products are deliberately
-avoided because they can overflow or underflow even for finite residuals.
+Define the scalar variable, residual units, parameters, expected root branch,
+and admissible interval. For a sign-bracketed solve, $f$ must be continuous on
+the interval and its endpoints must have opposite signs or contain an exact
+root. For an implicit derivative, the selected root must also be unique and
+smooth in the parameter, with a finite nonzero local slope $\partial f/\partial x$.
 
-`update_bracket(state, x, fx, valid=True)` replaces exactly one endpoint when
-`x` is finite and inside the verified bracket and `fx` is finite. An exact
-interior root collapses both endpoints to `x`. `valid=False` returns every field
-unchanged, so a downstream solver can exclude an externally inadmissible trial
-without corrupting root evidence or moving its own expensive trial state into
-Jaxstro.
+:::{important}
+A sign change certifies an odd number of crossings for a continuous residual;
+it does not by itself certify uniqueness. The caller owns continuity, branch
+meaning, units, and admissibility. Jaxstro can preserve endpoint evidence and
+check numerical certificate gates, but it cannot infer those scientific facts.
+:::
 
-`BracketedRootState` pairs true `BracketState` endpoint evidence with
-`BracketHistory` used only for interpolation. `propose_bracketed` tries
-inverse-quadratic interpolation when three distinct residual points exist;
-otherwise the endpoint secant is selected. The selected interpolant must pass
-finite-denominator, strict-bracket, safeguard-band, and previous-step progress
-guards. A rejected selected interpolant uses the overflow-safe midpoint.
-`advance_bracketed_root` consumes one evaluation; `valid=False` preserves the
-bracket, history, and status exactly.
+Pick tolerances in root-coordinate units. `atol` has the units of $x$ and
+`rtol` is dimensionless. Enable sufficient precision before requesting a
+tolerance near float64 limits.
+
+## Define the mathematical objects
+
+A root is $x^\star$ such that $f(x^\star;\theta)=0$. A bracket at iteration $k$
+is an ordered interval $[a_k,b_k]$ with evaluated endpoint residuals. The best
+endpoint is the one with smaller absolute residual. A proposal is a candidate
+inside the bracket, produced by bisection, secant interpolation, or
+inverse-quadratic interpolation (IQI).
+
+A fixed trace stores the proposal, its residual, updated endpoint evidence,
+proposal kind, execution mask, admissibility, convergence state, and terminal
+status for every allocated scan slot. Unused floating entries are NaN and
+unused mask entries are false; fixed shape is an execution contract, not a
+convergence claim.
+
+For a parameterized root relation, define
+$f_x=\partial f/\partial x$ and $f_\theta=\partial f/\partial\theta$ on the
+selected smooth branch. These local derivatives belong to the mathematical
+relation, not to the branch history of a numerical solver.
+
+## Derive the method
+
+### Bracket preservation and bisection
+
+A verified bracket preserves the opposite-sign endpoint invariant
+
+```{math}
+:label: eq-root-bracket-invariant
+a_k\le b_k,\qquad f(a_k)\,f(b_k)\le 0.
+```
+
+Sign bits or exact endpoint zeros are safer in floating point than multiplying
+large or tiny residuals. Bisection evaluates
+$m_k=a_k+(b_k-a_k)/2$ and replaces the endpoint that has the same sign as
+$f(m_k)$. Therefore $b_{k+1}-a_{k+1}=(b_k-a_k)/2$. After $N$ steps,
+
+```{math}
+b_N-a_N=2^{-N}(b_0-a_0).
+```
+
+This is a value-error certificate for a continuous sign-changing residual; it
+does not create a useful derivative with respect to parameters inside $f$.
+
+### Safeguarded interpolation
+
+Secant interpolation uses the line through the endpoint pairs. IQI fits the
+inverse relation $x(f)$ through three distinct residual points. The current
+proposal code tries inverse-quadratic interpolation when three distinct
+residual points exist; otherwise the endpoint secant is selected. The selected
+interpolant must be finite, strictly inside the bracket, make sufficient
+progress, and stay inside the safeguard band
+
+```{math}
+:label: eq-root-safeguard-band
+a_k+\sigma(b_k-a_k)
+<x_{\mathrm{trial}}<
+b_k-\sigma(b_k-a_k),\qquad 0\le\sigma<\frac12.
+```
+
+A rejected selected interpolant falls back to the overflow-safe midpoint. The
+bracket update then restores [](#eq-root-bracket-invariant).
+
+### Newton and the implicit derivative
+
+Newton linearizes the residual about $x_k$:
+$f(x_k+\Delta x)\approx f(x_k)+f'(x_k)\Delta x$. Setting the approximation to
+zero gives
+
+```{math}
+x_{k+1}=x_k-\frac{f(x_k)}{f'(x_k)}.
+```
+
+For a unique smooth mathematical root, differentiate
+$f(x^\star(\theta);\theta)=0$:
+
+```{math}
+:label: eq-root-implicit-derivative
+\frac{d x^\star}{d\theta}
+=-
+\frac{\partial f/\partial\theta}
+{\partial f/\partial x}
+\bigg|_{x=x^\star}.
+```
+
+This implicit function theorem (IFT) result requires a nonzero denominator and
+the stated uniqueness and smooth-branch assumptions. It is not obtained by
+differentiating bisection decisions.
+
+(newton-ppf)=
+### Inverse CDFs
+
+For a cumulative distribution $F$, the quantile $x=F^{-1}(u)$ solves
+$F(x)-u=0$ and $F'(x)=\operatorname{pdf}(x)$. Newton therefore becomes
+
+```{math}
+:label: eq-ppf-step
+x_{k+1}=x_k-\frac{F(x_k)-u}{\operatorname{pdf}(x_k)}.
+```
+
+This finite inverse-CDF construction is not a generic implicit-root
+certificate.
+
+## What the algorithm actually does
+
+`bracket_expand(f, x0, step=1, growth=2, max_steps=32)` searches symmetric
+intervals with a fixed scan and returns `(lo, hi, found)`. If discovery fails,
+the returned endpoints are the last expanded interval and `found=False`.
+`bisect` performs 50 fixed halvings; `bisect_many` is the explicit array-shaped
+wrapper for independent brackets.
+
+`initialize_bracket` constructs true endpoint evidence from already evaluated
+residuals. `update_bracket(..., valid=False)` leaves every field unchanged.
+`BracketedRootState` pairs `BracketState` with interpolation-only
+`BracketHistory`; `propose_bracketed` proposes without evaluating, and
+`advance_bracketed_root` consumes one externally supplied evaluation.
 
 ```{list-table} Proposal-kind telemetry
 :header-rows: 1
@@ -132,56 +168,81 @@ bracket, history, and status exactly.
   - Masked slot or missing bracket
 * - `PROPOSAL_SECANT`
   - `1`
-  - Secant interpolation passed every guard; `safeguarded=False`
+  - Endpoint secant accepted
 * - `PROPOSAL_MIDPOINT`
   - `2`
-  - Selected interpolant rejected; deterministic midpoint used and `safeguarded=True`
+  - Selected interpolant rejected; deterministic midpoint used
 * - `PROPOSAL_LO_ENDPOINT`
   - `3`
-  - Exact root at the lower endpoint
+  - Exact lower-endpoint root
 * - `PROPOSAL_HI_ENDPOINT`
   - `4`
-  - Exact root at the upper endpoint
+  - Exact upper-endpoint root
 * - `PROPOSAL_INVERSE_QUADRATIC`
   - `5`
-  - Three-point inverse-quadratic interpolation passed every guard
+  - Three-point IQI accepted
 ```
 
-## `safeguarded_bracketed_root` - fixed trace, guarded evaluations
+`safeguarded_bracketed_root` evaluates both endpoints and runs `max_steps`
+fixed `lax.scan` slots. A scalar `lax.cond` prevents residual evaluation after
+convergence or terminal failure. Convergence is an exact residual or a full
+bracket width no larger than
+$\mathrm{atol}+\mathrm{rtol}|x_{\mathrm{best}}|$. Exhaustion returns the
+evaluated endpoint with smaller absolute residual and `converged=False`.
+A missing bracket returns NaN root and residual with `bracketed=False`; a
+nonfinite interior evaluation terminates that lane.
 
-The high-level wrapper evaluates both endpoints, verifies the bracket, and runs
-a fixed-length scan. Each active slot evaluates `f` inside `lax.cond`; missing-
-bracket, converged, and later masked slots do not execute `f`. Convergence means
-an exact residual or a full bracket width no larger than
+`RootTrace` and `BracketedRootResult` retain the fixed trace, status, final
+bracket, initial residual scale, and function-evaluation count. The no-extra-
+evaluation guarantee is scalar. `vmap` preserves values and shapes but can
+lower `lax.cond` to select-style execution; `map_safeguarded_bracketed_root`
+owns an explicit `lax.map` boundary when physical per-lane skipping matters.
 
-```{math}
-\mathrm{atol} + \mathrm{rtol}\,|x_{\mathrm{best}}|.
-```
+## What JAX differentiates
 
-This is a root-coordinate tolerance: `atol` has the units of `x`, and `rtol` is
-dimensionless. The returned point is always an evaluated endpoint in the final
-verified bracket, so the full-width test certifies its coordinate error for a
-continuous sign-changing residual. Exhaustion returns the endpoint with smaller
-absolute residual but keeps `converged=False`. A nonfinite interior evaluation is recorded as executed but
-inadmissible and exhausts that lane immediately, avoiding repeated expensive
-calls at the same proposal. A missing bracket returns `root=NaN`,
-`residual=NaN`, and `bracketed=False`; it never fabricates a root.
+`bisect`, bracket discovery, and safeguarded proposals select intervals through
+sign and acceptance predicates. Their parameter gradients are branch-selected
+finite-program artifacts, not root sensitivities; bisection is structurally
+zero with respect to parameters captured only inside $f$.
 
-`RootTrace` records fixed-length arrays for proposal and signed residual, the
-post-update `lo`, `hi`, `f_lo`, and `f_hi`, proposal kind, and `executed`,
-`admissible`, per-slot `converged`, and terminal `status`. Unused floating slots are NaN,
-unused kinds are `PROPOSAL_NONE`, and unused masks are false.
-`BracketedRootResult` also returns terminal status, initial residual scale, the
-final true bracket, function-evaluation count, and trace.
+`newton` and `newton_with_grad` use smooth iterates, finite-map gradients. JAX
+can expose a finite executed-map sensitivity through the 30 fixed updates, but
+that is not automatically [](#eq-root-implicit-derivative). The zero-derivative
+operand is replaced by one before division to avoid dead-branch poisoning; this
+guard preserves finiteness, not convergence.
 
-The no-extra-evaluation guarantee and `n_evaluations` count describe scalar
-execution. `vmap` preserves values and fixed shapes, but JAX may batch scalar
-`lax.cond` into select-style execution that computes both branches. When a batch
-contains expensive residuals and physical per-lane skipping matters, use
-`map_safeguarded_bracketed_root`, which owns an explicit `lax.map` boundary.
+`implicit_bracketed_root(f, args, ...)` is separate. It uses `lax.custom_root`
+and exposes a certified mathematical-root sensitivity only after caller
+assertions of uniqueness and a smooth branch plus convergence, finiteness,
+residual, bracket-width, and slope-conditioning gates. Rejection returns NaN
+for the derivative-facing value and attempted gradient while retaining the
+nested primal diagnostics.
+
+`newton_ppf` adds `pdf_floor` to its denominator and clips every iterate to
+`[lo, hi]`. Interior iterates can carry finite executed-map sensitivity with
+respect to $u$ and parameters in the CDF. At a clipped support boundary the
+gradient saturates to zero. `monotone_inverse_interp` is linear inside table
+cells and clamps outside the tabulated range.
+
+:::{warning}
+Do not infer an implicit derivative from a finite gradient. The value-first
+hybrid makes no implicit-root derivative claim. Only the fail-closed implicit
+API claims [](#eq-root-implicit-derivative), and only when every certificate
+gate passes.
+:::
+
+## Using it in Jaxstro
+
+Use the actual owner path and inspect the typed result rather than extracting a
+number without its status:
 
 ```python
-from jaxstro.numerics import safeguarded_bracketed_root
+from jaxstro.jaxconfig import enable_high_precision
+
+enable_high_precision()  # before creating JAX arrays
+
+from jaxstro.numerics.rootfinding import safeguarded_bracketed_root
+
 
 result = safeguarded_bracketed_root(
     lambda x: x**2 - 2.0,
@@ -192,67 +253,82 @@ result = safeguarded_bracketed_root(
     rtol=1.0e-12,
     safeguard_fraction=0.1,
 )
+assert result.bracketed
 assert result.converged
 ```
+
+The safeguarded interface is scalar and returns fixed-length trace arrays.
+Batched callers map scalar solves explicitly. The function and iteration count
+are static when wrapped in `jax.jit`.
+
+```{list-table} Choosing a one-dimensional solver
+:header-rows: 1
+:label: tbl-solver-choice
+
+* - Need
+  - Use
+  - Derivative meaning
+* - Discover a sign change
+  - `bracket_expand`
+  - Value evidence only
+* - Simple robust bracketed value
+  - `bisect` or `bisect_many`
+  - No parameter-root derivative claim
+* - Auditable expensive bracketed value
+  - `safeguarded_bracketed_root`
+  - Value-first branch-selected map
+* - Downstream-owned trial evaluation
+  - bracket primitives
+  - Value-first checkpoint surface
+* - Smooth residual and good guess
+  - `newton` or `newton_with_grad`
+  - Finite executed-map sensitivity
+* - Unique smooth certified root
+  - `implicit_bracketed_root`
+  - Certified mathematical-root sensitivity
+* - Smooth inverse CDF
+  - `newton_ppf`
+  - Finite executed-map sensitivity
+* - Monotone inverse table
+  - `monotone_inverse_interp`
+  - Cell-local query sensitivity
+```
+
+## How to audit the result
+
+### Predict -> compute -> audit: which derivative are you asking for?
+
+**Predict.** State whether the target is a root value, the finite executed
+algorithm, or a unique smooth mathematical root. Derive the expected sensitivity.
+
+**Compute.** Retain signed endpoint residuals, trace, status, final bracket,
+local slope, and every certificate predicate.
+
+**Audit.** Check the opposite-sign endpoint invariant is checked at every
+executed update. Compare the certified AD derivative with the analytic result
+and an independently recomputed central finite difference. Reject the claim if
+uniqueness, smoothness, residual, width, finiteness, or conditioning fails.
 
 :::{figure} ../../10-theory/figures/rootfinding-safeguards.webp
 :name: fig-rootfinding-safeguards
 :alt: Two-panel safeguarded root trace showing circle IQI, square secant, and triangle midpoint proposals on a quadratic residual and solid lower endpoint, dashed upper endpoint, and dotted bracket width across executed iterations
 
-Both panels are computed from the public solver and its fixed-shape trace. The
-left panel shows which selected proposals were evaluated; the right shows the
-stored interval endpoints and width contracting. The opposite-sign endpoint
-invariant is checked from the traced endpoint residuals in the figure test, but
-is not encoded as another curve. This fixture demonstrates auditable interval
-telemetry, not universal speed for every residual.
+The public trace supplies every plotted point. The figure demonstrates interval
+telemetry and the opposite-sign endpoint invariant; it does not claim universal
+speed.
 :::
 
-The reproducible evaluation-count and warm-timing comparison with fixed-count
-bisection is available as a
-[human-readable evidence report](../../60-validation/numerical/rootfinding-performance.md) and
-[machine-readable envelope](https://github.com/drannarosen/jaxstro/blob/main/docs/validation/rootfinding-performance.json). The
-benchmark treats function-evaluation count as the primary algorithmic cost and
-does not impose a hardware-dependent wall-time threshold. The ratified gate
-requires the hybrid not to exceed bisection evaluations on any of five cases and
-to reduce evaluations by at least 25% on three.
-
-:::{warning} Value-first means no implicit-root derivative claim
-The executed IQI/secant/midpoint branch history is a numerical map, not an
-implicit-root derivative. No gradient claim is made for parameters captured by
-`f`, even if `jax.grad` returns a finite number for a particular execution. This
-API does not use `lax.custom_root` and does not implement an IFT derivative.
-
-Use the separate `implicit_bracketed_root(f, args, ...)` only when an
-implicit function theorem (IFT)
-derivative is required. It uses `lax.custom_root` and requires caller assertions
-of a unique root and smooth selected branch plus runtime gates for primal
-convergence, finite evidence, residual, final-bracket width, and slope
-conditioning. Rejection returns NaN for both the derivative-facing value and an
-attempted gradient while retaining the nested primal diagnostics.
-:::
-
-### Predict -> compute -> audit: which derivative are you asking for?
-
-**Predict.** Decide whether the desired quantity is the sensitivity of the
-finite executed algorithm or of a unique, smooth mathematical root. Write down
-the expected derivative and the conditions under which it exists.
-
-**Compute.** Run the value solver and, separately, the certified implicit API.
-Keep the branch trace, signed residual, final bracket, local slope, and every
-certificate predicate.
-
-**Audit.** Compare AD, the analytic derivative, and an independent central
-finite difference. Reject the claim when uniqueness, smoothness, residual,
-width, finiteness, or conditioning evidence fails.
+The reproducible evaluation-count report is
+[](../../60-validation/numerical/rootfinding-performance.md). Its primary cost
+is function-evaluation count, not a hardware-dependent timing threshold.
 
 :::{figure} ../../10-theory/figures/rootfinding-value-versus-ift.webp
 :name: fig-rootfinding-value-versus-ift
 :alt: Two-panel comparison of a branch-selected quadratic root trace with analytic, certified implicit-function AD, and central finite-difference sensitivities; certification includes uniqueness and smoothness assertions plus convergence, finiteness, residual, width, and slope gates, while a flat-root certificate is rejected
 
-The value-first trace answers "what numerical map executed?" The derivative
-panel answers the different question "how does the certified root relation move
-with its parameter?" The flat-root annotation is deliberately shown as a
-rejection, not as a derivative estimate.
+The left panel asks what numerical map executed. The right asks how the
+certified root relation moves with its parameter. The flat-root case is a
+rejection, not an estimate.
 :::
 
 ```{list-table} Measured quadratic implicit-root evidence
@@ -284,126 +360,28 @@ rejection, not as a derivative estimate.
   - coordinate units per parameter unit
 ```
 
-These values are copied from the
-[machine-readable envelope](https://github.com/drannarosen/jaxstro/blob/main/docs/validation/implicit-root-gradients.json), with a
-[human-readable evidence report](../../60-validation/numerical/implicit-root-gradients.md), both
-generated and freshness-checked by `scripts/benchmark_implicit_root.py`. A
-documentation test requires the table to match that artifact; the JSON and
-numerical tests remain the primary executable evidence.
+The machine-readable envelope and human report are generated and freshness-
+checked together; see [](../../60-validation/numerical/implicit-root-gradients.md).
 
-## `newton` and `newton_with_grad` - smooth iterates, finite-map gradients
+## Where the claim stops
 
-`newton(f, x0)` runs the update $x_{k+1} = x_k - f(x_k)/f'(x_k)$ for a fixed 30
-steps, taking $f'$ from `jax.grad(f)` automatically. Because every step is a smooth
-arithmetic function of $x_k$ and of any parameters captured in $f$, AD can expose
-the finite executed-map sensitivity with respect to those parameters. This is a
-derivative of the fixed iteration that ran, not automatically the derivative of
-the ideal mathematical root. Use `implicit_bracketed_root` when the scientific
-target is a certified mathematical-root sensitivity.
+A valid bracket does not prove uniqueness. A small residual alone can hide an
+ill-conditioned root. A narrow bracket certifies coordinate location only under
+the continuity and sign-change assumptions. Successful JIT or VMAP execution
+does not add derivative meaning, and a warm benchmark does not establish
+performance for a different residual cost or batch structure.
 
-The one hazard is division by a zero derivative. jaxstro guards the **operand**,
-not the result (principle [3](../methods.md#p3-guard-singularities)): it replaces a
-zero $f'$ with $1$ before dividing, so no `inf`/`NaN` enters the backward pass.
-Supply an analytic derivative with `newton_with_grad(f, df, x0)` when autodiff of
-$f$ is expensive or $f$ is not directly differentiable.
+The exponential inverse-CDF check validates one smooth interior case. It does
+not certify all distributions, clipped quantiles, traced invalid tables, or
+model-specific branch semantics.
 
-The price of that smoothness is robustness: Newton needs a decent starting guess
-and a non-vanishing derivative along the path. Bracket first with knowledge of the
-problem, then refine.
+## Connected ideas
 
-(newton-ppf)=
-## `newton_ppf` - the inverse-CDF solver, and the clip-to-support caveat
-
-Reparameterized sampling needs the percent-point function (the inverse CDF): given
-a uniform draw $u \in (0,1)$, return the quantile $x = F^{-1}(u)$ solving
-$F(x) = u$. `newton_ppf` applies Newton to the residual $g(x) = F(x) - u$, whose
-derivative is exactly the density, $g'(x) = F'(x) = \mathrm{pdf}(x)$:
-
-```{math}
-:label: eq-ppf-step
-x_{k+1} = x_k - \frac{F(x_k) - u}{\mathrm{pdf}(x_k)}.
-```
-
-It is deliberately distribution-agnostic - you pass your own `cdf` (closing over the
-distribution's parameters), an initial guess, and the support bounds `[lo, hi]`. The
-PDF comes from your `pdf` argument or, failing that, from `jax.grad(cdf)`. The
-finite executed iteration can carry sensitivities **both** with respect to $u$
-**and** with respect to parameters inside `cdf`. This supports inference through
-that executed numerical map; it is not a generic implicit-root certificate.
-
-Two guards deserve a note, and they connect back to the principles:
-
-- **A density floor, not a branch.** The denominator carries an additive
-  `pdf_floor` (default $10^{-30}$) so a near-zero density in a flat-CDF region
-  cannot produce a `NaN`. This is the safe-operand pattern again
-  ([principle 3](../methods.md#p3-guard-singularities)): additive, never a `where` on
-  the result.
-- **Clipping to the support saturates the gradient there.** Each iterate is clipped
-  to `[lo, hi]` so it never leaves the support - but a quantile pinned at a bound
-  has zero gradient with respect to your parameters at that bound
-  ([principle 4](../methods.md#p4-saturation)). For interior quantiles this never
-  fires; if you are fitting parameters that push a quantile against `lo` or `hi`,
-  that is where the gradient quietly dies.
-
-The PPF is validated against the analytic exponential inverse,
-$F^{-1}(u) = -\ln(1-u)/\lambda$, by an FD-vs-AD grad-check - value and gradient both
-([](../../60-validation/validation.md)).
-
-## `monotone_inverse_interp` - inverse lookup for table-defined CDFs
-
-`monotone_inverse_interp(x, y, y_new)` is the table-first inverse path. It assumes
-`x` and `y` are one-dimensional, same-length, strictly increasing arrays, then
-interpolates the inverse table $x(y)$ linearly. Queries below `y[0]` clamp to
-`x[0]`; queries above `y[-1]` clamp to `x[-1]`.
-
-This is useful for CDF-like tables when the distribution is known only on a grid
-or when the caller wants a deterministic, inexpensive inverse before a smoother
-solver is justified. Inside the tabulated domain, gradients with respect to
-`y_new` are the reciprocal local slope. At clamped endpoints the gradient
-saturates to zero, matching the library's broader clamp policy.
-
-The function validates concrete tables eagerly. Under `jit`, value-dependent
-validation cannot raise on tracers, so production callers should build tables
-once and keep the monotonicity contract explicit.
-
-## What to reach for
-
-```{list-table} Choosing a 1-D solver
-:header-rows: 1
-:label: tbl-solver-choice
-
-* - You have...
-  - Use
-  - Differentiable w.r.t. parameters?
-* - a point near an unknown sign-changing root
-  - `bracket_expand`
-  - No - sign-discovery utility
-* - a sign-bracketed root, robustness matters
-  - `bisect`
-  - No w.r.t. function parameters
-* - an expensive sign-bracketed root with auditable failure state
-  - `safeguarded_bracketed_root`
-  - No implicit-root derivative claim; value-first
-* - a downstream solver that owns trial admissibility and expensive state
-  - `initialize_bracket` + `propose_bracketed` + `update_bracket`
-  - No implicit-root derivative claim; value-first
-* - many independent sign-bracketed roots
-  - `bisect_many`
-  - No w.r.t. function parameters
-* - a smooth $f$ and a good guess
-  - `newton`
-  - Finite executed-map sensitivity; not an implicit-root certificate
-* - a smooth $f$ and a cheap analytic $f'$
-  - `newton_with_grad`
-  - Finite executed-map sensitivity; not an implicit-root certificate
-* - an inverse-CDF / quantile to sample
-  - `newton_ppf`
-  - Finite executed-map sensitivity w.r.t. $u$ and CDF parameters
-* - a monotone table that should be inverted by lookup
-  - `monotone_inverse_interp`
-  - Yes inside table cells w.r.t. query values
-```
-
-Signatures and defaults are in [](../../50-api/change-constraints/rootfinding.md); the design rationale for
-hoisting the generic Newton-PPF into the foundation is
-[](../../70-project/decisions/0009-jaxstro-params-selective-inference.md).
+:::{seealso}
+Connect roots to conditioning in
+[](../../10-foundations/models-and-computation/sensitivity-conditioning-identifiability.md),
+parameters to [](../../30-representations/parameters-state/parameters-and-transforms.md),
+exact signatures and statuses to [](../../50-api/change-constraints/rootfinding.md),
+and executable evidence to [](../../60-validation/validation.md). The generic
+fixed-iteration principles are in [](../methods.md#p2-fixed-iteration).
+:::

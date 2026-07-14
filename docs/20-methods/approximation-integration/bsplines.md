@@ -1,52 +1,156 @@
 ---
 title: B-splines
 description: >-
-  Fixed-knot local basis functions with explicit evaluation, clamping, and
-  gradient contracts for one-dimensional tabulated functions.
+  Fixed-knot local basis construction, calculus, fitting, and regularization
+  primitives with explicit derivative boundaries.
 ---
 
-B-splines are a way to represent a smooth function as a local weighted sum:
+## The question this method answers
 
-```{math}
-S(x) = \sum_i c_i B_{i,p}(x),
-```
+How can a smooth function be represented by local basis functions so that one
+coefficient changes only a limited region? A degree-$p$ B-spline writes
+$S(x)=\sum_i c_iB_{i,p}(x)$ using knots, local basis functions, and coefficients.
 
-where `p` is the degree, `c_i` are coefficients, and `B_{i,p}` are basis
-functions defined by a knot vector. The reason they belong in a differentiable
-foundation package is simple: each basis function has local support, the basis
-is nonnegative, and inside the active knot domain the basis functions form a
-partition of unity.
-
-That gives a stable primitive for downstream packages that need smooth
-table-like functions: atmosphere-grid interpolation, microphysics tables,
-stellar tracks, calibration curves, or any other place where global polynomials
-would be too eager to oscillate.
-
-:::{figure} ../../10-theory/figures/bspline-local-support.webp
-:name: fig-bspline-local-support
-:alt: Six cubic B-spline basis curves with local support and their sum equal to one across the active domain
-
-Each colored curve is one column returned by `bspline_basis(...)` for a fixed
-six-function cubic basis. The right panel sums those same returned columns. It
-visualizes one executable open-uniform configuration; it is not evidence about
-adaptive-knot quality or smoothing-model selection.
+:::{tip}
+Use B-splines when local support and explicit smoothness are more useful than a
+single global polynomial. Keep knot selection and the regularization weight as
+visible modeling decisions.
 :::
 
-## Learning objectives
+## Before computation: what should be true?
 
-After this chapter, you should be able to explain local support, verify
-partition of unity, and distinguish basis construction from coefficient fitting
-and scientific regularization choices.
+The knot vector must be one-dimensional, nondecreasing, long enough for the
+nonnegative integer degree, and define a positive-width active domain. The
+coefficient axis must have length
+$n_{\mathrm{basis}}=n_{\mathrm{knots}}-p-1$. Decide whether knots are fixed
+representation choices or data-dependent preprocessing.
 
-### Concept check: local change, local effect
+:::{important}
+Basis construction, coefficient fitting, and smoothing policy are separate
+problems. Jaxstro supplies fixed-knot mechanics and a roughness primitive; it
+does not choose knots, smoothing strength, or scientific model complexity.
+:::
 
-Predict which query interval changes when one cubic-spline coefficient changes.
-Compute the basis support, then audit nonnegativity and the partition-of-unity
-sum before interpreting a fitted curve.
+Basis vectors are a linear representation; see
+[](../../10-foundations/mathematical-objects/linear-algebra-language-of-change.md)
+and [](../../30-representations/representations.md).
 
-## The current boundary
+## Define the mathematical objects
 
-jaxstro's spline surface is deliberately fixed-knot first:
+Let $t_0\le\cdots\le t_{K-1}$ be knots, $p\ge0$ the polynomial degree, and
+$B_{i,p}$ the $i$th normalized basis function. Its support is contained in
+$[t_i,t_{i+p+1}]$. Inside the active domain, bases are nonnegative and form a
+partition of unity. A clamped open knot vector repeats each endpoint $p+1$
+times.
+
+The coefficient vector $c$ defines $S$. A design matrix has entries
+$B_{ji}=B_{i,p}(x_j)$. A derivative-order-$m$ roughness functional measures the
+integrated square of $S^{(m)}$.
+
+## Derive the method
+
+The degree-zero basis selects one half-open knot interval:
+
+```{math}
+:label: eq-bspline-zero
+B_{i,0}(x)=
+\begin{cases}
+1,&t_i\le x<t_{i+1},\\
+0,&\text{otherwise}.
+\end{cases}
+```
+
+The Cox-de Boor recurrence builds higher degree from adjacent lower-degree
+bases {cite:t}`deBoor1972`:
+
+```{math}
+:label: eq-cox-de-boor
+B_{i,p}(x)=
+\frac{x-t_i}{t_{i+p}-t_i}B_{i,p-1}(x)
++\frac{t_{i+p+1}-x}{t_{i+p+1}-t_{i+1}}B_{i+1,p-1}(x).
+```
+
+A zero denominator contributes zero, which is the standard repeated-knot
+convention. Differentiating the spline gives a degree-$(p-1)$ spline with
+
+```{math}
+:label: eq-bspline-derivative
+c'_i=p\frac{c_{i+1}-c_i}{t_{i+p+1}-t_{i+1}}.
+```
+
+The coefficient sensitivity is especially simple:
+$\partial S(x)/\partial c_i=B_{i,p}(x)$. For smoothing, Jaxstro approximates
+
+```{math}
+:label: eq-bspline-roughness
+R_m(c)=\int \left[S^{(m)}(x)\right]^2 dx
+```
+
+on a fixed sample grid. A caller may form an objective such as
+$\lVert Bc-y\rVert_2^2+\lambda R_m(c)$, but $\lambda$ remains caller-owned.
+
+Antiderivative increments obey
+$d_{i+1}-d_i=c_i(t_{i+p+1}-t_i)/(p+1)$, enabling definite integrals by endpoint
+subtraction.
+
+## What the algorithm actually does
+
+`bspline_basis` evaluates [](#eq-cox-de-boor) for every basis and clamps queries
+to the active domain. `bspline_eval` contracts coefficients with that basis;
+`bspline_eval_deboor` provides the equivalent local de Boor evaluator.
+`bspline_derivative`, `bspline_antiderivative`, and `bspline_integral` transform
+coefficients and knot vectors as above.
+
+`open_uniform_knots` creates clamped equally spaced interior knots.
+`adaptive_open_uniform_knots` places interior knots at sample quantiles; this is
+deterministic preprocessing, not knot optimization. `fit_bspline_lstsq` solves
+ordinary fixed-knot least squares. `tensor_product_design_matrix` computes a
+row-wise Kronecker product. Degree and relevant axes are static under JIT.
+
+Invalid concrete degree, knot order, coefficient shape, sample shape, or active
+domain raises `ValueError`. Value-dependent knot checks cannot raise while the
+knots are traced.
+
+## What JAX differentiates
+
+```{list-table} B-spline gradient contracts
+:header-rows: 1
+:label: tbl-bspline-gradient-contracts
+
+* - Operation
+  - Contract
+  - Supported claim
+  - Boundary
+* - Coefficients at fixed knots
+  - `smooth_pathwise`
+  - AD returns the active basis vector.
+  - Knots and degree remain fixed.
+* - Interior query coordinate
+  - `smooth_pathwise`
+  - AD agrees with finite differences in a smooth knot span.
+  - Query stays away from repeated knots and boundaries.
+* - Clamped exterior coordinate
+  - `known_zero`
+  - Evaluator and analytic derivative are constant outside.
+  - Saturation is not an inference direction.
+* - Knot boundaries
+  - `validation_only`
+  - Multiplicity-specific continuity can be checked.
+  - No universal knot gradient is claimed.
+* - Quantile knot construction
+  - `validation_only`
+  - Deterministic placement can be reproduced.
+  - Sorting and quantiles are preprocessing boundaries.
+```
+
+:::{warning}
+Smoothness at a knot depends on multiplicity. Clamped exterior derivatives are
+zero, while quantile knot construction and active-span selection are not smooth
+inference paths. A least-squares solution also inherits rank and conditioning
+limits from its design matrix.
+:::
+
+## Using it in Jaxstro
 
 ```python
 from jaxstro.jaxconfig import enable_high_precision
@@ -55,7 +159,7 @@ enable_high_precision()  # before creating JAX arrays
 
 import jax.numpy as jnp
 
-from jaxstro.numerics import (
+from jaxstro.numerics.splines import (
     BSpline1D,
     bspline_basis,
     bspline_derivative,
@@ -80,164 +184,40 @@ assert jnp.allclose(values, wrapped_values)
 assert jnp.all(jnp.isfinite(derivative))
 ```
 
-It evaluates supplied coefficients by basis contraction or de Boor recursion,
-computes derivative and antiderivative values, exposes sample design matrices,
-solves ordinary least-squares fits for fixed knots, builds quantile-based clamped
-knots, assembles row-wise tensor-product design matrices, and provides a
-roughness penalty primitive. It still does not own smoothing-spline model
-selection, adaptive-knot optimization loops, extrapolation, or domain-specific
-regularization policy.
+## How to audit the result
 
-## Knots and clamping
+Check basis nonnegativity, local support, and partition of unity. Compare basis
+contraction against de Boor evaluation. Verify AD with respect to coefficients
+against the basis vector and AD with respect to an interior query against both
+the analytic derivative and central finite differences. For a fit, inspect
+design rank, condition, residuals, and sensitivity to knots and regularization.
 
-A clamped open-uniform knot vector repeats the first and last knot `degree + 1`
-times. For a cubic spline on `[0, 1]`, a single-span knot vector is:
+:::{figure} ../../10-theory/figures/bspline-local-support.webp
+:name: fig-bspline-local-support
+:alt: Six cubic B-spline basis curves with local support and their sum equal to one across the active domain
 
-```text
-0 0 0 0 1 1 1 1
-```
+The public basis values show local support and partition of unity for one
+open-uniform cubic configuration. They do not validate knot or smoothing-model
+selection.
+:::
 
-This makes the first and last coefficients control the endpoint values. jaxstro's
-`open_uniform_knots(...)` constructs this layout for any valid `n_basis` and
-degree.
+Measured anchors are indexed in [](../../60-validation/validation.md).
 
-Inputs outside the active knot domain are clamped to the endpoint basis values.
-This matches the existing fail-closed posture of `interp1d`: no extrapolated
-curve is invented. The trade-off is the same as any hard saturation: gradients
-with respect to `x` are zero outside the active domain. If an optimizer needs to
-move an out-of-domain `x` back into range, the caller should handle the domain
-constraint explicitly rather than relying on spline extrapolation.
+## Where the claim stops
 
-## Cox-de Boor recurrence
+Jaxstro does not own smoothing-spline model selection, adaptive-knot optimization,
+extrapolation, sparse tensor-product storage, uncertainty calibration, or a
+domain-specific regularization policy. Deterministic quantile knots are not an
+optimized adaptive spline.
 
-{cite:t}`deBoor1972` gives the normalized-basis recurrence and derivative
-coefficient relations in equations (10)--(15). The notation here uses degree
-$p$, where that paper uses order $k=p+1$.
+## Connected ideas
 
-The degree-zero basis is an interval indicator:
-
-```{math}
-B_{i,0}(x) =
-\begin{cases}
-1, & t_i \le x < t_{i+1} \\
-0, & \text{otherwise}.
-\end{cases}
-```
-
-Higher degrees are built recursively:
-
-```{math}
-B_{i,p}(x) =
-\frac{x - t_i}{t_{i+p} - t_i} B_{i,p-1}(x)
-+
-\frac{t_{i+p+1} - x}{t_{i+p+1} - t_{i+1}} B_{i+1,p-1}(x).
-```
-
-Repeated knots make some denominators zero. The implementation uses the standard
-safe convention: a term with a zero denominator contributes zero. This is also
-the AD-safe convention. The denominator is sanitized before division, so a dead
-zero-width term does not leak `NaN` into the backward pass.
-
-## Differentiability
-
-The derivative claim depends on which input is changing. The fixed-knot surface
-has these explicit contracts:
-
-```{list-table} B-spline gradient contracts
-:header-rows: 1
-:label: tbl-bspline-gradient-contracts
-
-* - Operation
-  - Contract
-  - Supported claim
-  - Boundary
-* - Coefficients at fixed knots
-  - `smooth_pathwise`
-  - Evaluation is linear in the coefficients; AD returns the active basis
-    vector and is checked independently.
-  - The knot vector and degree remain fixed.
-* - Interior query coordinate
-  - `smooth_pathwise`
-  - AD agrees with finite differences inside a smooth knot span.
-  - The query is away from repeated knots and the clamped domain boundary.
-* - Clamped exterior coordinate
-  - `known_zero`
-  - The public evaluator and analytic derivative are constant outside the
-    active domain.
-  - This zero is a saturation contract, not an inference direction.
-* - Knot boundaries
-  - `validation_only`
-  - Values and the derivatives guaranteed by the local knot multiplicity can
-    be checked at a named boundary.
-  - Smoothness is multiplicity-dependent; no universal knot gradient is claimed.
-* - Quantile knot construction
-  - `validation_only`
-  - Deterministic quantile placement is checked as a construction result.
-  - Sorting and quantile selection are not presented as a smooth inference path.
-```
-
-For fixed knots, spline evaluation is linear in the coefficients:
-
-```{math}
-\frac{\partial S(x)}{\partial c_i} = B_{i,p}(x).
-```
-
-That property is tested directly: the AD gradient with respect to coefficients
-matches the basis vector. Gradients with respect to interior `x` are checked
-against finite differences in the validation suite. At knots, the derivative
-order depends on the knot multiplicity, so tests use interior points rather than
-pretending every knot is smooth.
-
-The analytic derivative uses the standard coefficient transform:
-
-```{math}
-c'_i =
-p \frac{c_{i+1} - c_i}{t_{i+p+1} - t_{i+1}},
-```
-
-then evaluates a degree `p - 1` spline on the trimmed knot vector. Zero-width
-denominators use the same safe-zero convention as the basis recurrence. Outside
-the active knot domain, `bspline_derivative(...)` returns zero, matching the
-gradient of the public clamped evaluator with respect to `x`.
-
-Definite integrals use the antiderivative coefficient transform. If $S$ has
-degree $p$, the antiderivative has degree $p+1$ on the knot vector with one extra
-boundary knot at each end. Coefficient increments are:
-
-```{math}
-d_{i+1} - d_i = c_i\,\frac{t_{i+p+1} - t_i}{p+1}.
-```
-
-Fixed-knot least-squares fitting solves the linear design problem:
-
-```{math}
-\mathbf{B}\mathbf{c} \approx \mathbf{y}.
-```
-
-It is a convenience around the basis matrix, not a smoothing spline. For noisy
-data, `bspline_roughness_penalty(...)` supplies the common integrated squared
-derivative term so callers can build an explicit objective without jaxstro
-choosing the smoothing weight.
-
-## de Boor and tensor products
-
-The de Boor algorithm is the standard stable evaluator for a single spline value
-when you already know the active knot span. `bspline_eval_deboor(...)` now exposes
-that evaluator and is validated against the basis-contraction path. The public
-mathematical contract is identical; the two spellings exist so callers can choose
-the representation that best matches their workflow.
-
-`tensor_product_design_matrix(...)` performs a row-wise Kronecker product of 1D
-basis matrices. That is the construction primitive for tensor-product splines
-without making jaxstro own multidimensional smoothing, sparse storage, or
-domain-specific grid policy.
-
-`adaptive_open_uniform_knots(...)` is intentionally modest: it places interior
-knots at sample quantiles and clamps the endpoints. It is deterministic knot
-construction, not a knot-optimization algorithm.
-
-## From explanation to evidence
-
-Use the [](../../50-api/approximation-integration/splines.md) for signatures and
-ownership, the [](../../60-validation/validation.md) for measured spline anchors, and
-the [](../methods.md#gradient-contracts) for the package-wide contract taxonomy.
+:::{seealso}
+Connect basis matrices to
+[](../../10-foundations/mathematical-objects/linear-algebra-language-of-change.md),
+representations to [](../../30-representations/representations.md), signatures
+to [](../../50-api/approximation-integration/splines.md), the gradient taxonomy
+to [](../methods.md#gradient-contracts), and evidence to
+[](../../60-validation/validation.md). Direct table interpolation is in
+[](./interpolation.md).
+:::
