@@ -72,16 +72,43 @@ to test. It depends on consistent incidence, geometry, and boundary accounting; 
 does not follow merely because a stencil resembles a continuum derivative.
 
 An algebraic adjoint $G^{\mathsf{T}}$ is defined by an unweighted Euclidean inner
-product. A discrete adjoint under mass matrices $\mathbf{M}_0$ and $\mathbf{M}_1$
-instead satisfies
-$\langle G\phi,q\rangle_{\mathbf{M}_1}=\langle\phi,G^{*}q\rangle_{\mathbf{M}_0}$,
-including boundary terms. Continuum identities such as integration by parts require
-discrete summation-by-parts evidence under the declared inner products.
+product. For invertible mass matrices $\mathbf{M}_0$ and $\mathbf{M}_1$, the
+weighted algebraic adjoint and its exact inner-product identity are
+
+```{math}
+:label: eq-weighted-field-adjoint
+G^{*}=\mathbf{M}_{0}^{-1}G^{\mathsf{T}}\mathbf{M}_{1},
+\qquad
+\langle G\phi,q\rangle_{\mathbf{M}_{1}}
+=\langle\phi,G^{*}q\rangle_{\mathbf{M}_{0}}.
+```
+
+Equation [](#eq-weighted-field-adjoint) is an algebraic definition and contains no
+boundary term. A discrete integration-by-parts or summation-by-parts claim instead
+relates the gradient to a separately defined discrete divergence $D$. Under one
+declared matrix convention, that distinct identity is
+
+```{math}
+:label: eq-field-summation-by-parts
+\langle G\phi,q\rangle_{\mathbf{M}_{1}}
+=-\langle\phi,Dq\rangle_{\mathbf{M}_{0}}
++\phi^{\mathsf{T}}\mathbf{E}_{\partial}q,
+\qquad
+G^{\mathsf{T}}\mathbf{M}_{1}+\mathbf{M}_{0}D
+=\mathbf{E}_{\partial}.
+```
+
+Here $\mathbf{E}_{\partial}$ represents the boundary bilinear form, including the
+trace and oriented normal-flux pairing appropriate to the discretization. It is
+generally nonzero. When the boundary form vanishes, as under suitable periodic or
+homogeneous boundary conditions, [](#eq-field-summation-by-parts) reduces to
+$D=-G^{*}$. That relation does not hold for a general nonzero boundary form.
 
 ## Failure modes and interpretation limits
 
-- Uniform-spacing stencils applied to nonuniform coordinates return incorrect units
-  and scale even when shapes match.
+- Uniform-spacing stencils applied to nonuniform coordinates may retain the expected
+  units while returning the wrong local scale, value, and convergence behavior, even
+  when shapes match.
 - Inconsistent face orientation destroys interior-flux cancellation.
 - Ghost cells or padding without a named boundary condition hide external data.
 - Applying a node operator to cell-centered values introduces an unstated

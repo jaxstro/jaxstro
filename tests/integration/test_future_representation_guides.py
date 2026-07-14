@@ -124,18 +124,109 @@ def test_each_guide_has_labeled_math_and_matching_prose_cross_reference() -> Non
         assert any(f"[]({f'#{label}'})" in text for label in labels), relative
 
 
-def test_linearized_formula_and_analytic_covariance_pushforward() -> None:
+def test_linearized_formula_centers_about_the_input_mean() -> None:
     text = _compact_math(_read("uncertainty/linearized-propagation.md"))
     assert ":label:eq-linearized-covariance" in text
     assert (
-        r"\mathbf{C}_{y}\approx\mathbf{J}\mathbf{C}_{x}\mathbf{J}^{\mathsf{T}}" in text
+        r"\widehat{\boldsymbol{\mu}}_{y}=f(\mathbf{x}_{0})"
+        r"+\mathbf{J}_{0}(\boldsymbol{\mu}_{x}-\mathbf{x}_{0})" in text
+    )
+    assert (
+        r"f(\mathbf{X})-\widehat{\boldsymbol{\mu}}_{y}"
+        r"\approx\mathbf{J}_{0}(\mathbf{X}-\boldsymbol{\mu}_{x})" in text
+    )
+    assert (
+        r"\mathbf{C}_{y}\approx\mathbf{J}_{0}\mathbf{C}_{x}"
+        r"\mathbf{J}_{0}^{\mathsf{T}}" in text
     )
 
+    samples = jnp.array([[-1.0, 2.0], [2.0, 0.0], [4.0, 5.0]])
+    weights = jnp.array([0.2, 0.3, 0.5])
+    expansion_point = jnp.array([0.5, -1.0])
     jacobian = jnp.array([[2.0, -1.0], [0.5, 3.0]])
-    input_covariance = jnp.array([[4.0, 1.5], [1.5, 9.0]])
-    propagated = jacobian @ input_covariance @ jacobian.T
-    expected = jnp.array([[19.0, -14.75], [-14.75, 86.5]])
-    assert jnp.allclose(propagated, expected)
+
+    input_mean = weights @ samples
+    centered_inputs = samples - input_mean
+    input_covariance = (centered_inputs * weights[:, None]).T @ centered_inputs
+    offsets = samples - expansion_point
+    raw_offset_moment = (offsets * weights[:, None]).T @ offsets
+    mean_offset = input_mean - expansion_point
+
+    assert not jnp.allclose(input_mean, expansion_point)
+    assert not jnp.allclose(raw_offset_moment, input_covariance)
+    assert jnp.allclose(
+        raw_offset_moment,
+        input_covariance + jnp.outer(mean_offset, mean_offset),
+    )
+
+    linearized_outputs = offsets @ jacobian.T
+    output_mean = weights @ linearized_outputs
+    centered_outputs = linearized_outputs - output_mean
+    output_covariance = (centered_outputs * weights[:, None]).T @ centered_outputs
+    assert jnp.allclose(
+        output_covariance,
+        jacobian @ input_covariance @ jacobian.T,
+    )
+
+
+def test_weighted_adjoint_has_an_exact_inner_product_identity() -> None:
+    text = _compact_math(_read("fields/field-operators.md"))
+    assert r"G^{*}=\mathbf{M}_{0}^{-1}G^{\mathsf{T}}\mathbf{M}_{1}" in text
+    assert (
+        r"\langleG\phi,q\rangle_{\mathbf{M}_{1}}"
+        r"=\langle\phi,G^{*}q\rangle_{\mathbf{M}_{0}}" in text
+    )
+    assert "containsnoboundaryterm" in text.lower()
+
+    gradient = jnp.array([[-1.0, 1.0, 0.0], [0.0, -1.0, 1.0]])
+    mass_0 = jnp.diag(jnp.array([2.0, 3.0, 4.0]))
+    mass_1 = jnp.diag(jnp.array([5.0, 7.0]))
+    adjoint = jnp.linalg.solve(mass_0, gradient.T @ mass_1)
+    field = jnp.array([1.0, -2.0, 0.5])
+    flux = jnp.array([0.25, -1.0])
+
+    left = (gradient @ field) @ mass_1 @ flux
+    right = field @ mass_0 @ (adjoint @ flux)
+    assert jnp.allclose(left, right)
+
+
+def test_sbp_uses_a_separate_divergence_and_nonzero_boundary_form() -> None:
+    text = _compact_math(_read("fields/field-operators.md"))
+    assert "separatelydefineddiscretedivergence" in text.lower()
+    assert (
+        r"G^{\mathsf{T}}\mathbf{M}_{1}+\mathbf{M}_{0}D"
+        r"=\mathbf{E}_{\partial}" in text
+    )
+    assert "D=-G^{*}" in text
+    assert "boundaryformvanishes" in text.lower()
+
+    gradient = jnp.array([[-1.0, 1.0], [-1.0, 1.0]])
+    divergence = gradient.copy()
+    mass_0 = jnp.diag(jnp.array([0.5, 0.5]))
+    mass_1 = mass_0.copy()
+    boundary = jnp.diag(jnp.array([-1.0, 1.0]))
+    field = jnp.array([2.0, 5.0])
+    flux = jnp.array([7.0, 11.0])
+
+    assert not jnp.allclose(boundary, jnp.zeros_like(boundary))
+    assert jnp.allclose(
+        gradient.T @ mass_1 + mass_0 @ divergence,
+        boundary,
+    )
+    gradient_pairing = (gradient @ field) @ mass_1 @ flux
+    divergence_pairing = field @ mass_0 @ (divergence @ flux)
+    boundary_pairing = field @ boundary @ flux
+    assert jnp.allclose(
+        gradient_pairing,
+        -divergence_pairing + boundary_pairing,
+    )
+
+
+def test_nonuniform_stencil_warning_separates_units_from_accuracy() -> None:
+    text = _normalized_prose(_read("fields/field-operators.md")).lower()
+    assert "retain the expected units" in text
+    assert "wrong local scale, value, and convergence behavior" in text
+    assert "return incorrect units and scale" not in text
 
 
 def test_sigma_and_ensemble_formula_contracts() -> None:
