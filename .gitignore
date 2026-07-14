@@ -225,3 +225,6 @@ docs/10-theory/figures/*.pdf
 docs/10-theory/figures/*.png
 
 .adr/
+
+# Isolated execution worktrees created by engineering agents.
+.worktrees/
