@@ -249,9 +249,9 @@ width, finiteness, or conditioning evidence fails.
 :name: fig-rootfinding-value-versus-ift
 :alt: Two-panel comparison of a branch-selected quadratic root trace with analytic, certified implicit-function AD, and central finite-difference sensitivities; certification includes uniqueness and smoothness assertions plus convergence, finiteness, residual, width, and slope gates, while a flat-root certificate is rejected
 
-The value-first trace answers “what numerical map executed?” The derivative
-panel answers the different question “how does the certified root relation move
-with its parameter?” The flat-root annotation is deliberately shown as a
+The value-first trace answers "what numerical map executed?" The derivative
+panel answers the different question "how does the certified root relation move
+with its parameter?" The flat-root annotation is deliberately shown as a
 rejection, not as a derivative estimate.
 :::
 
@@ -372,7 +372,7 @@ once and keep the monotonicity contract explicit.
 :header-rows: 1
 :label: tbl-solver-choice
 
-* - You have…
+* - You have...
   - Use
   - Differentiable w.r.t. parameters?
 * - a point near an unknown sign-changing root

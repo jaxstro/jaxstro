@@ -21,7 +21,7 @@ Add **`jaxstro.params`** - a small, typed, **Equinox-only** utility (no new core
 
 1. **Marking:** a `where`-callable selector (typed, IDE/refactor-safe) as the front door; an explicit boolean filter-spec PyTree as the low-level escape hatch. `where` selects **whole array leaves** in v1.
 2. **PyTree<->flat-vector bridge** (`Parameterization.to_vector`/`from_vector`) built on `eqx.partition`/`tree_at` + `jax.flatten_util.ravel_pytree`. Round-trips exactly; jit/grad/vmap-safe.
-3. **Transforms in v1:** a bijector registry (Identity/Exp/Softplus/Sigmoid) with analytic log-Jacobians (numpyro/TFP `forward: ℝ->physical` convention) for unconstrained-space inference of bounded params.
+3. **Transforms in v1:** a bijector registry (Identity/Exp/Softplus/Sigmoid) with analytic log-Jacobians (the NumPyro/TFP $\mathbb{R} \to \mathrm{physical}$ forward convention) for unconstrained-space inference of bounded params.
 4. **optax/numpyro glue deferred** from the core module (Equinox-only); the validation script demonstrates optax + numpyro under an optional `[ml]` extra.
 
 ## Rationale

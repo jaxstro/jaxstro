@@ -35,11 +35,11 @@ then audit recall, symmetry, cutoff inclusion, and overflow independently.
 
 ```text
 positions
-   ↓ host-side cell assignment and ordering
+   -> host-side cell assignment and ordering
 fixed-capacity cells or Morton bins
-   ↓ stencil gather
+   -> stencil gather
 candidate pool
-   ↓ distance filter + overflow check
+   -> distance filter + overflow check
 exact fixed-radius neighbors
 ```
 
@@ -73,7 +73,7 @@ capacity `Bcap` and unused slots carry a sentinel plus a Boolean mask.
 - `fill_bins(...)` deterministically selects `Bcap` members when a bin is too
   full, but it returns no overflow flag. `fill_bins` cannot certify full recall after capacity overflow.
 - `fill_bins_exact(...)` returns `did_overflow` along with the members and mask.
-  “Exact” here means exact grouping when capacity is sufficient; it does not
+  "Exact" here means exact grouping when capacity is sufficient; it does not
   make a too-small `Bcap` lossless.
 
 Never infer completeness from a full-looking fixed-shape array. Propagate the

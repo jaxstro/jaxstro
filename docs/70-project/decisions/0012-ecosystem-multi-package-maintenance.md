@@ -20,7 +20,7 @@ The jaxstro ecosystem consists of multiple interdependent packages (jaxstro core
 **Per-package editable path-sources with independent release cadence; standardize tooling; add sibling smoke-test CI.**
 
 1. **Editable path-sources**: Each package uses `path = "."` in its `pyproject.toml` for local jaxstro core (or sibling dependencies), allowing local development without requiring jaxstro to publish pre-release wheels. Enables rapid iteration across the ecosystem.
-2. **Independent release cadence**: Each package (jaxstro, gravax, progenax, fluxax, …) maintains its own version number and release schedule via per-package `uv.lock` and `pyproject.toml`. Solver-library churn in one package does not force synchronized releases across the ecosystem.
+2. **Independent release cadence**: Each package (jaxstro, gravax, progenax, fluxax, ...) maintains its own version number and release schedule via per-package `uv.lock` and `pyproject.toml`. Solver-library churn in one package does not force synchronized releases across the ecosystem.
 3. **Standardized tooling**: All packages follow the same build/lint/test setup: hatchling, `py.typed`, `uv lock --check`, ruff + mypy, pytest with 3-tier organization (unit/integration/validation), CHANGELOG, semver + deprecation policy.
 4. **Sibling smoke-test CI**: A jaxstro-side CI job runs the full test suites of downstream consumers (progenax, fluxax, gravax) against the candidate jaxstro build. A break in jaxstro fails immediately in jaxstro's CI (not discovered weeks later when someone runs downstream). Reciprocally, major changes in (e.g.) gravax that might affect fluxax are surfaced early.
 

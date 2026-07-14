@@ -9,7 +9,7 @@ decided_by: user
 last_read: 0
 ---
 
-# 0001 - Thin foundation posture over all-deps façade
+# 0001 - Thin foundation posture over all-deps facade
 
 ## Context
 
