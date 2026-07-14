@@ -9,11 +9,19 @@ BASE_PATH="${BASE_URL:-}"
 LOG_PATH="${TMPDIR:-/tmp}/jaxstro-myst-start-$$.log"
 SERVER_PID=""
 
-cleanup() {
-  if [[ -n "$SERVER_PID" ]] && kill -0 "$SERVER_PID" 2>/dev/null; then
-    kill "$SERVER_PID" 2>/dev/null || true
-    wait "$SERVER_PID" 2>/dev/null || true
+stop_docs_server() {
+  if [[ -n "$SERVER_PID" ]]; then
+    local pid="$SERVER_PID"
+    SERVER_PID=""
+    if kill -0 "$pid" 2>/dev/null; then
+      kill "$pid" 2>/dev/null || true
+    fi
+    wait "$pid" 2>/dev/null || true
   fi
+}
+
+cleanup() {
+  stop_docs_server
   rm -f "$LOG_PATH"
 }
 trap cleanup EXIT INT TERM
@@ -36,17 +44,6 @@ echo "== docs: strict static build =="
   myst build --html --ci --strict
 )
 
-# MyST 1.10.1 has no custom-JavaScript theme option and strips scripts from
-# site parts, so patch the exact static artifact that Pages uploads.
-env -u VIRTUAL_ENV uv run --no-sync python \
-  "$ROOT_DIR/scripts/inject_docs_accessibility.py" \
-  "$ROOT_DIR/docs/_build/html"
-
-if [[ ! -f "$ROOT_DIR/docs/_build/html/index.html" ]]; then
-  echo "docs gate failed: docs/_build/html/index.html is missing" >&2
-  exit 1
-fi
-
 echo "== docs: rendered DOM and route manifest =="
 (
   cd "$ROOT_DIR/docs"
@@ -61,6 +58,26 @@ if ! env -u VIRTUAL_ENV uv run --no-sync python "$ROOT_DIR/scripts/check_docs_si
   --base-path "$BASE_PATH"; then
   echo "== MyST server log ==" >&2
   tail -n 120 "$LOG_PATH" >&2
+  exit 1
+fi
+
+stop_docs_server
+
+# MyST 1.10.1 has no custom-JavaScript theme option and strips scripts from
+# site parts. `myst start` can also rebuild the static tree, so patch only after
+# that process has stopped. This is the final mutation of the Pages artifact.
+echo "== docs: final static accessibility artifact =="
+env -u VIRTUAL_ENV uv run --no-sync python \
+  "$ROOT_DIR/scripts/inject_docs_accessibility.py" \
+  "$ROOT_DIR/docs/_build/html"
+
+echo "== docs: final static artifact postcondition =="
+env -u VIRTUAL_ENV uv run --no-sync python \
+  "$ROOT_DIR/scripts/inject_docs_accessibility.py" \
+  "$ROOT_DIR/docs/_build/html" --check
+
+if [[ ! -f "$ROOT_DIR/docs/_build/html/index.html" ]]; then
+  echo "docs gate failed: docs/_build/html/index.html is missing" >&2
   exit 1
 fi
 

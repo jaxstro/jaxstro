@@ -17,16 +17,36 @@ def test_docs_gate_is_reused_by_local_and_full_ci_gates() -> None:
     assert (
         'uv run --no-sync python "$ROOT_DIR/scripts/check_docs_site.py"' in script_text
     )
-    assert '"$ROOT_DIR/scripts/inject_docs_accessibility.py"' in script_text
-    assert script_text.index("myst build --html --ci --strict") < script_text.index(
-        '"$ROOT_DIR/scripts/inject_docs_accessibility.py"'
+    injector_calls = list(
+        re.finditer(
+            r'"\$ROOT_DIR/scripts/inject_docs_accessibility\.py" \\\n'
+            r'  "\$ROOT_DIR/docs/_build/html"(?P<check> --check)?',
+            script_text,
+        )
     )
-    assert script_text.index(
-        '"$ROOT_DIR/scripts/inject_docs_accessibility.py"'
-    ) < script_text.index("exec myst start")
-    assert script_text.index(
-        '"$ROOT_DIR/scripts/inject_docs_accessibility.py"'
-    ) < script_text.index('"$ROOT_DIR/scripts/check_docs_site.py"')
+    assert len(injector_calls) == 2
+    inject_call, verify_call = injector_calls
+    assert inject_call.group("check") is None
+    assert verify_call.group("check") == " --check"
+
+    build_position = script_text.index("myst build --html --ci --strict")
+    start_position = script_text.index("exec myst start")
+    audit_position = script_text.index('"$ROOT_DIR/scripts/check_docs_site.py"')
+    stop_position = script_text.rindex("\nstop_docs_server\n")
+    success_position = script_text.index('echo "ALL DOCS GATES PASSED"')
+
+    assert (
+        build_position
+        < start_position
+        < audit_position
+        < stop_position
+        < inject_call.start()
+        < verify_call.start()
+        < success_position
+    )
+    final_artifact_lane = script_text[inject_call.start() : success_position]
+    assert "myst build" not in final_artifact_lane
+    assert "myst start" not in final_artifact_lane
 
     local_gate = (REPO_ROOT / "scripts" / "check.sh").read_text(encoding="utf-8")
     full_gate = (REPO_ROOT / ".github" / "workflows" / "full-gate.yml").read_text(

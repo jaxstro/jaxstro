@@ -14,8 +14,9 @@ from pathlib import Path
 
 HOOK_MARKER = "jaxstro-docs-disclosure-labels-start"
 HOOK_END_MARKER = "jaxstro-docs-disclosure-labels-end"
+HOOK_ID = "jaxstro-docs-disclosure-labels"
 ACCESSIBILITY_HOOK = f"""<!-- {HOOK_MARKER} -->
-<script id="jaxstro-docs-disclosure-labels">
+<script id="{HOOK_ID}">
 (() => {{
   const disclosureSelector =
     ".myst-primary-sidebar .myst-toc-item > button[aria-controls]";
@@ -57,6 +58,10 @@ ACCESSIBILITY_HOOK = f"""<!-- {HOOK_MARKER} -->
 </script>
 <!-- {HOOK_END_MARKER} -->"""
 
+HOOK_START = f"<!-- {HOOK_MARKER} -->"
+HOOK_END = f"<!-- {HOOK_END_MARKER} -->"
+HOOK_SCRIPT = f'<script id="{HOOK_ID}">'
+
 
 def inject_accessibility_hook(source: str) -> str:
     """Return HTML with one accessibility hook immediately before ``</body>``."""
@@ -70,6 +75,32 @@ def inject_accessibility_hook(source: str) -> str:
     if "</body>" not in source:
         raise ValueError("built HTML has no closing body tag")
     return source.replace("</body>", f"{ACCESSIBILITY_HOOK}\n</body>", 1)
+
+
+def verify_accessibility_hook(source: str) -> None:
+    """Require exactly one current hook immediately before ``</body>``."""
+    signal_count = sum(
+        source.count(signal) for signal in (HOOK_MARKER, HOOK_END_MARKER, HOOK_ID)
+    )
+    if signal_count == 0:
+        raise ValueError("missing accessibility hook")
+
+    start_count = source.count(HOOK_START)
+    end_count = source.count(HOOK_END)
+    script_count = source.count(HOOK_SCRIPT)
+    if max(start_count, end_count, script_count) > 1:
+        raise ValueError("duplicate accessibility hook")
+    if (start_count, end_count, script_count) != (1, 1, 1):
+        raise ValueError("malformed accessibility hook")
+
+    start = source.index(HOOK_START)
+    end = source.index(HOOK_END, start) + len(HOOK_END)
+    if source[start:end] != ACCESSIBILITY_HOOK:
+        raise ValueError("stale accessibility hook")
+
+    body = source.find("</body>", end)
+    if body < 0 or source[end:body].strip():
+        raise ValueError("malformed accessibility hook placement")
 
 
 def inject_tree(root: Path) -> tuple[int, int]:
@@ -90,10 +121,40 @@ def inject_tree(root: Path) -> tuple[int, int]:
     return changed, unchanged
 
 
+def verify_tree(root: Path) -> int:
+    """Verify every HTML file below *root* and return the checked page count."""
+    if not root.is_dir():
+        raise FileNotFoundError(f"built HTML directory does not exist: {root}")
+
+    paths = sorted(root.rglob("*.html"))
+    if not paths:
+        raise ValueError(f"built HTML directory contains no HTML files: {root}")
+
+    errors = []
+    for path in paths:
+        try:
+            verify_accessibility_hook(path.read_text(encoding="utf-8"))
+        except ValueError as error:
+            errors.append(f"{path.relative_to(root)}: {error}")
+    if errors:
+        details = "\n".join(f"- {error}" for error in errors)
+        raise ValueError(f"docs accessibility hook verification failed:\n{details}")
+    return len(paths)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("root", type=Path, help="built MyST HTML directory")
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="verify that every HTML page has exactly one current hook",
+    )
     args = parser.parse_args()
+    if args.check:
+        checked = verify_tree(args.root)
+        print(f"docs accessibility hook: {checked} pages verified current")
+        return 0
     changed, unchanged = inject_tree(args.root)
     print(f"docs accessibility hook: {changed} patched, {unchanged} already current")
     return 0
