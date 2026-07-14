@@ -7,7 +7,18 @@ li.myst-outline-item {
   color: #cbd5e1;
 }
 
-/* The theme's heading permalink is transparent by default; expose it to keyboard focus. */
-a[aria-label="Link to this Section"]:focus {
+/* Use a focus indicator that clears 3:1 against the site's light surfaces. */
+:focus-visible {
+  outline: 2px solid #005fcc !important;
+  outline-offset: 2px;
+}
+
+.dark :focus-visible {
+  outline-color: #60a5fa !important;
+}
+
+/* The heading permalink starts transparent and zero-width; expose a real focus box. */
+a[aria-label="Link to this Section"]:focus-visible {
   opacity: 1;
+  width: 1em;
 }
