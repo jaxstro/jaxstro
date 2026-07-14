@@ -79,6 +79,13 @@ def test_verify_tree_accepts_exactly_one_current_hook_per_html_page(
     assert module.verify_tree(root) == 2
 
 
+def test_verify_hook_identity_is_scoped_to_script_elements() -> None:
+    source = module.inject_accessibility_hook("<html><body>Page</body></html>")
+    source = source.replace("<body>", f"<body><div id='{module.HOOK_ID}'></div>")
+
+    module.verify_accessibility_hook(source)
+
+
 @pytest.mark.parametrize(
     ("broken_source", "expected"),
     [
@@ -87,6 +94,24 @@ def test_verify_tree_accepts_exactly_one_current_hook_per_html_page(
             module.inject_accessibility_hook(
                 "<html><body>Duplicate</body></html>"
             ).replace("</body>", f"{module.ACCESSIBILITY_HOOK}\n</body>"),
+            "duplicate",
+        ),
+        (
+            module.inject_accessibility_hook(
+                "<html><body>Duplicate</body></html>"
+            ).replace(
+                "<body>",
+                f"<body><script id='{module.HOOK_ID}'></script>",
+            ),
+            "duplicate",
+        ),
+        (
+            module.inject_accessibility_hook(
+                "<html><body>Duplicate</body></html>"
+            ).replace(
+                "<body>",
+                f"<body><script data-test=\"duplicate\" id = '{module.HOOK_ID}'></script>",
+            ),
             "duplicate",
         ),
         (
@@ -100,6 +125,12 @@ def test_verify_tree_accepts_exactly_one_current_hook_per_html_page(
                 "<html><body>Malformed</body></html>"
             ).replace(f"<!-- {module.HOOK_END_MARKER} -->", ""),
             "malformed",
+        ),
+        (
+            module.inject_accessibility_hook("<html><body>Misplaced</body></html>")
+            .replace(module.ACCESSIBILITY_HOOK, "")
+            .replace("</html>", f"{module.ACCESSIBILITY_HOOK}</html>"),
+            "placement",
         ),
     ],
 )

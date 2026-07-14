@@ -10,6 +10,7 @@ would block this inline script.
 from __future__ import annotations
 
 import argparse
+from html.parser import HTMLParser
 from pathlib import Path
 
 HOOK_MARKER = "jaxstro-docs-disclosure-labels-start"
@@ -60,7 +61,20 @@ ACCESSIBILITY_HOOK = f"""<!-- {HOOK_MARKER} -->
 
 HOOK_START = f"<!-- {HOOK_MARKER} -->"
 HOOK_END = f"<!-- {HOOK_END_MARKER} -->"
-HOOK_SCRIPT = f'<script id="{HOOK_ID}">'
+
+
+class _HookScriptParser(HTMLParser):
+    """Count script elements with the stable hook identity."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.count = 0
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag == "script" and any(
+            name == "id" and value == HOOK_ID for name, value in attrs
+        ):
+            self.count += 1
 
 
 def inject_accessibility_hook(source: str) -> str:
@@ -79,15 +93,15 @@ def inject_accessibility_hook(source: str) -> str:
 
 def verify_accessibility_hook(source: str) -> None:
     """Require exactly one current hook immediately before ``</body>``."""
-    signal_count = sum(
-        source.count(signal) for signal in (HOOK_MARKER, HOOK_END_MARKER, HOOK_ID)
-    )
-    if signal_count == 0:
-        raise ValueError("missing accessibility hook")
-
     start_count = source.count(HOOK_START)
     end_count = source.count(HOOK_END)
-    script_count = source.count(HOOK_SCRIPT)
+    parser = _HookScriptParser()
+    parser.feed(source)
+    parser.close()
+    script_count = parser.count
+
+    if (start_count, end_count, script_count) == (0, 0, 0):
+        raise ValueError("missing accessibility hook")
     if max(start_count, end_count, script_count) > 1:
         raise ValueError("duplicate accessibility hook")
     if (start_count, end_count, script_count) != (1, 1, 1):
