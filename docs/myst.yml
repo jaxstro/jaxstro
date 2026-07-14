@@ -204,12 +204,66 @@ project:
         - file: 30-decisions/0014-provenance-registry-hoist.md
     - title: API reference
       children:
-        - file: 40-api/index.md
-        - file: 40-api/contracts.md
-        - file: 40-api/provenance/index.md
-        - file: 40-api/provenance/constants.md
-        - file: 40-api/provenance/transforms.md
-        - file: 40-api/provenance/atmospheres.md
+        - file: 50-api/api.md
+        - title: Change and constraints
+          children:
+            - file: 50-api/change-constraints/autodiff.md
+            - file: 50-api/change-constraints/rootfinding.md
+            - file: 50-api/change-constraints/kepler.md
+            - file: 50-api/change-constraints/optimization.md
+            - file: 50-api/change-constraints/ode.md
+        - title: Approximation and integration
+          children:
+            - file: 50-api/approximation-integration/interpolation.md
+            - file: 50-api/approximation-integration/regular-grid.md
+            - file: 50-api/approximation-integration/splines.md
+            - file: 50-api/approximation-integration/integration.md
+            - file: 50-api/approximation-integration/quadrature.md
+        - title: Linear structure
+          children:
+            - file: 50-api/linear-structure/linear-algebra.md
+            - file: 50-api/linear-structure/compensated.md
+            - file: 50-api/linear-structure/operators.md
+            - file: 50-api/linear-structure/special.md
+        - title: Randomness
+          children:
+            - file: 50-api/randomness/distributions.md
+            - file: 50-api/randomness/rng.md
+            - file: 50-api/randomness/random.md
+            - file: 50-api/randomness/sampling.md
+            - file: 50-api/randomness/stats.md
+        - title: Discrete space
+          children:
+            - file: 50-api/discrete-space/grids.md
+            - file: 50-api/discrete-space/meshes.md
+            - file: 50-api/discrete-space/spatial.md
+        - title: Physical representations
+          children:
+            - file: 50-api/physical-representations/constants.md
+            - file: 50-api/physical-representations/units.md
+            - file: 50-api/physical-representations/quantity.md
+            - file: 50-api/physical-representations/coords.md
+            - file: 50-api/physical-representations/geometry.md
+            - file: 50-api/physical-representations/astrometry.md
+            - file: 50-api/physical-representations/params.md
+        - title: Scientific data
+          children:
+            - file: 50-api/scientific-data/spectra.md
+            - file: 50-api/scientific-data/atmospheres.md
+        - title: Research infrastructure
+          children:
+            - file: 50-api/research-infrastructure/checks.md
+            - file: 50-api/research-infrastructure/jaxconfig.md
+            - file: 50-api/research-infrastructure/contracts.md
+            - file: 50-api/research-infrastructure/evidence.md
+            - file: 50-api/research-infrastructure/provenance.md
+            - file: 50-api/research-infrastructure/testing.md
+            - title: Source-backed provenance cards
+              children:
+                - file: 50-api/research-infrastructure/source-provenance/source-provenance.md
+                - file: 50-api/research-infrastructure/source-provenance/constants.md
+                - file: 50-api/research-infrastructure/source-provenance/transforms.md
+                - file: 50-api/research-infrastructure/source-provenance/atmospheres.md
     - title: Validation
       children:
         - file: 60-validation/index.md

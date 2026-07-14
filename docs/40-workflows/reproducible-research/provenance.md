@@ -107,11 +107,11 @@ storage, or reporting policy.
 
 ## Registry and honest gaps
 
-The generated [](../../40-api/provenance/index.md) routes to the current families:
+The generated [](../../50-api/research-infrastructure/source-provenance/source-provenance.md) routes to the current families:
 
-- [](../../40-api/provenance/constants.md) - constants and unit conventions;
-- [](../../40-api/provenance/transforms.md) - coordinate and astrometric transforms;
-- [](../../40-api/provenance/atmospheres.md) - the current atmosphere evidence gap.
+- [](../../50-api/research-infrastructure/source-provenance/constants.md) - constants and unit conventions;
+- [](../../50-api/research-infrastructure/source-provenance/transforms.md) - coordinate and astrometric transforms;
+- [](../../50-api/research-infrastructure/source-provenance/atmospheres.md) - the current atmosphere evidence gap.
 
 Zero registered atmosphere cards do not mean complete atmosphere coverage. The
 empty generated family is an explicit gap while atmosphere backends and their

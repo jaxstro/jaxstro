@@ -96,12 +96,12 @@ convenience wrappers may resolve `units=None` to the package default.
 ## Provenance ownership
 
 Two provenance surfaces answer different questions. The
-[source-backed provenance cards](../40-api/provenance/index.md) connect constants,
+[source-backed provenance cards](../50-api/research-infrastructure/source-provenance/source-provenance.md) connect constants,
 transforms, and capability boundaries to references, code symbols, validation
 paths, and evidence states. They describe why a public scientific claim is
 trustworthy.
 
-The [runtime artifact manifests](#workflow-provenance) instead record what a particular
+The [runtime artifact manifests](../50-api/research-infrastructure/provenance.md) instead record what a particular
 computation consumed: configuration, environment, seeds, hashes, and method
 identifiers. They make a run reproducible. A card does not replace a manifest,
 and a manifest does not establish the scientific source behind a constant or

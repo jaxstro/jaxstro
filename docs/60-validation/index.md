@@ -18,7 +18,7 @@ Read the rows with the corresponding explanations: gradient contracts in
 [](../20-methods/methods.md), discrete and exact neighbor contracts in
 [](../20-methods/discrete-space/spatial.md), implemented quantity semantics in
 [](../30-representations/units-quantities/quantities.md), and source-backed registry pages in
-[](../40-api/provenance/index.md).
+[](../50-api/research-infrastructure/source-provenance/source-provenance.md).
 
 ## Validation anchors
 
@@ -114,6 +114,6 @@ uv run mypy src
 The validation table is intentionally compact. Detailed numerical derivations
 belong in [](../20-methods/methods.md); this page records the executable anchors.
 
-The generated [](../40-api/contracts.md) registry connects selected public claims
+The generated [](../50-api/research-infrastructure/contracts.md) registry connects selected public claims
 to these evidence classes. An unclassified callable remains unverified rather
 than inheriting support from its module.

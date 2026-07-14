@@ -129,7 +129,7 @@ def test_scientific_ml_pages_are_planned_substantive_and_not_api_promises() -> N
         "auditable-training.md": ("eq-ml-training-update", "exactly `K`", "optimizer"),
         "ecosystem-boundaries.md": ("Equinox", "Optax", "Informax"),
     }
-    api_text = (DOCS / "40-api/index.md").read_text(encoding="utf-8")
+    api_text = (DOCS / "50-api/api.md").read_text(encoding="utf-8")
     for name, phrases in required.items():
         path = DOCS / "40-workflows/scientific-ml" / name
         assert path.is_file(), path

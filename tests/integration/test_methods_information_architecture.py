@@ -169,7 +169,9 @@ def test_migration_retires_old_method_and_representation_sources() -> None:
         for page in pages:
             assert not (old_theory / f"{page}.md").exists(), page
 
-    assert (old_theory / "science-patterns.md").is_file()
+    assert (
+        DOCS / "40-workflows" / "differentiable-research" / "science-patterns.md"
+    ).is_file()
     assert not (old_theory / "quantities.md").exists()
     assert not (old_theory / "geometry.md").exists()
     assert (

@@ -38,6 +38,40 @@ def render_contract_reference(inventory: ContractInventory) -> str:
         "Unverified does not mean unsupported; it means no claim is registered.",
         "This generated page does not infer support from importability or an unrelated passing test.",
         "",
+        "## Owner import path",
+        "",
+        "`jaxstro.contracts`",
+        "",
+        "## Purpose",
+        "",
+        "Expose the validated scientific-contract vocabulary, runtime inventory audit, and deterministic reference rendering.",
+        "",
+        "## Public records and callables",
+        "",
+        "Contract enums and records, `collect_contracts`, `audit_runtime_inventory`, `get_callable_contract`, and `get_module_contract`.",
+        "",
+        "## Shape and dtype expectations",
+        "",
+        "Contracts are immutable host-side metadata. They describe array, unit, transform, and evidence policies but do not contain runtime scientific arrays.",
+        "",
+        "## JAX transforms and AD classification",
+        "",
+        "This tooling is host-side. The generated callable table records transform and AD claims owned by runtime modules.",
+        "",
+        "## Failure behavior",
+        "",
+        "Invalid records, unresolved evidence, and runtime inventory drift fail validation instead of inferring support from importability.",
+        "",
+        "## Contract and evidence links",
+        "",
+        "Registered computational evidence resolves to the [evidence index](../../60-validation/evidence-index.md).",
+        "",
+        "## Canonical import example",
+        "",
+        "```python",
+        "from jaxstro.contracts import get_callable_contract",
+        "```",
+        "",
         "## Module ownership",
         "",
         "| Module | Maturity | Boundary | Dimensional policy | Ownership | Non-ownership |",
@@ -78,7 +112,7 @@ def render_contract_reference(inventory: ContractInventory) -> str:
                 "; ".join(
                     f"[`{item.id}`](https://github.com/drannarosen/jaxstro/blob/main/{item.target}) ({item.kind.value})"
                     + (
-                        f" -> [`{item.artifact_id}`](../evidence-index)"
+                        f" -> [`{item.artifact_id}`](../../60-validation/evidence-index.md)"
                         f" gates `{', '.join(item.artifact_comparison_ids)}`"
                         if item.artifact_id
                         else ""

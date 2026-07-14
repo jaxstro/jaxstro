@@ -23,7 +23,7 @@ at package build time; the module does not query external authorities at runtime
 | Runtime owner | `jaxstro.constants` owns raw numeric values and their source comments. |
 | Shape and unit policy | Public values are scalar Python numbers; units are encoded by symbol names and documentation rather than a runtime `Quantity` wrapper. |
 | Transform boundary | Constants may appear inside `jit`, `vmap`, and `grad`, but they are static coefficients rather than differentiated inputs. |
-| Evidence | Source-backed cards in [](../../40-api/provenance/constants.md) and constant tests check values, derivations, and stored-precision identities. |
+| Evidence | Source-backed cards in [](../../50-api/research-infrastructure/source-provenance/constants.md) and constant tests check values, derivations, and stored-precision identities. |
 | Downstream interpretation boundary | A constant does not select a domain unit system, define code units, or establish that a model using it is scientifically valid. |
 
 ## Coefficients need conventions

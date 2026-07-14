@@ -57,7 +57,7 @@ _TARGETS = (
     (
         "provenance.cards",
         EvidenceClass.SOURCE_PROVENANCE,
-        "docs/40-api/provenance/index.md",
+        "docs/50-api/research-infrastructure/source-provenance/source-provenance.md",
         "Uses repository-owned source cards; no runtime dataset required.",
     ),
     (
@@ -81,7 +81,14 @@ def build_evidence_index(root: str | Path) -> EvidenceIndex:
         digest = "sha256:" + hashlib.sha256(content).hexdigest()
         if identity == "provenance.cards":
             digest = _digest_files(
-                tuple(sorted((root_path / "docs/40-api/provenance").glob("*.md")))
+                tuple(
+                    sorted(
+                        (
+                            root_path
+                            / "docs/50-api/research-infrastructure/source-provenance"
+                        ).glob("*.md")
+                    )
+                )
             )
         if evidence_class is EvidenceClass.COMPUTATIONAL:
             artifact = artifact_from_dict(json.loads(content))

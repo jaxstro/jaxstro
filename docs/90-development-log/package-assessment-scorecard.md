@@ -33,10 +33,10 @@ evidence, not effort or ambition.
 | Dimension | Grade | Evidence | Evidence-backed rationale | Deficiency preventing the next grade | Promotion evidence required |
 | --- | --- | --- | --- | --- | --- |
 | Internal differentiable-science foundation | A− | [](../60-validation/index.md) | Broad shared primitives, explicit ownership, and extensive executable validation | Evidence depth and downstream verification are not uniform | Generated contracts, uniform evidence classes, and pinned adoption records |
-| Public scientific package | B+ | [](../40-api/index.md) | Cohesive surface, minimal core dependencies, typed failures, and a public site | Public reach and external adoption trail the implementation | Stable release, public compatibility evidence, and external use cases |
+| Public scientific package | B+ | [](../50-api/api.md) | Cohesive surface, minimal core dependencies, typed failures, and a public site | Public reach and external adoption trail the implementation | Stable release, public compatibility evidence, and external use cases |
 | Curriculum concept | B+ | [](../10-foundations/foundations.md) | An expert-reviewed first-principles spine connects models, dimensionality, linear algebra, derivatives, probability, inference, conditioning, and programs through predict → compute → audit | Learner comprehension and transfer have not yet been studied | Learner evidence, misconception diagnostics, and concept-linked figures |
 | Executable research workflows | B+ | [](../40-workflows/investigations/investigations.md) | Three CI-executed investigations resolve public APIs to contracts, evidence, limitations, and claim boundaries | Investigation breadth and standalone evidence remain limited | Broader investigation coverage and independent evidence artifacts |
-| Architecture and ownership | A | [](../40-api/contracts.md) | Thin-foundation ADRs, one-way ecosystem boundaries, and generated module contracts are explicit | Evidence depth remains uneven at callable level | Expand callable classification without weakening the thin-foundation boundary |
+| Architecture and ownership | A | [](../50-api/research-infrastructure/contracts.md) | Thin-foundation ADRs, one-way ecosystem boundaries, and generated module contracts are explicit | Evidence depth remains uneven at callable level | Expand callable classification without weakening the thin-foundation boundary |
 | Numerical correctness | A− | [](../60-validation/index.md) | Analytic cases, limits, round trips, convergence, and FD comparisons cover major kernels | Validation and performance artifacts remain uneven by module | Per-contract evidence coverage and missing-evidence ratchets |
 | AD honesty | A | [](../20-methods/change-constraints-evolution/rootfinding.md) | Smooth, blocked, zero, value-first, validation-only, and certified implicit paths are distinguished | The taxonomy is distributed across prose and tests | Generated callable-level AD contract matrix |
 | JAX architecture | A− | [](../20-methods/methods.md) | JIT, VMAP, scan, PyTree, JVP/VJP, and gradient behavior are tested on substantial surfaces | Transform and batching-cost behavior is hard to discover per callable | Generated transform matrix linked to executable evidence |
@@ -44,7 +44,7 @@ evidence, not effort or ambition.
 | Test architecture | A− | [](../60-validation/index.md) | Unit, integration, and validation tiers contain analytic and independent checks | No public module-by-module branch-coverage ratchet is maintained | Coverage policy tied to semantic contracts rather than raw volume alone |
 | Units and dimensional safety | B+ | [](../30-representations/units-quantities/quantity-system.md) | `UnitSystem` is mature and `quantity` is substantially implemented | Two live dimensional surfaces remain while adoption is deferred | Downstream parity, performance, serialization, and migration evidence |
 | Provenance | A | [](../60-validation/evidence-index.md) | Source cards, runtime manifests, full-card content digests, and a class-preserving evidence index are freshness checked | Downstream reproduction policies and adoption records are not yet uniform | Pinned downstream evidence manifests and compatibility records |
-| API cohesion | B+ | [](../40-api/contracts.md) | Public modules and selected consequential callables now have generated, export-audited contracts | Many public callables remain explicitly unclassified | Prioritized callable-level coverage and downstream query evidence |
+| API cohesion | B+ | [](../50-api/research-infrastructure/contracts.md) | Public modules and selected consequential callables now have generated, export-audited contracts | Many public callables remain explicitly unclassified | Prioritized callable-level coverage and downstream query evidence |
 | Documentation correctness | A− | [](../60-validation/index.md) | Examples, routes, links, figures, and content contracts are tested | Active guides and some command narratives can lag implementation | Current `CLAUDE.md` plus generated claims and freshness gates |
 | Accessibility | B+ | [](../20-methods/change-constraints-evolution/rootfinding.md) | Alt text and redundant visual encodings are enforced for new figures | Structural checks do not yet constitute learner-centered accessibility evidence | Keyboard, contrast, comprehension, and learner review gates |
 | Performance evidence | B+ | [](../60-validation/evidence-index.md) | Rootfinding and spectra use one units-explicit metric/comparison envelope with deterministic freshness checks | Compile, graph-size, memory, and cost coverage remains uneven by module | Method-appropriate performance records for consequential public contracts |
@@ -119,9 +119,9 @@ not treated as supported.
 | Metric identity | Symbol | Value | Units |
 | --- | --- | ---: | --- |
 | Registered public modules | `N_module,contract` | 16 | modules |
-| Callable-level contracts | `N_callable,contract` | 15 | callables |
+| Callable-level contracts | `N_callable,contract` | 16 | callables |
 | Explicitly unclassified public callables | `N_callable,unclassified` | 208 | callables |
-| Module-inherited public record types | `N_symbol,inherited` | 125 | symbols |
+| Module-inherited public record types | `N_symbol,inherited` | 126 | symbols |
 
 The completed foundation and next investment are:
 

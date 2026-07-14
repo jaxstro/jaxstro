@@ -108,7 +108,7 @@ giving the wrong derivative with respect to $\alpha$.
 ```
 
 See [](../20-methods/probability-sampling/distributions.md) for the derivation and the
-[](../40-api/index.md) page for public signatures.
+[](../50-api/api.md) page for public signatures.
 
 ## Use this cycle in research
 

@@ -72,7 +72,7 @@ breadth.
 
 Checked items describe implemented capability families. Their detailed maturity
 and evidence remain governed by the [](./package-assessment-scorecard.md),
-[](../40-api/contracts.md), and [](../60-validation/index.md).
+[](../50-api/research-infrastructure/contracts.md), and [](../60-validation/index.md).
 
 ### Numerical accuracy and defensive primitives
 
@@ -552,8 +552,8 @@ while admitting new primitives only when reuse and evidence justify them.
 
 ## Evidence and companion pages
 
-- [](../40-api/index.md) — current public modules and execution boundaries.
-- [](../40-api/contracts.md) — generated ownership, maturity, transform, AD,
+- [](../50-api/api.md) — current public modules and execution boundaries.
+- [](../50-api/research-infrastructure/contracts.md) — generated ownership, maturity, transform, AD,
   failure, and evidence contracts.
 - [](../60-validation/index.md) — independent validation anchors.
 - [](./package-assessment-scorecard.md) — living grades and promotion gates.

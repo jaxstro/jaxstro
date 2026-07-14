@@ -84,4 +84,4 @@ let one passing evidence category silently stand in for another.
 > validation, and a finite gradient is not an implicit function theorem proof.
 
 Continue to the [](../../20-methods/methods.md) module chapters and the generated
-[](../../40-api/contracts.md) contract registry.
+[](../../50-api/research-infrastructure/contracts.md) contract registry.

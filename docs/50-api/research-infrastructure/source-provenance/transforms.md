@@ -27,7 +27,7 @@ Cartesian origin, coincident observer/star geometry, spherical poles, and zenith
 
 ### Sources
 
-- <a href="https://github.com/jaxstro/jaxstro/blob/main/docs/audits/2026-07-11-core-hardening-audit.md">source</a> — the nine interior gradient contracts and enumerated singular exclusions. *Locator:* `Confirmed findings A-006 and A-007; Tests and reproductions`
+- <a href="https://github.com/jaxstro/jaxstro/blob/main/docs/audits/2026-07-11-core-hardening-audit.md">source</a> - the nine interior gradient contracts and enumerated singular exclusions. *Locator:* `Confirmed findings A-006 and A-007; Tests and reproductions`
 
 ### Code & validation
 
@@ -57,7 +57,7 @@ The Galactic/ICRS rotation coefficients and the public galactic_to_equatorial an
 
 ### Sources
 
-- <a href="https://www.iausofa.org/s/manual_c.pdf">source</a> — the IAU 1958 to ICRS convention and rotation coefficients. *Locator:* `SOFA routine iauG2icrs and Galactic-coordinate-system notes`
+- <a href="https://www.iausofa.org/s/manual_c.pdf">source</a> - the IAU 1958 to ICRS convention and rotation coefficients. *Locator:* `SOFA routine iauG2icrs and Galactic-coordinate-system notes`
 
 ### Code & validation
 
@@ -89,7 +89,7 @@ sky_tangent and compute_proper_motions on their documented regular domains.
 
 ### Sources
 
-- <a href="https://github.com/jaxstro/jaxstro/blob/main/docs/audits/2026-07-11-core-hardening-audit.md">source</a> — the verified frame-ownership correction and eager wide-field warning contract. *Locator:* `Confirmed findings A-002 and A-003`
+- <a href="https://github.com/jaxstro/jaxstro/blob/main/docs/audits/2026-07-11-core-hardening-audit.md">source</a> - the verified frame-ownership correction and eager wide-field warning contract. *Locator:* `Confirmed findings A-002 and A-003`
 
 ### Code & validation
 

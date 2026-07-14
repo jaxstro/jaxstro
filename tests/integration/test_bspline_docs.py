@@ -90,6 +90,6 @@ def test_bspline_page_embeds_the_registered_accessible_figure() -> None:
 def test_bspline_page_routes_to_api_validation_and_contract_taxonomy() -> None:
     text = _page_text()
 
-    assert "[](../../40-api/index.md#jaxstro-numerics-splines)" in text
+    assert "[](../../50-api/approximation-integration/splines.md)" in text
     assert "[](../../60-validation/index.md)" in text
     assert "[](../methods.md#gradient-contracts)" in text

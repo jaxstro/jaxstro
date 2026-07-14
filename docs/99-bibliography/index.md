@@ -20,7 +20,7 @@ the number rather than trust it (principle
 - **{cite:t}`OkeGunn1983`** — the AB magnitude system; the $3631\ \mathrm{Jy}$ zero
   point in `PhotometricUnits`.
 - **{cite:t}`GolubWelsch1969`** — the eigenvalue construction behind the Gaussian
-  quadrature nodes and weights ([](../40-api/index.md)).
+  quadrature nodes and weights ([](../50-api/approximation-integration/quadrature.md)).
 - **{cite:t}`Neumaier1974`** — compensated (Neumaier) summation, used where an
   ordinary `sum` would lose digits (principle
   [5](../20-methods/methods.md#p5-floating-point)).

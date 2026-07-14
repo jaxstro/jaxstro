@@ -98,6 +98,6 @@ def test_linear_algebra_page_embeds_registered_figure_and_evidence_routes() -> N
         "after selected diagonal jitter"
     ) in text
     assert DESIGN_RECORD.is_file()
-    assert "[](../../40-api/index.md#jaxstro-numerics-linear-algebra)" in text
+    assert "[](../../50-api/linear-structure/linear-algebra.md)" in text
     assert "[](../../60-validation/index.md)" in text
     assert "[](../methods.md#gradient-contracts)" in text

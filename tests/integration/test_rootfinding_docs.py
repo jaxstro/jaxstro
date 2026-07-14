@@ -34,7 +34,7 @@ def test_rootfinding_docs_describe_actual_interpolation_order():
 def test_numerical_pages_expand_implicit_function_theorem_before_ift() -> None:
     paths = (
         ROOTFINDING,
-        REPO_ROOT / "docs" / "40-api" / "index.md",
+        REPO_ROOT / "docs" / "50-api" / "change-constraints" / "rootfinding.md",
         REPO_ROOT / "docs" / "60-validation" / "index.md",
     )
     for path in paths:

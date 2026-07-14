@@ -220,6 +220,6 @@ validation policies.
 
 ## From explanation to evidence
 
-Use the [](../../40-api/index.md#jaxstro-numerics-interpolation) for signatures and
+Use the [](../../50-api/approximation-integration/interpolation.md) for signatures and
 ownership, the [](../../60-validation/index.md) for measured interpolation anchors,
 and the [](../methods.md#gradient-contracts) for the package-wide contract taxonomy.

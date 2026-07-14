@@ -27,7 +27,7 @@ The CODATA-derived constants in jaxstro.constants, including exact revised-SI co
 
 ### Sources
 
-- <a href="https://physics.nist.gov/cuu/Constants/archive2018.html">source</a> — the versioned values and exactness states of fundamental constants. *Locator:* `NIST CODATA 2018 archive and linked 2018 recommended-values tables`
+- <a href="https://physics.nist.gov/cuu/Constants/archive2018.html">source</a> - the versioned values and exactness states of fundamental constants. *Locator:* `NIST CODATA 2018 archive and linked 2018 recommended-values tables`
 
 ### Code & validation
 
@@ -66,8 +66,8 @@ RSUN_CM, LSUN_ERG_S, TEFF_SUN, MSUN_G, and the conventionally rounded M_BOL_SUN 
 
 ### Sources
 
-- <a href="https://www.iau.org/common/Uploaded%20files/IAUGA2015-Resolution-B3-recommended-nominal-conversion.pdf">source</a> — R_sun^N, L_sun^N, T_eff,sun^N, and (GM)_sun^N exact values and semantics. *Locator:* `IAU 2015 Resolution B3, nominal solar conversion constants`
-- <a href="https://www.iau.org/static/resolutions/IAU2015_English.pdf">source</a> — the exact L_0 luminosity defining M_bol=0. *Locator:* `IAU 2015 Resolution B2, absolute bolometric magnitude zero point`
+- <a href="https://www.iau.org/common/Uploaded%20files/IAUGA2015-Resolution-B3-recommended-nominal-conversion.pdf">source</a> - R_sun^N, L_sun^N, T_eff,sun^N, and (GM)_sun^N exact values and semantics. *Locator:* `IAU 2015 Resolution B3, nominal solar conversion constants`
+- <a href="https://www.iau.org/static/resolutions/IAU2015_English.pdf">source</a> - the exact L_0 luminosity defining M_bol=0. *Locator:* `IAU 2015 Resolution B2, absolute bolometric magnitude zero point`
 
 ### Code & validation
 
@@ -105,7 +105,7 @@ UnitSystem conversion methods, predefined systems, aliases, and DEFAULT_UNITS.
 
 ### Sources
 
-- <a href="https://github.com/jaxstro/jaxstro/blob/main/docs/audits/2026-07-11-core-hardening-audit.md">source</a> — the audited implementation contract and tested unit-system aliases. *Locator:* `Verified non-defect observations; UnitSystem.G dimensional conversion`
+- <a href="https://github.com/jaxstro/jaxstro/blob/main/docs/audits/2026-07-11-core-hardening-audit.md">source</a> - the audited implementation contract and tested unit-system aliases. *Locator:* `Verified non-defect observations; UnitSystem.G dimensional conversion`
 
 ### Code & validation
 

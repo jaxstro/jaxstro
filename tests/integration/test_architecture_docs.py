@@ -52,8 +52,11 @@ def test_architecture_distinguishes_two_provenance_surfaces() -> None:
 
     assert "source-backed provenance cards" in text
     assert "runtime artifact manifests" in text
-    assert "../40-api/provenance/index.md" in text
-    assert "./provenance.md" in text
+    assert (
+        "../50-api/research-infrastructure/source-provenance/source-provenance.md"
+        in text
+    )
+    assert "../50-api/research-infrastructure/provenance.md" in text
 
 
 def test_architecture_embeds_accessible_registered_figure() -> None:

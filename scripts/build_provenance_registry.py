@@ -17,7 +17,9 @@ from jaxstro.testing.provenance_cards import render_registry, validate_card
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 REGISTRY_DIR = REPO_ROOT / "docs" / "provenance" / "registry"
-OUTPUT_DIR = REPO_ROOT / "docs" / "40-api" / "provenance"
+OUTPUT_DIR = (
+    REPO_ROOT / "docs" / "50-api" / "research-infrastructure" / "source-provenance"
+)
 
 FAMILY_TITLES = {
     "atmospheres": "Atmosphere boundaries",
@@ -49,10 +51,12 @@ def render_outputs(
 ) -> dict[str, str]:
     """Return every generated filename and its deterministic content."""
 
-    return render_registry(
+    outputs = render_registry(
         families if families is not None else load_registry(),
         family_titles=FAMILY_TITLES,
     )
+    outputs["source-provenance.md"] = outputs.pop("index.md")
+    return outputs
 
 
 def emit(outputs: dict[str, str]) -> None:

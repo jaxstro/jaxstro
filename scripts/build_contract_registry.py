@@ -14,7 +14,8 @@ from jaxstro.contracts.render import inventory_to_json, render_contract_referenc
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUTS = {
     ROOT / "docs/validation/contracts.json": inventory_to_json,
-    ROOT / "docs/40-api/contracts.md": render_contract_reference,
+    ROOT
+    / "docs/50-api/research-infrastructure/contracts.md": render_contract_reference,
 }
 
 

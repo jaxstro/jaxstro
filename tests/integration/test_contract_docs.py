@@ -7,9 +7,11 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_generated_page_is_navigable_and_explains_unverified() -> None:
-    page = (ROOT / "docs/40-api/contracts.md").read_text(encoding="utf-8")
+    page = (ROOT / "docs/50-api/research-infrastructure/contracts.md").read_text(
+        encoding="utf-8"
+    )
     myst = (ROOT / "docs/myst.yml").read_text(encoding="utf-8")
-    assert myst.count("40-api/contracts.md") == 1
+    assert myst.count("50-api/research-infrastructure/contracts.md") == 1
     assert "# Scientific contract registry" in page
     assert "Unverified does not mean unsupported" in page
     assert "## Transform and AD contracts" in page

@@ -1,4 +1,4 @@
-"""Executable ownership contracts for the provenance architecture page."""
+"""Executable ownership contracts for the provenance workflow page."""
 
 from __future__ import annotations
 
@@ -8,7 +8,9 @@ import jaxstro.provenance as runtime_provenance
 from jaxstro.testing import ALLOWED_STATUSES, ProvenanceCard, validate_card
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-PROVENANCE_PAGE = REPO_ROOT / "docs" / "20-architecture" / "provenance.md"
+PROVENANCE_PAGE = (
+    REPO_ROOT / "docs" / "40-workflows" / "reproducible-research" / "provenance.md"
+)
 
 
 def _page_text() -> str:
@@ -40,7 +42,7 @@ def test_provenance_page_matches_both_installed_ownership_surfaces() -> None:
 def test_provenance_page_has_a_structured_ownership_comparison() -> None:
     text = _page_text()
 
-    assert "title: Provenance architecture" in text
+    assert "title: Provenance for reproducible research" in text
     assert "```{list-table} Provenance ownership" in text
     assert ":label: tbl-provenance-ownership" in text
     for header in ("Surface", "Question answered", "Inputs", "Output", "Validation"):
@@ -71,11 +73,11 @@ def test_provenance_page_routes_generated_families_and_honest_gaps() -> None:
     text = _page_text()
 
     for route in (
-        "../40-api/provenance/index.md",
-        "../40-api/provenance/constants.md",
-        "../40-api/provenance/transforms.md",
-        "../40-api/provenance/atmospheres.md",
-        "../60-validation/index.md",
+        "../../50-api/research-infrastructure/source-provenance/source-provenance.md",
+        "../../50-api/research-infrastructure/source-provenance/constants.md",
+        "../../50-api/research-infrastructure/source-provenance/transforms.md",
+        "../../50-api/research-infrastructure/source-provenance/atmospheres.md",
+        "../../60-validation/index.md",
     ):
         assert f"[]({route})" in text
 

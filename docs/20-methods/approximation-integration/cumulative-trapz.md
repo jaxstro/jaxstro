@@ -101,5 +101,5 @@ The trapezoidal rule is degree-1 Newton–Cotes; the only subtlety is *when* you
 multiply by the spacing, and the answer — dx-outside — is the one that keeps jaxstro
 and progenax bit-identical. For exact integration of polynomials at far fewer
 points, Gaussian quadrature is the next step up; see the API entry for the
-quadrature factory in [](../../40-api/index.md). The call signatures for `trapz`,
+quadrature factory in [](../../50-api/approximation-integration/quadrature.md). The call signatures for `trapz`,
 `cumulative_trapz`, and `simpson` live there too.

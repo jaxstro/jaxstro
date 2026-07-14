@@ -51,7 +51,7 @@ research page as soon as the missing connection is active again.
 ## API lookup
 
 If you already know the method and need its signature, inputs, outputs, or
-failure state, go directly to the [](../40-api/index.md) reference. Follow its
+failure state, go directly to the [](../50-api/api.md) reference. Follow its
 links back to theory before relying on a derivative, boundary policy, or
 approximation whose meaning is not already clear.
 

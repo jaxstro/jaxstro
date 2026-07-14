@@ -91,6 +91,6 @@ def test_regular_grid_page_embeds_registered_figure_and_evidence_routes() -> Non
         "grid boundary"
     ) in text
     assert DESIGN_RECORD.is_file()
-    assert "[](../../40-api/index.md#jaxstro-numerics-regular-grid)" in text
+    assert "[](../../50-api/approximation-integration/regular-grid.md)" in text
     assert "[](../../60-validation/index.md)" in text
     assert "[](../methods.md#gradient-contracts)" in text

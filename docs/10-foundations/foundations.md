@@ -73,7 +73,7 @@ claim that a physical model adequately describes an observation.
 
 Foundations asks what an idea means and how it connects to scientific
 reasoning. The [](../20-methods/methods.md) chapters explain how numerical methods
-work and where their algorithmic boundaries lie. The [](../40-api/index.md)
+work and where their algorithmic boundaries lie. The [](../50-api/api.md)
 records exact public surfaces. The [](../60-validation/index.md) links claims
 to executable evidence.
 

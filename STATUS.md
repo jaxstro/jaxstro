@@ -1,6 +1,8 @@
 # jaxstro — status
 
-next: Review and approve the researcher-first Methods, Representations, and Research workflows routes at Gate 2. After approval, begin the grouped, owner-qualified API reference; Task 8 has not started.
+next: Review the grouped, owner-qualified API reference at `/api`. Do not begin Task 9 until the documentation-ownership migration is accepted.
+
+previous: Researcher-first documentation Task 8 completed on local main (2026-07-14). The omnibus API was replaced by a route-first `/api` landing and 38 current owner pages, including the post-plan `jaxstro.numerics.kepler` owner. Generated contract and source-provenance pages now live under `docs/50-api/research-infrastructure`; contract, evidence, and source-card artifacts regenerate deterministically from current runtime ownership. All routed API links, TOC entries, and manifest routes were migrated, no Task 8 API page retains an opaque generated index route, and runtime exports were unchanged. The affected suite passed 87 tests, the full integration suite passed 245 tests, and the strict shared docs gate rendered and audited 163 unique routes.
 
 previous: Researcher-first documentation Tasks 3 through 7 completed on local main (2026-07-13). Numerical methods now separate current Jaxstro owners from delegated ecosystem methods and planned QMC/signal capabilities; scientific representations separate current units, geometry, spectra, and parameter/state owners from planned uncertainty and deferred field abstractions; research workflows organize scientific ML, data pipelines, differentiable research, reproducible research, and executable investigations around representation -> computation plan -> execution -> audit -> evidence -> claim. Task 7 hard-cut the teaching-oriented executable registry to a deterministic schema-2 research-workflow registry with no aliases. The combined affected suite passed 60 tests, the strict MyST build rendered 127 pages, the exact route/link/accessibility audit passed, and independent review found no remaining findings.
 
@@ -41,7 +43,7 @@ in 8 s. Live verification returned 200 for the homepage, release checklist, and 
 CSS. The first run's 404 exposed and permanently ratcheted the `_build/site` versus `_build/html`
 artifact boundary.
 
-blocker: Awaiting Anna's Gate 2 approval before grouped API work. The shared full docs gate also reports Kepler-owned generated contract artifacts stale; the exact documentation slices pass in isolation.
+blocker:
 due:
 
 ## Phase C — DONE (2026-06-17, branch feature/phase-c-release-hardening, HEAD 40f936e)

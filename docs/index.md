@@ -79,7 +79,7 @@ evidence anchors, coverage reports, and deterministic trust summaries.
 :::
 
 :::{card} Look up the API
-:link: ./40-api/index.md
+:link: ./50-api/api.md
 
 Start here if you already know what you want and need the signature. The API
 reference covers the public modules: `units`, `constants`, `astrometry`,
@@ -135,17 +135,17 @@ evidence.
 - **Evaluating the broader package vision?** Read
   [](./20-architecture/science-general-vision.md) for the module boundary, the
   non-astronomy value proposition, and the checklist for future core modules.
-- **Using units today?** The [](./40-api/index.md) reference documents the
+- **Using units today?** The [](./50-api/physical-representations/units.md) reference documents the
   current `jaxstro.units` contract. The
   [quantity representation page](./30-representations/units-quantities/quantity-system.md) describes
   an implemented evaluation surface, not an approved ecosystem migration.
-- **Evaluating spatial operations?** Start with [](./40-api/index.md) for the
+- **Evaluating spatial operations?** Start with [](./50-api/discrete-space/spatial.md) for the
   import surface and [](./60-validation/index.md) for evidence around neighbor
   gathering and exact-pair behavior. The
   [spatial theory chapter](./20-methods/discrete-space/spatial.md) explains candidate recall,
   capacity, overflow, and exact fixed-radius contracts.
 - **Checking provenance?** The
-  [generated provenance cards](./40-api/provenance/index.md) connect registered
+  [generated provenance cards](./50-api/research-infrastructure/source-provenance/source-provenance.md) connect registered
   constants and transforms to their sources, reference values, and validation
   state.
 - **Porting code from a sibling package?** The [decision log](./30-decisions/index.md)
@@ -158,7 +158,7 @@ evidence.
   downstream photometry. Atmosphere support is in progress; it does not block
   the hardened foundation modules.
 - **Auditing a number?** Start with the
-  [constants provenance card](./40-api/provenance/constants.md), then follow its
+  [constants provenance card](./50-api/research-infrastructure/source-provenance/constants.md), then follow its
   source and validation links. The [validation](./60-validation/index.md)
   section is where numerical claims meet their tests.
 

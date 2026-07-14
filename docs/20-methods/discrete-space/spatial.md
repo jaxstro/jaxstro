@@ -195,5 +195,5 @@ this preprocessing layer.
   - Preconditions plus `did_overflow == False`
 ```
 
-The public ownership map is in [](../../40-api/index.md), and quantitative evidence
+The public ownership map is in [](../../50-api/discrete-space/spatial.md), and quantitative evidence
 belongs in [](../../60-validation/index.md).

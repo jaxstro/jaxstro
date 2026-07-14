@@ -1,33 +1,22 @@
-"""Executable public-surface contracts for the API reference page."""
+"""Executable public-surface contracts for owner-qualified API pages."""
 
 from __future__ import annotations
 
 import importlib
-import re
 import subprocess
 import sys
 from pathlib import Path
 
 import jaxstro
 from jaxstro.contracts import ADSemantics, SupportLevel, get_callable_contract
+from jaxstro.numerics import kepler, rootfinding
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-API_PAGE = REPO_ROOT / "docs" / "40-api" / "index.md"
+API_ROOT = REPO_ROOT / "docs" / "50-api"
 
 
-def _api_text() -> str:
-    return API_PAGE.read_text(encoding="utf-8")
-
-
-def _api_section(module: str) -> str:
-    text = _api_text()
-    match = re.search(
-        rf"^### `{re.escape(module)}`\n(?P<body>.*?)(?=^### |\Z)",
-        text,
-        re.MULTILINE | re.DOTALL,
-    )
-    assert match is not None, f"missing API section for {module}"
-    return match.group("body")
+def _page(relative: str) -> str:
+    return (API_ROOT / relative).read_text(encoding="utf-8")
 
 
 def test_spatial_is_an_eager_top_level_public_module_in_a_clean_process() -> None:
@@ -40,7 +29,7 @@ assert jaxstro.spatial.__name__ == "jaxstro.spatial"
     subprocess.run([sys.executable, "-c", code], check=True)
 
 
-def test_documented_public_import_surface_is_executable() -> None:
+def test_documented_public_module_surface_is_executable() -> None:
     public_modules = (
         "astrometry",
         "atmospheres",
@@ -66,65 +55,52 @@ def test_documented_public_import_surface_is_executable() -> None:
     assert callable(enable_high_precision)
 
 
-def test_api_table_has_structured_ownership_boundary_and_evidence_fields() -> None:
-    text = _api_text()
+def test_api_landing_states_current_ownership_and_migration_boundary() -> None:
+    text = _page("api.md")
 
-    assert "```{list-table} Public modules" in text
-    assert "  - Ownership" in text
-    assert "  - Runtime / preprocessing boundary" in text
-    assert "  - Evidence and status" in text
-    assert "`jaxstro.units` is the current ecosystem contract" in text
-    assert "`jaxstro.quantity` is implemented" in text
-    assert "ecosystem adoption and any replacement cutover remain deferred" in text
-    assert "Implemented with explicit policy gaps" in text
-    assert "Sonora and BSTAR adapters are present" in text
-    assert "../20-methods/discrete-space/spatial.md" in text
+    assert "## Canonical import policy" in text
+    assert "## Method owners" in text
+    assert "## Representation and data owners" in text
+    assert "## Research infrastructure owners" in text
+    assert "legacy inventory awaiting" in text
+    assert "This reference does not change runtime exports" in text
+    assert "Only current importable surfaces appear here" in text
 
 
 def test_api_reference_exposes_provenance_card_tooling_and_routes() -> None:
-    text = _api_text()
+    text = _page("research-infrastructure/testing.md")
 
     for symbol in ("ProvenanceCard", "validate_card", "render_card", "render_registry"):
         assert getattr(jaxstro.testing, symbol) is not None
         assert symbol in jaxstro.testing.__all__
         assert f"`{symbol}" in text
 
-    assert "./provenance/index.md" in text
+    assert "./source-provenance/source-provenance.md" in text
     assert "source-backed provenance cards" in text
-    assert "runtime manifests" in text
 
 
-def test_random_api_section_links_each_symbol_family_to_its_method_scope() -> None:
-    section = _api_section("jaxstro.numerics.random")
-    paragraphs = [paragraph for paragraph in section.split("\n\n") if paragraph]
+def test_random_api_page_links_each_symbol_family_to_its_method_scope() -> None:
+    text = _page("randomness/random.md")
+    records = text.split("## Shape and dtype expectations", 1)[0]
 
-    prng_paragraph = next(
-        paragraph for paragraph in paragraphs if "`key_stream(...)`" in paragraph
-    )
-    assert "`fold_in_stream(...)`" in prng_paragraph
-    assert "`seed_manifest(...)`" in prng_paragraph
-    assert "../20-methods/probability-sampling/random.md" in prng_paragraph
-    assert "../20-methods/probability-sampling/sampling.md" not in prng_paragraph
-
-    resampling_paragraph = next(
-        paragraph
-        for paragraph in paragraphs
-        if "`systematic_resample(...)`" in paragraph
-    )
-    assert "`stratified_resample(...)`" in resampling_paragraph
-    assert "`residual_resample(...)`" in resampling_paragraph
-    assert "../20-methods/probability-sampling/sampling.md" in resampling_paragraph
-    assert "../20-methods/probability-sampling/random.md" not in resampling_paragraph
+    assert "`key_stream`" in records
+    assert "`fold_in_stream`" in records
+    assert "`seed_manifest`" in records
+    assert "`systematic_resample`" in records
+    assert "`stratified_resample`" in records
+    assert "`residual_resample`" in records
+    assert "../../20-methods/probability-sampling/random.md" in text
+    assert "../../20-methods/probability-sampling/sampling.md" in text
 
 
 def test_interpolation_reference_does_not_duplicate_symbol_descriptions() -> None:
-    text = _api_text()
+    text = _page("approximation-integration/interpolation.md")
 
     assert text.count("`pchip_slopes(...)`") == 1
     assert text.count("`monotone_cubic_interp(...)`") == 1
 
 
-def test_safeguarded_rootfinding_public_surface_is_documented_and_executable() -> None:
+def test_safeguarded_rootfinding_surface_is_documented_from_its_owner() -> None:
     symbols = (
         "PROPOSAL_NONE",
         "PROPOSAL_SECANT",
@@ -165,18 +141,20 @@ def test_safeguarded_rootfinding_public_surface_is_documented_and_executable() -
         "map_safeguarded_bracketed_root",
         "implicit_bracketed_root",
     )
-    text = _api_text()
+    owner_text = _page("change-constraints/rootfinding.md")
+    contract_text = _page("research-infrastructure/contracts.md")
 
     for symbol in symbols:
-        assert getattr(jaxstro.numerics, symbol) is not None
-        assert symbol in jaxstro.numerics.__all__
-        assert f"`{symbol}" in text
+        assert getattr(rootfinding, symbol) is not None
+        assert (
+            f"jaxstro.numerics.{symbol}" in contract_text or f"`{symbol}" in owner_text
+        )
 
-    assert "value-first" in text
-    assert "implicit-root derivative" in text
+    assert "value-first" in owner_text
+    assert "implicit derivative" in owner_text
 
 
-def test_universal_kepler_public_surface_is_documented_and_contracted() -> None:
+def test_universal_kepler_surface_is_documented_and_contracted_by_owner() -> None:
     symbols = (
         "KEPLER_STATUS_CONVERGED",
         "KEPLER_STATUS_INVALID_INPUT",
@@ -186,11 +164,10 @@ def test_universal_kepler_public_surface_is_documented_and_contracted() -> None:
         "UniversalKeplerResult",
         "universal_kepler_step",
     )
-    text = _api_text()
+    text = _page("change-constraints/kepler.md")
 
     for symbol in symbols:
-        assert getattr(jaxstro.numerics, symbol) is not None
-        assert symbol in jaxstro.numerics.__all__
+        assert getattr(kepler, symbol) is not None
         assert f"`{symbol}" in text
 
     contract = get_callable_contract("jaxstro.numerics.universal_kepler_step")

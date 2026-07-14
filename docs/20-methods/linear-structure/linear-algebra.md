@@ -225,6 +225,6 @@ dense primitives whose numerical boundaries can be stated and tested.
 ## From explanation to evidence
 
 For signatures and ownership, see
-[](../../40-api/index.md#jaxstro-numerics-linear-algebra). The assertion-bearing
+[](../../50-api/linear-structure/linear-algebra.md). The assertion-bearing
 evidence map is in [](../../60-validation/index.md). The five package-wide gradient
 labels are defined in [](../methods.md#gradient-contracts).

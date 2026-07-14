@@ -7,6 +7,6 @@ description: "Generated index of source-backed jaxstro provenance cards."
 
 # Provenance cards
 
-- [Atmosphere boundaries](atmospheres.md) — 5 cards
-- [Constants and unit conventions](constants.md) — 3 cards
-- [Coordinate and astrometric transforms](transforms.md) — 3 cards
+- [Atmosphere boundaries](atmospheres.md) - 5 cards
+- [Constants and unit conventions](constants.md) - 3 cards
+- [Coordinate and astrometric transforms](transforms.md) - 3 cards

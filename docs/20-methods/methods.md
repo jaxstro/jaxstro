@@ -343,5 +343,5 @@ boundaries in specific methods. Read on:
   pattern (principles [1](#p1-differentiability), [9](#p9-correctness),
   [10](#p10-vectorize)).
 
-Then map principles to call signatures in [](../40-api/index.md), and the design
+Then map principles to call signatures in [](../50-api/api.md), and the design
 *choices* behind them in [](../30-decisions/index.md).

@@ -52,7 +52,10 @@ def test_landing_routes_and_ecosystem_status_are_current() -> None:
     assert "(three-doors)=" in text
     assert "(two-doors)=" not in text
     assert "planned startrax" not in text.lower()
-    assert "./40-api/provenance/index.md" in text
+    assert (
+        "./50-api/research-infrastructure/source-provenance/source-provenance.md"
+        in text
+    )
     assert "./60-validation/index.md" in text
     assert "./20-methods/discrete-space/spatial.md" in text
     assert "./30-representations/spectra-atmospheres/atmosphere-capabilities.md" in text

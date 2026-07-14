@@ -30,7 +30,7 @@ affine fixtures and records interior value/derivative errors and boundary events
 
 Compare values and derivatives with the analytic affine map. Exercise all three
 boundary policies deliberately. Then follow the callable contracts in
-[](../../40-api/contracts.md) to their validation targets and limitations.
+[](../../50-api/research-infrastructure/contracts.md) to their validation targets and limitations.
 
 ## Misconception check
 

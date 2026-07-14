@@ -108,6 +108,6 @@ def test_random_claims_have_primary_provenance() -> None:
 
 def test_random_page_routes_to_api_validation_and_contract_taxonomy() -> None:
     for text in (_page_text(), _sampling_text()):
-        assert "[](../../40-api/index.md#jaxstro-numerics-random)" in text
+        assert "[](../../50-api/randomness/random.md)" in text
         assert "[](../../60-validation/index.md)" in text
         assert "[](../methods.md#gradient-contracts)" in text

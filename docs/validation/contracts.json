@@ -77,6 +77,7 @@
     "jaxstro.numerics.ScaledOperator",
     "jaxstro.numerics.SumOperator",
     "jaxstro.numerics.TransposeOperator",
+    "jaxstro.numerics.UniversalKeplerResult",
     "jaxstro.numerics.VerletResult",
     "jaxstro.params.AbstractBijector",
     "jaxstro.params.Exp",
@@ -673,6 +674,79 @@
           ]
         },
         {
+          "ad_semantics": "smooth_pathwise",
+          "boundaries": [
+            {
+              "evidence_ids": [
+                "numerics.universal_kepler_step.value"
+              ],
+              "failure_mode": "structured_result",
+              "summary": "Invalid input, nonfinite iteration, singular radius, or exhausted iteration budget."
+            }
+          ],
+          "cost_notes": "Runs a fixed 12-slot Newton scan by default; converged lanes freeze numerically.",
+          "domain": "Finite relative Cartesian vectors, positive mu, signed finite dt, and mutually consistent caller-owned units.",
+          "evidence": [
+            {
+              "claim": "Fixed-route JVP and VJP directional derivatives agree with central finite differences.",
+              "id": "numerics.universal_kepler_step.fixed_route_ad",
+              "kind": "validation_test",
+              "target": "tests/validation/test_kepler_gradients.py"
+            },
+            {
+              "claim": "Elliptic, near-parabolic, hyperbolic, reverse, scale, transform, and typed-failure behavior.",
+              "id": "numerics.universal_kepler_step.value",
+              "kind": "unit_test",
+              "target": "tests/unit/test_kepler.py"
+            }
+          ],
+          "id": "numerics.universal_kepler_step",
+          "import_path": "jaxstro.numerics.universal_kepler_step",
+          "limitations": [
+            "No derivative claim across status, iteration-count, Stumpff-route, conic-label, or collision boundaries.",
+            "No implicit-root derivative claim; AD follows the finite executed Newton map.",
+            "Units, object identity, encounter selection, and state-commit policy belong to callers."
+          ],
+          "maturity": "validated",
+          "outputs": "UniversalKeplerResult with Cartesian state, residual, iteration count, and exhaustive status.",
+          "precision": "float32 and float64; invariant and derivative validation uses float64.",
+          "purpose": "Propagate a relative Cartesian two-body state across any Newtonian conic.",
+          "transforms": [
+            {
+              "conditions": "",
+              "evidence_ids": [
+                "numerics.universal_kepler_step.value"
+              ],
+              "support": "supported",
+              "transform": "jit"
+            },
+            {
+              "conditions": "Continuous state on one converged route with fixed shape, iteration budget, status path, and Stumpff branch.",
+              "evidence_ids": [
+                "numerics.universal_kepler_step.fixed_route_ad"
+              ],
+              "support": "conditional",
+              "transform": "jvp"
+            },
+            {
+              "conditions": "Continuous state on one converged route with fixed shape, iteration budget, status path, and Stumpff branch.",
+              "evidence_ids": [
+                "numerics.universal_kepler_step.fixed_route_ad"
+              ],
+              "support": "conditional",
+              "transform": "vjp"
+            },
+            {
+              "conditions": "",
+              "evidence_ids": [
+                "numerics.universal_kepler_step.value"
+              ],
+              "support": "supported",
+              "transform": "vmap"
+            }
+          ]
+        },
+        {
           "ad_semantics": "value_first",
           "boundaries": [],
           "cost_notes": "",
@@ -883,7 +957,7 @@
   ],
   "package_version": "0.1.0",
   "schema_version": "1",
-  "source_revision": "sha256:3b932e2d554eb044eacfc59088f1d41b94965d3a9052e0c1ed5bdebddc7b9415",
+  "source_revision": "sha256:0def42fe91bb5243bad2a5e63c76f632dca63090c146d43cd742c9537bcf9042",
   "unclassified_callables": [
     "jaxstro.atmospheres.acquisition_rows_to_markdown",
     "jaxstro.atmospheres.build_bosz_index",

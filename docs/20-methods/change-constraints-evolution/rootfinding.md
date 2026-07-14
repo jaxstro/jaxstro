@@ -404,6 +404,6 @@ once and keep the monotonicity contract explicit.
   - Yes inside table cells w.r.t. query values
 ```
 
-Signatures and defaults are in [](../../40-api/index.md); the design rationale for
+Signatures and defaults are in [](../../50-api/change-constraints/rootfinding.md); the design rationale for
 hoisting the generic Newton-PPF into the foundation is
 [](../../30-decisions/0009-jaxstro-params-selective-inference.md).

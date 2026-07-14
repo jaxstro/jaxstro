@@ -68,4 +68,4 @@ def test_theory_index_routes_discrete_and_validation_contracts() -> None:
     assert text.count("[](./discrete-space/spatial.md)") >= 2
     assert "inactive branch can still poison a derivative" in text
     assert "[](../60-validation/index.md)" in text
-    assert "[](../40-api/index.md)" in text
+    assert "[](../50-api/api.md)" in text

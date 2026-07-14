@@ -39,7 +39,7 @@ def test_science_patterns_route_to_theory_api_and_validation() -> None:
     assert "[](../../20-methods/change-constraints-evolution/rootfinding.md)" in text
     assert "[](../../20-methods/probability-sampling/distributions.md)" in text
     assert "[](../../20-methods/discrete-space/spatial.md)" in text
-    assert "[](../../40-api/index.md)" in text
+    assert "[](../../50-api/api.md)" in text
     assert "[](../../60-validation/index.md)" in text
 
 

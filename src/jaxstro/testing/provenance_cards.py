@@ -227,7 +227,7 @@ def render_card(card: Mapping[str, object] | ProvenanceCard) -> str:
     for source in item.sources:
         reference = _render_reference(source.reference)
         lines.append(
-            f'- <a href="{reference}">source</a> — {source.supports}. '
+            f'- <a href="{reference}">source</a> - {source.supports}. '
             f"*Locator:* `{source.locator}`"
         )
     if not item.sources:
@@ -308,7 +308,7 @@ def render_index(
         title = titles.get(family, family.replace("_", " ").title())
         count = len(families[family])
         lines.append(
-            f"- [{title}]({family}.md) — {count} card{'s' if count != 1 else ''}"
+            f"- [{title}]({family}.md) - {count} card{'s' if count != 1 else ''}"
         )
     return "\n".join(lines).rstrip() + "\n"
 

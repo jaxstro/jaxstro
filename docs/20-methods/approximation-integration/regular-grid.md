@@ -182,6 +182,6 @@ modules.
 ## From explanation to evidence
 
 For signatures and payload ownership, see
-[](../../40-api/index.md#jaxstro-numerics-regular-grid). The assertion-bearing test
+[](../../50-api/approximation-integration/regular-grid.md). The assertion-bearing test
 map is in [](../../60-validation/index.md). The five package-wide differentiation
 labels are defined in [](../methods.md#gradient-contracts).

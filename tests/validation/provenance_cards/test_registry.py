@@ -19,7 +19,9 @@ from jaxstro.testing import (
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SCRIPT_PATH = REPO_ROOT / "scripts" / "build_provenance_registry.py"
 REGISTRY_DIR = REPO_ROOT / "docs" / "provenance" / "registry"
-OUTPUT_DIR = REPO_ROOT / "docs" / "40-api" / "provenance"
+OUTPUT_DIR = (
+    REPO_ROOT / "docs" / "50-api" / "research-infrastructure" / "source-provenance"
+)
 EXPECTED_FAMILIES = {"atmospheres", "constants", "transforms"}
 
 
