@@ -47,7 +47,7 @@ Selected conventions include:
 
 - `G_CGS`, `C_CGS`, `H_CGS`, `K_B`, and related microphysical constants use the
   recorded CODATA 2018 values or exact revised-SI definitions converted to CGS.
-- `RSUN_CM`, `LSUN_ERG_S`, and `TSUN_K` are IAU nominal conversion constants. They
+- `RSUN_CM`, `LSUN_ERG_S`, and `TEFF_SUN` are IAU nominal conversion constants. They
   are not measurements of a time-varying Sun.
 - `MSUN_G` is a rounded compatibility conversion derived from the exact IAU nominal
   solar mass parameter and Jaxstro's frozen `G_CGS`; it is not an exact nominal

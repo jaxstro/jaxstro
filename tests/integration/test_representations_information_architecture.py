@@ -5,9 +5,23 @@ from __future__ import annotations
 import importlib
 import json
 import re
+from dataclasses import fields
 from pathlib import Path
 
+import jax.numpy as jnp
 import yaml
+
+import jaxstro.constants as constants
+from jaxstro.provenance import MethodManifest
+from jaxstro.quantity.dimensions import DIMENSION_NAMES
+from jaxstro.spectra import (
+    CoveragePolicy,
+    PointResamplingMethod,
+    SpectralAxis,
+    SpectralCoordinate,
+    SpectralPlan,
+    SpectralSampling,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 DOCS = ROOT / "docs"
@@ -188,6 +202,92 @@ def test_every_page_occurs_once_in_toc_and_route_manifest() -> None:
 def test_every_named_runtime_owner_imports() -> None:
     for owner in IMPORT_OWNERS:
         importlib.import_module(owner)
+
+
+def test_constants_page_names_only_existing_public_constant_symbols() -> None:
+    text = _read("units-quantities/constants-and-conventions.md")
+    selected = text.split("Selected conventions include:", 1)[1].split(
+        "See [](#eq-constants-newtonian-gravity)", 1
+    )[0]
+    named_symbols = set(re.findall(r"`([A-Z][A-Z0-9]*_[A-Z0-9_]+)`", selected))
+
+    assert "TEFF_SUN" in named_symbols
+    assert "TSUN_K" not in text
+    assert named_symbols
+    assert all(hasattr(constants, symbol) for symbol in named_symbols)
+
+
+def test_quantities_page_tracks_the_runtime_dimension_tuple_in_exact_order() -> None:
+    text = _read("units-quantities/quantities.md")
+    dimension_rows = re.findall(
+        r"(?m)^\| `([a-z]+)` \| `([^`]+)` \| `([a-g])` \|$", text
+    )
+
+    assert tuple(name for name, _, _ in dimension_rows) == DIMENSION_NAMES
+    assert tuple(exponent for _, _, exponent in dimension_rows) == tuple("abcdefg")
+    assert len({symbol for _, symbol, _ in dimension_rows}) == len(DIMENSION_NAMES)
+
+
+def test_provenance_page_matches_method_manifest_dataclass_fields() -> None:
+    text = _read("parameters-state/serialization-and-provenance.md")
+    manifest_section = text.split("## Content identity", 1)[1].split(
+        "## Deterministic rendering", 1
+    )[0]
+    documented = re.findall(r"`([a-z]+)`", manifest_section)
+
+    assert documented == [field.name for field in fields(MethodManifest)]
+    assert "metrics" not in manifest_section
+    assert "notes" not in manifest_section
+
+
+def test_resampling_page_matches_runtime_pytree_and_local_gradient_boundary() -> None:
+    target_axis = SpectralAxis.bins(
+        jnp.array([100.0, 150.0, 240.0]),
+        coordinate=SpectralCoordinate.WAVELENGTH,
+        unit="nm",
+        sampling=SpectralSampling.BIN_AVERAGES,
+        resolving_power=1000.0,
+    )
+    plan = SpectralPlan(target_axis)
+
+    plan_children, plan_aux = plan.tree_flatten()
+    axis_children, axis_aux = target_axis.tree_flatten()
+    text = _read("spectra-atmospheres/conservative-spectral-resampling.md")
+    prose = " ".join(text.split())
+
+    assert plan_children == (target_axis,)
+    assert plan_aux == (CoveragePolicy.INTERSECTION, PointResamplingMethod.LINEAR)
+    assert axis_children == (target_axis.values, target_axis.edges)
+    assert axis_aux == (
+        SpectralCoordinate.WAVELENGTH,
+        "nm",
+        SpectralSampling.BIN_AVERAGES,
+        1000.0,
+    )
+    for phrase in (
+        "Numeric axis values and edges are dynamic PyTree leaves",
+        "local query sensitivity inside fixed intervals",
+        "away from knots",
+        "limiter transitions",
+        "shape or topology",
+    ):
+        assert phrase in prose
+
+
+def test_atmosphere_manifest_path_and_validation_link_are_distinct() -> None:
+    page = REPRESENTATIONS / "spectra-atmospheres" / "atmosphere-capabilities.md"
+    text = _read("spectra-atmospheres/atmosphere-capabilities.md")
+    link = re.search(r"\[validation overview\]\(([^)]+)\)", text)
+
+    assert "`docs/validation/atmosphere-interpolation.json`" in text
+    assert link is not None
+    target = (page.parent / link.group(1)).resolve()
+    assert target == DOCS / "60-validation" / "index.md"
+    manifest = json.loads((DOCS / "route-manifest.json").read_text(encoding="utf-8"))
+    assert manifest[target.relative_to(DOCS).as_posix()].startswith("/")
+    assert not re.search(
+        r"\[docs/validation/atmosphere-interpolation\.json\]\([^)]+\)", text
+    )
 
 
 def test_every_page_opens_with_status_and_has_a_substantive_contract() -> None:

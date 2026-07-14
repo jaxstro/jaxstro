@@ -32,16 +32,37 @@ If a quantity has dimensions
 ```{math}
 :label: eq-quantity-dimension-vector
 
-[x] = M^{a}L^{b}T^{c}I^{d}\Theta^{e}N^{f},
+[x]
+=
+\mathsf{M}^{a}
+\mathsf{Len}^{b}
+\mathsf{t}^{c}
+\mathsf{Temp}^{d}
+\mathsf{I}^{e}
+\mathsf{N}^{f}
+\mathsf{Lum}^{g},
 \qquad
-a,\ldots,f \in \mathbb{Q},
+a,\ldots,g \in \mathbb{Q},
 ```
 
-then dimensional equality means equality of the complete exponent vector. The exact
-rational representation makes unit equality, hashing, powers, and serialization
-stable. At the algebra layer, `q.cm ** Fraction(1, 2)` is accepted while a raw
-floating `0.5` is rejected; the parser may rationalize a documented decimal input
-before constructing metadata.
+the factors map to the runtime dimension tuple in this exact order:
+
+| Runtime dimension | Equation factor | Exponent |
+| --- | --- | --- |
+| `mass` | `\mathsf{M}` | `a` |
+| `length` | `\mathsf{Len}` | `b` |
+| `time` | `\mathsf{t}` | `c` |
+| `temperature` | `\mathsf{Temp}` | `d` |
+| `current` | `\mathsf{I}` | `e` |
+| `amount` | `\mathsf{N}` | `f` |
+| `luminosity` | `\mathsf{Lum}` | `g` |
+
+The distinct `\mathsf{Len}` and `\mathsf{Lum}` factors avoid using one symbol for
+both length and luminosity. Dimensional equality means equality of all seven entries
+in this complete exponent vector. The exact rational representation makes unit
+equality, hashing, powers, and serialization stable. At the algebra layer,
+`q.cm ** Fraction(1, 2)` is accepted while a raw floating `0.5` is rejected; the
+parser may rationalize a documented decimal input before constructing metadata.
 
 ```python
 import jax.numpy as jnp

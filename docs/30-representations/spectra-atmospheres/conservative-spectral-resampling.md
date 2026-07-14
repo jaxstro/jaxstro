@@ -21,7 +21,7 @@ bin-average remapping onto a fixed `SpectralPlan`, with fail-closed coverage.
 | Physical convention | Point samples use linear or monotone-cubic interpolation; bin averages preserve bin integrals over overlap; no extrapolation or zero filling is implied. |
 | Runtime owner | `jaxstro.spectra` owns `SpectralPlan`, sampling enums, status values, and `resample_spectrum`. |
 | Shape and unit policy | Source and target must share coordinate, unit, and sampling semantic; output shape is fixed by the target axis and bin edges have one more entry than bin values. |
-| Transform boundary | Fixed plans and array evaluation are JAX compatible; axis validation and method selection are static, and unsupported windows return NaN values with status. |
+| Transform boundary | Numeric axis values and edges are dynamic PyTree leaves with local fixed-interval sensitivities; coordinate kind, unit, sampling, resolving-power metadata, method, coverage policy, and shape or topology transitions are static or nonsmooth. |
 | Evidence | Unit tests check identity paths, point methods, bin conservation, shape failures, and unsupported windows; validation reports measured spectral behavior. |
 | Downstream interpretation boundary | Resampling does not choose instrument response, resolving-power adequacy, noise covariance, line-spread function, or acceptable scientific resolution. |
 
@@ -62,7 +62,15 @@ counts. Confirm the spectral semantic and interval measure before interpreting a
 conservative numerical result.
 :::
 
-Fixed-shape evaluation can be compiled and differentiated with respect to numeric
-values on a fixed route. Changing the axis, point method, or sampling semantic is a
-static representation change. The tests prove the implemented overlap and status
-contract, not that a requested grid resolves every downstream feature.
+Fixed-shape evaluation can be compiled and differentiated with respect to spectral
+values and same-shape numeric target coordinates. Numeric axis values and edges are
+dynamic PyTree leaves. The validated target-coordinate claim is local query
+sensitivity inside fixed intervals and away from knots. Monotone-cubic sensitivities
+likewise apply only inside a fixed limiter branch; knot crossings and limiter
+transitions are derivative boundaries.
+
+Coordinate kind, unit, sampling semantic, resolving-power metadata, point method,
+and coverage policy are static metadata. A change in array shape or topology is a
+structural transition, not a smooth coordinate perturbation. The tests prove these
+local PyTree, overlap, status, and derivative contracts, not that a requested grid
+resolves every downstream feature.

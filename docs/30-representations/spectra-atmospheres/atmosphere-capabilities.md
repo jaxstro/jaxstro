@@ -93,7 +93,9 @@ repeat printed coordinates. At the canonical boundary Jaxstro mean-coalesces sam
 at identical published coordinates before enforcing a strictly increasing wavelength
 axis, and records that operation in provenance.
 
-The policy manifest is
-[`docs/validation/atmosphere-interpolation.json`](../../60-validation/index.md).
+The generated policy manifest is stored in source at
+`docs/validation/atmosphere-interpolation.json`. See the
+[validation overview](../../60-validation/index.md) for how policy evidence is
+organized and bounded.
 See [](./source-artifacts-and-adapters.md) for artifact mechanics and
 [](./spectra-data-architecture.md) for the runtime ownership chain.
