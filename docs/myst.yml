@@ -131,6 +131,17 @@ project:
             - file: 30-representations/parameters-state/parameters-and-transforms.md
             - file: 30-representations/parameters-state/pytrees-as-scientific-state.md
             - file: 30-representations/parameters-state/serialization-and-provenance.md
+        - title: Uncertainty propagation
+          children:
+            - file: 30-representations/uncertainty/what-uncertainty-represents.md
+            - file: 30-representations/uncertainty/linearized-propagation.md
+            - file: 30-representations/uncertainty/sigma-point-propagation.md
+            - file: 30-representations/uncertainty/ensemble-propagation.md
+        - title: Fields and discretized domains
+          children:
+            - file: 30-representations/fields/fields-and-domains.md
+            - file: 30-representations/fields/topology-and-discretization.md
+            - file: 30-representations/fields/field-operators.md
     - title: Research workflows (current locations)
       children:
         - file: 10-theory/science-patterns.md

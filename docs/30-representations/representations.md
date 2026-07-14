@@ -48,17 +48,35 @@ Separate structured physical state from unconstrained optimization coordinates, 
 record what an executed method consumed without confusing runtime provenance with
 scientific validation.
 :::
+
+:::{card} Uncertainty propagation
+:link: ./uncertainty/what-uncertainty-represents.md
+
+**Planned Jaxstro capability.** Distinguish probability, uncertain state, noise,
+numerical error, and model discrepancy before comparing linearized, sigma-point,
+and ensemble propagation. No runtime module or schedule is promised.
+:::
+
+:::{card} Fields and discretized domains
+:link: ./fields/fields-and-domains.md
+
+**Deferred abstraction.** Separate field values, domains, coordinates, topology,
+operators, units, and boundaries. A common runtime awaits evidence from two real
+consumers; these guides promise no module or schedule.
+:::
 ::::
 
 ## How to read this section
 
-Each capability page begins with a seven-row representation contract. Read that
-table before the examples: it names the mathematical object, convention, runtime
-owner, shape and unit policy, JAX transform boundary, evidence, and downstream
-interpretation boundary. Those rows are the minimum information needed to decide
-whether a representation matches a research question.
+Each implemented capability page begins with a seven-row representation contract.
+Read that table before the examples: it names the mathematical object, convention,
+runtime owner, shape and unit policy, JAX transform boundary, evidence, and
+downstream interpretation boundary. Planned and deferred guides instead begin with
+an exact status and keep their derivation, failure modes, evidence gate, and claim
+boundary visible.
 
-The pages describe implemented Jaxstro capabilities only. Numerical algorithms live
-under [](../20-methods/methods.md), research workflows remain at their current
-published locations until their dedicated migration, and validation anchors live in
+Status labels separate implemented Jaxstro capabilities from planned propagation
+work and deferred field abstractions. Numerical algorithms live under
+[](../20-methods/methods.md), research workflows remain at their current published
+locations until their dedicated migration, and validation anchors live in
 [](../60-validation/index.md).
