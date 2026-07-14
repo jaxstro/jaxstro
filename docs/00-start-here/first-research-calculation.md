@@ -25,7 +25,7 @@ data, and checks support.
 The rationale for this structure, including why optional prerequisite recovery
 is rigorous rather than remedial, is in
 [](../05-foundations/why-this-documentation-works-this-way.md). Use the
-[](../05-foundations/choose-your-path.md) page whenever a concept needs
+[](./choose-your-path.md) page whenever a concept needs
 reactivation before you continue.
 
 ## Predict

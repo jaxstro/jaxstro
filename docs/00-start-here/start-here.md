@@ -1,5 +1,5 @@
 ---
-title: Getting started
+title: Start here
 description: >-
   Install jaxstro with uv, turn on float64, and run one worked example —
   safe math plus a differentiable root-find — before you trust anything else.
@@ -11,7 +11,7 @@ habits everything else in the package depends on: **guard your arithmetic** and
 **verify solver gradients independently**.
 
 For the reasoning pattern used throughout the site and in course activities,
-continue to [](./how-to-learn.md): **predict → compute → audit**.
+continue to [](./first-research-calculation.md): **predict → compute → audit**.
 
 ## Prerequisites
 

@@ -35,8 +35,9 @@ the first time, and **future-you** trying to remember *why* a function rounds th
 way it does. The theory pages teach the methods; the reference pages let you look
 up the call signature; the decision log records every choice and its trade-offs.
 Research students and course learners should begin with
-[](./00-getting-started/how-to-learn.md), which explains the site's recurring
-**predict → compute → audit** reasoning cycle.
+[](./00-start-here/start-here.md), then use
+[](./00-start-here/first-research-calculation.md) to practice the site's
+recurring **predict → compute → audit** reasoning cycle.
 The optional [](./05-foundations/foundations.md) route rebuilds the connected ideas
 the site will not assume are currently active.
 
@@ -121,7 +122,7 @@ evidence.
 
 ## Routed paths
 
-- **New here?** Read [](./00-getting-started/index.md) first — it installs the
+- **New here?** Read [](./00-start-here/start-here.md) first — it installs the
   package, turns on float64, and walks one worked example end to end. Then follow
   the bridge into [](./10-theory/index.md).
 - **Evaluating the broader package vision?** Read

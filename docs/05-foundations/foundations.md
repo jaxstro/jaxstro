@@ -11,14 +11,15 @@ topic in an earlier course means it is ready for use now. It reconnects ideas
 that are often taught separately: physical models, linear algebra, derivatives,
 probability, inference, conditioning, and differentiable programs.
 
-Start with [](./choose-your-path.md) if you want a short, ungraded route. Read
+Start with [](../00-start-here/choose-your-path.md) if you want a short,
+ungraded route. Read
 [](./why-this-documentation-works-this-way.md) if you want to understand why
 the site repeatedly asks you to predict, compute, audit, and state only the
 claim the evidence warrants.
 
 ## The foundations sequence
 
-1. [](./choose-your-path.md).
+1. [](../00-start-here/choose-your-path.md).
 2. [](./functions-units-scales.md).
 3. [](./what-is-a-model.md): representations, assumptions, parameters,
    predictions, information compression, and dimensionality.

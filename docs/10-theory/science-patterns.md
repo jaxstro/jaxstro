@@ -8,7 +8,7 @@ description: Research questions routed to generic primitives, transform contract
 Modules remain the durable technical units of this site. This page takes the
 other route: start with a research question, then find its equation, primitive,
 transform boundary, evidence, and owner. Use every pattern with
-[](../00-getting-started/how-to-learn.md). Signatures live in
+[](../00-start-here/first-research-calculation.md). Signatures live in
 [](../40-api/index.md), and claims resolve to [](../60-validation/index.md).
 
 ## Locate an event or equilibrium

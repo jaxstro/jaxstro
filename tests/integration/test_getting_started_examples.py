@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-PAGE = Path(__file__).resolve().parents[2] / "docs/00-getting-started/index.md"
+PAGE = Path(__file__).resolve().parents[2] / "docs/00-start-here/start-here.md"
 
 
 def _worked_example() -> str:

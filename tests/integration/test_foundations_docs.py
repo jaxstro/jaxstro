@@ -26,7 +26,7 @@ def test_documentation_design_page_explains_the_evidence_first_structure() -> No
 
 def test_choose_your_path_is_optional_ungraded_and_task_routed() -> None:
     index = (DOCS / "05-foundations" / "foundations.md").read_text(encoding="utf-8")
-    chooser = (DOCS / "05-foundations" / "choose-your-path.md").read_text(
+    chooser = (DOCS / "00-start-here" / "choose-your-path.md").read_text(
         encoding="utf-8"
     )
     assert "Foundations: the ideas we will not assume" in index
@@ -42,9 +42,9 @@ def test_choose_your_path_is_optional_ungraded_and_task_routed() -> None:
         assert phrase in chooser
     assert "beginner" not in chooser.lower()
     assert "advanced learner" not in chooser.lower()
-    assert "./linear-algebra-language-of-change.md" in chooser
-    assert "./what-is-a-derivative.md" in chooser
-    assert "./probability-and-distributions.md" in chooser
+    assert "../05-foundations/linear-algebra-language-of-change.md" in chooser
+    assert "../05-foundations/what-is-a-derivative.md" in chooser
+    assert "../05-foundations/probability-and-distributions.md" in chooser
 
 
 def test_homepage_names_four_routes_without_stale_door_count() -> None:
@@ -58,7 +58,7 @@ def test_foundations_navigation_preserves_module_theory_section() -> None:
     manifest = json.loads((DOCS / "route-manifest.json").read_text(encoding="utf-8"))
     for page, route in (
         ("05-foundations/foundations.md", "/foundations"),
-        ("05-foundations/choose-your-path.md", "/choose-your-path"),
+        ("00-start-here/choose-your-path.md", "/choose-your-path"),
         (
             "05-foundations/why-this-documentation-works-this-way.md",
             "/why-this-documentation-works-this-way",

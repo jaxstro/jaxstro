@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-PAGE = REPO_ROOT / "docs" / "00-getting-started" / "how-to-learn.md"
+PAGE = REPO_ROOT / "docs" / "00-start-here" / "first-research-calculation.md"
 
 
 def test_learning_page_explains_the_full_reasoning_cycle() -> None:
@@ -27,14 +27,16 @@ def test_learning_page_explains_the_full_reasoning_cycle() -> None:
 def test_learning_page_is_wired_into_every_entry_surface() -> None:
     myst = (REPO_ROOT / "docs" / "myst.yml").read_text(encoding="utf-8")
     homepage = (REPO_ROOT / "docs" / "index.md").read_text(encoding="utf-8")
-    getting_started = (
-        REPO_ROOT / "docs" / "00-getting-started" / "index.md"
-    ).read_text(encoding="utf-8")
+    start_here = (REPO_ROOT / "docs" / "00-start-here" / "start-here.md").read_text(
+        encoding="utf-8"
+    )
     manifest = json.loads(
         (REPO_ROOT / "docs" / "route-manifest.json").read_text(encoding="utf-8")
     )
 
-    assert myst.count("00-getting-started/how-to-learn.md") == 1
-    assert homepage.count("./00-getting-started/how-to-learn.md") == 1
-    assert getting_started.count("./how-to-learn.md") == 1
-    assert manifest["00-getting-started/how-to-learn.md"] == "/how-to-learn"
+    assert myst.count("00-start-here/first-research-calculation.md") == 1
+    assert homepage.count("./00-start-here/first-research-calculation.md") == 1
+    assert start_here.count("./first-research-calculation.md") == 1
+    assert manifest["00-start-here/first-research-calculation.md"] == (
+        "/first-research-calculation"
+    )

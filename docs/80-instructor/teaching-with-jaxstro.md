@@ -24,7 +24,7 @@ not a four-step worksheet ritual.
 
 ## Supporting uneven preparation
 
-Offer [](../05-foundations/choose-your-path.md) as an ungraded route. Let
+Offer [](../00-start-here/choose-your-path.md) as an ungraded route. Let
 students use the complete first-principles path or enter through a familiar
 language. Do not publicly classify students by route. A student may need a
 probability refresher for one unit and lead the class on linear algebra in the
@@ -101,4 +101,3 @@ with an explanation of expected output structure.
 Use [](./assessment-rubric.md) for lab notes, code reviews, oral checks, or short
 research memos. Grade the relation among model, program, evidence, and claim;
 do not let a numerically correct scalar erase unsupported reasoning.
-
