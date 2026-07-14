@@ -55,8 +55,19 @@ $G_{\mathrm{coh}}$, while white-noise density conversion depends on
 $B_{\mathrm{ENBW}}$. Therefore [](#eq-window-gain-enbw) shows why an amplitude
 correction and a noise-power correction are not interchangeable.
 
-The DFT of $y_n$ is the circular convolution of the signal spectrum with the
-window spectrum under the finite-record convention. This explains leakage but
+Let $W_m$ and $Y_k$ use the same DFT pair as $X_k$ on the signal-axes page.
+Multiplication in the sample domain then gives:
+
+```{math}
+:label: eq-window-product-theorem
+
+Y_k = \frac{1}{N}\sum_{m=0}^{N-1}
+W_m X_{(k-m)\bmod N}.
+```
+
+Thus [](#eq-window-product-theorem) says that the DFT of $y_n$ is $1/N$
+times the circular convolution of the two spectra under the documented
+unnormalized-forward DFT convention. This redistribution explains leakage but
 does not guarantee that tapering resolves overlapping components.
 
 ## What the ecosystem already owns

@@ -68,6 +68,11 @@ P_k^{(2)}, & k=N/2\ \text{for even }N, \\
 \end{cases}
 ```
 
+Therefore an odd-length one-sided spectrum doubles every strictly positive bin:
+there is no Nyquist endpoint. An even-length spectrum instead leaves both DC
+and its $k=N/2$ Nyquist endpoint undoubled. This is the endpoint consequence of
+the even- and odd-$N$ axes on [](./signal-axes.md#eq-signal-frequency-axis).
+
 A window replaces the unwindowed normalization with its declared coherent or
 power gain. That correction must be stated rather than inferred from the output
 name.

@@ -22,9 +22,11 @@ are represented and which cannot be distinguished.
 
 For $N$ uniformly spaced samples with cadence $\Delta t$, the sampled duration
 is $T=N\Delta t$ under the periodic-record convention. The Fourier-bin spacing
-is $\Delta f=1/T$. The highest non-aliased frequency represented for real
-uniform sampling is the Nyquist frequency, but content above it can alias into
-the represented band.
+is $\Delta f=1/T$. For sample frequency $f_s=1/\Delta t$, $f_s/2$ is the
+Nyquist limit, but content above it can alias into the represented band. The
+limit is not always a sampled Fourier bin: even $N$ includes $k=N/2$ at
+$f_s/2$, whereas odd $N$ ends its nonnegative branch at $k=(N-1)/2$, at
+$(N-1)f_s/(2N)$, and has no Nyquist bin.
 
 ## Mathematical objects
 
@@ -69,6 +71,12 @@ frequencies after subtracting the sampling frequency $f_s=1/\Delta t$. The
 frequency equation does not make irregular samples uniform or recover aliased
 content.
 
+This parity distinction controls one-sided endpoint handling. DC is always an
+unpaired endpoint, but $f_s/2$ is an unpaired endpoint only for even $N$. For
+odd $N$, every strictly positive real-FFT bin has a distinct negative-frequency
+partner. The corresponding power-doubling rule is stated in
+[](./spectral-estimation.md#eq-one-sided-periodogram).
+
 ## What the ecosystem already owns
 
 [JAX FFT](https://docs.jax.dev/en/latest/_autosummary/jax.numpy.fft.fft.html)
@@ -101,9 +109,10 @@ Readiness would require:
 ## Claim boundary
 
 :::{warning}
-Nyquist identifies a representable boundary for ideal uniform sampling. It does
-not prove that the signal was band limited, prevent aliasing, or make a finite
-record resolve features narrower than $\Delta f$.
+The Nyquist limit identifies a boundary for ideal uniform sampling. It does not
+prove that the signal was band limited, prevent aliasing, or make a finite
+record resolve features narrower than $\Delta f$; for odd $N$, it is not itself
+a represented bin.
 :::
 
 This page defines conventions, not a detector, estimator, or implemented

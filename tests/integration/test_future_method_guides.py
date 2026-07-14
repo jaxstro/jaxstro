@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import cmath
 import json
+import math
 import re
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 DOCS = ROOT / "docs"
@@ -82,6 +86,44 @@ def _read(relative: str) -> str:
     return (METHODS / relative).read_text(encoding="utf-8")
 
 
+def _dft(values: list[complex]) -> list[complex]:
+    """Evaluate the negative-exponent, unnormalized DFT documented by the guide."""
+    size = len(values)
+    return [
+        sum(
+            value * cmath.exp(-2j * math.pi * frequency * sample / size)
+            for sample, value in enumerate(values)
+        )
+        for frequency in range(size)
+    ]
+
+
+def _inverse_dft(values: list[complex]) -> list[complex]:
+    """Evaluate the positive-exponent inverse DFT with its documented 1/N."""
+    size = len(values)
+    return [
+        sum(
+            value * cmath.exp(2j * math.pi * frequency * sample / size)
+            for frequency, value in enumerate(values)
+        )
+        / size
+        for sample in range(size)
+    ]
+
+
+def _assert_complex_sequences_close(
+    actual: list[complex], expected: list[complex]
+) -> None:
+    assert len(actual) == len(expected)
+    for actual_value, expected_value in zip(actual, expected, strict=True):
+        assert actual_value.real == pytest.approx(expected_value.real, abs=1e-12)
+        assert actual_value.imag == pytest.approx(expected_value.imag, abs=1e-12)
+
+
+def _compact_math(source: str) -> str:
+    return re.sub(r"\s+", "", source)
+
+
 def test_all_guides_exist_once_in_toc_and_manifest_with_native_routes() -> None:
     myst = (DOCS / "myst.yml").read_text(encoding="utf-8")
     manifest = json.loads((DOCS / "route-manifest.json").read_text(encoding="utf-8"))
@@ -137,25 +179,10 @@ def test_qmc_distinguishes_three_point_constructions_and_error_claims() -> None:
         "does not provide an uncertainty estimate",
     ):
         assert phrase in text
+    assert "for $r \\geq 2$ independent scrambles" in text
 
 
-def test_signal_family_contains_required_scientific_contracts() -> None:
-    signal = "\n".join(
-        _read(relative) for relative in GUIDES if relative.startswith("signals/")
-    )
-    for token in (
-        "X_k",
-        "f_{\\mathrm{Nyq}}",
-        "equivalent noise bandwidth",
-        "coherent gain",
-        "one-sided",
-        "two-sided",
-        "cross spectrum",
-        "phase wrapping",
-        r"\tau(f) = -\frac{\phi(f)}{2\pi f}",
-    ):
-        assert token in signal
-
+def test_signal_pages_pin_runtime_ownership_and_planned_status() -> None:
     for relative in (
         "signals/signal-axes.md",
         "signals/windows-spectral-leakage.md",
@@ -165,6 +192,132 @@ def test_signal_family_contains_required_scientific_contracts() -> None:
         text = _read(relative)
         assert "[JAX FFT](https://docs.jax.dev/" in text, relative
         assert "`jaxstro.signal` does not exist" in text, relative
+
+    windows = _read("signals/windows-spectral-leakage.md")
+    assert "coherent gain" in windows
+    assert "equivalent noise bandwidth" in windows
+
+    estimation = _read("signals/spectral-estimation.md")
+    assert "one-sided" in estimation
+    assert "two-sided" in estimation
+
+    phase = _read("signals/phase-and-delay.md")
+    assert "cross spectrum" in phase
+    assert "Phase wrapping" in phase
+
+
+def test_documented_dft_roundtrip_and_window_product_theorem() -> None:
+    signal = [1.0 + 0.5j, -2.0j, 3.0 - 1.0j, -0.5 + 2.0j]
+    window = [1.0, 0.25, 0.5, 0.75]
+    signal_spectrum = _dft(signal)
+    window_spectrum = _dft([complex(value) for value in window])
+
+    _assert_complex_sequences_close(_inverse_dft(signal_spectrum), signal)
+
+    windowed_spectrum = _dft(
+        [value * weight for value, weight in zip(signal, window, strict=True)]
+    )
+    size = len(signal)
+    expected_product_spectrum = [
+        sum(
+            window_spectrum[index] * signal_spectrum[(frequency - index) % size]
+            for index in range(size)
+        )
+        / size
+        for frequency in range(size)
+    ]
+    _assert_complex_sequences_close(windowed_spectrum, expected_product_spectrum)
+
+    axes = _compact_math(_read("signals/signal-axes.md"))
+    assert r"X_k=\sum_{n=0}^{N-1}x_n" in axes
+    assert r"x_n=\frac{1}{N}\sum_{k=0}^{N-1}X_k" in axes
+
+    windows = _read("signals/windows-spectral-leakage.md")
+    compact_windows = _compact_math(windows)
+    assert ":label:eq-window-product-theorem" in compact_windows
+    assert r"Y_k=\frac{1}{N}\sum_{m=0}^{N-1}W_mX_{(k-m)\bmodN}" in compact_windows
+    assert "[](#eq-window-product-theorem)" in windows
+
+
+def test_even_and_odd_real_fft_axes_pin_the_nyquist_limit() -> None:
+    sample_frequency = 8.0
+
+    def real_fft_axis(size: int) -> list[float]:
+        return [index * sample_frequency / size for index in range(size // 2 + 1)]
+
+    assert real_fft_axis(8) == pytest.approx([0.0, 1.0, 2.0, 3.0, 4.0])
+    assert real_fft_axis(7) == pytest.approx([0.0, 8.0 / 7.0, 16.0 / 7.0, 24.0 / 7.0])
+    assert real_fft_axis(8)[-1] == sample_frequency / 2
+    assert real_fft_axis(7)[-1] == 3 * sample_frequency / 7
+    assert real_fft_axis(7)[-1] < sample_frequency / 2
+
+    axes = _read("signals/signal-axes.md")
+    for phrase in (
+        "Nyquist limit",
+        "$k=N/2$",
+        "$k=(N-1)/2$",
+        "no Nyquist bin",
+        "one-sided endpoint",
+    ):
+        assert phrase in axes
+
+
+@pytest.mark.parametrize(
+    "signal",
+    (
+        [2.0, -1.0, 0.5, 3.0],
+        [2.0, -1.0, 0.5, 3.0, -0.25],
+    ),
+)
+def test_parseval_and_one_sided_endpoint_accounting(signal: list[float]) -> None:
+    cadence = 0.25
+    size = len(signal)
+    spectrum = _dft([complex(value) for value in signal])
+    delta_frequency = 1.0 / (size * cadence)
+    two_sided_density = [cadence * abs(value) ** 2 / size for value in spectrum]
+    time_mean_square = sum(value**2 for value in signal) / size
+
+    assert sum(two_sided_density) * delta_frequency == pytest.approx(time_mean_square)
+
+    one_sided_density = two_sided_density[: size // 2 + 1]
+    if size % 2 == 0:
+        one_sided_density[1:-1] = [2 * value for value in one_sided_density[1:-1]]
+    else:
+        one_sided_density[1:] = [2 * value for value in one_sided_density[1:]]
+    assert sum(one_sided_density) * delta_frequency == pytest.approx(time_mean_square)
+
+    estimation = _read("signals/spectral-estimation.md")
+    compact_estimation = _compact_math(estimation)
+    assert r"P_k^{(2)}=\frac{\Deltat}{N}|X_k|^2" in compact_estimation
+    assert r"\sum_{k=0}^{N-1}P_k^{(2)}\Deltaf" in compact_estimation
+    assert "even-length Nyquist bin" in estimation
+    assert "odd-length one-sided spectrum doubles every strictly positive bin" in (
+        estimation
+    )
+
+
+def test_known_delayed_pair_pins_cross_spectrum_and_delay_sign() -> None:
+    size = 8
+    delay_samples = 1
+    first = [1.0 + 0.0j, *([0.0j] * (size - 1))]
+    second = first[-delay_samples:] + first[:-delay_samples]
+    first_spectrum = _dft(first)
+    second_spectrum = _dft(second)
+    frequency_bin = 1
+    frequency = frequency_bin / size
+
+    cross_spectrum = (
+        first_spectrum[frequency_bin].conjugate() * second_spectrum[frequency_bin]
+    )
+    phase = cmath.phase(cross_spectrum)
+    inferred_delay = -phase / (2 * math.pi * frequency)
+
+    assert phase == pytest.approx(-2 * math.pi * frequency * delay_samples)
+    assert inferred_delay == pytest.approx(delay_samples)
+
+    phase_page = _compact_math(_read("signals/phase-and-delay.md"))
+    assert r"C_{xy}(f)=X^*(f)Y(f)" in phase_page
+    assert r"\tau(f)=-\frac{\phi(f)}{2\pif}" in phase_page
 
 
 def test_planned_pages_do_not_claim_unimplemented_runtime_modules() -> None:

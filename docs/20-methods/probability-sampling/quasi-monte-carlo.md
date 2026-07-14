@@ -49,8 +49,8 @@ weight estimator is:
 \widehat{I}_{N}=\frac{1}{N}\sum_{n=1}^{N}f(\mathbf{u}_{n}).
 ```
 
-For $R$ independent scrambles, apply [](#eq-qmc-estimator) separately to obtain
-$\widehat{I}_{N,r}$, then estimate between-replicate variation:
+For $R \geq 2$ independent scrambles, apply [](#eq-qmc-estimator) separately to
+obtain $\widehat{I}_{N,r}$, then estimate between-replicate variation:
 
 ```{math}
 :label: eq-rqmc-replicate-variance
