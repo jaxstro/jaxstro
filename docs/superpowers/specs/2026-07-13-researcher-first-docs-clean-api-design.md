@@ -368,13 +368,16 @@ Source root: `docs/50-api/`
 - `change-constraints/`: autodiff, rootfinding, optimization, and ODE.
 - `approximation-integration/`: interpolation, regular-grid interpolation,
   splines, integration, and quadrature.
-- `linear-structure/`: linear algebra, operators, and special functions.
-- `randomness/`: distributions, random streams, sampling, and statistics.
+- `linear-structure/`: linear algebra, compensated arithmetic, operators, and
+  special functions.
+- `randomness/`: distributions, PRNG helpers, random streams, sampling, and
+  statistics.
 - `discrete-space/`: grids, meshes, and spatial algorithms.
 - `physical-representations/`: constants, units, quantity, coordinates,
   geometry, astrometry, and parameters.
 - `scientific-data/`: spectra and atmospheres.
-- `research-infrastructure/`: contracts, evidence, provenance, and testing.
+- `research-infrastructure/`: numerical checks, JAX configuration, contracts,
+  evidence, provenance, and testing.
 
 The API reference documents only importable, supported surfaces. Planned
 modules do not receive fake API pages. Their concept pages may show a clearly
@@ -571,7 +574,12 @@ Canonical usage is module-qualified:
 ```python
 from jaxstro.numerics import rootfinding
 
-result = rootfinding.safeguarded_bracketed_root(...)
+result = rootfinding.safeguarded_bracketed_root(
+    lambda x: x**2 - 2.0,
+    0.0,
+    2.0,
+    max_steps=64,
+)
 ```
 
 or symbol-qualified from the owner:
