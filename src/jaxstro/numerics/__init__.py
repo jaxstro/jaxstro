@@ -60,6 +60,7 @@ from . import (
     grids,
     integration,
     interpolation,
+    kepler,
     linear_algebra,
     meshes,
     ode,
@@ -109,6 +110,14 @@ from .interpolation import (
     NaturalCubicSpline1D,
     eval_cubic_spline,
     natural_cubic_spline_coeffs,
+)
+from .kepler import (
+    KEPLER_STATUS_CONVERGED,
+    KEPLER_STATUS_INVALID_INPUT,
+    KEPLER_STATUS_MAX_STEPS,
+    KEPLER_STATUS_NONFINITE_ITERATION,
+    KEPLER_STATUS_SINGULAR_RADIUS,
+    UniversalKeplerResult,
 )
 from .linear_algebra import (
     add_diagonal_jitter,
@@ -272,6 +281,13 @@ __all__ = [
     "eval_cubic_spline",
     "NaturalCubicSpline1D",
     "rootfinding",
+    "kepler",
+    "KEPLER_STATUS_CONVERGED",
+    "KEPLER_STATUS_INVALID_INPUT",
+    "KEPLER_STATUS_NONFINITE_ITERATION",
+    "KEPLER_STATUS_SINGULAR_RADIUS",
+    "KEPLER_STATUS_MAX_STEPS",
+    "UniversalKeplerResult",
     "PROPOSAL_NONE",
     "PROPOSAL_SECANT",
     "PROPOSAL_MIDPOINT",
