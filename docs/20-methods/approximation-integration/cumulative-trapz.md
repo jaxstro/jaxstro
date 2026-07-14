@@ -21,11 +21,12 @@ output match the problem.
 
 ## Before computation: what should be true?
 
-The selected sample axis must contain the intended ordered values. If `x` is
-provided it must be one-dimensional and match that axis length. A meaningful
-integral also requires coordinate units, value units, and enough resolution for
-the unresolved curvature. Simpson rules additionally require at least three,
-an odd number of samples, and uniform spacing.
+The supported default-last-axis paths require the last sample axis to contain
+the intended ordered values. If `x` is provided it must be one-dimensional and
+match that last-axis length. A meaningful integral also requires coordinate
+units, value units, and enough resolution for the unresolved curvature. Simpson
+rules additionally require at least three, an odd number of samples, and
+uniform spacing.
 
 :::{important}
 An integration rule computes the integral of an interpolating approximation.
@@ -84,10 +85,16 @@ last bits differ.
 
 ## What the algorithm actually does
 
-`trapz(y, x=None, axis=-1)` returns a total. With no `x`, it uses unit spacing;
-with `x`, each panel carries `diff(x)` inside the reduction.
-`cumulative_trapz(y, x=None, dx=1.0, axis=-1)` returns the same shape as `y`
-with a leading zero along `axis`.
+`trapz(y, x=None)` returns a total over the default last axis. With no `x`, it
+uses unit spacing; with `x`, each panel carries `diff(x)` inside the reduction.
+The function signature exposes `axis=-1`, but nondefault `trapz` axes are not
+currently supported. Passing `axis` explicitly, even as `axis=-1`, traces
+that argument through plain `jax.jit` and raises
+`TracerIntegerConversionError` when Python indexes the shape.
+
+`cumulative_trapz(y, x=None, dx=1.0)` returns the same shape as `y` with a
+leading zero on the default last axis. Its supported multidimensional paths
+likewise keep the integration coordinate last.
 
 The canonical uniform path is dx-outside: it accumulates
 `0.5 * (y_left + y_right)` first and multiplies by scalar `dx` once afterward.
@@ -95,7 +102,10 @@ This is the ecosystem parity contract. The mathematically equivalent dx-inside
 ordering can differ by about one unit in the last place because the multiply is
 rounded at a different stage. On a nonuniform grid, every `diff(x)` must remain
 inside its panel before the cumulative sum and the scalar `dx` argument is
-ignored.
+ignored. Nonuniform multidimensional cumulative integration on a selected
+non-last axis is a current limitation: direct width broadcasting between
+`diff(x)` and panel values is incompatible for shapes such as `(2,)` and
+`(2, 4)`.
 
 `simpson` returns the total of uniform two-interval quadratic panels.
 `cumulative_simpson` returns only panel endpoints: input length $n$ becomes
@@ -111,8 +121,10 @@ the grid ordering and shape stay fixed. That coordinate derivative represents
 motion of the sampled abscissae, not automatic differentiation of an underlying
 continuous function between them.
 
-`axis` controls array structure, and cumulative integration treats it as static
-under JIT. Sample count and Simpson panel count are shape choices.
+Sample count and Simpson panel count are shape choices. The present public
+trapezoid contract is deliberately narrower than the signatures: use the
+default last axis, and do not pass `axis` to `trapz` until its static-argument
+handling is repaired.
 
 :::{warning}
 Concrete shape errors raise, but a value-dependent uniform-spacing check is
@@ -138,8 +150,8 @@ assert running[0] == 0.0
 assert jnp.allclose(running[-1], total)
 ```
 
-For a multidimensional `y`, `x` still describes only the selected integration
-axis. All other axes remain payload axes.
+For a multidimensional `y`, place the integration coordinate on the last axis;
+`x` describes that last axis and all preceding axes remain payload axes.
 
 ## How to audit the result
 
@@ -147,8 +159,11 @@ Integrate constants and linear functions, which trapezoids reproduce exactly.
 For a smooth curved function, compare grids with spacing $h$, $h/2$, and $h/4$;
 the error ratio should approach four when the global $O(h^2)$ regime is reached.
 Check cumulative shape, leading zero, final-value parity with the total, both
-spacing modes, negative axes, and dx-outside byte parity. Compare AD in sample
-values with independently computed trapezoid weights.
+spacing modes on the default last axis, and dx-outside byte parity. Compare AD
+in sample values with independently computed trapezoid weights. Keep explicit
+failure probes for `trapz(..., axis=-1)` and for nonuniform multidimensional
+cumulative integration on a non-last axis so that these current limitations
+cannot be mistaken for supported negative or selected axes.
 
 The package evidence index is [](../../60-validation/validation.md).
 

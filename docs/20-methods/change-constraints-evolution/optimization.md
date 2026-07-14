@@ -43,8 +43,9 @@ $p_k\in\mathbb{R}^n$ specifies the proposed motion, and a positive step length
 $\alpha_k$ controls its size.
 
 For residuals $r_i(x)$, the half-squared loss is $\rho(r)=r^2/2$. The Huber loss
-is quadratic near zero and linear in the tails; the pseudo-Huber loss is the
-smooth approximation
+is quadratic near zero and linear in the tails. Its value and first derivative
+are continuous at $|r|=\delta$, while its second derivative changes there. The
+pseudo-Huber loss is the smoother approximation
 
 ```{math}
 \rho_\delta(r)=\delta^2\left(\sqrt{1+(r/\delta)^2}-1\right).
@@ -73,7 +74,9 @@ Starting from $\alpha_0$, the tested sequence is
 $\alpha_i=\alpha_0\beta^i$ with $0<\beta<1$. The right-hand side decreases
 below $F(x_k)$ only for a descent direction.
 
-No single stopping statistic proves convergence. Jaxstro reports three:
+No single stopping statistic proves convergence. Jaxstro reports three. Let
+$s_0>0$ be the parameter-scale floor used when $\lVert x_k\rVert_2$ is small.
+The runtime name is `scale_floor`, with default `scale_floor=1e-12`:
 
 ```{math}
 :label: eq-optimization-convergence
@@ -104,10 +107,11 @@ trace.
 ## What JAX differentiates
 
 The smooth losses and diagnostics compose with JAX array transforms. Squared
-and pseudo-Huber losses are smooth on their floating domains. Huber is
-piecewise smooth and has a kink at $|r|=\delta$. Armijo's acceptance predicate
-selects a discrete branch, so a derivative of the returned step is a derivative
-of the selected finite program, not an implicit derivative of an optimum.
+and pseudo-Huber losses are smooth on their floating domains. Huber is $C^1$
+but not $C^2$ at $|r|=\delta$: its gradient is continuous, while its curvature
+and Hessian change across the threshold. Armijo's acceptance predicate selects
+a discrete branch, so a derivative of the returned step is a derivative of the
+selected finite program, not an implicit derivative of an optimum.
 
 :::{warning}
 `accepted=True`, a small step, or a small objective change does not establish a
@@ -156,8 +160,10 @@ declared direction. Confirm $g_k^\mathsf{T}p_k<0$, reproduce every tested Armijo
 inequality, and retain `accepted` and `iterations`. Run from multiple initial
 conditions when local minima are possible. Refine all three convergence
 tolerances and check that the scientifically relevant outputs remain stable.
-For robust losses, place FD probes away from the Huber kink and include outliers
-large enough to exercise the tails.
+For robust losses, finite-difference the Huber gradient from both sides of the
+threshold to verify first-derivative continuity, and keep curvature or Hessian
+probes away from $|r|=\delta$. Include outliers large enough to exercise the
+tails; use pseudo-Huber when a smoother curvature contract is required.
 
 Executable method audits are indexed in [](../../60-validation/methods/validation-methods.md).
 

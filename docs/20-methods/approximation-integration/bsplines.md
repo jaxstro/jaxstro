@@ -90,8 +90,13 @@ on a fixed sample grid. A caller may form an objective such as
 $\lVert Bc-y\rVert_2^2+\lambda R_m(c)$, but $\lambda$ remains caller-owned.
 
 Antiderivative increments obey
-$d_{i+1}-d_i=c_i(t_{i+p+1}-t_i)/(p+1)$, enabling definite integrals by endpoint
-subtraction.
+
+```{math}
+:label: eq-bspline-antiderivative
+d_{i+1}-d_i=c_i\frac{t_{i+p+1}-t_i}{p+1},
+```
+
+enabling definite integrals by endpoint subtraction.
 
 ## What the algorithm actually does
 

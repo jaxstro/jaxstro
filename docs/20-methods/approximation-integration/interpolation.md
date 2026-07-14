@@ -37,11 +37,12 @@ payloads connect to [](../../30-representations/representations.md).
 
 ## Define the mathematical objects
 
-Let $x_0<\cdots<x_{n-1}$ be knots and let $y_i$ be scalar or array-valued
-samples along one selected axis. For a query $x\in[x_i,x_{i+1}]$, define the
-interval width $h_i=x_{i+1}-x_i$ and local coordinate
-$t=(x-x_i)/h_i\in[0,1]$. Node derivatives are denoted $m_i$ and secant slopes
-are $d_i=(y_{i+1}-y_i)/h_i$.
+Let $x_0<\cdots<x_{n-1}$ be knots and let $y_i$ be scalar samples. The linear,
+Hermite, and PCHIP implementations also allow array-valued payloads along a
+selected axis; the natural-cubic implementation does not. For a query
+$x\in[x_i,x_{i+1}]$, define the interval width $h_i=x_{i+1}-x_i$ and local
+coordinate $t=(x-x_i)/h_i\in[0,1]$. Node derivatives are denoted $m_i$ and
+secant slopes are $d_i=(y_{i+1}-y_i)/h_i$.
 
 A boundary policy specifies the value outside $[x_0,x_{n-1}]`: clamp to endpoint
 values or numerically continue the endpoint segment. A limiter branch is the
@@ -105,9 +106,16 @@ derivatives. `pchip_slopes` constructs limited slopes, and
 coefficient construction uses `jnp.linalg.solve`; `eval_cubic_spline` evaluates
 the selected interval in nested polynomial form and clamps its query first.
 
-Concrete wrappers check shapes and strictly increasing grids. Value-dependent
-exceptions cannot fire on tracers: eager validation is skipped while the grid is traced,
-so the caller must supply a strictly increasing grid under `jax.jit`.
+Array-valued payloads are supported by the linear, Hermite, and PCHIP paths.
+By contrast, `natural_cubic_spline_coeffs`, `eval_cubic_spline`, and
+`NaturalCubicSpline1D` support scalar one-dimensional `y` only. The current
+natural-cubic coefficient routine does not cleanly reject an array-valued `y`;
+it reaches incompatible core array assembly and raises `TypeError`. Treat that
+failure as a limitation, not as array-payload support.
+
+Concrete wrappers check the shapes they explicitly support and strictly
+increasing grids. Value-dependent exceptions cannot fire on
+tracers: eager validation is skipped while the grid is traced; the caller must supply a strictly increasing grid under `jax.jit`.
 With `extrapolate=True`, the endpoint linear or Hermite segment is numerical continuation, not a physical guarantee.
 
 ## What JAX differentiates
@@ -126,7 +134,8 @@ With `extrapolate=True`, the endpoint linear or Hermite segment is numerical con
   - The query remains away from knots and clamping.
 * - Natural-spline values and interior query
   - `smooth_pathwise`
-  - The coefficient solve and evaluation carry local gradients.
+  - For scalar one-dimensional `y`, the coefficient solve and evaluation carry
+    local gradients.
   - The selected interval remains fixed.
 * - PCHIP inside a fixed limiter branch
   - `smooth_pathwise`
@@ -192,7 +201,8 @@ assert jnp.allclose(wrapped_monotone, monotone)
 Prepared `TabulatedFunction1D`, `MonotoneTabulatedFunction1D`, and
 `NaturalCubicSpline1D` objects are registered PyTrees. Their table arrays are
 dynamic leaves; interpolation axes stored by the monotone wrapper are static
-auxiliary data.
+auxiliary data. This PyTree behavior does not widen `NaturalCubicSpline1D`
+beyond its scalar one-dimensional value contract.
 
 ## How to audit the result
 

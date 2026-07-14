@@ -15,14 +15,17 @@ policy, and production solver stacks remain delegated ecosystem concerns.
 :::{tip}
 Use RK4 as the ordinary high-accuracy fixed-step baseline, midpoint when a
 second-order method is sufficient, and Euler mainly as a transparent reference.
-Use velocity-Verlet when the model is a separable second-order system and
-long-term geometric behavior matters.
+These are first-order RHS integrators. The separate second-order
+velocity-Verlet surface is appropriate when the model is a separable
+conservative system and long-term geometric behavior matters.
 :::
 
 ## Before computation: what should be true?
 
-The model must be written as a first-order initial-value problem with a fixed
-state shape. Choose a step $h$ small relative to the shortest relevant timescale
+For `euler`, `midpoint`, `rk4`, and `solve_fixed_step`, the model must be written
+as a first-order initial-value problem with a fixed state shape. The
+`velocity_verlet` API instead accepts the second-order acceleration relation
+directly. Choose a step $h$ small relative to the shortest relevant timescale
 and make the integration interval, units, and initial state explicit. These
 explicit methods are not a stiffness remedy.
 
@@ -48,6 +51,12 @@ $f$ is the right-hand side (RHS). A grid uses $t_n=t_0+nh$ and a numerical state
 $y_n\approx y(t_n)$. For order $p$, local truncation error measures one exact
 step started from the exact state; global error measures accumulated trajectory
 error after $O(1/h)$ steps over a fixed interval.
+
+The velocity-Verlet surface instead represents
+$d^2q/dt^2=a(q,t)$ with position $q$ and velocity $v=dq/dt$. The implementation
+accepts time-dependent acceleration, but its geometric long-time motivation
+applies to an appropriate separable conservative system, not to arbitrary
+$a(q,t)$.
 
 ## Derive the method
 
@@ -105,8 +114,10 @@ an unknown name raises `ValueError`.
 `velocity_verlet` accepts acceleration `a(q, t)` and returns `VerletResult(t,
 q, v)` with the same leading history length. It updates position using the old
 acceleration, evaluates acceleration at the new position and time, then averages
-the old and new accelerations in the velocity update. No method adapts $h$,
-detects events, retries failures, or estimates error at runtime.
+the old and new accelerations in the velocity update. This second-order
+velocity-Verlet surface does not require callers to rewrite $(q,v)$ as a
+first-order RHS. No method adapts $h$, detects events, retries failures, or
+estimates error at runtime.
 
 ## What JAX differentiates
 
@@ -158,8 +169,10 @@ $h/4$. An order-$p$ method should approach
 $E(h)/E(h/2)\approx 2^p$ before roundoff dominates. Without an analytic
 solution, compare nested refinements at common times. Separately compare AD for
 a final-state scalar against a central finite difference in each claimed smooth
-parameter. For velocity-Verlet, also track problem-specific invariants such as
-energy or angular momentum; bounded drift is evidence, not an exact guarantee.
+parameter. For velocity-Verlet on an appropriate separable conservative system,
+also track problem-specific invariants such as energy or angular momentum;
+bounded drift is evidence, not an exact guarantee. Do not transfer that
+geometric claim to arbitrary time-dependent or dissipative accelerations.
 
 The executable audit map is in [](../../60-validation/methods/validation-methods.md).
 

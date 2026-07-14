@@ -96,12 +96,14 @@ progress, and stay inside the safeguard band
 ```{math}
 :label: eq-root-safeguard-band
 a_k+\sigma(b_k-a_k)
-<x_{\mathrm{trial}}<
+\le x_{\mathrm{trial}}\le
 b_k-\sigma(b_k-a_k),\qquad 0\le\sigma<\frac12.
 ```
 
-A rejected selected interpolant falls back to the overflow-safe midpoint. The
-bracket update then restores [](#eq-root-bracket-invariant).
+The safeguard band is inclusive; a proposal on either band edge is admissible
+when it also satisfies the separate finite, strict-interior, and progress
+checks. A rejected selected interpolant falls back to the overflow-safe
+midpoint. The bracket update then restores [](#eq-root-bracket-invariant).
 
 ### Newton and the implicit derivative
 
@@ -148,8 +150,9 @@ certificate.
 `bracket_expand(f, x0, step=1, growth=2, max_steps=32)` searches symmetric
 intervals with a fixed scan and returns `(lo, hi, found)`. If discovery fails,
 the returned endpoints are the last expanded interval and `found=False`.
-`bisect` performs 50 fixed halvings; `bisect_many` is the explicit array-shaped
-wrapper for independent brackets.
+`bisect(..., max_steps=50)` performs a caller-selected fixed number of
+halvings, with default `max_steps=50`; `bisect_many` is the explicit
+array-shaped wrapper for independent brackets.
 
 `initialize_bracket` constructs true endpoint evidence from already evaluated
 residuals. `update_bracket(..., valid=False)` leaves every field unchanged.
@@ -205,11 +208,12 @@ sign and acceptance predicates. Their parameter gradients are branch-selected
 finite-program artifacts, not root sensitivities; bisection is structurally
 zero with respect to parameters captured only inside $f$.
 
-`newton` and `newton_with_grad` use smooth iterates, finite-map gradients. JAX
-can expose a finite executed-map sensitivity through the 30 fixed updates, but
-that is not automatically [](#eq-root-implicit-derivative). The zero-derivative
-operand is replaced by one before division to avoid dead-branch poisoning; this
-guard preserves finiteness, not convergence.
+`newton` and `newton_with_grad` use smooth iterates, finite-map gradients.
+Their caller-selected fixed update count has default `max_steps=30`. JAX can
+expose a finite executed-map sensitivity through those updates, but that is not
+automatically [](#eq-root-implicit-derivative). The zero-derivative operand is
+replaced by one before division to avoid dead-branch poisoning; this guard
+preserves finiteness, not convergence.
 
 `implicit_bracketed_root(f, args, ...)` is separate. It uses `lax.custom_root`
 and exposes a certified mathematical-root sensitivity only after caller

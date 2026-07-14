@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -64,6 +66,7 @@ PAGE_SPECS = {
             "eq-bspline-zero",
             "eq-cox-de-boor",
             "eq-bspline-derivative",
+            "eq-bspline-antiderivative",
             "eq-bspline-roughness",
         ),
     ),
@@ -83,6 +86,44 @@ PAGE_SPECS = {
     ),
 }
 
+EXACT_RELATIONS = {
+    "change-constraints-evolution/optimization.md": (
+        r"F(x_k+\alpha_kp_k)\leF(x_k)+c_1\alpha_k\nablaF(x_k)^\mathsf{T}p_k",
+    ),
+    "approximation-integration/regular-grid.md": (
+        r"f_{\boldsymbol{i}+\boldsymbol{b}}\prod_{d=1}^{D}t_d^{b_d}(1-t_d)^{1-b_d}",
+    ),
+    "approximation-integration/bsplines.md": (
+        r"B_{i,p}(x)=\frac{x-t_i}{t_{i+p}-t_i}B_{i,p-1}(x)+\frac{t_{i+p+1}-x}{t_{i+p+1}-t_{i+1}}B_{i+1,p-1}(x)",
+        r"c'_i=p\frac{c_{i+1}-c_i}{t_{i+p+1}-t_{i+1}}",
+        r"d_{i+1}-d_i=c_i\frac{t_{i+p+1}-t_i}{p+1}",
+    ),
+    "approximation-integration/quadrature.md": (
+        r"\widetilde{w}_i=\frac{w_i}{\sqrt{\pi}}",
+    ),
+}
+
+RELATION_MUTATIONS = {
+    EXACT_RELATIONS["change-constraints-evolution/optimization.md"][0]: (
+        r"F(x_k+\alpha_kp_k)\leF(x_k)+c_1\alpha_k\nablaF(x_k)^\mathsf{T}+p_k"
+    ),
+    EXACT_RELATIONS["approximation-integration/regular-grid.md"][0]: (
+        r"f_{\boldsymbol{i}+\boldsymbol{b}}+\prod_{d=1}^{D}t_d^{b_d}(1-t_d)^{1-b_d}"
+    ),
+    EXACT_RELATIONS["approximation-integration/bsplines.md"][0]: (
+        r"B_{i,p}(x)=\frac{x-t_i}{t_{i+p}-t_i}B_{i,p-1}(x)-\frac{t_{i+p+1}-x}{t_{i+p+1}-t_{i+1}}B_{i+1,p-1}(x)"
+    ),
+    EXACT_RELATIONS["approximation-integration/bsplines.md"][1]: (
+        r"c'_i=p+\frac{c_{i+1}-c_i}{t_{i+p+1}-t_{i+1}}"
+    ),
+    EXACT_RELATIONS["approximation-integration/bsplines.md"][2]: (
+        r"d_{i+1}-d_i=c_i+\frac{t_{i+p+1}-t_i}{p+1}"
+    ),
+    EXACT_RELATIONS["approximation-integration/quadrature.md"][0]: (
+        r"\widetilde{w}_i=w_i\sqrt{\pi}"
+    ),
+}
+
 
 def _page(relative: str) -> str:
     return (DOCS / "20-methods" / relative).read_text(encoding="utf-8")
@@ -92,6 +133,34 @@ def _first_python_block(relative: str) -> str:
     match = re.search(r"```python\n(?P<code>.*?)\n```", _page(relative), re.DOTALL)
     assert match is not None, relative
     return match.group("code")
+
+
+def _derivation(relative: str, text: str | None = None) -> str:
+    if text is None:
+        text = _page(relative)
+    derive_start = text.index("## Derive the method")
+    algorithm_start = text.index("## What the algorithm actually does")
+    return text[derive_start:algorithm_start]
+
+
+def _compact(text: str) -> str:
+    return re.sub(r"\s+", "", text)
+
+
+def _missing_exact_relations_from_compact(
+    relative: str, compact: str
+) -> tuple[str, ...]:
+    return tuple(
+        relation
+        for relation in EXACT_RELATIONS.get(relative, ())
+        if relation not in compact
+    )
+
+
+def _missing_exact_relations(relative: str, text: str) -> tuple[str, ...]:
+    return _missing_exact_relations_from_compact(
+        relative, _compact(_derivation(relative, text))
+    )
 
 
 @pytest.mark.parametrize("relative", PAGE_SPECS)
@@ -125,9 +194,7 @@ def test_current_method_pages_keep_the_required_derivations_visible_and_labeled(
     text = _page(relative)
     _, _, equation_labels = PAGE_SPECS[relative]
 
-    derive_start = text.index("## Derive the method")
-    algorithm_start = text.index("## What the algorithm actually does")
-    derivation = text[derive_start:algorithm_start]
+    derivation = _derivation(relative, text)
     for label in equation_labels:
         assert f":label: {label}" in derivation, (relative, label)
     assert "```{math}" in derivation, relative
@@ -176,23 +243,208 @@ def test_derivations_protect_the_scientific_relations_not_only_section_names() -
 
     for relative, patterns in expected_relations.items():
         text = _page(relative)
-        derive_start = text.index("## Derive the method")
-        algorithm_start = text.index("## What the algorithm actually does")
-        derivation = text[derive_start:algorithm_start]
+        derivation = _derivation(relative, text)
         for pattern in patterns:
             assert re.search(pattern, derivation, flags=re.DOTALL), (relative, pattern)
 
 
-def test_rootfinding_example_enables_precision_and_converges() -> None:
-    relative = "change-constraints-evolution/rootfinding.md"
+@pytest.mark.parametrize("relative", PAGE_SPECS)
+def test_current_method_page_examples_execute_in_isolation(relative: str) -> None:
     block = _first_python_block(relative)
+    completed = subprocess.run(
+        [sys.executable, "-c", block],
+        cwd=DOCS.parent,
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert completed.returncode == 0, (
+        relative,
+        completed.stdout,
+        completed.stderr,
+    )
+
+
+def test_rootfinding_example_enables_precision_before_owner_import() -> None:
+    block = _first_python_block("change-constraints-evolution/rootfinding.md")
     assert block.index("enable_high_precision()") < block.index(
         "from jaxstro.numerics.rootfinding import"
     )
 
-    namespace: dict[str, object] = {}
-    exec(compile(block, relative, "exec"), namespace)
 
-    result = namespace["result"]
-    assert bool(result.bracketed)
-    assert bool(result.converged)
+def test_exact_relations_are_mutation_resistant() -> None:
+    for relative, relations in EXACT_RELATIONS.items():
+        text = _page(relative)
+        assert not _missing_exact_relations(relative, text), relative
+
+        compact = _compact(_derivation(relative, text))
+        for relation in relations:
+            mutated = compact.replace(relation, RELATION_MUTATIONS[relation], 1)
+            assert relation in _missing_exact_relations_from_compact(
+                relative, mutated
+            ), (
+                relative,
+                relation,
+            )
+
+
+def test_reviewed_runtime_boundaries_are_stated_explicitly() -> None:
+    integration = " ".join(
+        _page("approximation-integration/cumulative-trapz.md").split()
+    )
+    assert "supported default-last-axis paths" in integration
+    assert "nondefault `trapz` axes are not currently supported" in integration
+    assert "nonuniform multidimensional cumulative integration" in integration
+    assert "direct width broadcasting" in integration
+
+    interpolation = " ".join(
+        _page("approximation-integration/interpolation.md").split()
+    )
+    assert "scalar one-dimensional `y` only" in interpolation
+    assert "Array-valued payloads are supported by the linear, Hermite, and PCHIP" in (
+        interpolation
+    )
+    assert "does not cleanly reject an array-valued `y`" in interpolation
+
+    optimization = " ".join(
+        _page("change-constraints-evolution/optimization.md").split()
+    )
+    assert "Huber is $C^1$ but not $C^2$" in optimization
+    assert "curvature and Hessian" in optimization
+    assert "$s_0>0$" in optimization
+    assert "`scale_floor=1e-12`" in optimization
+
+    rootfinding = " ".join(_page("change-constraints-evolution/rootfinding.md").split())
+    assert "default `max_steps=50`" in rootfinding
+    assert "default `max_steps=30`" in rootfinding
+    assert r"\le x_{\mathrm{trial}}\le" in rootfinding
+
+    ode = " ".join(_page("change-constraints-evolution/ode.md").split())
+    assert "first-order RHS integrators" in ode
+    assert "second-order velocity-Verlet surface" in ode
+    assert "separable conservative system" in ode
+
+
+def _run_runtime_shape_status_and_failure_probes() -> None:
+    import jax
+    import jax.numpy as jnp
+
+    from jaxstro.numerics.autodiff import jvp, vjp
+    from jaxstro.numerics.integration import cumulative_trapz, trapz
+    from jaxstro.numerics.interpolation import (
+        cubic_hermite_interp,
+        monotone_cubic_interp,
+        natural_cubic_spline_coeffs,
+    )
+    from jaxstro.numerics.ode import solve_fixed_step, velocity_verlet
+    from jaxstro.numerics.optimization import armijo_backtracking
+    from jaxstro.numerics.quadrature import gauss_laguerre_nodes
+    from jaxstro.numerics.regular_grid import regular_grid_interp
+    from jaxstro.numerics.rootfinding import safeguarded_bracketed_root
+    from jaxstro.numerics.splines import bspline_eval, open_uniform_knots
+
+    x = jnp.array([0.4, -0.2])
+    tangent = jnp.array([0.3, 0.7])
+    cotangent = jnp.array([1.2, -0.5])
+
+    def function(value):
+        return jnp.array([value[0] ** 2, value[0] * value[1]])
+
+    _, pushed = jvp(function, x, tangent)
+    _, pulled = vjp(function, x, cotangent)
+    assert pushed.shape == cotangent.shape
+    assert pulled.shape == tangent.shape
+    assert jnp.allclose(jnp.vdot(cotangent, pushed), jnp.vdot(tangent, pulled))
+
+    missing_root = safeguarded_bracketed_root(
+        lambda value: value**2 + 1.0,
+        -1.0,
+        1.0,
+        max_steps=8,
+    )
+    assert not bool(missing_root.bracketed)
+    assert not bool(missing_root.converged)
+    assert bool(jnp.isnan(missing_root.root))
+
+    def objective(value):
+        return 0.5 * jnp.sum(value**2)
+
+    point = jnp.array([1.0])
+    rejected = armijo_backtracking(
+        objective,
+        point,
+        direction=point,
+        grad=point,
+        max_steps=4,
+    )
+    assert not bool(rejected.accepted)
+    assert int(rejected.iterations) == 4
+
+    with pytest.raises(ValueError, match="unknown fixed-step ODE method"):
+        solve_fixed_step(
+            lambda y, t: y + t,
+            y0=jnp.ones(2),
+            t0=0.0,
+            dt=0.1,
+            num_steps=2,
+            method="bogus",  # type: ignore[arg-type]
+        )
+    verlet = velocity_verlet(
+        lambda q, t: -q + 0.0 * t,
+        q0=jnp.ones(2),
+        v0=jnp.zeros(2),
+        t0=0.0,
+        dt=0.1,
+        num_steps=3,
+    )
+    assert verlet.q.shape == verlet.v.shape == (4, 2)
+
+    grid = jnp.arange(3.0)
+    payload = jnp.stack([grid, grid**2], axis=1)
+    slopes = jnp.ones_like(payload)
+    assert cubic_hermite_interp(grid, payload, slopes, 0.5, axis=0).shape == (2,)
+    assert monotone_cubic_interp(grid, payload, 0.5, axis=0).shape == (2,)
+    with pytest.raises(TypeError, match="different numbers of dimensions"):
+        natural_cubic_spline_coeffs(grid, payload)
+
+    with pytest.raises(jax.errors.TracerIntegerConversionError):
+        trapz(jnp.ones((3, 4)), axis=-1)
+    with pytest.raises(ValueError, match="Incompatible shapes for broadcasting"):
+        cumulative_trapz(jnp.ones((3, 4)), grid, axis=0)
+
+    with pytest.raises(ValueError, match="outside query points"):
+        regular_grid_interp(
+            (jnp.array([0.0, 1.0]),),
+            jnp.array([2.0, 3.0]),
+            jnp.array([[2.0]]),
+            boundary="reject",
+        )
+
+    knots = open_uniform_knots(0.0, 1.0, n_basis=4, degree=3)
+    with pytest.raises(ValueError, match="coefficient axis length"):
+        bspline_eval(knots, jnp.ones(3), jnp.array([0.5]), degree=3)
+
+    nodes, weights = gauss_laguerre_nodes(4)
+    assert nodes.shape == weights.shape == (4,)
+    with pytest.raises(ValueError, match="n >= 1"):
+        gauss_laguerre_nodes(0)
+
+
+def test_runtime_shape_status_and_failure_probes_match_the_pages() -> None:
+    probe = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "from tests.integration.test_method_page_contract import "
+                "_run_runtime_shape_status_and_failure_probes as run; run()"
+            ),
+        ],
+        cwd=DOCS.parent,
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert probe.returncode == 0, probe.stderr
