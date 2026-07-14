@@ -104,6 +104,8 @@ SCIENTIFIC_ML_PAGES = {
     "40-workflows/scientific-ml/ecosystem-boundaries.md",
 }
 
+LITERAL_BODY_DIRECTIVES = {"code", "code-block", "literalinclude"}
+
 
 @dataclass(frozen=True)
 class HeadingNode:
@@ -147,6 +149,31 @@ class _OpenDirective:
     parent_directives: tuple[str, ...]
 
 
+def _append_literal_range(ranges: list[tuple[int, int]], start: int, end: int) -> None:
+    if ranges and ranges[-1][1] + 1 == start:
+        ranges[-1] = (ranges[-1][0], end)
+    else:
+        ranges.append((start, end))
+
+
+def _inside_list_context(lines: tuple[str, ...], index: int, indent: int) -> bool:
+    """Return whether an indented line belongs to a preceding list item."""
+    if indent < 2:
+        return False
+    list_item = re.compile(r"^( {0,3})(?:[-+*]|\d{1,9}[.)])(?:[ \t]+)")
+    for previous in range(index - 1, -1, -1):
+        line = lines[previous]
+        if not line.strip():
+            continue
+        match = list_item.match(line)
+        if match:
+            return indent >= len(match.group(1)) + 2
+        previous_indent = len(line) - len(line.lstrip(" "))
+        if previous_indent < indent:
+            return False
+    return False
+
+
 def _directive_parts(
     lines: tuple[str, ...], start: int, end: int
 ) -> tuple[dict[str, str], str]:
@@ -182,7 +209,7 @@ def _parse_myst_source(source: str) -> MystDocument:
         r"^(\s*)(:{3,}|`{3,})\{([A-Za-z0-9_-]+)\}(?:\s+(.*?))?\s*$"
     )
     generic_fence = re.compile(r"^(\s*)(`{3,}|~{3,})(.*)$")
-    heading_pattern = re.compile(r"^\s*(#{1,6})\s+(.+?)\s*#*\s*$")
+    heading_pattern = re.compile(r"^(\s*)(#{1,6})\s+(.+?)\s*#*\s*$")
 
     for index, line in enumerate(lines):
         if literal is not None:
@@ -217,7 +244,19 @@ def _parse_myst_source(source: str) -> MystDocument:
                         parent_directives=frame.parent_directives,
                     )
                 )
+                if frame.name in LITERAL_BODY_DIRECTIVES:
+                    _append_literal_range(
+                        literal_ranges, frame.start_index + 1, index + 1
+                    )
                 continue
+            if top.name in LITERAL_BODY_DIRECTIVES:
+                continue
+
+        indent = len(line) - len(line.lstrip(" "))
+        in_list = _inside_list_context(lines, index, indent)
+        if indent >= 4 and not directive_stack and not in_list:
+            _append_literal_range(literal_ranges, index + 1, index + 1)
+            continue
 
         opener = directive_open.match(line)
         if opener:
@@ -244,8 +283,8 @@ def _parse_myst_source(source: str) -> MystDocument:
 
         heading = heading_pattern.match(line)
         if heading:
-            level = len(heading.group(1))
-            text = heading.group(2).strip()
+            level = len(heading.group(2))
+            text = heading.group(3).strip()
             ancestry = tuple(
                 node.text for node in visible_heading_stack if node.level < level
             )
@@ -545,6 +584,57 @@ def test_tokenizer_ignores_directive_examples_inside_literal_fences() -> None:
     document = _parse_myst_source(source)
 
     assert document.directives == ()
+
+
+def test_tokenizer_treats_literal_body_directives_as_opaque() -> None:
+    for name in ("code", "code-block", "literalinclude"):
+        source = f"""## Visible heading
+
+````{{{name}}} example.py
+:::{"{"}card{"}"} Not live
+:::
+```{{tabs}}
+```
+## Core derivation
+````
+"""
+        document = _parse_myst_source(source)
+
+        assert [node.name for node in document.directives] == [name]
+        assert [node.text for node in document.headings] == ["Visible heading"]
+        assert document.literal_ranges == ((3, 9),)
+
+
+def test_tokenizer_ignores_top_level_four_space_indented_code() -> None:
+    source = """## Visible heading
+
+    ## Core derivation
+    :::{card} Not live
+    :::
+    ```{tabs}
+    ```
+"""
+    document = _parse_myst_source(source)
+
+    assert document.directives == ()
+    assert [node.text for node in document.headings] == ["Visible heading"]
+    assert document.literal_ranges == ((3, 7),)
+
+
+def test_tokenizer_preserves_indented_live_directives_in_list_context() -> None:
+    source = """## Choices
+
+- Compare approaches.
+
+    :::{card} Live nested choice
+    Body.
+    :::
+"""
+    document = _parse_myst_source(source)
+
+    assert [node.name for node in document.directives] == ["card"]
+    assert document.directives[0].argument == "Live nested choice"
+    assert document.directives[0].body == "Body."
 
 
 def test_critical_heading_contract_rejects_missing_renamed_nested_or_wrong_level() -> (

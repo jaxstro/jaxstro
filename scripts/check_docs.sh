@@ -36,6 +36,12 @@ echo "== docs: strict static build =="
   myst build --html --ci --strict
 )
 
+# MyST 1.10.1 has no custom-JavaScript theme option and strips scripts from
+# site parts, so patch the exact static artifact that Pages uploads.
+env -u VIRTUAL_ENV uv run --no-sync python \
+  "$ROOT_DIR/scripts/inject_docs_accessibility.py" \
+  "$ROOT_DIR/docs/_build/html"
+
 if [[ ! -f "$ROOT_DIR/docs/_build/html/index.html" ]]; then
   echo "docs gate failed: docs/_build/html/index.html is missing" >&2
   exit 1

@@ -17,6 +17,13 @@ def test_docs_gate_is_reused_by_local_and_full_ci_gates() -> None:
     assert (
         'uv run --no-sync python "$ROOT_DIR/scripts/check_docs_site.py"' in script_text
     )
+    assert '"$ROOT_DIR/scripts/inject_docs_accessibility.py"' in script_text
+    assert script_text.index("myst build --html --ci --strict") < script_text.index(
+        '"$ROOT_DIR/scripts/inject_docs_accessibility.py"'
+    )
+    assert script_text.index(
+        '"$ROOT_DIR/scripts/inject_docs_accessibility.py"'
+    ) < script_text.index("exec myst start")
 
     local_gate = (REPO_ROOT / "scripts" / "check.sh").read_text(encoding="utf-8")
     full_gate = (REPO_ROOT / ".github" / "workflows" / "full-gate.yml").read_text(
@@ -29,6 +36,14 @@ def test_docs_gate_is_reused_by_local_and_full_ci_gates() -> None:
     assert "mystmd@1.10.1" in docs_job
     assert "astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b" in docs_job
     assert "uv sync --locked --extra dev" in docs_job
+
+    pages = (REPO_ROOT / ".github" / "workflows" / "pages.yml").read_text(
+        encoding="utf-8"
+    )
+    assert pages.index("run: bash scripts/check_docs.sh") < pages.index(
+        "uses: actions/upload-pages-artifact@v5"
+    )
+    assert "path: docs/_build/html" in pages
 
 
 def test_committed_route_manifest_matches_authored_navigation_routes() -> None:
