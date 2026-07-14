@@ -23,8 +23,11 @@ model is scientifically appropriate.
 State the shapes and units first. For $n$ observations and $p$ features, a
 design matrix has shape $(n,p)$ and a response has leading shape $(n,)$. A
 weighted fit needs finite nonnegative weights of shape $(n,)$. Covariance needs
-at least `ddof + 1` effective observations, and a solve needs a rank assumption
-or an explicit singular-value cutoff.
+`n_obs - ddof > 0` for unweighted covariance and
+`sum(weights) - ddof > 0` for weighted covariance. The weighted denominator is
+the current frequency-weight-style runtime semantics, not an
+effective-sample-size correction. A solve also needs a rank assumption or an
+explicit singular-value cutoff.
 
 :::{warning}
 `weighted_lstsq` and covariance helpers reject invalid concrete weights, but
@@ -88,6 +91,10 @@ singular values above the chosen cutoff.
 
 `covariance_matrix(samples, weights=None, rowvar=False, ddof=1)` treats rows as
 observations by default. `rowvar` and `ddof` are static in its compiled core.
+Under the current weighted rule, one observation with weight 2 and `ddof=1`
+passes because its denominator is one and returns a zero covariance matrix. This
+illustrates the normalization convention; it is not evidence for two independent
+observations.
 `weighted_lstsq` accepts scalar or array-valued responses with the same leading
 sample axis. `qr_solve` requires rows greater than or equal to columns;
 `svd_solve` zeroes inverse singular values at or below `rcond * max(s)`.

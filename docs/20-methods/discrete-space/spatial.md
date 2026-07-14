@@ -23,7 +23,9 @@ and `did_overflow` is false.
 Define the coordinate frame, boundary convention, cell size, cutoff, and fixed
 capacities. For the exact query, `cell_size >= cutoff`, `Bcap` must hold every
 searched cell, and `k_max` must hold every accepted neighbor per particle. The
-current geometry is open and clamped, not periodic.
+27-cell gather makes a candidate axis of length `27 * Bcap`, so
+`k_max <= 27 * Bcap` is required before the fixed-size top-k selection can run.
+The current geometry is open and clamped, not periodic.
 
 Morton binning requires `Nbins_per_dim` to be a positive power of two no larger
 than 1024. Dense linear cells accept arbitrary positive dimensions and are the
@@ -87,11 +89,21 @@ filter and recall audit.
 `gather_pairs_within_radius` assigns dense cells, gathers a masked 27-cell
 stencil, computes distances, and returns `(neighbors, mask, did_overflow)` with
 shapes `(N, k_max)`, `(N, k_max)`, and `()`. It is exact only when
-`did_overflow` is false and all stated preconditions hold. Its `dims=None` path
-reads positions on the host and is eager-only; under `jit`, `dims` must be
-provided explicitly as static grid structure. `k_max`, `Bcap`, dimensions, and
-the concrete `cell_size >= cutoff` guard also determine traced structure or
-host-side checks.
+`did_overflow` is false and all stated preconditions, including the candidate-axis
+bound, hold.
+
+The candidate axis has length `27 * Bcap`; therefore
+`k_max <= 27 * Bcap` is required independently of whether `k_max` can hold every
+true neighbor. If omitted, `Bcap=None` selects `min(N, max(k_max, 64))`. Because
+that fallback cannot exceed $N$, it does not guarantee
+`k_max <= 27 * Bcap` when `k_max > 27 * N`; the caller must still check the
+structural bound.
+
+The `dims=None` path reads positions on the host and is eager-only. For a
+supported transformed call, `cell_size`, `cutoff`, `k_max`, `Bcap`, and `dims`
+must be static or closed over for `jax.jit`. In particular, `cell_size` and
+`cutoff` pass through Python `float(...)` in the precondition guard, while the
+remaining controls determine array shapes, top-k size, or Python grid structure.
 
 The result is exact only when `did_overflow` is false and those geometry and
 capacity conditions all hold.

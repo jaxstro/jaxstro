@@ -470,6 +470,10 @@ def test_reviewed_runtime_boundaries_are_stated_explicitly() -> None:
     )
     assert "`rowvar` and `ddof` are static" in linear
     assert "zero variance" in linear
+    assert "`n_obs - ddof > 0` for unweighted covariance" in linear
+    assert "`sum(weights) - ddof > 0` for weighted covariance" in linear
+    assert "frequency-weight-style runtime semantics" in linear
+    assert "not an effective-sample-size correction" in linear
 
     operators = " ".join(_page("linear-structure/operators.md").split())
     assert "Python structure is static" in operators
@@ -505,7 +509,14 @@ def test_reviewed_runtime_boundaries_are_stated_explicitly() -> None:
     spatial = " ".join(_page("discrete-space/spatial.md").split())
     assert "exact only when `did_overflow` is false" in spatial
     assert "host-side, discrete preprocessing" in spatial
-    assert "under `jit`, `dims`" in spatial
+    assert "candidate axis has length `27 * Bcap`" in spatial
+    assert "`k_max <= 27 * Bcap` is required" in spatial
+    assert "`Bcap=None` selects `min(N, max(k_max, 64))`" in spatial
+    assert "does not guarantee `k_max <= 27 * Bcap` when `k_max > 27 * N`" in spatial
+    assert (
+        "`cell_size`, `cutoff`, `k_max`, `Bcap`, and `dims` must be static or "
+        "closed over for `jax.jit`"
+    ) in spatial
 
 
 def _run_runtime_shape_status_and_failure_probes() -> None:
@@ -646,6 +657,11 @@ def _run_runtime_shape_status_and_failure_probes() -> None:
     centered = observations - jnp.mean(observations, axis=0)
     covariance = covariance_matrix(observations, ddof=1)
     assert jnp.allclose(covariance, centered.T @ centered / 2.0)
+    weighted_singleton = covariance_matrix(
+        jnp.array([[3.0, 4.0]]), weights=jnp.array([2.0]), ddof=1
+    )
+    assert weighted_singleton.shape == (2, 2)
+    assert jnp.allclose(weighted_singleton, jnp.zeros((2, 2)))
     design = jnp.array([[1.0, 0.0], [1.0, 1.0], [1.0, 2.0]])
     response = jnp.array([1.0, 3.0, 5.0])
     weights = jnp.array([1.0, 2.0, 1.0])
@@ -767,6 +783,91 @@ def test_runtime_shape_status_and_failure_probes_match_the_pages() -> None:
             (
                 "from tests.integration.test_method_page_contract import "
                 "_run_runtime_shape_status_and_failure_probes as run; run()"
+            ),
+        ],
+        cwd=DOCS.parent,
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert probe.returncode == 0, probe.stderr
+
+
+def _run_spatial_top_k_bound_failure_probe() -> None:
+    import jax.numpy as jnp
+
+    from jaxstro.spatial import gather_pairs_within_radius
+
+    with pytest.raises(
+        ValueError,
+        match="k argument to top_k must be no larger than size along axis",
+    ):
+        gather_pairs_within_radius(
+            jnp.array([[0.0, 0.0, 0.0]]),
+            origin=jnp.zeros(3),
+            cell_size=1.0,
+            cutoff=0.5,
+            k_max=28,
+            Bcap=1,
+            dims=(1, 1, 1),
+        )
+
+
+def test_spatial_top_k_bound_failure_matches_the_documented_candidate_axis() -> None:
+    probe = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "from tests.integration.test_method_page_contract import "
+                "_run_spatial_top_k_bound_failure_probe as run; run()"
+            ),
+        ],
+        cwd=DOCS.parent,
+        check=False,
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    assert probe.returncode == 0, probe.stderr
+
+
+def _run_supported_jitted_spatial_probe() -> None:
+    import jax
+    import jax.numpy as jnp
+
+    from jaxstro.spatial import gather_pairs_within_radius
+
+    positions = jnp.array(
+        [[0.0, 0.0, 0.0], [0.2, 0.0, 0.0], [0.5, 0.0, 0.0], [1.1, 0.0, 0.0]]
+    )
+
+    def query(pos):
+        return gather_pairs_within_radius(
+            pos,
+            origin=jnp.array([0.0, -0.5, -0.5]),
+            cell_size=0.5,
+            cutoff=0.5,
+            k_max=3,
+            Bcap=4,
+            dims=(4, 2, 2),
+        )
+
+    neighbors, mask, overflow = jax.jit(query)(positions)
+    assert neighbors.shape == mask.shape == (4, 3)
+    assert not bool(overflow)
+    assert set(map(int, neighbors[0][mask[0]].tolist())) == {1, 2}
+
+
+def test_spatial_jit_succeeds_with_shape_and_float_controls_closed_over() -> None:
+    probe = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            (
+                "from tests.integration.test_method_page_contract import "
+                "_run_supported_jitted_spatial_probe as run; run()"
             ),
         ],
         cwd=DOCS.parent,
