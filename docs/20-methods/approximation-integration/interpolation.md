@@ -46,7 +46,7 @@ assert jnp.allclose(hermite, monotone)
 assert jnp.allclose(wrapped_monotone, monotone)
 ```
 
-:::{figure} ./figures/interpolation-shape-contracts.webp
+:::{figure} ../../10-theory/figures/interpolation-shape-contracts.webp
 :name: fig-interpolation-shape-contracts
 :alt: Two-panel comparison of natural cubic and PCHIP interpolation for the same monotone samples, showing natural-spline undershoot and nonnegative PCHIP increments
 
@@ -220,6 +220,6 @@ validation policies.
 
 ## From explanation to evidence
 
-Use the [](../40-api/index.md#jaxstro-numerics-interpolation) for signatures and
-ownership, the [](../60-validation/index.md) for measured interpolation anchors,
-and the [](./index.md#gradient-contracts) for the package-wide contract taxonomy.
+Use the [](../../40-api/index.md#jaxstro-numerics-interpolation) for signatures and
+ownership, the [](../../60-validation/index.md) for measured interpolation anchors,
+and the [](../methods.md#gradient-contracts) for the package-wide contract taxonomy.

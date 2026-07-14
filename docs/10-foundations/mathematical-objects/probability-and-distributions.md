@@ -82,4 +82,4 @@ stellar population or measurement process.
 > over data is not automatically a normalized posterior over parameters.
 
 Continue to [](../models-and-computation/models-inference-information.md) or
-Jaxstro's [](../../10-theory/distributions.md) chapter.
+Jaxstro's [](../../20-methods/probability-sampling/distributions.md) chapter.

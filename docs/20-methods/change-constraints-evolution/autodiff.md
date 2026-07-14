@@ -7,7 +7,7 @@ description: >-
 
 If you want to connect calculus, local linear maps, scientific sensitivity, and
 the derivative of an executed program, begin with
-[](../10-foundations/mathematical-objects/what-is-a-derivative.md). This chapter
+[](../../10-foundations/mathematical-objects/what-is-a-derivative.md). This chapter
 focuses on Jaxstro's
 automatic-differentiation products and contracts.
 

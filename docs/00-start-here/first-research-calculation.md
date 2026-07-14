@@ -80,7 +80,7 @@ includes whether the bracket remained valid and why the algorithm stopped.
     unless the separate certificate passes.
 ```
 
-The [](../10-theory/rootfinding.md) chapter develops this example. The
+The [](../20-methods/change-constraints-evolution/rootfinding.md) chapter develops this example. The
 [](../60-validation/index.md) page links its claims to executable tests and
 evidence artifacts.
 
@@ -107,7 +107,7 @@ giving the wrong derivative with respect to $\alpha$.
     limits, and central finite differences against AD across the limit.
 ```
 
-See [](../10-theory/distributions.md) for the derivation and the
+See [](../20-methods/probability-sampling/distributions.md) for the derivation and the
 [](../40-api/index.md) page for public signatures.
 
 ## Use this cycle in research

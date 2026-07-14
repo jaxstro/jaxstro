@@ -8,7 +8,9 @@ from pathlib import Path
 import numpy as np
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-INTERPOLATION_PAGE = REPO_ROOT / "docs" / "10-theory" / "interpolation.md"
+INTERPOLATION_PAGE = (
+    REPO_ROOT / "docs" / "20-methods" / "approximation-integration" / "interpolation.md"
+)
 BIBLIOGRAPHY = REPO_ROOT / "docs" / "99-bibliography" / "references.bib"
 DESIGN_RECORD = (
     REPO_ROOT
@@ -91,7 +93,7 @@ def test_interpolation_equations_have_verified_primary_provenance() -> None:
 def test_interpolation_page_embeds_figure_and_evidence_routes() -> None:
     text = _page_text()
 
-    assert "./figures/interpolation-shape-contracts.webp" in text
+    assert "../../10-theory/figures/interpolation-shape-contracts.webp" in text
     assert ":name: fig-interpolation-shape-contracts" in text
     assert (
         ":alt: Two-panel comparison of natural cubic and PCHIP interpolation "
@@ -99,6 +101,6 @@ def test_interpolation_page_embeds_figure_and_evidence_routes() -> None:
         "nonnegative PCHIP increments"
     ) in text
     assert DESIGN_RECORD.is_file()
-    assert "[](../40-api/index.md#jaxstro-numerics-interpolation)" in text
-    assert "[](../60-validation/index.md)" in text
-    assert "[](./index.md#gradient-contracts)" in text
+    assert "[](../../40-api/index.md#jaxstro-numerics-interpolation)" in text
+    assert "[](../../60-validation/index.md)" in text
+    assert "[](../methods.md#gradient-contracts)" in text

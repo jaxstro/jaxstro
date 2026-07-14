@@ -1,0 +1,127 @@
+"""Contracts for the researcher-first numerical-method information architecture."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+DOCS = ROOT / "docs"
+METHODS = DOCS / "20-methods"
+
+FAMILIES = {
+    "change-constraints-evolution": (
+        "autodiff",
+        "rootfinding",
+        "optimization",
+        "ode",
+    ),
+    "approximation-integration": (
+        "interpolation",
+        "regular-grid",
+        "bsplines",
+        "cumulative-trapz",
+        "quadrature",
+    ),
+    "linear-structure": ("linear-algebra", "operators", "special-functions"),
+    "probability-sampling": (
+        "distributions",
+        "random",
+        "sampling",
+    ),
+    "discrete-space": ("grids", "meshes", "spatial"),
+}
+
+ROUTES = {
+    "methods.md": "/methods",
+    "change-constraints-evolution/autodiff.md": "/autodiff",
+    "change-constraints-evolution/rootfinding.md": "/rootfinding",
+    "change-constraints-evolution/optimization.md": "/optimization",
+    "change-constraints-evolution/ode.md": "/ode",
+    "approximation-integration/interpolation.md": "/interpolation",
+    "approximation-integration/regular-grid.md": "/regular-grid",
+    "approximation-integration/bsplines.md": "/bsplines",
+    "approximation-integration/cumulative-trapz.md": "/cumulative-trapz",
+    "approximation-integration/quadrature.md": "/quadrature",
+    "linear-structure/linear-algebra.md": "/linear-algebra",
+    "linear-structure/operators.md": "/operators",
+    "linear-structure/special-functions.md": "/special-functions",
+    "probability-sampling/distributions.md": "/distributions",
+    "probability-sampling/random.md": "/random",
+    "probability-sampling/sampling.md": "/sampling",
+    "discrete-space/grids.md": "/grids",
+    "discrete-space/meshes.md": "/meshes",
+    "discrete-space/spatial.md": "/spatial",
+}
+
+
+def test_current_method_pages_exist_once_in_the_toc_with_stable_routes() -> None:
+    myst = (DOCS / "myst.yml").read_text(encoding="utf-8")
+    manifest = json.loads((DOCS / "route-manifest.json").read_text(encoding="utf-8"))
+
+    assert sum(len(pages) for pages in FAMILIES.values()) == 18
+    for family, pages in FAMILIES.items():
+        for page in pages:
+            relative = f"{family}/{page}.md"
+            source = f"20-methods/{relative}"
+            assert (METHODS / relative).is_file(), source
+            assert myst.count(f"file: {source}") == 1, source
+            assert manifest[source] == ROUTES[relative]
+
+
+def test_methods_landing_uses_semantic_filename_and_family_titles() -> None:
+    landing = METHODS / "methods.md"
+    assert landing.is_file()
+    assert not (METHODS / "index.md").exists()
+
+    text = landing.read_text(encoding="utf-8")
+    for title in (
+        "Change, constraints, and evolution",
+        "Approximation from finite information",
+        "Linear structure and reusable operators",
+        "Randomness as a computational object",
+        "Discrete worlds: grids, meshes, and neighborhoods",
+        "Signals as sampled evidence",
+    ):
+        assert title in text
+
+    myst = (DOCS / "myst.yml").read_text(encoding="utf-8")
+    manifest = json.loads((DOCS / "route-manifest.json").read_text(encoding="utf-8"))
+    assert myst.count("file: 20-methods/methods.md") == 1
+    assert manifest["20-methods/methods.md"] == "/methods"
+    assert "10-theory/index.md" not in manifest
+
+
+def test_migration_retires_only_the_old_method_sources() -> None:
+    old_theory = DOCS / "10-theory"
+    for pages in FAMILIES.values():
+        for page in pages:
+            assert not (old_theory / f"{page}.md").exists(), page
+
+    for deferred in ("quantities.md", "geometry.md", "science-patterns.md"):
+        assert (old_theory / deferred).is_file(), deferred
+        assert not any(METHODS.rglob(deferred)), deferred
+
+
+def test_random_computation_and_sampling_have_distinct_scopes() -> None:
+    random_text = (METHODS / "probability-sampling" / "random.md").read_text(
+        encoding="utf-8"
+    )
+    sampling_text = (METHODS / "probability-sampling" / "sampling.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "## Scope: random computation" in random_text
+    assert "## Scope: sampling and resampling" not in random_text
+    assert "## Scope: sampling and resampling" in sampling_text
+    assert "## Scope: random computation" not in sampling_text
+
+
+def test_new_landing_and_sampling_page_use_ascii_punctuation() -> None:
+    for path in (
+        METHODS / "methods.md",
+        METHODS / "probability-sampling" / "sampling.md",
+    ):
+        text = path.read_text(encoding="utf-8")
+        for punctuation in ("–", "—", "‘", "’", "“", "”", "→"):
+            assert punctuation not in text, f"{path}: {punctuation!r}"

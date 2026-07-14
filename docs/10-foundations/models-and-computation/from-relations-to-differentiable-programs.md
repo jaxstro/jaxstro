@@ -83,5 +83,5 @@ let one passing evidence category silently stand in for another.
 > differentiable with respect to every captured value. Compilation is not
 > validation, and a finite gradient is not an implicit function theorem proof.
 
-Continue to the [](../../10-theory/index.md) module chapters and the generated
+Continue to the [](../../20-methods/methods.md) module chapters and the generated
 [](../../40-api/contracts.md) contract registry.

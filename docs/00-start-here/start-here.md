@@ -155,7 +155,7 @@ improves a solve*, *why fixed iteration does not by itself prove a derivative*,
 and *why `safe_log` guards the analytic check*. These are developed in the
 theory section.
 
-- Read [](../10-theory/index.md), the ten-principle thesis on AD-safe numerics.
-- Then [](../10-theory/rootfinding.md) explains the distinct value and gradient
+- Read [](../20-methods/methods.md), the ten-principle thesis on AD-safe numerics.
+- Then [](../20-methods/change-constraints-evolution/rootfinding.md) explains the distinct value and gradient
   contracts for `bisect`, `newton`, and `newton_ppf`.
 - When you need a call signature, jump to [](../40-api/index.md).

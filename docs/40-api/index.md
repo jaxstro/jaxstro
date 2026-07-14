@@ -97,14 +97,14 @@ page retains signatures and usage context rather than duplicating that matrix.
     random streams, and sampling.
   - JAX-transform support is method-specific; host-generated nodes, discrete
     choices, clamps, and branches remain explicit.
-  - **Implemented and evolving.** Start with [](../10-theory/index.md) and
+  - **Implemented and evolving.** Start with [](../20-methods/methods.md) and
     [](../60-validation/index.md).
 * - `jaxstro.spatial`
   - Morton coding, grid binning, approximate neighbor candidates, and exact
     fixed-radius pairs.
   - Index construction, sorting, capacity, and overflow policy are host-side or
     discrete preprocessing rather than differentiable kernels.
-  - **Implemented and evolving.** See [](../10-theory/spatial.md) and
+  - **Implemented and evolving.** See [](../20-methods/discrete-space/spatial.md) and
     [](../60-validation/index.md).
 * - `jaxstro.params`
   - Equinox PyTree↔vector `Parameterization` and Identity, Exp, Softplus, and
@@ -187,7 +187,7 @@ CGS constants with sourced values. A few that downstream packages rely on:
 ```
 
 Provenance discipline — every constant cites its authority — is principle
-[9](../10-theory/index.md#p9-correctness).
+[9](../20-methods/methods.md#p9-correctness).
 
 `MSUN_G` is deliberately not labelled an IAU nominal solar mass: Resolution B3
 defines the exact nominal solar *mass parameter* $(GM)_\odot^\mathrm{N}$, while
@@ -213,7 +213,7 @@ checkpointable low-level step surface additionally exports `BracketHistory`,
 `ROOT_STATUS_MISSING_BRACKET`, `ROOT_STATUS_NONFINITE_EVALUATION`, and
 `ROOT_STATUS_MAX_STEPS`. It exposes fixed-shape evidence and typed
 failure state but makes no implicit-root derivative claim. Behavior, field
-definitions, and differentiability caveats are in [](../10-theory/rootfinding.md).
+definitions, and differentiability caveats are in [](../20-methods/change-constraints-evolution/rootfinding.md).
 
 The separate derivative-certificate vocabulary exports
 `ImplicitRootAssumptions`, `ImplicitRootCertificate`, `ImplicitRootResult`,
@@ -279,7 +279,7 @@ wraps a natural spline table as a PyTree;
 `pchip_slopes(...)` constructs shape-preserving slopes; `monotone_cubic_interp(...)`
 combines those slopes with the Hermite evaluator; and
 `MonotoneTabulatedFunction1D` wraps a monotone table as a PyTree. The method page
-is [](../10-theory/interpolation.md).
+is [](../20-methods/approximation-integration/interpolation.md).
 
 ### `jaxstro.numerics.regular_grid`
 
@@ -289,7 +289,7 @@ multilinear interpolation on a tensor-product grid. `bilinear_interp(...)` and
 dimensions of `values`; every trailing dimension is a payload axis. Boundary
 policy is explicit: clamp, whole-payload fill, or eager reject. Value-dependent
 axis/query rejection is skipped while traced. The method page is
-[](../10-theory/regular-grid.md).
+[](../20-methods/approximation-integration/regular-grid.md).
 
 ### `jaxstro.numerics.grids`
 
@@ -297,7 +297,7 @@ axis/query rejection is skipped while traced. The method page is
 grids; `bin_centers(...)` and `geometric_bin_centers(...)` compute arithmetic or
 geometric centers; `conservative_rebin(...)` redistributes integrated bin totals
 onto new edges while preserving total overlap. The method page is
-[](../10-theory/grids.md).
+[](../20-methods/discrete-space/grids.md).
 
 ### `jaxstro.numerics.meshes`
 
@@ -306,14 +306,14 @@ onto new edges while preserving total overlap. The method page is
 `divergence_1d(...)` and `cell_to_face_average(...)` provide small finite-volume
 stencil helpers. `conservative_remap_1d(...)` remaps cell averages while
 preserving integrated totals over the overlapping domain. The method page is
-[](../10-theory/meshes.md).
+[](../20-methods/discrete-space/meshes.md).
 
 ### `jaxstro.numerics.integration`
 
 `trapz`, `cumulative_trapz` (dx-outside uniform path), `simpson`, and
 `cumulative_simpson` panel-endpoint sums. The trapezoid ordering choice is in
-[](../10-theory/cumulative-trapz.md); fixed-node and Simpson-panel rules are in
-[](../10-theory/quadrature.md).
+[](../20-methods/approximation-integration/cumulative-trapz.md); fixed-node and Simpson-panel rules are in
+[](../20-methods/approximation-integration/quadrature.md).
 
 ### `jaxstro.numerics.quadrature`
 
@@ -321,8 +321,8 @@ preserving integrated totals over the overlapping domain. The method page is
 `gauss_hermite_nodes(n)` (probabilists'), `clenshaw_curtis_nodes(n)`,
 `hermite_e_basis`, and Hermite expansion coefficients. Nodes are generated once
 on the host and frozen to constants; gradients flow through the integrand
-values, not the nodes (principle [7](../10-theory/index.md#p7-quadrature)).
-The method page is [](../10-theory/quadrature.md).
+values, not the nodes (principle [7](../20-methods/methods.md#p7-quadrature)).
+The method page is [](../20-methods/approximation-integration/quadrature.md).
 
 ### `jaxstro.numerics.splines`
 
@@ -337,7 +337,7 @@ derivative penalty; `fit_bspline_lstsq(...)` fits coefficients for fixed knots;
 `adaptive_open_uniform_knots(...)` places interior knots at sample quantiles;
 `tensor_product_design_matrix(...)` builds row-wise tensor-product designs; and
 `BSpline1D` wraps knots and coefficients as a PyTree. The method page is
-[](../10-theory/bsplines.md).
+[](../20-methods/approximation-integration/bsplines.md).
 
 ### `jaxstro.numerics.linear_algebra`
 
@@ -350,7 +350,7 @@ solve policies; `covariance_matrix(...)`, `correlation_from_covariance(...)`, an
 Concrete weighted calls reject non-finite weights and nonpositive covariance
 normalization; covariance-to-correlation conversion rejects non-square,
 non-finite, or negative-variance inputs. Value-dependent checks are skipped while
-traced. The method page is [](../10-theory/linear-algebra.md).
+traced. The method page is [](../20-methods/linear-structure/linear-algebra.md).
 
 ### `jaxstro.numerics.distributions`
 
@@ -360,14 +360,14 @@ CDF, and inverse-CDF helpers for positive lognormal, finite-support power-law,
 and truncated-normal families. The power-law signatures are unchanged, while
 normalization, logpdf, CDF, and PPF now share a smooth removable-singularity
 formulation through `alpha=-1`, including the alpha derivative. The method page is
-[](../10-theory/distributions.md).
+[](../20-methods/probability-sampling/distributions.md).
 
 ### `jaxstro.numerics.autodiff`
 
 `jvp(...)`, `vjp(...)`, `jacobian_vector_product(...)`,
 `vector_jacobian_product(...)`, `hvp(...)`, `gauss_newton_product(...)`, and
 `empirical_fisher_product(...)` expose common derivative products as named
-helpers over JAX primitives. The method page is [](../10-theory/autodiff.md).
+helpers over JAX primitives. The method page is [](../20-methods/change-constraints-evolution/autodiff.md).
 
 ### `jaxstro.geometry`
 
@@ -388,7 +388,7 @@ diagnostics for residual vectors, optionally with weights.
 objective and scan length are static under JIT. `relative_step_norm(...)`,
 `gradient_inf_norm(...)`, and `convergence_summary(...)` provide
 optimizer-agnostic stopping diagnostics. The method page is
-[](../10-theory/optimization.md).
+[](../20-methods/change-constraints-evolution/optimization.md).
 
 ### `jaxstro.numerics.ode`
 
@@ -397,7 +397,7 @@ updates for first-order systems with call signature `rhs(y, t)`. `euler(...)`,
 `midpoint(...)`, `rk4(...)`, and `solve_fixed_step(...)` return `ODEResult(t, y)`
 histories including the initial state. `velocity_verlet(...)` returns
 `VerletResult(t, q, v)` for separable second-order systems with acceleration
-callback `a(q, t)`. The method page is [](../10-theory/ode.md).
+callback `a(q, t)`. The method page is [](../20-methods/change-constraints-evolution/ode.md).
 
 ### `jaxstro.numerics.operators`
 
@@ -405,7 +405,7 @@ callback `a(q, t)`. The method page is [](../10-theory/ode.md).
 with `matvec`, `rmatvec`, `shape`, and `to_dense` methods. `scale(...)`,
 `add(...)`, `compose(...)`, `transpose(...)`, and `block_diag(...)` build scaled,
 summed, product, transpose-view, and block-diagonal operators. The method page is
-[](../10-theory/operators.md).
+[](../20-methods/linear-structure/operators.md).
 
 ### `jaxstro.numerics.special`
 
@@ -414,14 +414,14 @@ summed, product, transpose-view, and block-diagonal operators. The method page i
 `log_normalize(...)` and `normalize_log_weights(...)` handle stable log-weight
 normalization. `legendre_basis(...)`, `chebyshev_t_basis(...)`, and
 `laguerre_basis(...)` evaluate orthogonal polynomial bases with the degree axis
-last. The method page is [](../10-theory/special-functions.md).
+last. The method page is [](../20-methods/linear-structure/special-functions.md).
 
 ### `jaxstro.numerics.sampling`
 
 `inverse_cdf_draw(...)` maps a uniform deviate through a tabulated inverse CDF.
 `stratified_uniform(...)` draws one uniform sample from each equal-width stratum
-with deterministic shape. The method pages are [](../10-theory/rootfinding.md) and
-[](../10-theory/grids.md).
+with deterministic shape. The method pages are [](../20-methods/change-constraints-evolution/rootfinding.md) and
+[](../20-methods/discrete-space/grids.md).
 
 ### `jaxstro.numerics.random`
 
@@ -431,7 +431,7 @@ with deterministic shape. The method pages are [](../10-theory/rootfinding.md) a
 `residual_resample(...)` return shape-stable resampled indices from nonnegative
 weights. Their public wrappers reject invalid concrete eager inputs; traced
 callers own the finite/nonnegative value precondition. The method page is
-[](../10-theory/random.md).
+[](../20-methods/probability-sampling/random.md).
 
 :::{note} Per-symbol reference pages are planned
 A complete, auto-generated per-module symbol reference (signatures, parameters,

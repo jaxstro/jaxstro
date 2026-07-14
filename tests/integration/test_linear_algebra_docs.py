@@ -9,7 +9,9 @@ import numpy as np
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-LINEAR_ALGEBRA_PAGE = REPO_ROOT / "docs" / "10-theory" / "linear-algebra.md"
+LINEAR_ALGEBRA_PAGE = (
+    REPO_ROOT / "docs" / "20-methods" / "linear-structure" / "linear-algebra.md"
+)
 BIBLIOGRAPHY = REPO_ROOT / "docs" / "99-bibliography" / "references.bib"
 DESIGN_RECORD = (
     REPO_ROOT
@@ -88,7 +90,7 @@ def test_linear_algebra_claims_have_verified_sources() -> None:
 def test_linear_algebra_page_embeds_registered_figure_and_evidence_routes() -> None:
     text = _page_text()
 
-    assert "./figures/linear-algebra-contracts.webp" in text
+    assert "../../10-theory/figures/linear-algebra-contracts.webp" in text
     assert ":name: fig-linear-algebra-contracts" in text
     assert (
         ":alt: Four regression observations with an outlier and measured "
@@ -96,6 +98,6 @@ def test_linear_algebra_page_embeds_registered_figure_and_evidence_routes() -> N
         "after selected diagonal jitter"
     ) in text
     assert DESIGN_RECORD.is_file()
-    assert "[](../40-api/index.md#jaxstro-numerics-linear-algebra)" in text
-    assert "[](../60-validation/index.md)" in text
-    assert "[](./index.md#gradient-contracts)" in text
+    assert "[](../../40-api/index.md#jaxstro-numerics-linear-algebra)" in text
+    assert "[](../../60-validation/index.md)" in text
+    assert "[](../methods.md#gradient-contracts)" in text

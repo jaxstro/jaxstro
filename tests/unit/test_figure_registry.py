@@ -54,7 +54,7 @@ def test_architecture_figure_contains_ownership_labels() -> None:
 def test_spatial_figure_is_registered_for_the_theory_page() -> None:
     spec = FIGURES["spatial-neighbor-contracts"]
 
-    assert spec.page == "10-theory/spatial.md"
+    assert spec.page == "20-methods/discrete-space/spatial.md"
     assert spec.seed == 0
     assert spec.site_path == "docs/10-theory/figures/spatial-neighbor-contracts.webp"
     labels = {
@@ -68,7 +68,7 @@ def test_spatial_figure_is_registered_for_the_theory_page() -> None:
 def test_bspline_figure_is_registered_and_computed_from_public_basis() -> None:
     spec = FIGURES["bspline-local-support"]
 
-    assert spec.page == "10-theory/bsplines.md"
+    assert spec.page == "20-methods/approximation-integration/bsplines.md"
     assert spec.seed == 0
     assert spec.site_path == "docs/10-theory/figures/bspline-local-support.webp"
 
@@ -111,7 +111,7 @@ def test_bspline_figure_enables_x64_before_knot_allocation() -> None:
 def test_interpolation_figure_is_registered_and_uses_public_results() -> None:
     spec = FIGURES["interpolation-shape-contracts"]
 
-    assert spec.page == "10-theory/interpolation.md"
+    assert spec.page == "20-methods/approximation-integration/interpolation.md"
     assert spec.seed == 0
     assert spec.site_path == "docs/10-theory/figures/interpolation-shape-contracts.webp"
 
@@ -137,7 +137,7 @@ def test_interpolation_figure_is_registered_and_uses_public_results() -> None:
 def test_regular_grid_figure_is_registered_and_uses_public_results() -> None:
     spec = FIGURES["regular-grid-contracts"]
 
-    assert spec.page == "10-theory/regular-grid.md"
+    assert spec.page == "20-methods/approximation-integration/regular-grid.md"
     assert spec.seed == 0
     assert spec.site_path == "docs/10-theory/figures/regular-grid-contracts.webp"
 
@@ -162,7 +162,7 @@ def test_regular_grid_figure_is_registered_and_uses_public_results() -> None:
 def test_linear_algebra_figure_is_registered_and_uses_public_results() -> None:
     spec = FIGURES["linear-algebra-contracts"]
 
-    assert spec.page == "10-theory/linear-algebra.md"
+    assert spec.page == "20-methods/linear-structure/linear-algebra.md"
     assert spec.seed == 0
     assert spec.site_path == "docs/10-theory/figures/linear-algebra-contracts.webp"
 
@@ -267,7 +267,7 @@ def test_root_trace_figure_is_registered_and_uses_public_telemetry() -> None:
     spec = FIGURES["rootfinding-safeguards"]
     x, residual, result = root_trace_results()
 
-    assert spec.page == "10-theory/rootfinding.md"
+    assert spec.page == "20-methods/change-constraints-evolution/rootfinding.md"
     assert spec.site_path == "docs/10-theory/figures/rootfinding-safeguards.webp"
     assert x.shape == residual.shape == (801,)
     assert bool(result.converged)
@@ -289,7 +289,7 @@ def test_value_versus_ift_figure_uses_certified_and_rejected_results() -> None:
     spec = FIGURES["rootfinding-value-versus-ift"]
     results = implicit_comparison_results()
 
-    assert spec.page == "10-theory/rootfinding.md"
+    assert spec.page == "20-methods/change-constraints-evolution/rootfinding.md"
     assert results["certified"].certified
     assert not results["rejected"].certified
     assert np.isclose(results["ad"], results["analytic"], rtol=1.0e-9)

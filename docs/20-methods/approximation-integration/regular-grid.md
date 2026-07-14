@@ -62,7 +62,7 @@ matrix, spectrum, or a batch of diagnostics. `bilinear_interp(...)` and
 `trilinear_interp(...)` assemble two- and three-dimensional queries before
 calling the same generic kernel.
 
-:::{figure} ./figures/regular-grid-contracts.webp
+:::{figure} ../../10-theory/figures/regular-grid-contracts.webp
 :name: fig-regular-grid-contracts
 :alt: Unit-square interpolation query connected to four corners with measured bilinear weights, beside clamp and fill outputs across the grid boundary
 
@@ -182,6 +182,6 @@ modules.
 ## From explanation to evidence
 
 For signatures and payload ownership, see
-[](../40-api/index.md#jaxstro-numerics-regular-grid). The assertion-bearing test
-map is in [](../60-validation/index.md). The five package-wide differentiation
-labels are defined in [](./index.md#gradient-contracts).
+[](../../40-api/index.md#jaxstro-numerics-regular-grid). The assertion-bearing test
+map is in [](../../60-validation/index.md). The five package-wide differentiation
+labels are defined in [](../methods.md#gradient-contracts).

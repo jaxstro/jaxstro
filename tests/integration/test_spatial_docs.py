@@ -9,7 +9,7 @@ import jax.numpy as jnp
 from jaxstro.spatial import gather_pairs_within_radius
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SPATIAL_PAGE = REPO_ROOT / "docs" / "10-theory" / "spatial.md"
+SPATIAL_PAGE = REPO_ROOT / "docs" / "20-methods" / "discrete-space" / "spatial.md"
 MYST_CONFIG = REPO_ROOT / "docs" / "myst.yml"
 
 
@@ -21,7 +21,7 @@ def test_spatial_chapter_is_in_navigation_and_uses_public_api() -> None:
     text = _page_text()
     navigation = MYST_CONFIG.read_text(encoding="utf-8")
 
-    assert "10-theory/spatial.md" in navigation
+    assert "20-methods/discrete-space/spatial.md" in navigation
     for symbol in (
         "assign_particles_to_bins",
         "fill_bins",
@@ -74,7 +74,7 @@ def test_worked_exact_radius_example_matches_documented_neighbors() -> None:
 def test_spatial_chapter_embeds_registered_accessible_figure() -> None:
     text = _page_text()
 
-    assert "./figures/spatial-neighbor-contracts.webp" in text
+    assert "../../10-theory/figures/spatial-neighbor-contracts.webp" in text
     assert ":name: fig-spatial-neighbor-contracts" in text
     assert (
         ":alt: Two-panel spatial-neighbor diagram comparing a grid candidate "

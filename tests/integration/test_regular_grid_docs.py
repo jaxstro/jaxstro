@@ -8,7 +8,9 @@ from pathlib import Path
 import numpy as np
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-REGULAR_GRID_PAGE = REPO_ROOT / "docs" / "10-theory" / "regular-grid.md"
+REGULAR_GRID_PAGE = (
+    REPO_ROOT / "docs" / "20-methods" / "approximation-integration" / "regular-grid.md"
+)
 BIBLIOGRAPHY = REPO_ROOT / "docs" / "99-bibliography" / "references.bib"
 DESIGN_RECORD = (
     REPO_ROOT
@@ -81,7 +83,7 @@ def test_regular_grid_equation_has_primary_provenance() -> None:
 def test_regular_grid_page_embeds_registered_figure_and_evidence_routes() -> None:
     text = _page_text()
 
-    assert "./figures/regular-grid-contracts.webp" in text
+    assert "../../10-theory/figures/regular-grid-contracts.webp" in text
     assert ":name: fig-regular-grid-contracts" in text
     assert (
         ":alt: Unit-square interpolation query connected to four corners with "
@@ -89,6 +91,6 @@ def test_regular_grid_page_embeds_registered_figure_and_evidence_routes() -> Non
         "grid boundary"
     ) in text
     assert DESIGN_RECORD.is_file()
-    assert "[](../40-api/index.md#jaxstro-numerics-regular-grid)" in text
-    assert "[](../60-validation/index.md)" in text
-    assert "[](./index.md#gradient-contracts)" in text
+    assert "[](../../40-api/index.md#jaxstro-numerics-regular-grid)" in text
+    assert "[](../../60-validation/index.md)" in text
+    assert "[](../methods.md#gradient-contracts)" in text

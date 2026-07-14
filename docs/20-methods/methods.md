@@ -1,10 +1,69 @@
 ---
-title: Writing AD-safe scientific numerics
-short_title: Theory
+title: Numerical methods
+short_title: Methods
 description: >-
-  Ten principles for classifying and validating JAX transform contracts — from
-  smooth pathwise gradients to deliberately discrete scientific preprocessing.
+  A method atlas for turning scientific questions into auditable JAX
+  computations while preserving explicit transform and claim boundaries.
 ---
+
+Use this page when you need to choose a numerical method from the scientific
+question, the mathematical structure, and the evidence the result will require.
+
+Methods connect mathematical representations to executed computations. The
+families below group the current Jaxstro methods by the kind of question they
+answer; the shared transform-contract principles that follow apply across those
+families.
+
+::::{grid} 1 2 2 2
+
+:::{card} Change, constraints, and evolution
+:link: ./change-constraints-evolution/rootfinding.md
+
+Differentiate programs, solve scalar constraints, optimize objectives, and
+advance fixed-step dynamical systems.
+:::
+
+:::{card} Approximation from finite information
+:link: ./approximation-integration/interpolation.md
+
+Interpolate tabulated values, construct smooth bases, and accumulate integrals
+with explicit spacing and boundary contracts.
+:::
+
+:::{card} Linear structure and reusable operators
+:link: ./linear-structure/linear-algebra.md
+
+Work with dense linear structure, matrix-free operators, and stable reusable
+function bases.
+:::
+
+:::{card} Randomness as a computational object
+:link: ./probability-sampling/random.md
+
+Represent probability laws, own PRNG state explicitly, and separate random
+computation from discrete sampling and resampling decisions.
+:::
+
+:::{card} Discrete worlds: grids, meshes, and neighborhoods
+:link: ./discrete-space/grids.md
+
+Construct discrete domains, conservative remaps, and neighborhood candidates
+without inventing smooth derivatives for discrete identity operations.
+:::
+
+:::{card} Signals as sampled evidence
+Signal-method background is planned for the next slice. No `jaxstro.signal`
+runtime implementation is claimed here, and no unavailable route is linked.
+:::
+::::
+
+:::{note}
+A method choice is only one link in the research chain. Connect it to the
+representation that gives the inputs meaning, the executed JAX program, an
+independent audit, and the narrowest warranted scientific claim.
+:::
+
+## Shared numerical contracts
 
 A function can return the right number and still be wrong. When a gradient is
 part of its contract, a silently zero, `NaN`, or detached derivative can break
@@ -20,34 +79,36 @@ inference. This page is the thesis: ten principles for making those scientific
 contracts explicit, testable, and teachable.
 
 If you are starting from a research question rather than a method name, use
-[](./science-patterns.md) to route events, equilibria, integrals, tabulated
+[](../10-theory/science-patterns.md) to route events, equilibria, integrals, tabulated
 models, limiting distributions, spatial interactions, and provenance to the
 relevant module and evidence.
 
 :::{tip} Already fluent in differentiable programming?
-Skip to the principle that bites you most often — most people's is
+Skip to the principle that bites you most often - most people's is
 [](#p3-guard-singularities) (the `where`-trap) or [](#p4-saturation) (the silent
-gradient killer) — or go straight to the method pages:
-[](./rootfinding.md), [](./cumulative-trapz.md), [](./quadrature.md),
-[](./interpolation.md), [](./regular-grid.md), and [](./bsplines.md).
+gradient killer) - or go straight to the method pages:
+[](./change-constraints-evolution/rootfinding.md), [](./approximation-integration/cumulative-trapz.md), [](./approximation-integration/quadrature.md),
+[](./approximation-integration/interpolation.md), [](./approximation-integration/regular-grid.md), and [](./approximation-integration/bsplines.md).
 The dense helper layer for small fits and covariance diagnostics is
-[](./linear-algebra.md), objective helpers live in [](./optimization.md),
-fixed-step ODE helpers live in [](./ode.md), and generic special-function kernels
-live in [](./special-functions.md). Generic distribution kernels live in
-[](./distributions.md), vector geometry lives in [](./geometry.md), and
+[](./linear-structure/linear-algebra.md), objective helpers live in [](./change-constraints-evolution/optimization.md),
+fixed-step ODE helpers live in [](./change-constraints-evolution/ode.md), and generic special-function kernels
+live in [](./linear-structure/special-functions.md). Generic distribution kernels live in
+[](./probability-sampling/distributions.md), vector geometry lives in [](../10-theory/geometry.md), and
 matrix-free algebra helpers live in
-[](./operators.md). Autodiff product helpers live in [](./autodiff.md). Grid
+[](./linear-structure/operators.md). Autodiff product helpers live in [](./change-constraints-evolution/autodiff.md). Grid
 construction, conservative rebinning, and stratified uniforms are in
-[](./grids.md), structured 1D mesh helpers are in [](./meshes.md), and explicit
-PRNG streams and resampling helpers are in [](./random.md). Quantity semantics
-and boundary conversion live in [](./quantities.md). Spatial indexing,
-candidate recall, and exact fixed-radius pairs are in [](./spatial.md).
+[](./discrete-space/grids.md), structured 1D mesh helpers are in [](./discrete-space/meshes.md), and explicit
+PRNG streams are in [](./probability-sampling/random.md). Sampling
+and resampling decisions are in
+[](./probability-sampling/sampling.md). Quantity semantics
+and boundary conversion live in [](../10-theory/quantities.md). Spatial indexing,
+candidate recall, and exact fixed-radius pairs are in [](./discrete-space/spatial.md).
 :::
 
 ## Gradient contracts
 
-The first question is not “does `jax.grad` run?” It is “what derivative claim is
-scientifically valid here?” `jaxstro.testing` exposes five live contracts, and
+The first question is not "does `jax.grad` run?" It is "what derivative claim is
+scientifically valid here?" `jaxstro.testing` exposes five live contracts, and
 the audit gate interprets each one differently.
 
 ```{list-table} Gradient contracts
@@ -69,7 +130,7 @@ the audit gate interprets each one differently.
 * - `known_blocked`
   - Gradient flow is intentionally stopped or unavailable; the audited result
     must remain finite.
-  - AD–FD equality is not part of this gate.
+  - AD-FD equality is not part of this gate.
   - Never inference-ready; callers must not describe it as a physical gradient.
 * - `surrogate`
   - A live, nonzero surrogate sensitivity is required.
@@ -101,16 +162,16 @@ A fixed-step solver can still contain branch-selected intervals, clips, or
 singular derivatives.
 
 For a smooth function with a nonzero derivative and a parameter-independent
-initial guess, Newton can carry a `smooth_pathwise` contract after AD–FD
+initial guess, Newton can carry a `smooth_pathwise` contract after AD-FD
 verification. In contrast, bisection is a branch-selected forward solve: it can
 deliver an accurate root value without providing the smooth inverse sensitivity
 needed for inference. Iteration count and gradient contract are separate facts.
 
-→ [](./rootfinding.md) — the distinct contracts of `bisect`, `newton`, and
+-> [](./change-constraints-evolution/rootfinding.md) - the distinct contracts of `bisect`, `newton`, and
 `newton_ppf`.
 
 (p3-guard-singularities)=
-## 3. Guard singularities without killing the gradient — the `where`-trap
+## 3. Guard singularities without killing the gradient - the `where`-trap
 
 The natural way to avoid a division by zero is
 `jnp.where(d == 0, fallback, a / d)`. The selected forward value may be finite,
@@ -131,13 +192,13 @@ parameter on a wall while an optimizer reports convergence. Name which case you
 intend. When `newton_ppf` clips iterates to `[lo, hi]`, for example, its smooth
 pathwise claim applies to an interior solution, not to saturation at the support.
 
-→ [](./rootfinding.md#newton-ppf) discusses the clip-to-support trade-off.
+-> [](./change-constraints-evolution/rootfinding.md#newton-ppf) discusses the clip-to-support trade-off.
 
 (p5-floating-point)=
 ## 5. Floating point is part of the math
 
 Catastrophic cancellation, overflow in `exp`, and underflow in `log` are not
-edge cases — they are the common case in likelihood code. Work in the log domain,
+edge cases - they are the common case in likelihood code. Work in the log domain,
 use `log1p`/`expm1` near zero, and sum in the order that minimizes error. jaxstro
 provides `stable_log1p`, `stable_expm1`, `safe_log`, `safe_exp`, and Neumaier
 compensated summation for reductions where the ordinary `sum` loses digits. And
@@ -147,12 +208,12 @@ turn on float64 first ([](#p8-precision)).
 ## 6. Non-differentiable operations are forbidden in the differentiable graph
 
 `argmax`, `argsort`, `sort`, integer casts, and data-dependent shapes have no
-useful gradient. They are not banned from the package — the spatial module needs
-them — but they must be **isolated** from any path you will differentiate. Build
+useful gradient. They are not banned from the package - the spatial module needs
+them - but they must be **isolated** from any path you will differentiate. Build
 the Morton codes and neighbor lists once, as discrete preprocessing; keep the
 differentiable physics downstream of them.
 
-→ [](./spatial.md) — fixed-capacity cells, candidate recall, exact-pair overflow,
+-> [](./discrete-space/spatial.md) - fixed-capacity cells, candidate recall, exact-pair overflow,
 and the boundary between discrete identity and downstream differentiable values.
 
 (p7-quadrature)=
@@ -165,18 +226,18 @@ quadrature factory generates nodes once on the host with numpy and freezes them 
 constants: the gradient flows through `f(x_i)`, and the constant $x_i$ contributes
 nothing it should not.
 
-→ [](./cumulative-trapz.md) — Newton–Cotes integration over a grid of values.
+-> [](./approximation-integration/cumulative-trapz.md) - Newton-Cotes integration over a grid of values.
 
-→ [](./quadrature.md) — fixed-node Gaussian, Clenshaw-Curtis, and cumulative
+-> [](./approximation-integration/quadrature.md) - fixed-node Gaussian, Clenshaw-Curtis, and cumulative
 Simpson rules differentiate through values rather than node generation.
 
-→ [](./interpolation.md) — PCHIP-style interpolation differentiates inside
+-> [](./approximation-integration/interpolation.md) - PCHIP-style interpolation differentiates inside
 stable limiter branches and avoids inventing monotone-table overshoot.
 
-→ [](./regular-grid.md) — multilinear interpolation differentiates inside grid
+-> [](./approximation-integration/regular-grid.md) - multilinear interpolation differentiates inside grid
 cells while making out-of-domain policy explicit.
 
-→ [](./bsplines.md) — B-spline evaluation differentiates cleanly through
+-> [](./approximation-integration/bsplines.md) - B-spline evaluation differentiates cleanly through
 coefficients and interior coordinates for fixed knots.
 
 (p8-precision)=
@@ -190,7 +251,7 @@ accelerators. This is cheap insurance and the default posture for everything her
 (p9-correctness)=
 ## 9. Correctness over comfort
 
-Every constant cites its source — CODATA 2018, IAU 2015, Oke & Gunn 1983 — so a
+Every constant cites its source - CODATA 2018, IAU 2015, Oke & Gunn 1983 - so a
 reader can audit the number, not trust it. Every method is validated against an
 analytic result or a known answer. "It converged" and "it's elegant" are not
 evidence. The radiation constant in this package is $a = 7.565733250\times10^{-15}\,
@@ -213,60 +274,63 @@ support inference from expected-zero, blocked, surrogate, validation-only, and
 discrete paths with narrower claims. The rest of the theory section shows those
 boundaries in specific methods. Read on:
 
-- [](./rootfinding.md) — fixed-iteration solvers, and the `bisect` zero-gradient
+- [](./change-constraints-evolution/rootfinding.md) - fixed-iteration solvers, and the `bisect` zero-gradient
   caveat (principles [2](#p2-fixed-iteration), [3](#p3-guard-singularities),
   [4](#p4-saturation)).
-- [](./cumulative-trapz.md) — Newton–Cotes integration and the dx-outside ordering
+- [](./approximation-integration/cumulative-trapz.md) - Newton-Cotes integration and the dx-outside ordering
   (principles [5](#p5-floating-point), [7](#p7-quadrature)).
-- [](./quadrature.md) — fixed-node Gaussian and Clenshaw-Curtis quadrature plus
+- [](./approximation-integration/quadrature.md) - fixed-node Gaussian and Clenshaw-Curtis quadrature plus
   cumulative Simpson panel sums (principles [7](#p7-quadrature),
   [10](#p10-vectorize)).
-- [](./interpolation.md) — cubic Hermite and PCHIP-style interpolation for
+- [](./approximation-integration/interpolation.md) - cubic Hermite and PCHIP-style interpolation for
   smooth table evaluation without overshoot (principles [3](#p3-guard-singularities),
   [4](#p4-saturation), [7](#p7-quadrature)).
-- [](./regular-grid.md) — static-rank multilinear interpolation for gridded
+- [](./approximation-integration/regular-grid.md) - static-rank multilinear interpolation for gridded
   tables with explicit boundary policy (principles [4](#p4-saturation),
   [7](#p7-quadrature), [10](#p10-vectorize)).
-- [](./bsplines.md) — local smooth basis functions for AD-friendly tabulated
+- [](./approximation-integration/bsplines.md) - local smooth basis functions for AD-friendly tabulated
   functions (principles [3](#p3-guard-singularities), [7](#p7-quadrature),
   [10](#p10-vectorize)).
-- [](./linear-algebra.md) — weighted fits, solve wrappers, covariance helpers,
+- [](./linear-structure/linear-algebra.md) - weighted fits, solve wrappers, covariance helpers,
   and positive-definite jitter for small dense problems (principles
   [3](#p3-guard-singularities), [8](#p8-precision), [9](#p9-correctness)).
-- [](./autodiff.md) — JVP, VJP, HVP, Gauss-Newton, and empirical Fisher-style
+- [](./change-constraints-evolution/autodiff.md) - JVP, VJP, HVP, Gauss-Newton, and empirical Fisher-style
   products as named JAX-native helpers (principles [1](#p1-differentiability),
   [9](#p9-correctness), [10](#p10-vectorize)).
-- [](./geometry.md) — vector normalization, angular distances, rotations,
+- [](../10-theory/geometry.md) - vector normalization, angular distances, rotations,
   quaternions, rigid transforms, and explicit composition helpers (principles
   [1](#p1-differentiability), [9](#p9-correctness), [10](#p10-vectorize)).
-- [](./spatial.md) — Morton and linear cells, capacity/overflow, approximate
+- [](./discrete-space/spatial.md) - Morton and linear cells, capacity/overflow, approximate
   candidates, and exact fixed-radius neighbors as discrete preprocessing
   (principles [1](#p1-differentiability), [6](#p6-non-diff-ops),
   [9](#p9-correctness)).
-- [](./distributions.md) — logpdf, CDF, and inverse-CDF kernels for normal,
+- [](./probability-sampling/distributions.md) - logpdf, CDF, and inverse-CDF kernels for normal,
   lognormal, finite power-law, and truncated-normal families (principles
   [3](#p3-guard-singularities), [5](#p5-floating-point), [7](#p7-quadrature)).
-- [](./optimization.md) — robust residual losses, objective summaries,
+- [](./change-constraints-evolution/optimization.md) - robust residual losses, objective summaries,
   fixed-iteration line search, and convergence diagnostics (principles
   [1](#p1-differentiability), [2](#p2-fixed-iteration), [10](#p10-vectorize)).
-- [](./ode.md) — fixed-step Euler, midpoint/RK2, RK4, and velocity-Verlet
+- [](./change-constraints-evolution/ode.md) - fixed-step Euler, midpoint/RK2, RK4, and velocity-Verlet
   integration with scan-friendly gradient flow (principles
   [1](#p1-differentiability), [2](#p2-fixed-iteration), [10](#p10-vectorize)).
-- [](./operators.md) — dense, diagonal, scaled, summed, composed, transposed,
+- [](./linear-structure/operators.md) - dense, diagonal, scaled, summed, composed, transposed,
   and block-diagonal linear operators as PyTrees (principles
   [1](#p1-differentiability), [9](#p9-correctness), [10](#p10-vectorize)).
-- [](./special-functions.md) — stable Planck kernels, normalized log weights,
+- [](./linear-structure/special-functions.md) - stable Planck kernels, normalized log weights,
   and orthogonal polynomial bases (principles [3](#p3-guard-singularities),
   [5](#p5-floating-point), [9](#p9-correctness)).
-- [](./random.md) — explicit key streams, deterministic seed manifests, and
+- [](./probability-sampling/random.md) - explicit key streams and
+  deterministic seed manifests (principles [6](#p6-non-diff-ops),
+  [9](#p9-correctness), [10](#p10-vectorize)).
+- [](./probability-sampling/sampling.md) -
   systematic/stratified/residual resampling (principles [6](#p6-non-diff-ops),
   [9](#p9-correctness), [10](#p10-vectorize)).
-- [](./grids.md) — log grids, conservative binning, and stratified uniforms
+- [](./discrete-space/grids.md) - log grids, conservative binning, and stratified uniforms
   (principles [7](#p7-quadrature), [9](#p9-correctness), [10](#p10-vectorize)).
-- [](./meshes.md) — structured 1D cell/face geometry, finite-volume stencils,
+- [](./discrete-space/meshes.md) - structured 1D cell/face geometry, finite-volume stencils,
   and conservative cell-average remapping (principles [7](#p7-quadrature),
   [9](#p9-correctness), [10](#p10-vectorize)).
-- [](./quantities.md) — exact dimensions, JAX PyTree quantities, parser
+- [](../10-theory/quantities.md) - exact dimensions, JAX PyTree quantities, parser
   canonicalization, bases, constants, equivalencies, and the raw-array boundary
   pattern (principles [1](#p1-differentiability), [9](#p9-correctness),
   [10](#p10-vectorize)).

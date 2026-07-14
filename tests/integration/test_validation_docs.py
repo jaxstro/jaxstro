@@ -49,8 +49,8 @@ def test_validation_page_covers_current_cross_cutting_contracts() -> None:
 def test_validation_page_routes_claims_to_their_explanations() -> None:
     text = _validation_text()
 
-    assert "[](../10-theory/index.md)" in text
-    assert "[](../10-theory/spatial.md)" in text
+    assert "[](../20-methods/methods.md)" in text
+    assert "[](../20-methods/discrete-space/spatial.md)" in text
     assert "[](../10-theory/quantities.md)" in text
     assert "[](../40-api/provenance/index.md)" in text
 

@@ -8,7 +8,7 @@ description: >-
 
 The conceptual distinction among local change, finite-map AD, and implicit
 sensitivities is developed in
-[](../10-foundations/mathematical-objects/what-is-a-derivative.md).
+[](../../10-foundations/mathematical-objects/what-is-a-derivative.md).
 This chapter applies that distinction to concrete root algorithms and evidence.
 
 You have a scalar equation $f(x) = 0$ and you want the root — and you want to
@@ -16,7 +16,7 @@ differentiate that root with respect to whatever parameters $f$ closes over. Thi
 page explains the solvers jaxstro ships, what each one's gradient actually does,
 and the one trap that catches everyone.
 
-This is principle [2](./index.md#p2-fixed-iteration) made concrete: a solver that
+This is principle [2](../methods.md#p2-fixed-iteration) made concrete: a solver that
 loops "until converged" cannot be cleanly differentiated, so every solver here
 runs a **fixed** number of steps under `lax.scan`.
 
@@ -76,7 +76,7 @@ readable when each element carries its own bracket.
 But here is the trap. **The gradient of the bisection result with respect to the
 function parameters is structurally zero.** The *comparison* that decides which
 half to keep — `sign(f_a) * sign(f_m) <= 0` — is a non-differentiable predicate
-(principle [6](./index.md#p6-non-diff-ops)). Parameters captured inside `f` only
+(principle [6](../methods.md#p6-non-diff-ops)). Parameters captured inside `f` only
 affect those sign decisions, so $\partial x^\star/\partial\theta$ comes back as
 zero even though the true root plainly depends on $\theta$. The value is right;
 that gradient is a lie.
@@ -195,7 +195,7 @@ result = safeguarded_bracketed_root(
 assert result.converged
 ```
 
-:::{figure} ./figures/rootfinding-safeguards.webp
+:::{figure} ../../10-theory/figures/rootfinding-safeguards.webp
 :name: fig-rootfinding-safeguards
 :alt: Two-panel safeguarded root trace showing circle IQI, square secant, and triangle midpoint proposals on a quadratic residual and solid lower endpoint, dashed upper endpoint, and dotted bracket width across executed iterations
 
@@ -209,7 +209,7 @@ telemetry, not universal speed for every residual.
 
 The reproducible evaluation-count and warm-timing comparison with fixed-count
 bisection is available as a
-[human-readable evidence report](../validation/rootfinding-performance.md) and
+[human-readable evidence report](../../validation/rootfinding-performance.md) and
 [machine-readable envelope](https://github.com/drannarosen/jaxstro/blob/main/docs/validation/rootfinding-performance.json). The
 benchmark treats function-evaluation count as the primary algorithmic cost and
 does not impose a hardware-dependent wall-time threshold. The ratified gate
@@ -245,7 +245,7 @@ certificate predicate.
 finite difference. Reject the claim when uniqueness, smoothness, residual,
 width, finiteness, or conditioning evidence fails.
 
-:::{figure} ./figures/rootfinding-value-versus-ift.webp
+:::{figure} ../../10-theory/figures/rootfinding-value-versus-ift.webp
 :name: fig-rootfinding-value-versus-ift
 :alt: Two-panel comparison of a branch-selected quadratic root trace with analytic, certified implicit-function AD, and central finite-difference sensitivities; certification includes uniqueness and smoothness assertions plus convergence, finiteness, residual, width, and slope gates, while a flat-root certificate is rejected
 
@@ -286,7 +286,7 @@ rejection, not as a derivative estimate.
 
 These values are copied from the
 [machine-readable envelope](https://github.com/drannarosen/jaxstro/blob/main/docs/validation/implicit-root-gradients.json), with a
-[human-readable evidence report](../validation/implicit-root-gradients.md), both
+[human-readable evidence report](../../validation/implicit-root-gradients.md), both
 generated and freshness-checked by `scripts/benchmark_implicit_root.py`. A
 documentation test requires the table to match that artifact; the JSON and
 numerical tests remain the primary executable evidence.
@@ -302,7 +302,7 @@ the ideal mathematical root. Use `implicit_bracketed_root` when the scientific
 target is a certified mathematical-root sensitivity.
 
 The one hazard is division by a zero derivative. jaxstro guards the **operand**,
-not the result (principle [3](./index.md#p3-guard-singularities)): it replaces a
+not the result (principle [3](../methods.md#p3-guard-singularities)): it replaces a
 zero $f'$ with $1$ before dividing, so no `inf`/`NaN` enters the backward pass.
 Supply an analytic derivative with `newton_with_grad(f, df, x0)` when autodiff of
 $f$ is expensive or $f$ is not directly differentiable.
@@ -336,18 +336,18 @@ Two guards deserve a note, and they connect back to the principles:
 - **A density floor, not a branch.** The denominator carries an additive
   `pdf_floor` (default $10^{-30}$) so a near-zero density in a flat-CDF region
   cannot produce a `NaN`. This is the safe-operand pattern again
-  ([principle 3](./index.md#p3-guard-singularities)): additive, never a `where` on
+  ([principle 3](../methods.md#p3-guard-singularities)): additive, never a `where` on
   the result.
 - **Clipping to the support saturates the gradient there.** Each iterate is clipped
   to `[lo, hi]` so it never leaves the support — but a quantile pinned at a bound
   has zero gradient with respect to your parameters at that bound
-  ([principle 4](./index.md#p4-saturation)). For interior quantiles this never
+  ([principle 4](../methods.md#p4-saturation)). For interior quantiles this never
   fires; if you are fitting parameters that push a quantile against `lo` or `hi`,
   that is where the gradient quietly dies.
 
 The PPF is validated against the analytic exponential inverse,
 $F^{-1}(u) = -\ln(1-u)/\lambda$, by an FD-vs-AD grad-check — value and gradient both
-([](../60-validation/index.md)).
+([](../../60-validation/index.md)).
 
 ## `monotone_inverse_interp` — inverse lookup for table-defined CDFs
 
@@ -404,6 +404,6 @@ once and keep the monotonicity contract explicit.
   - Yes inside table cells w.r.t. query values
 ```
 
-Signatures and defaults are in [](../40-api/index.md); the design rationale for
+Signatures and defaults are in [](../../40-api/index.md); the design rationale for
 hoisting the generic Newton-PPF into the foundation is
-[](../30-decisions/0009-jaxstro-params-selective-inference.md).
+[](../../30-decisions/0009-jaxstro-params-selective-inference.md).

@@ -213,6 +213,6 @@ When an error appears, ask:
 
 Next, connect this orientation to the
 [](../10-foundations/foundations.md) route for mathematical meaning, read the
-[](../10-theory/autodiff.md) chapter for deeper derivative-product contracts,
+[](../20-methods/change-constraints-evolution/autodiff.md) chapter for deeper derivative-product contracts,
 or use [](./first-research-calculation.md) to place a JAX computation inside the
 full **predict -> compute -> audit** cycle.

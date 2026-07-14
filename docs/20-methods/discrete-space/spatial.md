@@ -98,7 +98,7 @@ A consumer should:
 3. apply the final filter or ranking; and
 4. validate recall on representative uniform, boundary, and clustered clouds.
 
-:::{figure} ./figures/spatial-neighbor-contracts.webp
+:::{figure} ../../10-theory/figures/spatial-neighbor-contracts.webp
 :name: fig-spatial-neighbor-contracts
 :alt: Two-panel spatial-neighbor diagram comparing a grid candidate pool with exact cutoff-filtered neighbors
 
@@ -195,5 +195,5 @@ this preprocessing layer.
   - Preconditions plus `did_overflow == False`
 ```
 
-The public ownership map is in [](../40-api/index.md), and quantitative evidence
-belongs in [](../60-validation/index.md).
+The public ownership map is in [](../../40-api/index.md), and quantitative evidence
+belongs in [](../../60-validation/index.md).

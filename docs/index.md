@@ -62,7 +62,7 @@ ungraded route, not a placement judgment.
 :::
 
 :::{card} Learn the methods
-:link: ./10-theory/index.md
+:link: ./20-methods/methods.md
 
 Start here if you want to understand *how to write numerics that differentiate
 cleanly*. The theory section opens with a ten-principle thesis on AD-safe
@@ -131,7 +131,7 @@ evidence.
 
 - **New here?** Read [](./00-start-here/start-here.md) first; it installs the
   package, turns on float64, and walks one worked example end to end. Then follow
-  the bridge into [](./10-theory/index.md).
+  the bridge into [](./20-methods/methods.md).
 - **Evaluating the broader package vision?** Read
   [](./20-architecture/science-general-vision.md) for the module boundary, the
   non-astronomy value proposition, and the checklist for future core modules.
@@ -142,7 +142,7 @@ evidence.
 - **Evaluating spatial operations?** Start with [](./40-api/index.md) for the
   import surface and [](./60-validation/index.md) for evidence around neighbor
   gathering and exact-pair behavior. The
-  [spatial theory chapter](./10-theory/spatial.md) explains candidate recall,
+  [spatial theory chapter](./20-methods/discrete-space/spatial.md) explains candidate recall,
   capacity, overflow, and exact fixed-radius contracts.
 - **Checking provenance?** The
   [generated provenance cards](./40-api/provenance/index.md) connect registered

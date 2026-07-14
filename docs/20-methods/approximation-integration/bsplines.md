@@ -22,7 +22,7 @@ table-like functions: atmosphere-grid interpolation, microphysics tables,
 stellar tracks, calibration curves, or any other place where global polynomials
 would be too eager to oscillate.
 
-:::{figure} ./figures/bspline-local-support.webp
+:::{figure} ../../10-theory/figures/bspline-local-support.webp
 :name: fig-bspline-local-support
 :alt: Six cubic B-spline basis curves with local support and their sum equal to one across the active domain
 
@@ -238,6 +238,6 @@ construction, not a knot-optimization algorithm.
 
 ## From explanation to evidence
 
-Use the [](../40-api/index.md#jaxstro-numerics-splines) for signatures and
-ownership, the [](../60-validation/index.md) for measured spline anchors, and
-the [](./index.md#gradient-contracts) for the package-wide contract taxonomy.
+Use the [](../../40-api/index.md#jaxstro-numerics-splines) for signatures and
+ownership, the [](../../60-validation/index.md) for measured spline anchors, and
+the [](../methods.md#gradient-contracts) for the package-wide contract taxonomy.

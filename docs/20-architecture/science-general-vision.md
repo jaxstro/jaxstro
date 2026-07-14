@@ -75,21 +75,21 @@ delivered work as a future roadmap.
   - Robust losses, objective and convergence summaries, gradient/step norms, and
     fixed-iteration Armijo backtracking.
   - Objective helpers, not an optimizer stack or replacement for Optax. See
-    [](../10-theory/optimization.md).
+    [](../20-methods/change-constraints-evolution/optimization.md).
 * - `jaxstro.numerics.ode`
   - Euler, midpoint/RK2, RK4, fixed-step scan integration, and velocity-Verlet.
   - Fixed-step methods only; adaptive solver policy stays outside the
-    foundation. See [](../10-theory/ode.md).
+    foundation. See [](../20-methods/change-constraints-evolution/ode.md).
 * - `jaxstro.numerics.operators`
   - A PyTree operator protocol with dense, diagonal, scaled, sum, product,
     transpose, and block-diagonal implementations.
   - Small matrix-free composition helpers, not a sparse storage or iterative
-    solver framework. See [](../10-theory/operators.md).
+    solver framework. See [](../20-methods/linear-structure/operators.md).
 * - `jaxstro.numerics.distributions`
   - Log-density, CDF, and inverse-CDF kernels for normal, lognormal, power-law,
     and truncated-normal families.
   - Explicit-support kernels, not distributions-as-objects or probabilistic
-    programming. See [](../10-theory/distributions.md).
+    programming. See [](../20-methods/probability-sampling/distributions.md).
 * - `jaxstro.geometry`
   - Vector normalization, angular distance, axis-angle rotation, quaternions,
     and rigid-transform composition/inversion.
@@ -99,7 +99,7 @@ delivered work as a future roadmap.
   - JVP, VJP, HVP, Gauss–Newton, and empirical-Fisher products.
   - Thin products over JAX primitives, not a differentiation framework or a
     promise that arbitrary caller functions are smooth. See
-    [](../10-theory/autodiff.md).
+    [](../20-methods/change-constraints-evolution/autodiff.md).
 * - `jaxstro.provenance`
   - Artifact hashes, environment snapshots, method manifests, and deterministic
     JSON/Markdown rendering.
@@ -109,11 +109,11 @@ delivered work as a future roadmap.
   - Explicit key streams, seed manifests, and systematic, stratified, and
     residual resampling.
   - Key flow stays visible; the module does not own a simulation runtime. See
-    [](../10-theory/random.md).
+    [](../20-methods/probability-sampling/random.md).
 * - `jaxstro.numerics.meshes`
   - Structured 1D edges, cell/face geometry, neighbors, divergence, face
     averaging, and conservative remapping.
-  - One-dimensional structured meshes only. See [](../10-theory/meshes.md).
+  - One-dimensional structured meshes only. See [](../20-methods/discrete-space/meshes.md).
 ```
 
 ## Units and quantity status

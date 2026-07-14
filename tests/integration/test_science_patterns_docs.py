@@ -30,9 +30,9 @@ def test_science_patterns_cover_the_required_research_questions() -> None:
 def test_science_patterns_route_to_theory_api_and_validation() -> None:
     text = PAGE.read_text(encoding="utf-8")
 
-    assert "[](./rootfinding.md)" in text
-    assert "[](./distributions.md)" in text
-    assert "[](./spatial.md)" in text
+    assert "[](../20-methods/change-constraints-evolution/rootfinding.md)" in text
+    assert "[](../20-methods/probability-sampling/distributions.md)" in text
+    assert "[](../20-methods/discrete-space/spatial.md)" in text
     assert "[](../40-api/index.md)" in text
     assert "[](../60-validation/index.md)" in text
 

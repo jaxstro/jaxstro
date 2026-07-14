@@ -15,10 +15,10 @@ shift downstream numbers:
 
 - **`cumulative_trapz` standardized to dx-outside.** Former dx-inside call sites may
   drift by ~1 ulp; this is the expected rounding difference, not a regression — see
-  [](../10-theory/cumulative-trapz.md).
+  [](../20-methods/approximation-integration/cumulative-trapz.md).
 - **`A_RAD` corrected** to $7.565733250\times10^{-15}\ \erg\,\mathrm{cm^{-3}\,K^{-4}}$,
   derived as $4\sigma_\mathrm{SB}/c$ from the CODATA 2018 values rather than rounded
-  independently (principle [9](../10-theory/index.md#p9-correctness)).
+  independently (principle [9](../20-methods/methods.md#p9-correctness)).
 
 ## Release evidence
 

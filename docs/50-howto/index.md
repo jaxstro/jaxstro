@@ -25,4 +25,4 @@ for the exact local conversion, query, and validation commands. Use
 boundary and backend design.
 
 For broader package setup, start with [](../00-start-here/start-here.md). For
-the numerical principles behind the recipes, see [](../10-theory/index.md).
+the numerical principles behind the recipes, see [](../20-methods/methods.md).

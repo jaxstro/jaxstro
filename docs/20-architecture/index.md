@@ -9,7 +9,7 @@ description: >-
 This section explains *why* the software has its current shape: JAX-native
 functional and PyTree design, explicit unit boundaries, one-way package
 dependencies, evidence ownership, and a deliberately thin foundation. Where the
-[theory section](../10-theory/index.md) covers mathematical method contracts,
+[theory section](../20-methods/methods.md) covers mathematical method contracts,
 this section covers package structure and responsibility.
 
 ## Foundation boundary
@@ -81,7 +81,7 @@ iterations and sanitized branches protect traced execution, while tests check
 forward values and gradients on the smooth domains named by each method. This
 does not make discrete indexing, sorting, catalog lookup, or every branch
 differentiable. The detailed mathematical contracts live in
-[](../10-theory/index.md), and quantitative checks live in
+[](../20-methods/methods.md), and quantitative checks live in
 [](../60-validation/index.md).
 
 ## Units policy

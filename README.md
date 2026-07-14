@@ -191,7 +191,7 @@ The solvers use fixed iteration counts so their shapes compose with `jit` and
 `vmap`. Bisection is the robust forward-value solver; its branch decisions do
 not define a trustworthy derivative of the root with respect to captured
 parameters. Use Newton's method when you need gradients through a smooth
-iterative path. The [root-finding theory](docs/10-theory/rootfinding.md) records
+iterative path. The [root-finding theory](docs/20-methods/change-constraints-evolution/rootfinding.md) records
 the full contracts.
 
 ```python

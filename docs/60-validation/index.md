@@ -9,14 +9,14 @@ This section is where the docs earn trust. The table records
 `Property | Tolerance | Measured | Anchor`: the bounded property, the comparison
 policy, what is measured, and the tests that enforce the claim. It includes the
 FD-vs-AD gradient audit (principle
-[1](../10-theory/index.md#p1-differentiability)), discrete spatial contracts,
+[1](../20-methods/methods.md#p1-differentiability)), discrete spatial contracts,
 quantity transforms, provenance-card integrity, and convergence checks for the
 numerical methods. Each row states the bounded claim its cited tests enforce;
 absence from this table is not evidence of validation.
 
 Read the rows with the corresponding explanations: gradient contracts in
-[](../10-theory/index.md), discrete and exact neighbor contracts in
-[](../10-theory/spatial.md), implemented quantity semantics in
+[](../20-methods/methods.md), discrete and exact neighbor contracts in
+[](../20-methods/discrete-space/spatial.md), implemented quantity semantics in
 [](../10-theory/quantities.md), and source-backed registry pages in
 [](../40-api/provenance/index.md).
 
@@ -112,7 +112,7 @@ uv run mypy src
 ```
 
 The validation table is intentionally compact. Detailed numerical derivations
-belong in [](../10-theory/index.md); this page records the executable anchors.
+belong in [](../20-methods/methods.md); this page records the executable anchors.
 
 The generated [](../40-api/contracts.md) registry connects selected public claims
 to these evidence classes. An unclassified callable remains unverified rather

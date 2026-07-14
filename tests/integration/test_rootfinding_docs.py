@@ -5,7 +5,13 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ADR = REPO_ROOT / "docs" / "30-decisions" / "0008-reject-ift-from-core.md"
-ROOTFINDING = REPO_ROOT / "docs" / "10-theory" / "rootfinding.md"
+ROOTFINDING = (
+    REPO_ROOT
+    / "docs"
+    / "20-methods"
+    / "change-constraints-evolution"
+    / "rootfinding.md"
+)
 
 
 def test_adr_distinguishes_information_field_theory_from_implicit_function_theorem():
@@ -39,8 +45,8 @@ def test_numerical_pages_expand_implicit_function_theorem_before_ift() -> None:
 def test_rootfinding_page_embeds_accessible_evidence_figures_and_activity() -> None:
     text = ROOTFINDING.read_text(encoding="utf-8")
 
-    assert "./figures/rootfinding-safeguards.webp" in text
-    assert "./figures/rootfinding-value-versus-ift.webp" in text
+    assert "../../10-theory/figures/rootfinding-safeguards.webp" in text
+    assert "../../10-theory/figures/rootfinding-value-versus-ift.webp" in text
     assert text.count(":alt:") >= 2
     assert "Predict → compute → audit: which derivative are you asking for?" in text
     assert "Metric identity" in text

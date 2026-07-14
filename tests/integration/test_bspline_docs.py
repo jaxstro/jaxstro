@@ -8,7 +8,9 @@ from pathlib import Path
 import numpy as np
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-BSPLINE_PAGE = REPO_ROOT / "docs" / "10-theory" / "bsplines.md"
+BSPLINE_PAGE = (
+    REPO_ROOT / "docs" / "20-methods" / "approximation-integration" / "bsplines.md"
+)
 BIBLIOGRAPHY = REPO_ROOT / "docs" / "99-bibliography" / "references.bib"
 DESIGN_RECORD = (
     REPO_ROOT
@@ -76,7 +78,7 @@ def test_bspline_equations_have_verified_primary_provenance() -> None:
 def test_bspline_page_embeds_the_registered_accessible_figure() -> None:
     text = _page_text()
 
-    assert "./figures/bspline-local-support.webp" in text
+    assert "../../10-theory/figures/bspline-local-support.webp" in text
     assert ":name: fig-bspline-local-support" in text
     assert (
         ":alt: Six cubic B-spline basis curves with local support and their "
@@ -88,6 +90,6 @@ def test_bspline_page_embeds_the_registered_accessible_figure() -> None:
 def test_bspline_page_routes_to_api_validation_and_contract_taxonomy() -> None:
     text = _page_text()
 
-    assert "[](../40-api/index.md#jaxstro-numerics-splines)" in text
-    assert "[](../60-validation/index.md)" in text
-    assert "[](./index.md#gradient-contracts)" in text
+    assert "[](../../40-api/index.md#jaxstro-numerics-splines)" in text
+    assert "[](../../60-validation/index.md)" in text
+    assert "[](../methods.md#gradient-contracts)" in text

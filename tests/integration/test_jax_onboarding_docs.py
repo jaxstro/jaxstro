@@ -184,7 +184,9 @@ def test_substantial_beginner_pages_route_readers_onward() -> None:
         encoding="utf-8"
     )
     assert "](../10-foundations/foundations.md)" in first_principles
-    assert "](../10-theory/autodiff.md)" in first_principles
+    assert (
+        "](../20-methods/change-constraints-evolution/autodiff.md)" in first_principles
+    )
 
 
 def test_task_1_routed_sources_use_ascii_punctuation() -> None:

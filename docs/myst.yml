@@ -64,29 +64,42 @@ project:
             - file: 10-foundations/models-and-computation/models-inference-information.md
             - file: 10-foundations/models-and-computation/sensitivity-conditioning-identifiability.md
             - file: 10-foundations/models-and-computation/from-relations-to-differentiable-programs.md
-    - title: Theory — AD-safe numerics
+    - title: Methods
       children:
-        - file: 10-theory/index.md
+        - file: 20-methods/methods.md
+        - title: Change, constraints, and evolution
+          children:
+            - file: 20-methods/change-constraints-evolution/autodiff.md
+            - file: 20-methods/change-constraints-evolution/rootfinding.md
+            - file: 20-methods/change-constraints-evolution/optimization.md
+            - file: 20-methods/change-constraints-evolution/ode.md
+        - title: Approximation from finite information
+          children:
+            - file: 20-methods/approximation-integration/interpolation.md
+            - file: 20-methods/approximation-integration/regular-grid.md
+            - file: 20-methods/approximation-integration/bsplines.md
+            - file: 20-methods/approximation-integration/cumulative-trapz.md
+            - file: 20-methods/approximation-integration/quadrature.md
+        - title: Linear structure and reusable operators
+          children:
+            - file: 20-methods/linear-structure/linear-algebra.md
+            - file: 20-methods/linear-structure/operators.md
+            - file: 20-methods/linear-structure/special-functions.md
+        - title: Randomness as a computational object
+          children:
+            - file: 20-methods/probability-sampling/distributions.md
+            - file: 20-methods/probability-sampling/random.md
+            - file: 20-methods/probability-sampling/sampling.md
+        - title: Discrete worlds - grids, meshes, and neighborhoods
+          children:
+            - file: 20-methods/discrete-space/grids.md
+            - file: 20-methods/discrete-space/meshes.md
+            - file: 20-methods/discrete-space/spatial.md
+    - title: Representations and workflows (current locations)
+      children:
         - file: 10-theory/science-patterns.md
         - file: 10-theory/quantities.md
-        - file: 10-theory/rootfinding.md
-        - file: 10-theory/cumulative-trapz.md
-        - file: 10-theory/quadrature.md
-        - file: 10-theory/interpolation.md
-        - file: 10-theory/regular-grid.md
-        - file: 10-theory/bsplines.md
-        - file: 10-theory/linear-algebra.md
-        - file: 10-theory/autodiff.md
         - file: 10-theory/geometry.md
-        - file: 10-theory/spatial.md
-        - file: 10-theory/distributions.md
-        - file: 10-theory/optimization.md
-        - file: 10-theory/ode.md
-        - file: 10-theory/operators.md
-        - file: 10-theory/special-functions.md
-        - file: 10-theory/random.md
-        - file: 10-theory/grids.md
-        - file: 10-theory/meshes.md
     - title: Research investigations
       children:
         - file: 70-investigations/investigations.md

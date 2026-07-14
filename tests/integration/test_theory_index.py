@@ -7,7 +7,7 @@ from pathlib import Path
 from jaxstro.testing import LIVE_GRAD_CONTRACTS, contract_requires_fd
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-THEORY_INDEX = REPO_ROOT / "docs" / "10-theory" / "index.md"
+THEORY_INDEX = REPO_ROOT / "docs" / "20-methods" / "methods.md"
 
 
 def _theory_text() -> str:
@@ -65,7 +65,7 @@ def test_theory_index_does_not_claim_universal_differentiability() -> None:
 def test_theory_index_routes_discrete_and_validation_contracts() -> None:
     text = _theory_text()
 
-    assert text.count("[](./spatial.md)") >= 2
+    assert text.count("[](./discrete-space/spatial.md)") >= 2
     assert "inactive branch can still poison a derivative" in text
     assert "[](../60-validation/index.md)" in text
     assert "[](../40-api/index.md)" in text

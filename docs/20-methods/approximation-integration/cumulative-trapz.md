@@ -28,7 +28,7 @@ The **cumulative** form keeps the running sum instead of the total, giving a res
 the same length as the input with a leading zero — exactly what you need to turn a
 density into a CDF. jaxstro provides both `trapz` (the total) and `cumulative_trapz`
 (the running integral). Both are pure `jax.numpy`, so they differentiate through the
-**values** $y_i$ (principle [7](./index.md#p7-quadrature)); the grid is data, not a
+**values** $y_i$ (principle [7](../methods.md#p7-quadrature)); the grid is data, not a
 parameter you backprop through.
 
 ## Two spacing modes
@@ -59,7 +59,7 @@ mathematically identical ways:
 The two are equal in exact arithmetic. In floating point they differ by **at most
 about one unit in the last place (ulp)**, because the constant $h$ enters the
 summation at a different point and is therefore rounded against a different running
-total (principle [5](./index.md#p5-floating-point)). jaxstro standardizes on
+total (principle [5](../methods.md#p5-floating-point)). jaxstro standardizes on
 **dx-outside**: accumulate the raw trapezoid increments first, then multiply by the
 scalar `dx` exactly once at the end.
 
@@ -78,7 +78,7 @@ Two reasons drive the choice:
 Migrating a former dx-inside call site to this function can shift its result by ~1
 ulp. That is the rounding difference between [](#eq-dx-inside) and
 [](#eq-dx-outside), not a bug. The affected progenax sites carry test budgets that
-allow it. See [](../95-release/index.md) for the reconciliation note.
+allow it. See [](../../95-release/index.md) for the reconciliation note.
 :::
 
 The non-uniform path cannot use this trick: each increment carries its own width
@@ -92,7 +92,7 @@ The same module ships `simpson`, the degree-2 Newton–Cotes rule, which assumes
 be silently mis-integrated, the Python wrapper raises on a concrete non-uniform grid
 *before* the jitted core runs — but under `jit` the grid is a tracer and the check
 cannot fire, so callers inside `jit` must pass a uniform grid themselves. This is
-principle [9](./index.md#p9-correctness): fail loudly where you can, document the
+principle [9](../methods.md#p9-correctness): fail loudly where you can, document the
 contract where you cannot.
 
 ## What we just established
@@ -101,5 +101,5 @@ The trapezoidal rule is degree-1 Newton–Cotes; the only subtlety is *when* you
 multiply by the spacing, and the answer — dx-outside — is the one that keeps jaxstro
 and progenax bit-identical. For exact integration of polynomials at far fewer
 points, Gaussian quadrature is the next step up; see the API entry for the
-quadrature factory in [](../40-api/index.md). The call signatures for `trapz`,
+quadrature factory in [](../../40-api/index.md). The call signatures for `trapz`,
 `cumulative_trapz`, and `simpson` live there too.

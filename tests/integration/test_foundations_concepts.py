@@ -113,16 +113,25 @@ def test_foundation_pages_are_navigable_without_replacing_module_pages() -> None
         page = f"10-foundations/{filename}"
         assert myst.count(f"file: {page}") == 1
         assert manifest[page].startswith("/")
-    assert "file: 10-theory/linear-algebra.md" in myst
-    assert "file: 10-theory/autodiff.md" in myst
-    assert "file: 10-theory/distributions.md" in myst
+    assert "file: 20-methods/linear-structure/linear-algebra.md" in myst
+    assert "file: 20-methods/change-constraints-evolution/autodiff.md" in myst
+    assert "file: 20-methods/probability-sampling/distributions.md" in myst
 
 
 def test_method_pages_link_back_to_conceptual_foundations() -> None:
     pairs = (
-        ("10-theory/linear-algebra.md", "linear-algebra-language-of-change.md"),
-        ("10-theory/autodiff.md", "what-is-a-derivative.md"),
-        ("10-theory/rootfinding.md", "what-is-a-derivative.md"),
+        (
+            "20-methods/linear-structure/linear-algebra.md",
+            "linear-algebra-language-of-change.md",
+        ),
+        (
+            "20-methods/change-constraints-evolution/autodiff.md",
+            "what-is-a-derivative.md",
+        ),
+        (
+            "20-methods/change-constraints-evolution/rootfinding.md",
+            "what-is-a-derivative.md",
+        ),
     )
     for method_page, foundation_name in pairs:
         text = (DOCS / method_page).read_text(encoding="utf-8")

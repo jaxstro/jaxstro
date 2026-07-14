@@ -78,6 +78,8 @@ def test_foundations_navigation_preserves_module_theory_section() -> None:
         assert myst.count(f"file: {page}") == 1
         assert manifest[page] == route
     assert "/why-this-documentation-works-this-way" not in manifest.values()
-    assert myst.count("title: Theory — AD-safe numerics") == 1
-    assert myst.count("file: 10-theory/rootfinding.md") == 1
-    assert myst.count("file: 10-theory/distributions.md") == 1
+    assert myst.count("title: Methods") == 1
+    assert (
+        myst.count("file: 20-methods/change-constraints-evolution/rootfinding.md") == 1
+    )
+    assert myst.count("file: 20-methods/probability-sampling/distributions.md") == 1

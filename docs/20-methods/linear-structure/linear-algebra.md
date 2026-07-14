@@ -7,7 +7,7 @@ description: >-
 
 For a first-principles account of vectors as perturbations, linear maps,
 geometry, null directions, and conditioning, begin with
-[](../10-foundations/mathematical-objects/linear-algebra-language-of-change.md).
+[](../../10-foundations/mathematical-objects/linear-algebra-language-of-change.md).
 This chapter remains
 the numerical-method and public-API reference.
 
@@ -79,7 +79,7 @@ from the objective. It is not an automatic outlier detector. Likewise, the
 returned jitter is the first successful member of the requested geometric
 sequence, not the smallest possible matrix perturbation.
 
-:::{figure} ./figures/linear-algebra-contracts.webp
+:::{figure} ../../10-theory/figures/linear-algebra-contracts.webp
 :name: fig-linear-algebra-contracts
 :alt: Four regression observations with an outlier and measured weighted and unweighted fits, beside matrix eigenvalues before and after selected diagonal jitter
 
@@ -225,6 +225,6 @@ dense primitives whose numerical boundaries can be stated and tested.
 ## From explanation to evidence
 
 For signatures and ownership, see
-[](../40-api/index.md#jaxstro-numerics-linear-algebra). The assertion-bearing
-evidence map is in [](../60-validation/index.md). The five package-wide gradient
-labels are defined in [](./index.md#gradient-contracts).
+[](../../40-api/index.md#jaxstro-numerics-linear-algebra). The assertion-bearing
+evidence map is in [](../../60-validation/index.md). The five package-wide gradient
+labels are defined in [](../methods.md#gradient-contracts).

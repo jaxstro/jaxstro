@@ -17,7 +17,8 @@ transform boundary, evidence, and owner. Use every pattern with
 
 **Equation.** $G(x;\theta)=0$.
 
-**Primitive.** [](./rootfinding.md) uses `safeguarded_bracketed_root` for an auditable value and trace.
+**Primitive.** [](../20-methods/change-constraints-evolution/rootfinding.md) uses
+`safeguarded_bracketed_root` for an auditable value and trace.
 
 **Transform boundary.** Scalar `jit`; value/shape `vmap`; physical-cost `lax.map`.
 
@@ -31,7 +32,8 @@ transform boundary, evidence, and owner. Use every pattern with
 
 **Equation.** $dx^\star/d\theta=-(\partial_\theta G)/(\partial_x G)$.
 
-**Primitive.** [](./rootfinding.md) provides `implicit_bracketed_root` separately from the value solver.
+**Primitive.** [](../20-methods/change-constraints-evolution/rootfinding.md)
+provides `implicit_bracketed_root` separately from the value solver.
 
 **Transform boundary.** The implicit derivative requires uniqueness and smoothness assertions plus convergence, finiteness, residual, width, and slope gates.
 
@@ -45,7 +47,11 @@ transform boundary, evidence, and owner. Use every pattern with
 
 **Equation.** $Q=\int_a^b q(x)\,dx$.
 
-**Primitive.** [](./cumulative-trapz.md), [](./quadrature.md), and [](./meshes.md) cover sampled, fixed-node, and conservative accumulation.
+**Primitive.**
+[](../20-methods/approximation-integration/cumulative-trapz.md),
+[](../20-methods/approximation-integration/quadrature.md), and
+[](../20-methods/discrete-space/meshes.md) cover sampled, fixed-node, and
+conservative accumulation.
 
 **Transform boundary.** Fixed shapes compose with JAX; node choice and discretization error remain distinct from pathwise derivatives.
 
@@ -59,7 +65,9 @@ transform boundary, evidence, and owner. Use every pattern with
 
 **Equation.** $y(x)$ is reconstructed locally from values, slopes, or grid stencils.
 
-**Primitive.** [](./interpolation.md), [](./regular-grid.md), and [](./bsplines.md).
+**Primitive.** [](../20-methods/approximation-integration/interpolation.md),
+[](../20-methods/approximation-integration/regular-grid.md), and
+[](../20-methods/approximation-integration/bsplines.md).
 
 **Transform boundary.** Prepared fixed-rank evaluation is JAX-native; topology and policy selection stay discrete.
 
@@ -73,7 +81,8 @@ transform boundary, evidence, and owner. Use every pattern with
 
 **Equation.** A finite power law approaches a logarithmic form as $\alpha\rightarrow-1$.
 
-**Primitive.** [](./distributions.md) uses smooth kernels in `powerlaw_logpdf`, `powerlaw_cdf`, and `powerlaw_ppf`.
+**Primitive.** [](../20-methods/probability-sampling/distributions.md) uses
+smooth kernels in `powerlaw_logpdf`, `powerlaw_cdf`, and `powerlaw_ppf`.
 
 **Transform boundary.** Interior parameter derivatives are smooth through the limit; support boundaries remain explicit.
 
@@ -101,7 +110,8 @@ transform boundary, evidence, and owner. Use every pattern with
 
 **Equation.** Candidate gathering precedes $\lVert x_i-x_j\rVert\le r$.
 
-**Primitive.** [](./spatial.md) separates conservative recall from exact fixed-radius pairs.
+**Primitive.** [](../20-methods/discrete-space/spatial.md) separates
+conservative recall from exact fixed-radius pairs.
 
 **Transform boundary.** Topology is discrete; fixed-shape pair payloads feed JAX kernels.
 

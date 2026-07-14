@@ -72,7 +72,7 @@ claim that a physical model adequately describes an observation.
 ## Connected routes, not duplicate explanations
 
 Foundations asks what an idea means and how it connects to scientific
-reasoning. The [](../10-theory/index.md) chapters explain how numerical methods
+reasoning. The [](../20-methods/methods.md) chapters explain how numerical methods
 work and where their algorithmic boundaries lie. The [](../40-api/index.md)
 records exact public surfaces. The [](../60-validation/index.md) links claims
 to executable evidence.

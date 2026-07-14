@@ -71,7 +71,8 @@ T_{n+1}(x) = 2xT_n(x) - T_{n-1}(x),
 ```
 
 These are basis evaluators only. Least-squares fitting is handled by
-[](./linear-algebra.md), and B-spline bases live in [](./bsplines.md). Keeping the
+[](./linear-algebra.md), and B-spline bases live in
+[](../approximation-integration/bsplines.md). Keeping the
 pieces separate makes the differentiability contract clearer: fixed bases are
 smooth in their coordinates; rank-changing fits and model-selection decisions are
 not silently hidden inside a "special function."

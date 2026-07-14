@@ -121,5 +121,5 @@ runtime convergence, finiteness, residual, width, and slope gates pass.
 Continue to
 [](../models-and-computation/sensitivity-conditioning-identifiability.md),
 [](../models-and-computation/from-relations-to-differentiable-programs.md), or
-Jaxstro's [](../../10-theory/autodiff.md) and
-[](../../10-theory/rootfinding.md) chapters.
+Jaxstro's [](../../20-methods/change-constraints-evolution/autodiff.md) and
+[](../../20-methods/change-constraints-evolution/rootfinding.md) chapters.

@@ -86,4 +86,4 @@ domain, rank tolerance, and observed conditioning.
 > automatically a well-conditioned scientific inverse.
 
 Continue to [](./what-is-a-derivative.md). For Jaxstro's numerical helpers, see
-[](../../10-theory/linear-algebra.md).
+[](../../20-methods/linear-structure/linear-algebra.md).
