@@ -23,7 +23,7 @@ scientific transform will do, compute it, and audit the result.
 ## Choose 64-bit precision before creating arrays
 
 JAX commonly defaults to 32-bit values. Jaxstro makes the scientific precision
-choice explicit, and that choice must happen before importing the executable
+choice explicit, and that choice must happen before defining or evaluating the
 map or creating any JAX arrays:
 
 ```python
@@ -33,11 +33,6 @@ enable_high_precision()
 
 import jax
 import jax.numpy as jnp
-from examples.onboarding.first_jax_map import (
-    batched_scaled_luminosity,
-    compiled_scaled_luminosity,
-    scaled_luminosity,
-)
 ```
 
 More bits do not fix a bad algorithm, but insufficient precision can erase a
@@ -55,8 +50,7 @@ For a star compared with a reference star, the Stefan-Boltzmann scaling is
 \left(\frac{T}{T_\mathrm{ref}}\right)^4.
 ```
 
-The imported executable example in `examples/onboarding/first_jax_map.py`
-expresses that map directly:
+The executable definition below expresses that map directly:
 
 ```python
 def scaled_luminosity(radius_ratio, temperature_ratio):
@@ -64,9 +58,6 @@ def scaled_luminosity(radius_ratio, temperature_ratio):
     temperature = jnp.asarray(temperature_ratio)
     return radius**2 * temperature**4
 
-
-batched_scaled_luminosity = jax.vmap(scaled_luminosity)
-compiled_scaled_luminosity = jax.jit(scaled_luminosity)
 ```
 
 At radius ratio 2 and temperature ratio 0.5, the predicted luminosity ratio is
@@ -85,6 +76,7 @@ of that map, not rewritten scientific models.
 one lane per star:
 
 ```python
+batched_scaled_luminosity = jax.vmap(scaled_luminosity)
 radii = jnp.array([1.0, 2.0, 0.5])
 temperatures = jnp.array([1.0, 0.5, 2.0])
 luminosities = batched_scaled_luminosity(radii, temperatures)
@@ -100,6 +92,7 @@ calls.
 compiles that program for the input signature:
 
 ```python
+compiled_scaled_luminosity = jax.jit(scaled_luminosity)
 first = compiled_scaled_luminosity(2.0, 0.5)   # trace and compile
 later = compiled_scaled_luminosity(3.0, 0.75)  # reuse when signatures match
 ```

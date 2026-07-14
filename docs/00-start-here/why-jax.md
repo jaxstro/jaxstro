@@ -123,8 +123,9 @@ one-off calculation may not need.
   - Direct JAX
   - Jaxstro
 * - Program transformations
-  - Ordinary eager array evaluation; batching and derivatives are separate
-    implementations or external tools.
+  - Eager vectorized and broadcast array batching is native for array-oriented
+    NumPy functions. General `vmap` lifting of scalar-shaped or PyTree programs
+    and automatic differentiation require other machinery.
   - Composable `jit`, `vmap`, JVP, VJP, and gradient transformations.
   - Direct JAX transformations plus transform-aware scientific primitives.
 * - State and compilation constraints

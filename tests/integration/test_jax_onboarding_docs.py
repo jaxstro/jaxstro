@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import ast
 import json
+import re
 import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -43,6 +46,10 @@ TASK_1_ROUTED_PAGES = (
 def _assert_links_in_order(text: str, links: tuple[str, ...]) -> None:
     positions = [text.index(f"]({link})") for link in links]
     assert positions == sorted(positions)
+
+
+def _python_cells(text: str) -> tuple[str, ...]:
+    return tuple(re.findall(r"```python\n(.*?)```", text, flags=re.DOTALL))
 
 
 def test_beginner_pages_exist_and_name_their_boundaries() -> None:
@@ -88,12 +95,43 @@ def test_public_entry_points_use_one_ordered_beginner_route() -> None:
 def test_precision_is_enabled_before_the_first_jax_evaluation() -> None:
     text = (START_HERE / "jax-from-first-principles.md").read_text(encoding="utf-8")
     precision = text.index("enable_high_precision()")
-    first_import = text.index("from examples.onboarding.first_jax_map import")
+    definition = text.index("def scaled_luminosity(")
     first_array = text.index("jnp.array(")
     first_evaluation = text.index("scaled_luminosity(2.0, 0.5)")
 
-    assert precision < first_import < first_array
+    assert precision < definition < first_array
     assert precision < first_evaluation
+
+
+def test_first_principles_has_one_executable_scaled_luminosity_owner() -> None:
+    text = (START_HERE / "jax-from-first-principles.md").read_text(encoding="utf-8")
+    owners = 0
+    for cell in _python_cells(text):
+        tree = ast.parse(cell)
+        owners += sum(
+            isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+            and node.name == "scaled_luminosity"
+            for node in ast.walk(tree)
+        )
+        owners += sum(
+            isinstance(node, ast.ImportFrom)
+            and node.module == "examples.onboarding.first_jax_map"
+            and any(alias.name == "scaled_luminosity" for alias in node.names)
+            for node in ast.walk(tree)
+        )
+
+    assert owners == 1
+
+
+def test_first_principles_python_cells_run_in_source_order() -> None:
+    text = (START_HERE / "jax-from-first-principles.md").read_text(encoding="utf-8")
+    subprocess.run(
+        [sys.executable, "-c", "\n".join(_python_cells(text))],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
 
 
 def test_why_jax_has_a_rendered_three_way_decision_table() -> None:
@@ -111,6 +149,16 @@ def test_why_jax_has_a_rendered_three_way_decision_table() -> None:
     assert "```{list-table} Choosing a research-programming layer" in source
     for phrase in required:
         assert phrase in source
+
+    numpy_transform_cell = source.split("* - Program transformations", 1)[1].split(
+        "* - State and compilation constraints", 1
+    )[0]
+    normalized_cell = numpy_transform_cell.lower()
+    assert "eager vectorized and broadcast array batching is native" in normalized_cell
+    assert "array-oriented" in numpy_transform_cell
+    assert "general `vmap` lifting" in normalized_cell
+    assert "automatic differentiation require other machinery" in normalized_cell
+    assert "batching and derivatives are separate implementations" not in source
 
     subprocess.run(
         ["myst", "build", "--html", "--ci", "--strict"],
