@@ -52,8 +52,12 @@ without inventing smooth derivatives for discrete identity operations.
 :::
 
 :::{card} Signals as sampled evidence
-Signal-method background is planned for the next slice. No `jaxstro.signal`
-runtime implementation is claimed here, and no unavailable route is linked.
+:link: ./signals/signal-axes.md
+
+Define sample and frequency axes, window finite records, estimate power, and
+interpret cross-spectral phase and delay. These guides describe a planned
+scientific convention layer; they do not claim an implemented `jaxstro.signal`
+runtime.
 :::
 ::::
 

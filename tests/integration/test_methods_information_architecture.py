@@ -42,6 +42,49 @@ FAMILY_TITLES = {
     "discrete-space": "Discrete worlds: grids, meshes, and neighborhoods",
 }
 
+TOC_FAMILIES = {
+    "change-constraints-evolution": (
+        "autodiff",
+        "rootfinding",
+        "nonlinear-systems",
+        "optimization",
+        "ode",
+        "adaptive-differential-equations",
+    ),
+    "approximation-integration": (
+        "interpolation",
+        "regular-grid",
+        "bsplines",
+        "cumulative-trapz",
+        "quadrature",
+        "adaptive-quadrature",
+    ),
+    "linear-structure": (
+        "linear-algebra",
+        "operators",
+        "iterative-linear-solvers",
+        "special-functions",
+    ),
+    "probability-sampling": (
+        "distributions",
+        "random",
+        "sampling",
+        "quasi-monte-carlo",
+    ),
+    "discrete-space": ("grids", "meshes", "spatial"),
+    "signals": (
+        "signal-axes",
+        "windows-spectral-leakage",
+        "spectral-estimation",
+        "phase-and-delay",
+    ),
+}
+
+TOC_TITLES = {
+    **FAMILY_TITLES,
+    "signals": "Signals as sampled evidence",
+}
+
 ROUTES = {
     "methods.md": "/methods",
     "change-constraints-evolution/autodiff.md": "/autodiff",
@@ -111,10 +154,10 @@ def test_methods_toc_preserves_family_titles_and_page_order() -> None:
     expected_children = [{"file": "20-methods/methods.md"}]
     expected_children.extend(
         {
-            "title": FAMILY_TITLES[family],
+            "title": TOC_TITLES[family],
             "children": [{"file": f"20-methods/{family}/{page}.md"} for page in pages],
         }
-        for family, pages in FAMILIES.items()
+        for family, pages in TOC_FAMILIES.items()
     )
 
     assert methods_toc["children"] == expected_children

@@ -71,8 +71,10 @@ project:
           children:
             - file: 20-methods/change-constraints-evolution/autodiff.md
             - file: 20-methods/change-constraints-evolution/rootfinding.md
+            - file: 20-methods/change-constraints-evolution/nonlinear-systems.md
             - file: 20-methods/change-constraints-evolution/optimization.md
             - file: 20-methods/change-constraints-evolution/ode.md
+            - file: 20-methods/change-constraints-evolution/adaptive-differential-equations.md
         - title: Approximation from finite information
           children:
             - file: 20-methods/approximation-integration/interpolation.md
@@ -80,21 +82,30 @@ project:
             - file: 20-methods/approximation-integration/bsplines.md
             - file: 20-methods/approximation-integration/cumulative-trapz.md
             - file: 20-methods/approximation-integration/quadrature.md
+            - file: 20-methods/approximation-integration/adaptive-quadrature.md
         - title: Linear structure and reusable operators
           children:
             - file: 20-methods/linear-structure/linear-algebra.md
             - file: 20-methods/linear-structure/operators.md
+            - file: 20-methods/linear-structure/iterative-linear-solvers.md
             - file: 20-methods/linear-structure/special-functions.md
         - title: Randomness as a computational object
           children:
             - file: 20-methods/probability-sampling/distributions.md
             - file: 20-methods/probability-sampling/random.md
             - file: 20-methods/probability-sampling/sampling.md
+            - file: 20-methods/probability-sampling/quasi-monte-carlo.md
         - title: "Discrete worlds: grids, meshes, and neighborhoods"
           children:
             - file: 20-methods/discrete-space/grids.md
             - file: 20-methods/discrete-space/meshes.md
             - file: 20-methods/discrete-space/spatial.md
+        - title: Signals as sampled evidence
+          children:
+            - file: 20-methods/signals/signal-axes.md
+            - file: 20-methods/signals/windows-spectral-leakage.md
+            - file: 20-methods/signals/spectral-estimation.md
+            - file: 20-methods/signals/phase-and-delay.md
     - title: Representations and workflows (current locations)
       children:
         - file: 10-theory/science-patterns.md
