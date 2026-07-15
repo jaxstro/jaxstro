@@ -565,6 +565,7 @@ git commit -m "feat(quad): add adaptive method configurations"
 
 **Files:**
 - Create: `src/jaxstro/quad/_gk.py`
+- Create: `src/jaxstro/quad/_gk_data.py` through the fixture owner script
 - Create: `tests/unit/quad/test_gk.py`
 - Create: `tests/validation/test_quad_gk_tables.py`
 - Create: `tests/fixtures/quadpack/dqk15.f`
@@ -580,7 +581,7 @@ git commit -m "feat(quad): add adaptive method configurations"
 - Produces `gauss_kronrod_data(method)` and a payload-capable local embedded-rule estimate.
 - Sources every constant and rescaling coefficient from named Netlib QUADPACK files.
 
-- [ ] **Step 1: Capture primary-source provenance before constants**
+- [x] **Step 1: Capture primary-source provenance before constants**
 
 Check the exact Netlib source files into `tests/fixtures/quadpack/` with source
 URLs, retrieval date, and SHA-256 digests. Add a deterministic parser/emit-check
@@ -591,21 +592,21 @@ Run: `env -u VIRTUAL_ENV uv run --no-sync python scripts/build_quadpack_gk_fixtu
 
 Run: `env -u VIRTUAL_ENV uv run --no-sync python scripts/build_quadpack_gk_fixture.py --check`
 
-- [ ] **Step 2: Write failing table-invariant and exactness tests**
+- [x] **Step 2: Write failing table-invariant and exactness tests**
 
 For all six pairs, test node count, symmetry, strict ordering, positive Kronrod weights, aligned embedded weights, mass two, Gauss moments through degrees 13/19/29/39/49/59, and Kronrod moments through degrees 23/31/47/61/77/91 under float64 tolerances declared per pair.
 
-- [ ] **Step 3: Verify RED**
+- [x] **Step 3: Verify RED**
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_gk.py tests/validation/test_quad_gk_tables.py`
 
 Expected: `_gk` imports fail.
 
-- [ ] **Step 4: Implement literal data and the QUADPACK-style estimator**
+- [x] **Step 4: Implement literal data and the QUADPACK-style estimator**
 
 Store immutable Python tuple literals and convert them to the active JAX dtype. Expand symmetry with array operations. Evaluate all nodes in one integrand call. Return high value, payload error, absolute-integral proxy, mean-deviation proxy, nonfinite flag, and roundoff-floor flag. Use componentwise magnitudes for real and complex payloads.
 
-- [ ] **Step 5: Validate independently and compile**
+- [x] **Step 5: Validate independently and compile**
 
 Compare runtime nodes and weights with the deterministically parsed checked-in
 Netlib provenance fixture and, secondarily, SciPy's current fixtures where
@@ -618,7 +619,7 @@ translation. Test JIT and no order-dependent Python-loop unrolling.
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_gk.py tests/validation/test_quad_gk_tables.py`
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/jaxstro/quad/_gk.py tests/unit/quad/test_gk.py tests/validation/test_quad_gk_tables.py tests/fixtures/quadpack scripts/build_quadpack_gk_fixture.py
