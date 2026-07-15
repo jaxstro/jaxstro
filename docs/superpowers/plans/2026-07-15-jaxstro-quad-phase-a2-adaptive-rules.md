@@ -799,7 +799,7 @@ git commit -m "feat(quad): add adaptive Clenshaw-Curtis"
 - Reuses A1 tanh-sinh nesting and every A1 domain map.
 - Uses the same local reference partition for finite and improper domains.
 
-- [ ] **Step 1: Write failing nested-work and domain-family tests**
+- [x] **Step 1: Write failing nested-work and domain-family tests**
 
 Cover finite smooth and endpoint-singular integrals with exponents `0.5`, `0.9`,
 and `0.99`, finite breakpoints,
@@ -814,11 +814,11 @@ exponents `0.9` and `0.99` may take that same honest roundoff path, but may not
 pass merely because adjacent levels agree. Ratchet the exact error aggregation,
 active counts, shell indices, and terminal transition.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_adaptive_tanh_sinh.py`
 
-- [ ] **Step 3: Implement one high-level nested adapter**
+- [x] **Step 3: Implement one high-level nested adapter**
 
 Use the Task 0 active-lattice owner to construct the adjacent-level union,
 explicit coarse-to-fine mapping, active masks, and tail metadata. Physically
@@ -830,11 +830,11 @@ never split a physical improper interval directly. Treat exhausted local
 reference extent as priority evidence, not an immediate roundoff status; allow
 the shared controller to bisect the reference region.
 
-- [ ] **Step 4: Run focused transform and fixed-rule regressions**
+- [x] **Step 4: Run focused transform and fixed-rule regressions**
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_adaptive_tanh_sinh.py tests/unit/quad/test_tanh_sinh.py tests/integration/test_quad_adaptive_transforms.py`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/jaxstro/quad/_adaptive.py src/jaxstro/quad/adaptive.py tests/unit/quad/test_adaptive_tanh_sinh.py

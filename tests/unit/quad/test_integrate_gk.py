@@ -6,13 +6,13 @@ import pytest
 
 from jaxstro import quantity
 from jaxstro.quad import (
-    AdaptiveTanhSinh,
     ErrorKind,
     GaussKronrod,
     Infinite,
     Interval,
     MaxNorm,
     QuadStatus,
+    Romberg,
     WeightedMeasure,
     integrate,
 )
@@ -208,7 +208,7 @@ def test_integrate_rejects_unsupported_structure_and_gradient_policy() -> None:
         integrate(
             lambda x: x,
             Interval(-1.0, 1.0),
-            **_options(method=AdaptiveTanhSinh()),
+            **_options(method=Romberg()),
         )
     with pytest.raises(ValueError, match="Phase A3 replay"):
         integrate(

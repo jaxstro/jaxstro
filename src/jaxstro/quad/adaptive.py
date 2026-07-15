@@ -13,13 +13,15 @@ from ._adaptive import (
     infer_payload_zero,
     nested_rule_estimate_values,
     reference_partition,
+    tanh_sinh_estimate_values,
+    tanh_sinh_pair_data,
     transformed_integrand,
     validate_adaptive_capacities,
 )
 from ._gk import gauss_kronrod_data, gauss_kronrod_estimate_values
 from .domains import Infinite, Interval, LeftInfinite, RightInfinite
 from .measures import LebesgueMeasure, WeightedMeasure
-from .methods import AdaptiveClenshawCurtis, GaussKronrod
+from .methods import AdaptiveClenshawCurtis, AdaptiveTanhSinh, GaussKronrod
 from .result import ErrorKind, QuadError, QuadResult, QuadStatus, QuadWork
 from .tolerance import ErrorNorm, MaxNorm
 from .tolerance import error_norm as reduce_error_norm
@@ -99,9 +101,9 @@ def integrate(
             'Phase A2 accepts only gradient="stop"; Phase A3 replay is not yet '
             "implemented"
         )
-    if not isinstance(method, (GaussKronrod, AdaptiveClenshawCurtis)):
+    if not isinstance(method, (GaussKronrod, AdaptiveClenshawCurtis, AdaptiveTanhSinh)):
         raise TypeError(f"{type(method).__name__} is not implemented in Phase A2")
-    if not isinstance(domain, Interval):
+    if not isinstance(domain, Interval) and not isinstance(method, AdaptiveTanhSinh):
         raise TypeError(f"{type(method).__name__} requires a finite Interval")
     selected_measure: AdaptiveMeasure = (
         LebesgueMeasure() if measure is None else measure
@@ -111,15 +113,20 @@ def integrate(
             "adaptive quadrature requires LebesgueMeasure or WeightedMeasure"
         )
 
-    node_cost = (
-        method.pair if isinstance(method, GaussKronrod) else method.initial_order
-    )
-    validate_adaptive_capacities(
-        node_cost=node_cost,
-        max_evaluations=max_evaluations,
-        max_regions=max_regions,
-        initial_regions=len(domain.breakpoints) + 1,
-    )
+    initial_regions = len(domain.breakpoints) + 1 if isinstance(domain, Interval) else 1
+    if isinstance(method, GaussKronrod):
+        node_cost = method.pair
+    elif isinstance(method, AdaptiveClenshawCurtis):
+        node_cost = method.initial_order
+    else:
+        node_cost = None
+    if node_cost is not None:
+        validate_adaptive_capacities(
+            node_cost=node_cost,
+            max_evaluations=max_evaluations,
+            max_regions=max_regions,
+            initial_regions=initial_regions,
+        )
 
     absolute_tolerance = jnp.asarray(epsabs)
     relative_tolerance = jnp.asarray(epsrel)
@@ -130,13 +137,16 @@ def integrate(
     ):
         raise TypeError("adaptive tolerances must have a real dtype")
 
+    if isinstance(domain, Interval):
+        domain_scalars = (domain.lower, domain.upper, *domain.breakpoints)
+    elif isinstance(domain, RightInfinite):
+        domain_scalars = (domain.lower,)
+    elif isinstance(domain, LeftInfinite):
+        domain_scalars = (domain.upper,)
+    else:
+        domain_scalars = ()
     dtype = jnp.result_type(
-        domain.lower,
-        domain.upper,
-        *domain.breakpoints,
-        absolute_tolerance,
-        relative_tolerance,
-        0.0,
+        *domain_scalars, absolute_tolerance, relative_tolerance, 0.0
     )
     if isinstance(method, GaussKronrod):
         data = gauss_kronrod_data(method, dtype=dtype)
@@ -146,7 +156,7 @@ def integrate(
         def reduce_values(values):
             return gauss_kronrod_estimate_values(values, data)
 
-    else:
+    elif isinstance(method, AdaptiveClenshawCurtis):
         pair = clenshaw_curtis_pair_data(method, dtype=dtype)
         rule_nodes = pair.nodes
         error_kind = ErrorKind.REFINEMENT_DIFFERENCE
@@ -154,7 +164,24 @@ def integrate(
         def reduce_values(values):
             return nested_rule_estimate_values(values, pair)
 
+    else:
+        tanh_sinh_pair = tanh_sinh_pair_data(method, dtype=dtype)
+        rule_nodes = tanh_sinh_pair.nodes
+        node_cost = rule_nodes.shape[0]
+        error_kind = ErrorKind.REFINEMENT_DIFFERENCE
+        validate_adaptive_capacities(
+            node_cost=node_cost,
+            max_evaluations=max_evaluations,
+            max_regions=max_regions,
+            initial_regions=initial_regions,
+        )
+
+        def reduce_values(values):
+            return tanh_sinh_estimate_values(values, tanh_sinh_pair)
+
     partition = reference_partition(domain)
+    if node_cost is None:
+        raise AssertionError("adaptive method dispatch did not select a node cost")
     inferred_zero = infer_payload_zero(
         fun,
         args=args,
@@ -178,12 +205,14 @@ def integrate(
             region_upper=upper,
             args=args,
             measure=selected_measure,
+            open_region=isinstance(method, AdaptiveTanhSinh),
         )
         estimate = reduce_values(transformed.values)
         return LocalEstimate(
             value=estimate.value,
             error=estimate.error,
             nonfinite=transformed.nonfinite | estimate.nonfinite,
+            roundoff=transformed.roundoff,
         )
 
     tolerance_valid = (
@@ -192,7 +221,11 @@ def integrate(
         & (absolute_tolerance >= 0.0)
         & (relative_tolerance >= 0.0)
     )
-    zero_width = jnp.asarray(domain.lower) == jnp.asarray(domain.upper)
+    zero_width = (
+        jnp.asarray(domain.lower) == jnp.asarray(domain.upper)
+        if isinstance(domain, Interval)
+        else jnp.asarray(False)
+    )
     use_zero = partition.valid & tolerance_valid & zero_width
 
     def run_controller(_operand):

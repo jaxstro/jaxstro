@@ -16,9 +16,10 @@ from ._integrand import (
     infer_payload_zero,
     validate_node_values,
 )
+from ._tanh_sinh import _tanh_sinh_lattice_data
 from .domains import Infinite, Interval, LeftInfinite, RightInfinite, interval_is_valid
 from .measures import LebesgueMeasure, WeightedMeasure
-from .methods import AdaptiveClenshawCurtis
+from .methods import AdaptiveClenshawCurtis, AdaptiveTanhSinh
 from .result import QuadStatus
 from .rules import ClenshawCurtisRule
 from .tolerance import ErrorNorm
@@ -46,6 +47,7 @@ class TransformedIntegrand(NamedTuple):
     values: Array
     valid: Array
     nonfinite: Array
+    roundoff: Array
 
 
 class LocalEstimate(NamedTuple):
@@ -54,6 +56,7 @@ class LocalEstimate(NamedTuple):
     value: Array
     error: Array
     nonfinite: Array
+    roundoff: Any = False
 
 
 class NestedRulePair(NamedTuple):
@@ -72,6 +75,32 @@ class NestedRuleEstimate(NamedTuple):
     error: Array
     raw_error: Array
     roundoff_floor: Array
+    nonfinite: Array
+
+
+class TanhSinhPair(NamedTuple):
+    """Adjacent nested active tanh-sinh levels and explicit tail metadata."""
+
+    nodes: Array
+    high_indices: Array
+    high_weights: Array
+    high_density_weights: Array
+    low_indices: Array
+    low_nodes: Array
+    low_weights: Array
+    outer_shell: Array
+    terminal_index: Array
+    dtype_exhausted: Array
+
+
+class TanhSinhEstimate(NamedTuple):
+    """Adjacent-level tanh-sinh estimate with separated error evidence."""
+
+    value: Array
+    error: Array
+    discretization_error: Array
+    summation_error: Array
+    tail_error: Array
     nonfinite: Array
 
 
@@ -169,6 +198,88 @@ def nested_rule_estimate_values(
         error=error,
         raw_error=raw_error,
         roundoff_floor=floor,
+        nonfinite=nonfinite,
+    )
+
+
+def tanh_sinh_pair_data(method: AdaptiveTanhSinh, *, dtype=None) -> TanhSinhPair:
+    """Construct adjacent compact levels through the A1 active-lattice owner."""
+    low = _tanh_sinh_lattice_data(method.initial_level, dtype=dtype)
+    high = _tanh_sinh_lattice_data(method.initial_level + 1, dtype=dtype)
+    low_indices = high.coarse_to_fine
+    outer_shell = (jnp.abs(high.compact_indices) > 2 * low.terminal_index) & (
+        jnp.abs(high.compact_indices) < high.terminal_index
+    )
+    return TanhSinhPair(
+        nodes=high.compact_nodes,
+        high_indices=high.compact_indices,
+        high_weights=high.compact_weights,
+        high_density_weights=high.compact_density_weights,
+        low_indices=low_indices,
+        low_nodes=high.compact_nodes[low_indices],
+        low_weights=low.compact_weights,
+        outer_shell=outer_shell,
+        terminal_index=high.terminal_index,
+        dtype_exhausted=high.dtype_exhausted,
+    )
+
+
+def _summation_gamma(node_count: int, dtype) -> Array:
+    scaled_epsilon = node_count * jnp.finfo(dtype).eps
+    return jnp.asarray(scaled_epsilon / (1.0 - scaled_epsilon), dtype=dtype)
+
+
+def tanh_sinh_estimate_values(values: Array, pair: TanhSinhPair) -> TanhSinhEstimate:
+    """Reduce adjacent active levels and retain discretization, sum, and tail evidence."""
+    values = validate_node_values(
+        values, pair.nodes.shape[0], context="adaptive tanh-sinh"
+    )
+    if jnp.issubdtype(values.dtype, jnp.complexfloating):
+        target_dtype = (
+            jnp.complex64 if pair.nodes.dtype == jnp.float32 else jnp.complex128
+        )
+    else:
+        target_dtype = pair.nodes.dtype
+    values = values.astype(target_dtype)
+    high_value = _node_weighted_sum(values, pair.high_weights)
+    low_values = values[pair.low_indices]
+    low_value = _node_weighted_sum(low_values, pair.low_weights)
+    discretization = jnp.abs(high_value - low_value)
+    high_resabs = _node_weighted_sum(jnp.abs(values), pair.high_weights)
+    low_resabs = _node_weighted_sum(jnp.abs(low_values), pair.low_weights)
+    summation = (
+        _summation_gamma(pair.nodes.shape[0], pair.nodes.dtype) * high_resabs
+        + _summation_gamma(pair.low_indices.shape[0], pair.nodes.dtype) * low_resabs
+    )
+    contribution = values * jnp.reshape(
+        pair.high_weights,
+        (pair.nodes.shape[0],) + (1,) * (values.ndim - 1),
+    )
+    shell_mask = jnp.reshape(
+        pair.outer_shell,
+        (pair.nodes.shape[0],) + (1,) * (values.ndim - 1),
+    )
+    shell = jnp.sum(jnp.where(shell_mask, jnp.abs(contribution), 0.0), axis=0)
+    density_shape = (pair.nodes.shape[0],) + (1,) * (values.ndim - 1)
+    density_values = values * jnp.reshape(pair.high_density_weights, density_shape)
+    terminal = jnp.abs(density_values[0]) + jnp.abs(density_values[-1])
+    tail = shell + terminal
+    error = discretization + summation + tail
+    nonfinite = ~(
+        jnp.all(jnp.isfinite(values))
+        & jnp.all(jnp.isfinite(high_value))
+        & jnp.all(jnp.isfinite(low_value))
+        & jnp.all(jnp.isfinite(discretization))
+        & jnp.all(jnp.isfinite(summation))
+        & jnp.all(jnp.isfinite(tail))
+        & jnp.all(jnp.isfinite(error))
+    )
+    return TanhSinhEstimate(
+        value=high_value,
+        error=error,
+        discretization_error=discretization,
+        summation_error=summation,
+        tail_error=tail,
         nonfinite=nonfinite,
     )
 
@@ -293,6 +404,7 @@ def transformed_integrand(
     region_upper=1.0,
     args: Any = (),
     measure: AdaptiveMeasure | None = None,
+    open_region: bool = False,
 ) -> TransformedIntegrand:
     """Evaluate one local reference region with every map and density applied."""
     selected_measure: AdaptiveMeasure = (
@@ -309,6 +421,13 @@ def transformed_integrand(
     half_width = 0.5 * (upper - lower)
     midpoint = 0.5 * (upper + lower)
     reference = midpoint + half_width * nodes
+    roundoff = jnp.asarray(False)
+    if open_region:
+        interior_lower = jnp.nextafter(lower, upper)
+        interior_upper = jnp.nextafter(upper, lower)
+        clipped_reference = jnp.clip(reference, interior_lower, interior_upper)
+        roundoff = jnp.any(clipped_reference != reference)
+        reference = clipped_reference
     mapped = map_domain(domain, reference)
     has_args = has_explicit_args(args)
     raw_values = validate_node_values(
@@ -345,6 +464,7 @@ def transformed_integrand(
         values=values,
         valid=valid,
         nonfinite=nonfinite,
+        roundoff=roundoff,
     )
 
 
@@ -433,6 +553,7 @@ def adaptive_controller(
         | ~jnp.isfinite(global_error_norm)
         | ~jnp.isfinite(tolerance)
     )
+    initial_roundoff = jnp.any(initial.roundoff)
     converged = global_error_norm <= tolerance
     running = jnp.asarray(-1, dtype=jnp.int32)
     status = jnp.where(
@@ -444,7 +565,11 @@ def adaptive_controller(
             jnp.where(
                 converged,
                 jnp.asarray(QuadStatus.CONVERGED, dtype=jnp.int32),
-                running,
+                jnp.where(
+                    initial_roundoff,
+                    jnp.asarray(QuadStatus.ROUNDOFF_LIMITED, dtype=jnp.int32),
+                    running,
+                ),
             ),
         ),
     )
@@ -544,6 +669,7 @@ def adaptive_controller(
                 | ~jnp.isfinite(new_error_norm)
                 | ~jnp.isfinite(new_tolerance)
             )
+            child_roundoff = jnp.any(children.roundoff)
             now_converged = new_error_norm <= new_tolerance
             roundoff = (no_improvement_count >= 6) | (growth_count >= 5)
             new_status = jnp.where(
@@ -553,9 +679,13 @@ def adaptive_controller(
                     now_converged,
                     jnp.asarray(QuadStatus.CONVERGED, dtype=jnp.int32),
                     jnp.where(
-                        roundoff,
+                        child_roundoff,
                         jnp.asarray(QuadStatus.ROUNDOFF_LIMITED, dtype=jnp.int32),
-                        running,
+                        jnp.where(
+                            roundoff,
+                            jnp.asarray(QuadStatus.ROUNDOFF_LIMITED, dtype=jnp.int32),
+                            running,
+                        ),
                     ),
                 ),
             )
