@@ -19,6 +19,7 @@ from jaxstro.quad import (
     WeightedMeasure,
     fixed,
 )
+from jaxstro.quad._tanh_sinh import _tanh_sinh_lattice_data
 
 
 def test_fixed_gaussian_integrates_polynomial() -> None:
@@ -152,6 +153,41 @@ def test_fixed_tanh_sinh_handles_infinite_domain() -> None:
         rule=TanhSinhRule(6),
     )
     assert jnp.allclose(got, jnp.sqrt(jnp.pi), rtol=2e-9, atol=2e-9)
+
+
+def test_fixed_tanh_sinh_compact_path_has_finite_parameter_gradient() -> None:
+    lattice = _tanh_sinh_lattice_data(5, dtype=jnp.float64)
+    observed_node_counts = []
+
+    def integrand(x, parameter):
+        observed_node_counts.append(x.shape[0])
+        return jnp.where(x == 0.25, jnp.inf, jnp.exp(parameter * x))
+
+    value = fixed(
+        integrand,
+        Interval(-1.0, 1.0),
+        args=jnp.asarray(0.3),
+        rule=TanhSinhRule(5),
+    )
+    derivative = jax.grad(
+        lambda parameter: fixed(
+            integrand,
+            Interval(-1.0, 1.0),
+            args=parameter,
+            rule=TanhSinhRule(5),
+        )
+    )(jnp.asarray(0.3))
+    reference = fixed(
+        lambda x: x * jnp.exp(0.3 * x),
+        Interval(-1.0, 1.0),
+        rule=TanhSinhRule(5),
+    )
+    assert jnp.isfinite(value)
+    assert jnp.isfinite(derivative)
+    assert jnp.allclose(derivative, reference, rtol=2e-12, atol=2e-12)
+    assert observed_node_counts
+    assert set(observed_node_counts) == {lattice.compact_nodes.shape[0]}
+    assert lattice.compact_nodes.shape[0] < lattice.nodes.shape[0]
 
 
 def test_fixed_rejects_unsupported_structural_pairings() -> None:

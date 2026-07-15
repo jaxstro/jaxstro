@@ -246,6 +246,11 @@ T_d=\operatorname{asinh}\!\left(
 K_\ell^{\mathrm{cap}}=\left\lceil\frac{T_d}{h_\ell}\right\rceil+1.
 ```
 
+For $\ell>0$, replace this raw cap by
+$\max(K_\ell^{\mathrm{cap}},2\max A_{\ell-1})$ so every mandatory mapped
+coarse index is representable in the static candidate array even when rounding
+the analytic cap downward would otherwise exclude it.
+
 Let $A_\ell\subseteq\{0,\ldots,K_\ell^{\mathrm{cap}}\}$ be the retained
 nonnegative index set. At the base level, reserve $0$ and scan every remaining
 candidate through the cap in increasing index order, retaining it only when
@@ -454,7 +459,7 @@ breakpoints in A2.
   indices, active masks, coarse-to-fine mappings, parameter coordinates, and
   terminal-tail metadata for A2.
 
-- [ ] **Step 1: Write failing truncation, nesting, and representability tests**
+- [x] **Step 1: Write failing truncation, nesting, and representability tests**
 
 Under float32 and float64, require active nodes to be finite, strictly interior,
 unique, symmetric, and nested across adjacent levels, with finite strictly
@@ -473,11 +478,11 @@ In particular, float64 levels one through three must prove that unchanged
 terminals at levels one and two do not block the farther node exposed at level
 three.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_tanh_sinh.py tests/unit/quad/test_fixed.py -k 'tanh_sinh or representable or truncation'`
 
-- [ ] **Step 3: Implement the nested active lattice**
+- [x] **Step 3: Implement the nested active lattice**
 
 Use cached host-side NumPy/Python construction for compact public rule constants
 and static candidate arrays plus JAX array operations in the adaptive hot path.
@@ -490,21 +495,21 @@ public fixed constructor; padded masks and sentinels belong exclusively to the
 private adaptive constructor. Add a JIT/JAXPR regression proving compact setup
 introduces no dynamic-shape primitive into the traced evaluator.
 
-- [ ] **Step 4: Re-run complete A1 gates and document the correction**
+- [x] **Step 4: Re-run complete A1 gates and document the correction**
 
 Update the fixed-method page to explain representability masks, outer-tail
 limitations, and why fixed level agreement alone is not an error certificate.
 Run all A1 tanh-sinh, fixed, compatibility, transform, and reference tests under
 both active precision policies.
 
-- [ ] **Step 5: Dispatch a focused read-only numerical reviewer**
+- [x] **Step 5: Dispatch a focused read-only numerical reviewer**
 
 The reviewer must inspect nesting, unique active nodes, endpoint behavior,
 float32/float64 masks, fixed-rule numerical changes, and whether the new
 metadata is sufficient for A2 tail evidence. Resolve all Critical and Important
 findings before Task 1.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/jaxstro/quad/_tanh_sinh.py src/jaxstro/quad/fixed.py docs/20-methods/approximation-integration/quadrature.md tests/unit/quad/test_tanh_sinh.py tests/unit/quad/test_fixed.py

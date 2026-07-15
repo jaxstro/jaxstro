@@ -247,9 +247,25 @@ t(s)=\tanh\!\left(\frac{\pi}{2}\sinh s\right),
 
 The derivative decays double-exponentially near $t=\pm1$. Jaxstro composes
 this formula with explicit maps for finite, semi-infinite, and full-line
-domains. Representable endpoint distance eventually limits float64 accuracy
-for an integrand that diverges exactly at an endpoint; increasing the level
-past that point cannot recover information absent from the dtype.
+domains. At each level, Jaxstro retains only finite, strictly interior, unique
+nodes with finite positive weights. Every retained coarse node is reserved in
+the next level before new odd and outer nodes are admitted. This makes nesting
+an explicit finite-precision invariant rather than an assumption about ideal
+real arithmetic.
+
+The public fixed rule contains only these active nodes. A private padded lattice
+records masked candidates and terminal transformed-density information for the
+adaptive controller. Representable endpoint distance eventually limits
+accuracy for an integrand that diverges exactly at an endpoint; increasing the
+level cannot recover information absent from the active dtype.
+
+:::{warning}
+Agreement between adjacent fixed tanh-sinh levels measures discretization
+change, not omitted endpoint mass. Once the terminal mapped coordinate stops
+moving, that difference can shrink even though a substantial tail remains.
+Use an analytic or independently validated reference for a fixed-rule audit;
+Phase A2 adaptive tanh-sinh also carries explicit terminal-tail evidence.
+:::
 
 ## What the algorithm actually does
 
@@ -329,8 +345,9 @@ assert nodes.shape == weights.shape == (8,)
 
 For Gaussian rules, verify analytic moments through degree $2n-1$. For
 Clenshaw-Curtis and Fejer rules, verify their declared interpolatory degree and
-then compare increasing orders on the actual integrand. For tanh-sinh, sweep
-levels until the result stabilizes before the dtype endpoint floor is reached.
+then compare increasing orders on the actual integrand. For tanh-sinh, compare
+levels with an independent reference and inspect whether the dtype endpoint
+floor controls the result; level agreement alone is not an error certificate.
 
 The implementation is checked against independent SciPy roots and weights for
 all classical Gaussian families. JIT, VMAP, parameter gradients, moving-bound
