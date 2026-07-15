@@ -23,6 +23,14 @@ from .domains import (
     interval_orientation,
     sorted_breakpoints,
 )
+from .measures import (
+    JacobiMeasure,
+    LaguerreMeasure,
+    LebesgueMeasure,
+    PhysicistsHermiteMeasure,
+    StandardNormalMeasure,
+    WeightedMeasure,
+)
 from .result import ErrorKind, QuadError, QuadResult, QuadStatus, QuadWork
 from .tolerance import (
     ErrorNorm,
@@ -43,6 +51,9 @@ __all__ = [
     "ErrorNorm",
     "Infinite",
     "Interval",
+    "JacobiMeasure",
+    "LaguerreMeasure",
+    "LebesgueMeasure",
     "LeftInfinite",
     "gauss_hermite_nodes",
     "gauss_laguerre_nodes",
@@ -52,11 +63,14 @@ __all__ = [
     "L1Norm",
     "L2Norm",
     "MaxNorm",
+    "PhysicistsHermiteMeasure",
     "QuadError",
     "QuadResult",
     "QuadStatus",
     "QuadWork",
     "RightInfinite",
+    "StandardNormalMeasure",
+    "WeightedMeasure",
     "error_norm",
     "interval_is_valid",
     "interval_orientation",
