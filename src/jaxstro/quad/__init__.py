@@ -2,13 +2,12 @@
 
 from jaxstro.numerics.quadrature import (
     gauss_hermite_nodes,
-    gauss_laguerre_nodes,
-    gauss_legendre_nodes,
     hermite_coefficients,
     hermite_e_basis,
 )
 
 from ._chebyshev import clenshaw_curtis_nodes
+from ._recurrence import gauss_laguerre_nodes, gauss_legendre_nodes
 from .domains import (
     Infinite,
     Interval,

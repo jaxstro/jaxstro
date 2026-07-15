@@ -107,4 +107,16 @@ def gaussian_rule_data(rule: GaussianRule, measure: Any) -> FixedRuleData:
     return _golub_welsch(diagonal, off_diagonal, mass)
 
 
-__all__ = ["gaussian_rule_data"]
+def gauss_legendre_nodes(n: int):
+    """Return the canonical Gauss-Legendre rule on ``[-1, 1]``."""
+    data = gaussian_rule_data(GaussianRule(n), LebesgueMeasure())
+    return data.nodes, data.weights
+
+
+def gauss_laguerre_nodes(n: int):
+    """Return the canonical Gauss-Laguerre rule for ``exp(-x)``."""
+    data = gaussian_rule_data(GaussianRule(n), LaguerreMeasure())
+    return data.nodes, data.weights
+
+
+__all__ = ["gauss_laguerre_nodes", "gauss_legendre_nodes", "gaussian_rule_data"]

@@ -22,34 +22,31 @@ integrates polynomials **exactly up to degree** :math:`2n-1`:
 - **Clenshaw-Curtis**: interpolatory quadrature on Chebyshev-Lobatto nodes
   :math:`x_i = \cos(i\pi/(n-1))` over :math:`[-1, 1]`.
 
-Nodes/weights are the classical Gauss rule whose nodes are the roots of the
-orthogonal polynomial and whose weights follow from the Golub & Welsch (1969)
-eigenvalue construction (as implemented by NumPy's polynomial routines).
+New Legendre and Laguerre nodes and weights are constructed by the shared
+JAX-native Golub-Welsch engine in :mod:`jaxstro.quad`. This module remains a
+compatibility import lane.
 
-JAX-native exception (sanctioned, setup-only)
----------------------------------------------
-Node/weight **generation** is a one-time, HOST-SIDE constant setup: we call
-``numpy.polynomial`` (``leggauss`` / ``hermgauss``) to compute the nodes and
-weights, then **freeze** them to ``jnp.asarray`` constants with a **static**
-``n``. This does **not** violate the JAX-native rule:
+Legacy Hermite exception (sanctioned, setup-only)
+-------------------------------------------------
+The probabilists' Hermite helper calls ``numpy.polynomial.hermite.hermgauss``
+and freezes its output to JAX arrays. This narrow exception preserves the
+declared byte-level compatibility contract:
 
 - The nodes/weights are *constants*, computed once at call time (not in a hot
   loop, not traced). They carry no parameter dependence.
-- Every downstream operation -- evaluating the integrand at the nodes, the
+- Every downstream operation, including evaluating the integrand at the nodes,
   weighted sum, the Hermite recurrence -- is pure ``jax.numpy`` and fully
   differentiable. ``jax.grad`` flows through the **integrand values**, never
-  through the (constant) nodes. Generating nodes with numpy is therefore both
-  correct and performant; this is the one place ``numpy`` appears, by design.
+  through the constant nodes. This is the only NumPy construction in this
+  compatibility module.
 
 References
 ----------
 - Golub, G. H. & Welsch, J. H. 1969, "Calculation of Gauss Quadrature Rules",
   Math. Comp. 23, 221 (the eigenvalue construction behind the NumPy routines).
-- NumPy ``numpy.polynomial.legendre.leggauss`` (Gauss-Legendre) and
-  ``numpy.polynomial.hermite.hermgauss`` (physicists' Gauss-Hermite); the
+- NumPy ``numpy.polynomial.hermite.hermgauss`` (physicists' Gauss-Hermite); the
   probabilists' rule is obtained from the physicists' rule by the substitution
   :math:`g = \sqrt{2}\, x`, :math:`w \mapsto w / \sqrt{\pi}` (see below).
-- NumPy ``numpy.polynomial.laguerre.laggauss`` (Gauss-Laguerre).
 - Trefethen, L. N. 2008, "Is Gauss quadrature better than Clenshaw-Curtis?",
   SIAM Review 50, 67 (Clenshaw-Curtis context and algorithmic comparison).
 - Probabilists' Hermite ``He_n`` recurrence: Abramowitz & Stegun (1964),
@@ -63,31 +60,7 @@ import numpy as np  # constants only: quadrature node/weight generation at call 
 from jaxtyping import Array, Float
 
 from jaxstro.quad._chebyshev import clenshaw_curtis_nodes
-
-
-def gauss_legendre_nodes(n: int) -> tuple[Array, Array]:
-    r"""Gauss-Legendre nodes and weights on :math:`[-1, 1]`.
-
-    Returns ``(nodes, weights)`` such that
-    :math:`\int_{-1}^{1} f(x)\,dx \approx \sum_i w_i f(x_i)`, exact for
-    polynomials up to degree :math:`2n - 1`. The weights sum to ``2`` (the
-    length of the interval).
-
-    Parameters
-    ----------
-    n : int
-        Number of quadrature points (static; host-side node generation).
-
-    Notes
-    -----
-    Nodes/weights are generated host-side via
-    ``numpy.polynomial.legendre.leggauss`` (Golub & Welsch 1969 eigenvalue
-    construction) and frozen to ``jnp`` constants. They are exact constants;
-    differentiability of any quadrature built on top of them flows through the
-    integrand values, not these nodes.
-    """
-    nodes, weights = np.polynomial.legendre.leggauss(n)
-    return jnp.asarray(nodes), jnp.asarray(weights)
+from jaxstro.quad._recurrence import gauss_laguerre_nodes, gauss_legendre_nodes
 
 
 def gauss_hermite_nodes(n: int) -> tuple[Array, Array]:
@@ -119,19 +92,6 @@ def gauss_hermite_nodes(n: int) -> tuple[Array, Array]:
     g_nodes = jnp.asarray(np.sqrt(2.0) * x)
     weights = jnp.asarray(w / np.sqrt(np.pi))
     return g_nodes, weights
-
-
-def gauss_laguerre_nodes(n: int) -> tuple[Array, Array]:
-    r"""Gauss-Laguerre nodes and weights on :math:`[0, \infty)`.
-
-    Returns ``(nodes, weights)`` such that
-    :math:`\int_0^\infty e^{-x} f(x)\,dx \approx \sum_i w_i f(x_i)`, exact for
-    polynomials up to degree :math:`2n - 1`.
-    """
-    if n < 1:
-        raise ValueError("gauss_laguerre_nodes requires n >= 1")
-    nodes, weights = np.polynomial.laguerre.laggauss(n)
-    return jnp.asarray(nodes), jnp.asarray(weights)
 
 
 def hermite_e_basis(g: Float[Array, " q"], n_max: int) -> Float[Array, " n q"]:

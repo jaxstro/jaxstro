@@ -471,7 +471,7 @@ git commit -m "feat(quad): add fixed quadrature evaluator"
 - Preserves all six legacy public helper objects and top-level `jaxstro.numerics` exports.
 - Makes new implementations canonical except `gauss_hermite_nodes`, which remains the explicit compatibility backend and is consumed by `jaxstro.quad`.
 
-- [ ] **Step 1: Write failing owner and byte-identity ratchets**
+- [x] **Step 1: Write failing owner and byte-identity ratchets**
 
 ```python
 def test_new_node_helpers_are_owned_by_quad() -> None:
@@ -485,13 +485,13 @@ def test_probabilists_hermite_compatibility_exception_is_exact() -> None:
     np.testing.assert_array_equal(np.asarray(got_weights), old_weights / np.sqrt(np.pi))
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/integration/test_quad_compatibility.py tests/unit/test_quadrature.py`
 
 Expected: ownership assertions fail while value regressions remain green.
 
-- [ ] **Step 3: Replace legacy definitions with exact aliases**
+- [x] **Step 3: Replace legacy definitions with exact aliases**
 
 ```python
 from jaxstro.quad._chebyshev import clenshaw_curtis_nodes
@@ -502,13 +502,13 @@ from jaxstro.quad._recurrence import gauss_laguerre_nodes, gauss_legendre_nodes
 
 Keep `hermite_e_basis` and `hermite_coefficients` in the legacy module until a separately approved ownership decision. Do not create wrappers; use direct imports so identity tests are meaningful.
 
-- [ ] **Step 4: Run complete compatibility and numerical suites**
+- [x] **Step 4: Run complete compatibility and numerical suites**
 
 Run: `env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/integration/test_quad_compatibility.py tests/unit/test_quadrature.py tests/unit/quad`
 
 Expected: all tests pass with no numerical regression.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/jaxstro/quad/__init__.py src/jaxstro/numerics/quadrature.py src/jaxstro/numerics/__init__.py tests/integration/test_quad_compatibility.py tests/unit/test_quadrature.py

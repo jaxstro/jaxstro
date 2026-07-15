@@ -15,5 +15,11 @@ assert jnp.array_equal(
 )
 assert jaxstro.quad.gauss_hermite_nodes is quadrature.gauss_hermite_nodes
 assert jaxstro.numerics.gauss_hermite_nodes is jaxstro.quad.gauss_hermite_nodes
+assert jaxstro.quad.gauss_legendre_nodes is quadrature.gauss_legendre_nodes
+assert jaxstro.quad.gauss_laguerre_nodes is quadrature.gauss_laguerre_nodes
+assert jaxstro.quad.clenshaw_curtis_nodes is quadrature.clenshaw_curtis_nodes
+assert jaxstro.quad.gauss_legendre_nodes.__module__ == "jaxstro.quad._recurrence"
+assert jaxstro.quad.gauss_laguerre_nodes.__module__ == "jaxstro.quad._recurrence"
+assert jaxstro.quad.clenshaw_curtis_nodes.__module__ == "jaxstro.quad._chebyshev"
 """
     subprocess.run([sys.executable, "-c", code], check=True)
