@@ -89,7 +89,7 @@
   "50-api/api.md": "/api",
   "50-api/approximation-integration/integration.md": "/integration",
   "50-api/approximation-integration/interpolation.md": "/interpolation-1",
-  "50-api/approximation-integration/quad.md": "/quad-api",
+  "50-api/approximation-integration/quad.md": "/quad",
   "50-api/approximation-integration/quadrature.md": "/quadrature-1",
   "50-api/approximation-integration/regular-grid.md": "/regular-grid-1",
   "50-api/approximation-integration/splines.md": "/splines",
