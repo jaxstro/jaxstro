@@ -43,7 +43,7 @@ from .tolerance import (
     error_norm,
     tolerance_threshold,
 )
-from .transforms import AffineMapResult, map_interval
+from .transforms import AffineMapResult, DomainMapResult, map_domain, map_interval
 
 __all__ = [
     "AffineMapResult",
@@ -51,6 +51,7 @@ __all__ = [
     "ClenshawCurtisRule",
     "cumulative_simpson",
     "cumulative_trapezoid",
+    "DomainMapResult",
     "ErrorKind",
     "ErrorNorm",
     "FejerIRule",
@@ -83,6 +84,7 @@ __all__ = [
     "interval_is_valid",
     "interval_orientation",
     "map_interval",
+    "map_domain",
     "simpson",
     "sorted_breakpoints",
     "trapezoid",

@@ -5,10 +5,24 @@ from typing import NamedTuple
 import jax.numpy as jnp
 from jaxtyping import Array
 
-from .domains import Interval, interval_is_valid, interval_orientation
+from .domains import (
+    Infinite,
+    Interval,
+    LeftInfinite,
+    RightInfinite,
+    interval_is_valid,
+    interval_orientation,
+)
 
 
 class AffineMapResult(NamedTuple):
+    x: Array
+    jacobian: Array
+    orientation: Array
+    valid: Array
+
+
+class DomainMapResult(NamedTuple):
     x: Array
     jacobian: Array
     orientation: Array
@@ -29,3 +43,44 @@ def map_interval(domain: Interval, reference: Array) -> AffineMapResult:
         orientation=interval_orientation(domain),
         valid=interval_is_valid(domain),
     )
+
+
+def map_domain(
+    domain: Interval | RightInfinite | LeftInfinite | Infinite,
+    reference: Array,
+) -> DomainMapResult:
+    """Map reference coordinates in ``(-1, 1)`` to a Phase A domain."""
+    reference = jnp.asarray(reference)
+    if isinstance(domain, Interval):
+        mapped = map_interval(domain, reference)
+        return DomainMapResult(*mapped)
+    if isinstance(domain, RightInfinite):
+        lower = jnp.asarray(domain.lower)
+        ratio = (1.0 + reference) / (1.0 - reference)
+        return DomainMapResult(
+            x=lower + ratio,
+            jacobian=2.0 / (1.0 - reference) ** 2,
+            orientation=jnp.asarray(1.0),
+            valid=jnp.isfinite(lower),
+        )
+    if isinstance(domain, LeftInfinite):
+        upper = jnp.asarray(domain.upper)
+        ratio = (1.0 - reference) / (1.0 + reference)
+        return DomainMapResult(
+            x=upper - ratio,
+            jacobian=2.0 / (1.0 + reference) ** 2,
+            orientation=jnp.asarray(1.0),
+            valid=jnp.isfinite(upper),
+        )
+    if isinstance(domain, Infinite):
+        denominator = 1.0 - reference**2
+        return DomainMapResult(
+            x=reference / denominator,
+            jacobian=(1.0 + reference**2) / denominator**2,
+            orientation=jnp.asarray(1.0),
+            valid=jnp.asarray(True),
+        )
+    raise TypeError("unsupported Phase A integration domain")
+
+
+__all__ = ["AffineMapResult", "DomainMapResult", "map_domain", "map_interval"]

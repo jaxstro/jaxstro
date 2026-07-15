@@ -329,7 +329,7 @@ git commit -m "feat(quad): add Chebyshev fixed rule families"
 - Produces: `tanh_sinh_rule_data(TanhSinhRule) -> FixedRuleData` on `(-1, 1)`.
 - Produces: `map_domain(domain, reference) -> DomainMapResult(x, jacobian, orientation, valid)` for all Phase A domain types.
 
-- [ ] **Step 1: Write failing transform identity and endpoint-singularity tests**
+- [x] **Step 1: Write failing transform identity and endpoint-singularity tests**
 
 ```python
 @pytest.mark.parametrize(
@@ -341,18 +341,22 @@ git commit -m "feat(quad): add Chebyshev fixed rule families"
         (Infinite(), lambda x: jnp.exp(-x * x), jnp.sqrt(jnp.pi)),
     ],
 )
-def test_fixed_tanh_sinh_domains(domain, fun, expected) -> None:
-    got = fixed(fun, domain, rule=TanhSinhRule(7))
-    assert jnp.allclose(got, expected, rtol=2e-8, atol=2e-8)
+def test_tanh_sinh_formula_and_domain_maps(domain, fun, expected) -> None:
+    data = tanh_sinh_rule_data(TanhSinhRule(7))
+    mapped = map_domain(domain, data.nodes)
+    got = mapped.orientation * jnp.sum(data.weights * mapped.jacobian * fun(mapped.x))
+    # The algebraic endpoint singularity reaches the float64 nextafter limit.
+    tolerance = 2e-7 if isinstance(domain, Interval) else 2e-9
+    assert jnp.allclose(got, expected, rtol=tolerance, atol=tolerance)
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_tanh_sinh.py`
 
 Expected: imports for tanh-sinh construction and general maps fail.
 
-- [ ] **Step 3: Implement fixed double-exponential nodes and maps**
+- [x] **Step 3: Implement fixed double-exponential nodes and maps**
 
 ```python
 def tanh_sinh_rule_data(rule: TanhSinhRule) -> FixedRuleData:
@@ -367,13 +371,13 @@ def tanh_sinh_rule_data(rule: TanhSinhRule) -> FixedRuleData:
 
 Use rational maps from `(-1, 1)` to each semi-infinite domain and `x=t/(1-t**2)` for the full line. Compute Jacobians analytically, preserve orientation separately, and mask saturated endpoint nodes before evaluating the integrand.
 
-- [ ] **Step 4: Run finite, infinite, reversed, and JIT tests**
+- [x] **Step 4: Run finite, infinite, reversed, and JIT tests**
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_tanh_sinh.py tests/unit/quad/test_domains.py`
 
 Expected: all tests pass with finite mapped nodes and weights at supported levels.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/jaxstro/quad/_tanh_sinh.py src/jaxstro/quad/transforms.py tests/unit/quad/test_tanh_sinh.py
