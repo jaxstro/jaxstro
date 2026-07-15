@@ -182,7 +182,7 @@ git commit -m "feat(quad): add fixed rule configurations"
 - Produces: `gaussian_rule_data(rule: GaussianRule, measure) -> FixedRuleData`.
 - Consumes the six Phase A classical measure declarations and returns nodes in their natural reference support.
 
-- [ ] **Step 1: Write failing moment, exactness, and normalization tests**
+- [x] **Step 1: Write failing moment, exactness, and normalization tests**
 
 ```python
 @pytest.mark.parametrize(
@@ -206,13 +206,13 @@ def test_legendre_exact_through_degree_2n_minus_1() -> None:
         assert jnp.allclose(jnp.sum(data.weights * data.nodes**degree), expected, atol=2e-12)
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_recurrence.py tests/validation/test_quad_fixed_reference.py`
 
 Expected: imports fail because `_recurrence.py` does not exist.
 
-- [ ] **Step 3: Implement recurrence coefficients and one Jacobi-matrix solver**
+- [x] **Step 3: Implement recurrence coefficients and one Jacobi-matrix solver**
 
 ```python
 def _golub_welsch(diagonal, off_diagonal, mass) -> FixedRuleData:
@@ -236,13 +236,13 @@ def _standard_normal(order: int):
 
 Implement the standard orthonormal Legendre, Jacobi, generalized Laguerre, physicists' Hermite, and standard-normal recurrences. Handle the removable Jacobi diagonal singularity at `alpha + beta == 0` analytically rather than with a numerical epsilon. Apply `normalized=True` by dividing weights by the analytic measure mass.
 
-- [ ] **Step 4: Validate every family independently**
+- [x] **Step 4: Validate every family independently**
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_recurrence.py tests/validation/test_quad_fixed_reference.py`
 
 Expected: all analytic moment and independent SciPy root/weight comparisons pass at the predeclared float64 tolerances.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/jaxstro/quad/_recurrence.py tests/unit/quad/test_recurrence.py tests/validation/test_quad_fixed_reference.py
