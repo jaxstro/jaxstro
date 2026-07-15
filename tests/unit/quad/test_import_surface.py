@@ -37,3 +37,18 @@ def test_a0_facade_does_not_change_signatures() -> None:
     assert inspect.signature(jaxstro.quad.simpson) == inspect.signature(
         integration.simpson
     )
+
+
+def test_a2_method_configurations_are_canonical_public_exports() -> None:
+    names = (
+        "AdaptiveClenshawCurtis",
+        "AdaptiveTanhSinh",
+        "GaussKronrod",
+        "Romberg",
+        "RombergTanhSinh",
+    )
+    for name in names:
+        assert name in jaxstro.quad.__all__
+        assert getattr(jaxstro.quad, name).__module__ == "jaxstro.quad.methods"
+        assert not hasattr(integration, name)
+        assert not hasattr(quadrature, name)

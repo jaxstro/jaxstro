@@ -528,33 +528,33 @@ git commit -m "fix(quad): harden tanh-sinh representability"
 - Produces the five frozen configuration types with static PyTree metadata.
 - Extends the canonical public inventory without adding a legacy alias.
 
-- [ ] **Step 1: Write failing constructor, PyTree, validation, and inventory tests**
+- [x] **Step 1: Write failing constructor, PyTree, validation, and inventory tests**
 
 Test accepted defaults, all Gauss-Kronrod pairs, rejected unsupported pairs,
 Clenshaw-Curtis `2^k + 1` structure, nonnegative adaptive-tanh-sinh levels,
 Romberg and Romberg-tanh-sinh levels at least one, keyword signatures,
 immutability, empty dynamic leaves, static metadata, and complete exports.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_methods.py tests/unit/quad/test_import_surface.py`
 
 Expected: adaptive configuration imports fail.
 
-- [ ] **Step 3: Implement minimal frozen records**
+- [x] **Step 3: Implement minimal frozen records**
 
 Use registered dataclass PyTrees. Reject booleans where integers are required.
 Validate `GaussKronrod.pair in {15, 21, 31, 41, 51, 61}`,
 `AdaptiveClenshawCurtis.initial_order = 2^k + 1 >= 5`, a nonnegative level
 for adaptive tanh-sinh, and `initial_level >= 1` for both Romberg types.
 
-- [ ] **Step 4: Run focused tests and static checks**
+- [x] **Step 4: Run focused tests and static checks**
 
 Run: `env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_methods.py tests/unit/quad/test_import_surface.py`
 
 Run: `env -u VIRTUAL_ENV uv run --no-sync ruff check src/jaxstro/quad tests/unit/quad && env -u VIRTUAL_ENV uv run --no-sync mypy src/jaxstro/quad`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/jaxstro/quad/methods.py src/jaxstro/quad/__init__.py tests/unit/quad/test_methods.py tests/unit/quad/test_import_surface.py

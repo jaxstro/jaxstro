@@ -26,6 +26,13 @@ from .measures import (
     StandardNormalMeasure,
     WeightedMeasure,
 )
+from .methods import (
+    AdaptiveClenshawCurtis,
+    AdaptiveTanhSinh,
+    GaussKronrod,
+    Romberg,
+    RombergTanhSinh,
+)
 from .result import ErrorKind, QuadError, QuadResult, QuadStatus, QuadWork
 from .rules import (
     ClenshawCurtisRule,
@@ -46,6 +53,8 @@ from .tolerance import (
 from .transforms import AffineMapResult, DomainMapResult, map_domain, map_interval
 
 __all__ = [
+    "AdaptiveClenshawCurtis",
+    "AdaptiveTanhSinh",
     "AffineMapResult",
     "clenshaw_curtis_nodes",
     "ClenshawCurtisRule",
@@ -67,6 +76,7 @@ __all__ = [
     "gauss_laguerre_nodes",
     "gauss_legendre_nodes",
     "GaussianRule",
+    "GaussKronrod",
     "hermite_coefficients",
     "hermite_e_basis",
     "L1Norm",
@@ -78,6 +88,8 @@ __all__ = [
     "QuadStatus",
     "QuadWork",
     "RightInfinite",
+    "Romberg",
+    "RombergTanhSinh",
     "StandardNormalMeasure",
     "TanhSinhRule",
     "WeightedMeasure",
