@@ -53,7 +53,7 @@
 - Produces: `trapezoid(y, x=None, *, dx=1.0, axis=-1)`, `cumulative_trapezoid(y, x=None, *, dx=1.0, axis=-1)`, `simpson(y, x=None, *, dx=1.0, axis=-1)`, and `cumulative_simpson(y, x=None, *, dx=1.0, axis=-1)`.
 - Preserves: `integration.trapz is quad.trapezoid`, `integration.cumulative_trapz is quad.cumulative_trapezoid`, and exact existing value, dtype, shape, exception, and floating-point ordering behavior.
 
-- [ ] **Step 1: Write failing canonical-ownership and `dx` tests**
+- [x] **Step 1: Write failing canonical-ownership and `dx` tests**
 
 ```python
 def test_sampled_ownership_is_inverted() -> None:
@@ -69,13 +69,13 @@ def test_simpson_uniform_dx() -> None:
     assert jnp.array_equal(quad.simpson(y, dx=0.5), 4.0 / 3.0)
 ```
 
-- [ ] **Step 2: Run the tests and verify RED**
+- [x] **Step 2: Run the tests and verify RED**
 
 Run: `env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_sampled.py tests/integration/test_quad_compatibility.py`
 
 Expected: failures because canonical functions still live in `jaxstro.numerics.integration` and two total functions do not accept `dx`.
 
-- [ ] **Step 3: Move the existing implementations without changing arithmetic ordering**
+- [x] **Step 3: Move the existing implementations without changing arithmetic ordering**
 
 ```python
 @partial(jax.jit, static_argnames="axis")
@@ -92,13 +92,13 @@ trapz = trapezoid
 
 Move the current cumulative and Simpson cores verbatim, add the approved `dx` keyword to the total rules, and make the legacy module import and re-export these objects.
 
-- [ ] **Step 4: Run sampled, parity, gradient, and sampling consumers**
+- [x] **Step 4: Run sampled, parity, gradient, and sampling consumers**
 
 Run: `env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_sampled.py tests/integration/test_quad_compatibility.py tests/integration/test_integration_parity.py tests/unit/test_numerics.py tests/unit/test_sampling.py tests/validation/test_grad_checks.py -k 'trapz or trapezoid or simpson or sampling'`
 
 Expected: all selected tests pass and compatibility identities point toward `jaxstro.quad.sampled`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/jaxstro/quad/sampled.py src/jaxstro/quad/__init__.py src/jaxstro/numerics/integration.py tests/unit/quad/test_sampled.py tests/integration/test_quad_compatibility.py

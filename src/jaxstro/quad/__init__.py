@@ -1,10 +1,5 @@
 """Canonical namespace for current integration foundations and methods."""
 
-from jaxstro.numerics.integration import cumulative_simpson, simpson
-from jaxstro.numerics.integration import (
-    cumulative_trapz as cumulative_trapezoid,
-)
-from jaxstro.numerics.integration import trapz as trapezoid
 from jaxstro.numerics.quadrature import (
     clenshaw_curtis_nodes,
     gauss_hermite_nodes,
@@ -32,6 +27,7 @@ from .measures import (
     WeightedMeasure,
 )
 from .result import ErrorKind, QuadError, QuadResult, QuadStatus, QuadWork
+from .sampled import cumulative_simpson, cumulative_trapezoid, simpson, trapezoid
 from .tolerance import (
     ErrorNorm,
     L1Norm,
