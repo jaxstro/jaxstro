@@ -36,13 +36,16 @@ Fixed-rule helpers:
 Domains and measures:
 
 - `Interval`, `RightInfinite`, `LeftInfinite`, and `Infinite`
+- `interval_orientation`, `sorted_breakpoints`, and `interval_is_valid`
+- `AffineMapResult` and `map_interval`
 - `LebesgueMeasure`, `WeightedMeasure`, `JacobiMeasure`,
   `LaguerreMeasure`, `PhysicistsHermiteMeasure`, and `StandardNormalMeasure`
 
 Results and tolerances:
 
 - `QuadStatus`, `ErrorKind`, `QuadError`, `QuadWork`, and `QuadResult`
-- `MaxNorm`, `L1Norm`, `L2Norm`, `error_norm`, and `tolerance_threshold`
+- `ErrorNorm`, `MaxNorm`, `L1Norm`, `L2Norm`, `error_norm`, and
+  `tolerance_threshold`
 
 ## Shape and dtype expectations
 

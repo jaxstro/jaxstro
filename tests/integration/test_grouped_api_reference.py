@@ -9,7 +9,7 @@ import pkgutil
 from collections import Counter
 from pathlib import Path
 
-from jaxstro import numerics
+from jaxstro import numerics, quad
 from jaxstro.numerics.sampling import inverse_cdf_draw, stratified_uniform
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -129,6 +129,12 @@ def test_quad_owner_page_teaches_canonical_and_legacy_boundaries() -> None:
     assert "does not yet provide adaptive integration" in text
 
 
+def test_quad_owner_page_lists_the_complete_public_surface() -> None:
+    text = (API_ROOT / "approximation-integration/quad.md").read_text()
+    missing = {name for name in quad.__all__ if f"`{name}`" not in text}
+    assert not missing
+
+
 def test_grouped_api_pages_are_navigable_with_canonical_routes() -> None:
     myst = (DOCS / "myst.yml").read_text(encoding="utf-8")
     routes = json.loads((DOCS / "route-manifest.json").read_text(encoding="utf-8"))
@@ -229,5 +235,10 @@ def test_random_reference_documents_zero_weight_and_tracing_boundaries() -> None
 
 def test_status_counts_the_corrected_api_surface() -> None:
     text = (ROOT / "STATUS.md").read_text(encoding="utf-8")
-    assert "37 current owner pages, including `jaxstro.quad`" in text
-    assert "164 unique routes" in text
+    a0_entry = next(
+        line
+        for line in text.splitlines()
+        if line.startswith("previous: Jaxstro.quad Phase A0 API ownership")
+    )
+    assert "37 current owner pages, including `jaxstro.quad`" in a0_entry
+    assert "164 unique routes" in a0_entry
