@@ -536,7 +536,7 @@ git commit -m "refactor(quad): invert fixed helper ownership"
 - Makes fixed and weighted quadrature current, with adaptive methods still visibly planned.
 - Records exact public names, static arguments, supported rule/domain/measure combinations, cost, exactness, derivative boundaries, and validation provenance.
 
-- [ ] **Step 1: Write failing documentation and registry ratchets**
+- [x] **Step 1: Write failing documentation and registry ratchets**
 
 ```python
 def test_fixed_quadrature_page_claims_complete_a1_surface() -> None:
@@ -553,19 +553,19 @@ def test_quad_contract_lists_fixed() -> None:
     assert "fixed" in entry.callables
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/integration/test_method_page_contract.py tests/integration/test_grouped_api_reference.py tests/unit/test_contract_manifests.py`
 
 Expected: the current docs and generated contract omit A1 methods.
 
-- [ ] **Step 3: Write researcher-first documentation and regenerate inventories**
+- [x] **Step 3: Write researcher-first documentation and regenerate inventories**
 
 The method page must contain labeled LaTeX derivations for Gaussian exactness, affine mapping, weighted integration, the Chebyshev interpolant, and the double-exponential map. Use MyST `note`, `important`, `warning`, and `tip` admonitions only where each semantic role applies. Include executable raw-array examples and a support matrix. Mark A2 adaptive methods as planned rather than delegated.
 
 Run: `env -u VIRTUAL_ENV uv run --no-sync python scripts/build_evidence_index.py --emit && env -u VIRTUAL_ENV uv run --no-sync python scripts/build_contract_registry.py --emit`
 
-- [ ] **Step 4: Run documentation contracts and strict build**
+- [x] **Step 4: Run documentation contracts and strict build**
 
 Run: `env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/integration/test_method_page_contract.py tests/integration/test_grouped_api_reference.py tests/unit/test_contract_manifests.py`
 
@@ -573,7 +573,7 @@ Run: `DOCS_APP_PORT=4381 DOCS_SERVER_PORT=4382 bash scripts/check_docs.sh`
 
 Expected: contract tests pass and the strict MyST route, link, accessibility, and final-artifact gates pass without changing an existing route.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/jaxstro/contracts/registry.py docs tests/integration/test_method_page_contract.py tests/integration/test_grouped_api_reference.py tests/unit/test_contract_manifests.py

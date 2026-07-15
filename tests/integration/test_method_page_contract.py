@@ -656,6 +656,13 @@ def _run_runtime_shape_status_and_failure_probes() -> None:
     with pytest.raises(ValueError, match="n >= 1"):
         quad.gauss_laguerre_nodes(0)
 
+    fixed_value = quad.fixed(
+        lambda x: x**4,
+        quad.Interval(-1.0, 1.0),
+        rule=quad.GaussianRule(3),
+    )
+    assert jnp.allclose(fixed_value, 2.0 / 5.0)
+
     observations = jnp.array([[1.0, 2.0], [3.0, 4.0], [5.0, 8.0]])
     centered = observations - jnp.mean(observations, axis=0)
     covariance = covariance_matrix(observations, ddof=1)

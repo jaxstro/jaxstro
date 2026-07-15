@@ -30,9 +30,13 @@ stellar-model policy, and data packages own their archive-specific schemas.
   interpolation for gridded models with explicit clamp/fill/reject policies.
 - [x] **Numerical differentiation diagnostics.** Public finite-difference,
   directional-derivative, and Jacobian-check utilities in `jaxstro.testing`.
-- [x] **Quadrature expansion.** Additional fixed-node rules such as
-  Gauss-Laguerre and Clenshaw-Curtis, plus cumulative Simpson variants with
-  explicit shape contracts.
+- [x] **Complete fixed quadrature.** Canonical sampled-data rules, one shared
+  Gaussian recurrence engine, Legendre, Jacobi, generalized Laguerre, both
+  Hermite conventions, Clenshaw-Curtis, Fejer I and II, fixed tanh-sinh,
+  explicit domains and measures, and a JAX-transformable fixed evaluator.
+- [ ] **Adaptive one-dimensional quadrature.** Gauss-Kronrod pairs, nested
+  Clenshaw-Curtis, adaptive tanh-sinh, Romberg variants, deterministic status
+  precedence, and fixed-capacity work evidence.
 - [x] **Root-finding and monotone inversion.** Bracket discovery, vectorized
   independent solves, and monotone inverse interpolation for CDF-like tables.
 - [x] **Linear algebra primitives.** Weighted least squares, QR/SVD solve

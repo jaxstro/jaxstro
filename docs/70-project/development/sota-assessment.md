@@ -46,6 +46,10 @@ feature list.
 
 Future runtime ownership follows this exact order:
 
+The active exception is to complete the approved `jaxstro.quad` program before this queue.
+Its Phase A1 fixed methods are implemented; adaptive control and
+its evidence gates remain unfinished.
+
 1. `jaxstro.ml`
 2. `jaxstro.numerics.qmc`
 3. `jaxstro.uncertainty`
@@ -54,9 +58,12 @@ Future runtime ownership follows this exact order:
 6. fields only after two consumers
 
 Lineax owns general iterative linear solving, Optimistix owns general nonlinear
-systems, Quadax owns adaptive quadrature, and Diffrax owns adaptive differential
-equations. Jaxstro may add a narrow consumer-driven adapter only when it adds a
-scientific contract or evidence layer absent from the delegated owner.
+systems, and Diffrax owns adaptive differential equations.
+Jaxstro owns its approved adaptive quadrature program.
+Quadax remains an independent comparison implementation for validation and
+matched benchmarks. Jaxstro may add a narrow
+consumer-driven adapter only when it adds a scientific contract or evidence
+layer absent from the delegated owner.
 
 ## Now
 

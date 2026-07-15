@@ -71,7 +71,8 @@ def test_sota_assessment_calibrates_unfinished_infrastructure() -> None:
     assert "pinned adoption and compatibility evidence is not yet generated" in text
     assert "Lineax owns general iterative linear solving" in text
     assert "Optimistix owns general nonlinear" in text
-    assert "Quadax owns adaptive quadrature" in text
+    assert "Jaxstro owns its approved adaptive quadrature program" in text
+    assert "Quadax remains an independent comparison implementation" in text
     assert "Diffrax owns adaptive differential" in text
 
 
@@ -87,3 +88,4 @@ def test_sota_assessment_uses_the_approved_future_runtime_priority() -> None:
     )
     positions = [text.index(priority) for priority in priorities]
     assert positions == sorted(positions)
+    assert "complete the approved `jaxstro.quad` program before this queue" in text

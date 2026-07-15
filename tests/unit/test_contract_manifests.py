@@ -5,6 +5,7 @@ import sys
 
 import jaxstro
 from jaxstro.contracts import collect_contracts
+from jaxstro.contracts.registry import resolve_import_path
 
 PUBLIC = {
     f"jaxstro.{name}"
@@ -68,6 +69,19 @@ assert 'jaxstro.quad' not in sys.modules
 def test_contracts_is_public() -> None:
     assert jaxstro.contracts.__name__ == "jaxstro.contracts"
     assert "contracts" in jaxstro.__all__
+
+
+def test_quad_contract_registers_fixed_evaluation() -> None:
+    records = {item.import_path: item for item in collect_contracts().modules}
+    fixed = {item.import_path: item for item in records["jaxstro.quad"].callables}[
+        "jaxstro.quad.fixed"
+    ]
+    assert fixed.ad_semantics.value == "smooth_pathwise"
+    assert {item.transform for item in fixed.transforms} == {"jax.jit", "jax.vmap"}
+
+
+def test_contract_resolution_prefers_public_callable_over_same_named_module() -> None:
+    assert resolve_import_path("jaxstro.quad.fixed") is jaxstro.quad.fixed
 
 
 def test_core_dimensional_and_ownership_policies_are_specific() -> None:

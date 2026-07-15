@@ -23,7 +23,8 @@ parameter bridges, provenance, and validation tooling. The current public
 surface is indexed at [](../../50-api/api.md), with evidence boundaries at
 [](../../60-validation/validation.md).
 
-Implemented numerical families include interpolation, fixed-node quadrature,
+Implemented numerical families include interpolation, complete one-dimensional
+fixed quadrature,
 fixed-step differential equations, scalar roots, distributions, random-state
 mechanics, small dense linear algebra, operators, structured one-dimensional
 meshes, and differentiability audits. These foundations do not authorize a
@@ -37,6 +38,21 @@ contract is domain-general, the execution boundary is explicit, and evidence
 shows that central ownership reduces real duplication.
 
 ## Recommended additions
+
+### Active program: `jaxstro.quad`
+
+Jaxstro owns the approved quadrature capability program.
+Quadax remains a validation and benchmark comparator, not a runtime dependency
+or the public owner of Jaxstro's integration contract.
+
+- [x] Establish the canonical namespace, domains, measures, rules, and result
+  vocabulary.
+- [x] Add sampled-data canonicalization and the complete fixed-rule family.
+- [ ] Add adaptive Gauss-Kronrod, Clenshaw-Curtis, tanh-sinh, and Romberg
+  controllers with typed failure evidence.
+- [ ] Add replay derivatives, moving-bound evidence, and the quantity boundary.
+- [ ] Complete comparisons, documentation, migration guidance, and the Phase A
+  release gate.
 
 The priority order is fixed. Later items do not leapfrog earlier items merely
 because a prototype exists.
@@ -98,7 +114,8 @@ from the underlying owner.
 
 - [ ] Use Lineax and JAX for iterative linear systems; add no Jaxstro solver clone.
 - [ ] Use Optimistix for nonlinear systems, fixed points, and minimization.
-- [ ] Use Quadax for adaptive quadrature.
+- [ ] Use Quadax as an independent adaptive-quadrature validation and benchmark
+  comparator without adding it as a runtime dependency.
 - [ ] Use Diffrax for adaptive ODE, SDE, and CDE solving.
 - [ ] Require a concrete consumer and an adapter-specific evidence gap before
   proposing any wrapper.
@@ -121,7 +138,8 @@ consumers establish a shared topology and conservation boundary.
 - No general MCMC, VI, NPE, SBI, or posterior orchestration; use Informax and
   established inference libraries.
 - No Jaxstro implementation of iterative linear solvers, general nonlinear
-  systems, adaptive quadrature, or adaptive differential equations.
+  systems, or adaptive differential equations. The separately approved
+  `jaxstro.quad` program owns adaptive quadrature.
 - No multidimensional field framework before two consumers agree on the shared
   abstraction.
 - No method added only because another general-purpose library exposes it.
@@ -129,6 +147,7 @@ consumers establish a shared topology and conservation boundary.
 ## Build checklist
 
 - [ ] Generate callable-level transform and maturity coverage.
+- [ ] Complete the approved `jaxstro.quad` adaptive and evidence phases.
 - [ ] Decide quantity adoption from downstream parity and migration evidence.
 - [ ] Deliver the smallest evidence-complete `jaxstro.ml` vertical slice.
 - [ ] Deliver reference-sequence and convergence gates for `jaxstro.numerics.qmc`.

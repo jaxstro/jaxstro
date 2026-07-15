@@ -89,8 +89,13 @@
     "jaxstro.provenance.EnvironmentSnapshot",
     "jaxstro.provenance.MethodManifest",
     "jaxstro.quad.AffineMapResult",
+    "jaxstro.quad.ClenshawCurtisRule",
+    "jaxstro.quad.DomainMapResult",
     "jaxstro.quad.ErrorKind",
     "jaxstro.quad.ErrorNorm",
+    "jaxstro.quad.FejerIIRule",
+    "jaxstro.quad.FejerIRule",
+    "jaxstro.quad.GaussianRule",
     "jaxstro.quad.Infinite",
     "jaxstro.quad.Interval",
     "jaxstro.quad.JacobiMeasure",
@@ -107,6 +112,7 @@
     "jaxstro.quad.QuadWork",
     "jaxstro.quad.RightInfinite",
     "jaxstro.quad.StandardNormalMeasure",
+    "jaxstro.quad.TanhSinhRule",
     "jaxstro.quad.WeightedMeasure",
     "jaxstro.quantity.Dimension",
     "jaxstro.quantity.DimensionError",
@@ -832,18 +838,82 @@
       "ownership": "Runtime artifact manifests."
     },
     {
-      "callables": [],
-      "dimensional_policy": "Caller-owned units; Phase A0 records metadata but performs no quantity integration.",
+      "callables": [
+        {
+          "ad_semantics": "smooth_pathwise",
+          "boundaries": [
+            {
+              "evidence_ids": [
+                "quad-fixed-unit"
+              ],
+              "failure_mode": "raises",
+              "summary": "Unsupported rule, domain, and measure pairings raise eagerly."
+            },
+            {
+              "evidence_ids": [
+                "quad-fixed-unit"
+              ],
+              "failure_mode": "returns_nan",
+              "summary": "Value-dependent invalid finite domains return NaN under tracing."
+            }
+          ],
+          "cost_notes": "Integrand work is the static node count multiplied by the static number of finite breakpoint segments.",
+          "domain": "Raw-array scalar bounds, static rule and measure types, and an integrand with a leading node axis.",
+          "evidence": [
+            {
+              "claim": "JIT, VMAP, real and complex payloads, explicit-parameter gradients, and moving-bound gradients are executable.",
+              "id": "quad-fixed-transforms",
+              "kind": "integration_test",
+              "target": "tests/integration/test_quad_fixed_transforms.py"
+            },
+            {
+              "claim": "Analytic exactness, domains, measures, payloads, breakpoints, orientation, zero width, and structural failures are executable.",
+              "id": "quad-fixed-unit",
+              "kind": "unit_test",
+              "target": "tests/unit/quad/test_fixed.py"
+            }
+          ],
+          "id": "quad-fixed",
+          "import_path": "jaxstro.quad.fixed",
+          "limitations": [
+            "A fixed rule does not estimate truncation error or select its order.",
+            "Quantity-valued integration and adaptive replay derivatives are not implemented."
+          ],
+          "maturity": "experimental",
+          "outputs": "An array value with the integrand node axis reduced.",
+          "precision": "The active JAX precision policy; scientific reference validation uses float64.",
+          "purpose": "Evaluate one declared fixed quadrature formula over a supported one-dimensional domain and measure.",
+          "transforms": [
+            {
+              "conditions": "Rule type, rule order or level, measure type, breakpoint count, and payload shape remain static.",
+              "evidence_ids": [
+                "quad-fixed-transforms"
+              ],
+              "support": "supported",
+              "transform": "jax.jit"
+            },
+            {
+              "conditions": "Batch explicit arguments or numerical bounds.",
+              "evidence_ids": [
+                "quad-fixed-transforms"
+              ],
+              "support": "supported",
+              "transform": "jax.vmap"
+            }
+          ]
+        }
+      ],
+      "dimensional_policy": "Caller-owned units; Phase A1 accepts raw arrays only.",
       "evidence": [],
       "execution_boundary": "runtime",
       "id": "quad",
       "import_path": "jaxstro.quad",
       "intended_uses": [
-        "Configuring domains, measures, tolerances, results, and current integration helpers."
+        "Integrating sampled arrays and evaluating declared fixed formulas over supported one-dimensional domains."
       ],
       "maturity": "experimental",
       "non_ownership": "Adaptive controllers, quantity-valued integration, physical-model policy, inference, ODE solving, or scientific acceptance.",
-      "ownership": "Canonical integration namespace, typed configuration, and current sampled/fixed helper facade."
+      "ownership": "Canonical sampled-data integration, fixed one-dimensional quadrature, typed domains, measures, rules, and result evidence."
     },
     {
       "callables": [],
@@ -991,7 +1061,7 @@
   ],
   "package_version": "0.1.0",
   "schema_version": "1",
-  "source_revision": "sha256:39bb2e924f855e23142f1e4420c30bd3bbceb88adddf2c5cb1ede0c627577da6",
+  "source_revision": "sha256:c81ba370cc0ad8a7acb01d593c9098eee44c23d4e0f214ed49ea9ef2c0658ffb",
   "unclassified_callables": [
     "jaxstro.atmospheres.acquisition_rows_to_markdown",
     "jaxstro.atmospheres.build_bosz_index",
@@ -1158,6 +1228,7 @@
     "jaxstro.quad.hermite_e_basis",
     "jaxstro.quad.interval_is_valid",
     "jaxstro.quad.interval_orientation",
+    "jaxstro.quad.map_domain",
     "jaxstro.quad.map_interval",
     "jaxstro.quad.simpson",
     "jaxstro.quad.sorted_breakpoints",

@@ -18,5 +18,5 @@ temporary compatibility path retained while sibling packages migrate.
 | `jaxstro.numerics.quadrature.hermite_e_basis` | `jaxstro.quad.hermite_e_basis` |
 | `jaxstro.numerics.quadrature.hermite_coefficients` | `jaxstro.quad.hermite_coefficients` |
 
-Phase A0 preserves exact callable identity and emits no deprecation warning.
+Phase A1 preserves exact callable identity and emits no deprecation warning.
 Use the [Jaxstro quadrature foundation](./quad.md) for the current API.

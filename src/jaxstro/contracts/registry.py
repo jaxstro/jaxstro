@@ -92,6 +92,19 @@ def resolve_import_path(path: str) -> object:
     """Resolve a dotted public path or raise a portable validation error."""
 
     parts = path.split(".")
+    for stop in range(len(parts) - 1, 0, -1):
+        try:
+            parent = importlib.import_module(".".join(parts[:stop]))
+        except ModuleNotFoundError:
+            continue
+        resolved: object = parent
+        try:
+            for name in parts[stop:]:
+                resolved = getattr(resolved, name)
+        except AttributeError:
+            continue
+        return resolved
+
     module: Any | None = None
     remainder: list[str] = []
     for stop in range(len(parts), 0, -1):

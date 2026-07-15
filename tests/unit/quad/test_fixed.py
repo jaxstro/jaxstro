@@ -119,3 +119,12 @@ def test_fixed_rejects_unsupported_structural_pairings() -> None:
 def test_fixed_rejects_payload_without_node_axis() -> None:
     with pytest.raises(ValueError, match="leading node axis"):
         fixed(lambda _x: jnp.asarray(1.0), Interval(0.0, 1.0), rule=GaussianRule(3))
+
+
+def test_value_invalid_interval_returns_nan() -> None:
+    got = fixed(
+        lambda x: x,
+        Interval(0.0, 1.0, breakpoints=(2.0,)),
+        rule=GaussianRule(3),
+    )
+    assert jnp.isnan(got)

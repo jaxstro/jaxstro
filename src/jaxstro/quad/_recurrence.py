@@ -115,6 +115,8 @@ def gauss_legendre_nodes(n: int):
 
 def gauss_laguerre_nodes(n: int):
     """Return the canonical Gauss-Laguerre rule for ``exp(-x)``."""
+    if n < 1:
+        raise ValueError("gauss_laguerre_nodes requires n >= 1")
     data = gaussian_rule_data(GaussianRule(n), LaguerreMeasure())
     return data.nodes, data.weights
 

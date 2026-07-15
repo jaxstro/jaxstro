@@ -135,6 +135,22 @@ def test_quad_owner_page_lists_the_complete_public_surface() -> None:
     assert not missing
 
 
+def test_quad_owner_page_claims_complete_a1_fixed_surface() -> None:
+    text = (API_ROOT / "approximation-integration/quad.md").read_text()
+    for required in (
+        "`fixed`",
+        "`GaussianRule`",
+        "`ClenshawCurtisRule`",
+        "`FejerIRule`",
+        "`FejerIIRule`",
+        "`TanhSinhRule`",
+        "Gauss-Jacobi",
+        "float64",
+    ):
+        assert required in text
+    assert "Phase A0" not in text
+
+
 def test_grouped_api_pages_are_navigable_with_canonical_routes() -> None:
     myst = (DOCS / "myst.yml").read_text(encoding="utf-8")
     routes = json.loads((DOCS / "route-manifest.json").read_text(encoding="utf-8"))

@@ -82,6 +82,8 @@ def test_future_capabilities_roadmap_preserves_scope_and_build_advice() -> None:
     assert "No general MCMC, VI, NPE, SBI" in text
     for owner in ("Lineax", "Optimistix", "Quadax", "Diffrax"):
         assert owner in text
+    assert "Jaxstro owns the approved quadrature capability program" in text
+    assert "Quadax remains a validation and benchmark comparator" in text
 
 
 def test_future_capabilities_roadmap_is_navigable() -> None:

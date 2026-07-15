@@ -1,125 +1,238 @@
 ---
-title: Fixed-node quadrature
+title: Fixed and weighted quadrature
 description: >-
-  Gaussian and Clenshaw-Curtis rules with explicit polynomial exactness,
-  standard-normal convention, and fixed-node AD boundaries.
+  Gaussian, Clenshaw-Curtis, Fejer, and tanh-sinh formulas with explicit
+  measures, domain maps, exactness, JAX behavior, and audit boundaries.
 ---
 
 ## The question this method answers
 
-How can an integral be approximated by evaluating an integrand at a small,
-carefully chosen set of fixed nodes? Fixed-node quadrature replaces integration
-against a known weight function by a weighted sum. Jaxstro owns deterministic
-node factories and Hermite expansion helpers, not adaptive error control.
+How can we approximate a one-dimensional integral when we can choose where to
+evaluate the integrand, but do not need an adaptive error controller? Fixed
+quadrature replaces the continuous integral by a finite weighted sum. It is a
+good fit when the integrand is inexpensive, the domain and measure are known,
+and convergence can be audited by increasing a static order or level.
 
 :::{tip}
-Match the rule to the domain and weight: Legendre for unit weight on $[-1,1]$,
-Laguerre for $e^{-x}$ on $[0,\infty)$, and Jaxstro's probabilists' Hermite rule
-for expectations under a standard normal density.
+Start from the structure of the integral. Use a matched Gaussian rule when the
+measure is classical, a Chebyshev rule for a smooth finite-interval integrand,
+and tanh-sinh when endpoint behavior or an infinite-domain map is central.
 :::
 
 ## Before computation: what should be true?
 
-Define the integration domain, weight $\omega(x)$, integrand units, and required
-accuracy. Choose a concrete positive node count. Determine whether polynomial
-exactness or empirical convergence on a non-polynomial integrand is the relevant
-audit. Treat nodes and weights as setup constants, not inferred parameters.
+An integral depends on more than a function. It also depends on a domain
+$D$ and a measure $\mu$. In density form,
+
+```{math}
+:label: eq-fixed-node-overview
+I[f]
+=\int_D f(x)\,\mathrm{d}\mu(x)
+=\int_D f(x)\omega(x)\,\mathrm{d}x
+\approx Q_n[f]
+=\sum_{i=1}^{n}w_i f(x_i).
+```
+
+The nodes $x_i$ say where to evaluate the integrand. The weights $w_i$ encode
+the rule, the measure, and any domain transformation. A fixed formula does not
+observe its own error. Accuracy must be established from exactness identities,
+convergence across orders, or an independent reference.
 
 :::{important}
-The statement "exact through degree $2n-1$" applies to the matched Gaussian
-weight and polynomial class. It is not an error estimate for an arbitrary
-integrand.
+The integrand must accept the complete node array and return an array whose
+leading axis is the node axis. Scalar, vector, complex, and higher-rank payloads
+are supported after that leading axis.
 :::
-
-Probability-weighted integrals connect to
-[](../../10-foundations/mathematical-objects/probability-and-distributions.md)
-and coordinate/quantity semantics to
-[](../../30-representations/units-quantities/quantities.md).
 
 ## Define the mathematical objects
 
-Let $I[f]=\int_D f(x)\omega(x)\,dx$. A rule contains nodes
-$x_i\in D$ and scalar weights $w_i$. Its approximation is
-$Q_n[f]=\sum_{i=1}^n w_i f(x_i)$. Polynomial exactness of degree $q$ means
-$Q_n[p]=I[p]$ for every polynomial $p$ with degree at most $q$.
+The numerical problem consists of an integrand, a one-dimensional `Domain`, a
+declared `Measure`, and a static fixed `Rule`. `Interval` may contain a static
+number of dynamic breakpoint values. `RightInfinite`, `LeftInfinite`, and
+`Infinite` identify improper domains without hiding a transformation choice.
 
-Gaussian nodes are roots of the orthogonal polynomial associated with
-$\omega$. Clenshaw-Curtis instead uses Chebyshev-Lobatto nodes including the
-endpoints of $[-1,1]$.
+`GaussianRule`, `ClenshawCurtisRule`, `FejerIRule`, `FejerIIRule`, and
+`TanhSinhRule` are frozen configuration objects. Constructed nodes and weights
+are arrays; rule exactness and nesting are static metadata.
 
 ## Derive the method
 
-An $n$-node Gaussian rule chooses $2n$ node and weight degrees of freedom so
-that the first $2n$ weighted moments match. The resulting exactness statement is
+Every rule in this family evaluates the same fixed-sum abstraction,
+
+```{math}
+:label: eq-fixed-node-quadrature
+I[f]=\int_D f(x)\omega(x)\,\mathrm{d}x
+\approx Q_n[f]=\sum_{i=1}^{n}w_i f(x_i).
+```
+
+### Gaussian rules from one recurrence engine
+
+Let $p_k$ be polynomials orthogonal under the declared measure. Their
+three-term recurrence defines a symmetric Jacobi matrix,
+
+```{math}
+:label: eq-gaussian-jacobi-matrix
+J_n=
+\begin{bmatrix}
+a_0 & \sqrt{b_1} \\
+\sqrt{b_1} & a_1 & \sqrt{b_2} \\
+& \ddots & \ddots & \ddots \\
+&& \sqrt{b_{n-1}} & a_{n-1}
+\end{bmatrix}.
+```
+
+The eigenvalues of $J_n$ are the Gaussian nodes. If $v_i$ is the normalized
+eigenvector associated with node $x_i$, then the weight is the measure mass
+$\mu_0$ times the square of the first eigenvector component,
+
+```{math}
+:label: eq-gaussian-eigenweight
+w_i=\mu_0\left(v_{0i}\right)^2.
+```
+
+This single construction produces Gauss-Legendre, Gauss-Jacobi,
+Gauss-Laguerre, generalized Gauss-Laguerre, physicists' Gauss-Hermite, and
+standard-normal Gauss-Hermite rules. An $n$-node Gaussian rule satisfies
 
 ```{math}
 :label: eq-gaussian-exactness
 \sum_{i=1}^n w_i p(x_i)
-=\int_D p(x)\omega(x)\,dx,
-\qquad \deg p\le2n-1.
+=\int_D p(x)\omega(x)\,\mathrm{d}x,
+\qquad \deg p\le 2n-1.
 ```
 
-For a general integrand the same nodes define the approximation
+The degree statement is exact for the matched polynomial class. It is not a
+general error estimate.
 
-```{math}
-:label: eq-fixed-node-quadrature
-I[f]=\int_D f(x)\omega(x)\,dx
-\approx Q_n[f]=\sum_{i=1}^n w_i f(x_i).
-```
+#### The standard-normal convention
 
-NumPy supplies the physicists' Hermite rule
-$\int e^{-z^2}f(z)\,dz\approx\sum_i w_i f(z_i)$. Substituting
-$g=\sqrt{2}z$ and normalizing the Gaussian density gives Jaxstro's standard-
-normal rule:
+The legacy compatibility helper begins with the physicists' Hermite rule and
+uses $g=\sqrt{2}z$. The normalized weights are
 
 ```{math}
 :label: eq-standard-normal-hermite
-g_i=\sqrt{2}\,z_i,\qquad
-\widetilde{w}_i=\frac{w_i}{\sqrt{\pi}},\qquad
+g_i=\sqrt{2}\,z_i,
+\qquad
+\widetilde{w}_i=\frac{w_i}{\sqrt{\pi}},
+\qquad
 \mathbb{E}_{g\sim\mathcal{N}(0,1)}[f(g)]
 \approx\sum_i\widetilde{w}_i f(g_i).
 ```
 
-Thus the returned Hermite weights sum to one and reproduce standard-normal
-moments through degree $2n-1$.
+That helper remains byte-compatible with the earlier public implementation.
+New `GaussianRule` construction uses the shared JAX recurrence engine.
 
-Clenshaw-Curtis uses
-$x_i=\cos(i\pi/(n-1))$ and cosine-series weights. Its exactness pattern differs
-from Gaussian quadrature, so convergence must be tested rather than inferred
-from [](#eq-gaussian-exactness).
+### Finite domains and weighted measures
+
+For a finite interval with ordered physical endpoints $x_{\min}$ and
+$x_{\max}$, Jaxstro maps $t\in[-1,1]$ by
+
+```{math}
+:label: eq-fixed-affine-map
+x(t)=\frac{x_{\min}+x_{\max}}{2}
++\frac{x_{\max}-x_{\min}}{2}t,
+\qquad
+\left|\frac{\mathrm{d}x}{\mathrm{d}t}\right|
+=\frac{x_{\max}-x_{\min}}{2}.
+```
+
+The orientation sign is stored separately, so reversing the requested bounds
+negates the result without making the measure Jacobian negative. Breakpoints
+produce a static collection of subintervals evaluated together.
+
+`WeightedMeasure` evaluates its declared density exactly once. A matched
+Gaussian rule already contains its classical weight and therefore does not
+multiply that weight into the integrand again. `normalized=True` changes only
+the declared classical measure mass; it does not trigger a hidden numerical
+normalization.
+
+:::{warning}
+A classical measure is part of the quadrature formula. Do not manually multiply
+the same density into `fun` when using a matched `GaussianRule`.
+:::
+
+### Clenshaw-Curtis and Fejer rules
+
+The Chebyshev families interpolate the integrand at cosine-spaced nodes. Their
+weights are obtained by matching the exact Chebyshev moments
+
+```{math}
+:label: eq-chebyshev-moments
+\int_{-1}^{1}T_k(x)\,\mathrm{d}x
+=
+\begin{cases}
+\dfrac{2}{1-k^2}, & k\ \text{even},\\
+0, & k\ \text{odd}.
+\end{cases}
+```
+
+Clenshaw-Curtis includes both endpoints and is nested when the number of
+intervals doubles. Fejer type I and type II exclude the endpoints. All three
+families share the same cosine-interpolation substrate rather than duplicating
+weight formulas.
+
+### Fixed tanh-sinh
+
+Tanh-sinh begins with an evenly spaced parameter $s_k=kh$ and maps it to the
+reference interval by
+
+```{math}
+:label: eq-tanh-sinh-map
+t(s)=\tanh\!\left(\frac{\pi}{2}\sinh s\right),
+\qquad
+\frac{\mathrm{d}t}{\mathrm{d}s}
+=\frac{\pi}{2}
+\frac{\cosh s}{\cosh^2\!\left(\frac{\pi}{2}\sinh s\right)}.
+```
+
+The derivative decays double-exponentially near $t=\pm1$. Jaxstro composes
+this formula with explicit maps for finite, semi-infinite, and full-line
+domains. Representable endpoint distance eventually limits float64 accuracy
+for an integrand that diverges exactly at an endpoint; increasing the level
+past that point cannot recover information absent from the dtype.
 
 ## What the algorithm actually does
 
-`gauss_legendre_nodes`, `gauss_laguerre_nodes`, and `gauss_hermite_nodes` call
-NumPy polynomial factories on the host and freeze the one-dimensional results
-as JAX arrays. Laguerre and Clenshaw-Curtis explicitly reject `n < 1`; invalid
-Legendre and Hermite orders propagate their NumPy factory errors.
+`quad.fixed` performs the following static computation:
 
-`clenshaw_curtis_nodes(1)` returns node zero with weight two. Larger rules return
-nodes ordered from one to minus one. `hermite_e_basis(g, n_max)` uses the
-probabilists' recurrence
-$He_{n+1}(g)=gHe_n(g)-nHe_{n-1}(g)$ and returns shape
-`(n_max + 1, q)`. `hermite_coefficients(map_fn, n_max, n_quad=256)` returns
-$c_n=\mathbb{E}[map\_fn(g)He_n(g)]$ for $n=0,\ldots,n_{\max}$.
+1. Select a rule construction from the static rule and measure types.
+2. Construct nodes and weights at the static order or level.
+3. Map all nodes to the requested domain and breakpoint segments.
+4. Evaluate the integrand with one leading node axis.
+5. Apply a general density exactly once when one is declared.
+6. Reduce the node axis and sum the static segment axis.
 
-Node count and expansion order are concrete Python integers. No factory adapts
-order, returns a runtime error estimate, or owns a stopping policy.
+For $n$ nodes and $m$ breakpoint segments, the integrand receives $mn$ points.
+Gaussian construction includes a symmetric eigensolve of size $n$. Chebyshev
+construction solves the static cosine interpolation system. Repeated workloads
+should close over the rule so compilation can treat its construction as static.
 
 ## What JAX differentiates
 
-Node generation is host-side setup and is neither traced nor differentiated.
-Once nodes and weights exist, JAX differentiates the weighted sum through
-integrand values and any parameters closed over by the integrand.
-`hermite_e_basis` is pure JAX arithmetic and differentiable with respect to its
-input points. `hermite_coefficients` carries derivatives through `map_fn` values,
-not through `n_quad` or node construction.
+Rule type, order or level, measure type, breakpoint count, and payload shape are
+static. Bounds, breakpoint values, and explicit integrand parameters may be JAX
+arrays. The fixed evaluator supports `jax.jit` and `jax.vmap` under those
+conditions.
 
-:::{warning}
-Fixed nodes do not make a nonsmooth or singular integrand smooth. A finite AD
-result is the derivative of the fixed weighted sum, which approximates the
-derivative of the integral only when differentiation and integration may be
-interchanged and quadrature error is controlled for that derivative integrand.
+JAX differentiates the executed weighted sum. For smooth finite bounds this
+includes the affine node motion and Jacobian. This is a fixed-formula
+derivative, not proof that quadrature error is sufficiently small for the
+derivative integrand.
+
+:::{note}
+Adaptive replay differentiation is a separate Phase A3 contract. No adaptive
+controller is implemented by the fixed evaluator.
 :::
+
+### Units, shapes, and precision
+
+Phase A1 accepts raw arrays. The caller owns units and must ensure that the
+integrand value multiplied by the measure has the intended integral dimension.
+Quantity-valued boundaries remain planned for Phase A3.
+
+The node input has shape `(n,)`. The integrand returns `(n,)` or `(n, ...)`, and
+the result has shape `(...)`. Scientific reference tests use float64. The active
+JAX precision policy controls normal execution.
 
 ## Using it in Jaxstro
 
@@ -128,50 +241,58 @@ import jax.numpy as jnp
 
 from jaxstro import quad
 
-legendre_x, legendre_w = quad.gauss_legendre_nodes(8)
-poly_integral = jnp.sum(legendre_w * legendre_x**6)
+polynomial = quad.fixed(
+    lambda x: x**4,
+    quad.Interval(-1.0, 1.0),
+    rule=quad.GaussianRule(3),
+)
 
-normal_x, normal_w = quad.gauss_hermite_nodes(8)
-normal_second_moment = jnp.sum(normal_w * normal_x**2)
+normal_variance = quad.fixed(
+    lambda x: x**2,
+    quad.Infinite(),
+    rule=quad.GaussianRule(12),
+    measure=quad.StandardNormalMeasure(),
+)
 
-assert jnp.allclose(poly_integral, 2.0 / 7.0)
-assert jnp.allclose(jnp.sum(normal_w), 1.0)
-assert jnp.allclose(normal_second_moment, 1.0)
+assert jnp.allclose(polynomial, 2.0 / 5.0)
+assert jnp.allclose(normal_variance, 1.0)
 ```
 
-The returned node and weight arrays both have shape `(n,)`. Their default dtype
-follows the active JAX precision policy when NumPy results are converted.
+The compatibility node helpers remain available:
+
+```python
+nodes, weights = quad.gauss_legendre_nodes(8)
+assert nodes.shape == weights.shape == (8,)
+```
 
 ## How to audit the result
 
-For Gaussian rules, verify every moment from degree zero through $2n-1$ against
-an analytic value and confirm the first degree beyond the guarantee is not
-silently described as exact. Check weight sums: two for Legendre and Clenshaw-
-Curtis on $[-1,1]$, one for Laguerre's $e^{-x}$ measure, and one for the normalized
-Hermite rule. For a non-polynomial integrand, compare increasing node counts and
-an independent high-accuracy reference. Audit parameter gradients against
-central finite differences while holding nodes fixed.
+For Gaussian rules, verify analytic moments through degree $2n-1$. For
+Clenshaw-Curtis and Fejer rules, verify their declared interpolatory degree and
+then compare increasing orders on the actual integrand. For tanh-sinh, sweep
+levels until the result stabilizes before the dtype endpoint floor is reached.
 
-Executable evidence is indexed in [](../../60-validation/validation.md).
+The implementation is checked against independent SciPy roots and weights for
+all classical Gaussian families. JIT, VMAP, parameter gradients, moving-bound
+gradients, complex payloads, reversed intervals, breakpoints, and invalid
+pairings have executable tests. Evidence is indexed in
+[](../../60-validation/validation.md).
 
 ## Where the claim stops
 
-These factories do not detect singularities, transform arbitrary domains,
-estimate error, choose order, or adapt nodes. Polynomial moment tests validate
-the rule convention and implementation; they do not establish convergence for
-a new integrand. Hermite expansion coefficients do not by themselves establish
-that a truncated expansion is scientifically adequate.
+Fixed quadrature does not estimate error, choose an order, diagnose divergence,
+or certify interchange of differentiation and integration. A converged-looking
+order sweep is evidence for the tested sequence, not a universal guarantee.
+Adaptive Gauss-Kronrod, adaptive Clenshaw-Curtis, adaptive tanh-sinh, and
+Romberg controllers are Phase A2 work.
 
 ## Connected ideas
 
 :::{seealso}
-Connect weighted integrals to
+Connect measures to
 [](../../10-foundations/mathematical-objects/probability-and-distributions.md),
-units to [](../../30-representations/units-quantities/quantities.md), owner
-signatures to [](../../50-api/approximation-integration/quad.md), and evidence
-to [](../../60-validation/validation.md). The
-[legacy fixed-quadrature page](../../50-api/approximation-integration/quadrature.md)
-records the temporary import-name mapping. Sampled Newton-Cotes rules are in
-[](./cumulative-trapz.md); delegated adaptive methods are described in
+units to [](../../30-representations/units-quantities/quantities.md), the public
+owner to [](../../50-api/approximation-integration/quad.md), sampled-data rules
+to [](./cumulative-trapz.md), and the planned controller layer to
 [](./adaptive-quadrature.md).
 :::

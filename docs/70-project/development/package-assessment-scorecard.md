@@ -68,9 +68,9 @@ and an unclassified symbol is not treated as supported.
 | Metric identity | Symbol | Value | Units |
 | --- | --- | ---: | --- |
 | Registered public modules | `N_module,contract` | 17 | modules |
-| Callable-level contracts | `N_callable,contract` | 16 | callables |
-| Explicitly unclassified public callables | `N_callable,unclassified` | 224 | callables |
-| Module-inherited public record types | `N_symbol,inherited` | 146 | symbols |
+| Callable-level contracts | `N_callable,contract` | 17 | callables |
+| Explicitly unclassified public callables | `N_callable,unclassified` | 225 | callables |
+| Module-inherited public record types | `N_symbol,inherited` | 152 | symbols |
 
 **Unified evidence infrastructure: implemented.** Computational measurements,
 source provenance, and scientific policy remain separate evidence classes.
