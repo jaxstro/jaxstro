@@ -856,7 +856,7 @@ git commit -m "feat(quad): add adaptive tanh-sinh"
 - Documents `RombergTanhSinh` as Romberg-style global level refinement with no
   Richardson extrapolation, distinct from h-adaptive `AdaptiveTanhSinh`.
 
-- [ ] **Step 1: Write failing Richardson, reuse, and work tests**
+- [x] **Step 1: Write failing Richardson, reuse, and work tests**
 
 Test standard table identities on polynomials, the mutation-resistant addition
 in the base recurrence, exact `2^n + 1` standard work, explicit zero-based level
@@ -867,11 +867,11 @@ convergence, max-evaluation exit, nonfinite exit, stagnation/representability
 roundoff, unsupported breakpoints, and improper-domain support only for the
 tanh-sinh variant.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_romberg.py`
 
-- [ ] **Step 3: Implement the fixed-capacity refinement engines**
+- [x] **Step 3: Implement the fixed-capacity refinement engines**
 
 Derive the static maximum level from `max_evaluations`. Allocate the complete
 standard table, maximum lane arrays, and tanh-sinh active masks from that bound.
@@ -881,14 +881,14 @@ tanh-sinh lanes physically in an unbatched solve. Advance levels with
 columns. Stop before a level whose complete active logical node set exceeds the
 budget. Do not apply Richardson columns to Romberg-tanh-sinh.
 
-- [ ] **Step 4: Prove structural trace bounds and compile behavior**
+- [x] **Step 4: Prove structural trace bounds and compile behavior**
 
 JAXPR tests must show one outer loop body, one fixed lane map, and, for standard
 Romberg only, one Richardson loop regardless of static evaluation budget. Test
 JIT and VMAP on both variants, stopped gradients, logical per-lane work under
 VMAP, and direct `lax.map` guidance for cost-sensitive batches.
 
-- [ ] **Step 5: Run focused tests and commit**
+- [x] **Step 5: Run focused tests and commit**
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_romberg.py tests/integration/test_quad_adaptive_transforms.py`
 

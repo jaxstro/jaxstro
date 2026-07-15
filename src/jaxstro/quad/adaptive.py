@@ -19,9 +19,20 @@ from ._adaptive import (
     validate_adaptive_capacities,
 )
 from ._gk import gauss_kronrod_data, gauss_kronrod_estimate_values
+from ._romberg import (
+    romberg_refine,
+    romberg_tanh_sinh_refine,
+    validate_global_capacities,
+)
 from .domains import Infinite, Interval, LeftInfinite, RightInfinite
 from .measures import LebesgueMeasure, WeightedMeasure
-from .methods import AdaptiveClenshawCurtis, AdaptiveTanhSinh, GaussKronrod
+from .methods import (
+    AdaptiveClenshawCurtis,
+    AdaptiveTanhSinh,
+    GaussKronrod,
+    Romberg,
+    RombergTanhSinh,
+)
 from .result import ErrorKind, QuadError, QuadResult, QuadStatus, QuadWork
 from .tolerance import ErrorNorm, MaxNorm
 from .tolerance import error_norm as reduce_error_norm
@@ -101,10 +112,26 @@ def integrate(
             'Phase A2 accepts only gradient="stop"; Phase A3 replay is not yet '
             "implemented"
         )
-    if not isinstance(method, (GaussKronrod, AdaptiveClenshawCurtis, AdaptiveTanhSinh)):
+    if not isinstance(
+        method,
+        (
+            GaussKronrod,
+            AdaptiveClenshawCurtis,
+            AdaptiveTanhSinh,
+            Romberg,
+            RombergTanhSinh,
+        ),
+    ):
         raise TypeError(f"{type(method).__name__} is not implemented in Phase A2")
-    if not isinstance(domain, Interval) and not isinstance(method, AdaptiveTanhSinh):
+    improper_method = isinstance(method, (AdaptiveTanhSinh, RombergTanhSinh))
+    if not isinstance(domain, Interval) and not improper_method:
         raise TypeError(f"{type(method).__name__} requires a finite Interval")
+    if (
+        isinstance(method, (Romberg, RombergTanhSinh))
+        and isinstance(domain, Interval)
+        and domain.breakpoints
+    ):
+        raise ValueError(f"{type(method).__name__} does not accept breakpoints")
     selected_measure: AdaptiveMeasure = (
         LebesgueMeasure() if measure is None else measure
     )
@@ -148,6 +175,108 @@ def integrate(
     dtype = jnp.result_type(
         *domain_scalars, absolute_tolerance, relative_tolerance, 0.0
     )
+    if isinstance(method, (Romberg, RombergTanhSinh)):
+        validate_global_capacities(
+            initial_level=method.initial_level,
+            max_evaluations=max_evaluations,
+            max_regions=max_regions,
+            tanh_sinh=isinstance(method, RombergTanhSinh),
+            dtype=dtype,
+        )
+        inferred_zero = infer_payload_zero(
+            fun,
+            args=args,
+            node_count=1,
+            node_dtype=dtype,
+            context="global quadrature",
+        )
+        if jnp.issubdtype(inferred_zero.dtype, jnp.complexfloating):
+            value_dtype = jnp.complex64 if dtype == jnp.float32 else jnp.complex128
+        else:
+            value_dtype = dtype
+        zero_value = inferred_zero.astype(value_dtype)
+
+        def evaluate_one(reference):
+            transformed = transformed_integrand(
+                fun,
+                domain,
+                jnp.reshape(reference, (1,)),
+                args=args,
+                measure=selected_measure,
+            )
+            return (
+                transformed.values[0].astype(value_dtype),
+                transformed.nonfinite,
+                transformed.roundoff,
+            )
+
+        engine = (
+            romberg_refine if isinstance(method, Romberg) else romberg_tanh_sinh_refine
+        )
+        domain_valid = reference_partition(domain).valid
+        tolerance_valid = (
+            jnp.isfinite(absolute_tolerance)
+            & jnp.isfinite(relative_tolerance)
+            & (absolute_tolerance >= 0.0)
+            & (relative_tolerance >= 0.0)
+        )
+
+        def run_engine(_operand):
+            refined = engine(
+                evaluate_one,
+                zero_value,
+                initial_level=method.initial_level,
+                max_evaluations=max_evaluations,
+                max_regions=max_regions,
+                epsabs=epsabs,
+                epsrel=epsrel,
+                error_norm=error_norm,
+                dtype=dtype,
+                input_valid=domain_valid,
+            )
+            refined_error_norm = reduce_error_norm(refined.error, error_norm)
+            return QuadResult(
+                value=refined.value,
+                error=QuadError(
+                    estimate=refined.error,
+                    norm=refined_error_norm,
+                    kind=jnp.asarray(ErrorKind.REFINEMENT_DIFFERENCE, dtype=jnp.int32),
+                    confidence_level=jnp.asarray(
+                        jnp.nan, dtype=refined_error_norm.dtype
+                    ),
+                ),
+                tolerance=refined.tolerance,
+                status=refined.status,
+                work=QuadWork(
+                    evaluations=refined.evaluations,
+                    refinements=refined.refinements,
+                    active_regions=jnp.asarray(1, dtype=jnp.int32),
+                    levels=refined.levels,
+                    replicates=jnp.asarray(0, dtype=jnp.int32),
+                ),
+            )
+
+        use_zero = (
+            domain_valid
+            & tolerance_valid
+            & (jnp.asarray(domain.lower) == jnp.asarray(domain.upper))
+            if isinstance(domain, Interval)
+            else jnp.asarray(False)
+        )
+        result = jax.lax.cond(
+            use_zero,
+            lambda _operand: _zero_result(
+                zero_value,
+                epsabs,
+                epsrel,
+                error_norm,
+                ErrorKind.REFINEMENT_DIFFERENCE,
+            ),
+            run_engine,
+            operand=None,
+        )
+        return jax.tree.map(jax.lax.stop_gradient, result)
+
     if isinstance(method, GaussKronrod):
         data = gauss_kronrod_data(method, dtype=dtype)
         rule_nodes = data.nodes

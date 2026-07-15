@@ -12,7 +12,6 @@ from jaxstro.quad import (
     Interval,
     MaxNorm,
     QuadStatus,
-    Romberg,
     WeightedMeasure,
     integrate,
 )
@@ -208,7 +207,7 @@ def test_integrate_rejects_unsupported_structure_and_gradient_policy() -> None:
         integrate(
             lambda x: x,
             Interval(-1.0, 1.0),
-            **_options(method=Romberg()),
+            **_options(method=object()),
         )
     with pytest.raises(ValueError, match="Phase A3 replay"):
         integrate(
