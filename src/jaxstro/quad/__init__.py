@@ -14,6 +14,15 @@ from jaxstro.numerics.quadrature import (
     hermite_e_basis,
 )
 
+from .domains import (
+    Infinite,
+    Interval,
+    LeftInfinite,
+    RightInfinite,
+    interval_is_valid,
+    interval_orientation,
+    sorted_breakpoints,
+)
 from .result import ErrorKind, QuadError, QuadResult, QuadStatus, QuadWork
 from .tolerance import (
     ErrorNorm,
@@ -23,13 +32,18 @@ from .tolerance import (
     error_norm,
     tolerance_threshold,
 )
+from .transforms import AffineMapResult, map_interval
 
 __all__ = [
+    "AffineMapResult",
     "clenshaw_curtis_nodes",
     "cumulative_simpson",
     "cumulative_trapezoid",
     "ErrorKind",
     "ErrorNorm",
+    "Infinite",
+    "Interval",
+    "LeftInfinite",
     "gauss_hermite_nodes",
     "gauss_laguerre_nodes",
     "gauss_legendre_nodes",
@@ -42,8 +56,13 @@ __all__ = [
     "QuadResult",
     "QuadStatus",
     "QuadWork",
+    "RightInfinite",
     "error_norm",
+    "interval_is_valid",
+    "interval_orientation",
+    "map_interval",
     "simpson",
+    "sorted_breakpoints",
     "trapezoid",
     "tolerance_threshold",
 ]
