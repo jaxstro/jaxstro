@@ -758,7 +758,7 @@ git commit -m "feat(quad): add adaptive Gauss-Kronrod integration"
 - Reuses the A1 stable cosine construction and the shared h-adaptive controller.
 - Counts only high-rule nodes because the low rule is an exact subset.
 
-- [ ] **Step 1: Write failing nesting, work, and endpoint tests**
+- [x] **Step 1: Write failing nesting, work, and endpoint tests**
 
 Test high/low node identity, explicit inequality of low weights and subset high
 weights, polynomial exactness, no duplicated low evaluations, raw refinement
@@ -766,22 +766,22 @@ difference and summation-floor behavior, smooth finite integrals, breakpoint
 localization, vector payloads, endpoint-nonfinite failure, capacity states, and
 `REFINEMENT_DIFFERENCE` evidence.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_adaptive_clenshaw_curtis.py`
 
-- [ ] **Step 3: Implement the local pair adapter and dispatch**
+- [x] **Step 3: Implement the local pair adapter and dispatch**
 
 Construct both low and high A1 `ClenshawCurtisRule` data through the same
 cosine owner. Evaluate once at the high nodes. Reduce high values with high
 weights and even-index values with the separately constructed low weights. Do
 not create a second cosine implementation.
 
-- [ ] **Step 4: Run focused and A1 regression tests**
+- [x] **Step 4: Run focused and A1 regression tests**
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_adaptive_clenshaw_curtis.py tests/unit/quad/test_chebyshev_rules.py tests/integration/test_quad_adaptive_transforms.py`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/jaxstro/quad/_adaptive.py src/jaxstro/quad/adaptive.py tests/unit/quad/test_adaptive_clenshaw_curtis.py

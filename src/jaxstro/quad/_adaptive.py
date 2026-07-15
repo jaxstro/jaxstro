@@ -7,6 +7,7 @@ import jax
 import jax.numpy as jnp
 from jaxtyping import Array
 
+from ._chebyshev import chebyshev_rule_data
 from ._integrand import (
     call_integrand,
     density_values,
@@ -17,7 +18,9 @@ from ._integrand import (
 )
 from .domains import Infinite, Interval, LeftInfinite, RightInfinite, interval_is_valid
 from .measures import LebesgueMeasure, WeightedMeasure
+from .methods import AdaptiveClenshawCurtis
 from .result import QuadStatus
+from .rules import ClenshawCurtisRule
 from .tolerance import ErrorNorm
 from .tolerance import error_norm as reduce_error_norm
 from .transforms import map_domain
@@ -50,6 +53,25 @@ class LocalEstimate(NamedTuple):
 
     value: Array
     error: Array
+    nonfinite: Array
+
+
+class NestedRulePair(NamedTuple):
+    """One high rule and its independently weighted nested low subset."""
+
+    nodes: Array
+    high_weights: Array
+    low_indices: Array
+    low_weights: Array
+
+
+class NestedRuleEstimate(NamedTuple):
+    """High-rule estimate with refinement-difference error evidence."""
+
+    value: Array
+    error: Array
+    raw_error: Array
+    roundoff_floor: Array
     nonfinite: Array
 
 
@@ -86,6 +108,69 @@ class _ControllerState(NamedTuple):
     active_regions: Array
     no_improvement_count: Array
     growth_count: Array
+
+
+def clenshaw_curtis_pair_data(
+    method: AdaptiveClenshawCurtis, *, dtype=None
+) -> NestedRulePair:
+    """Construct a nested Clenshaw-Curtis pair through the A1 cosine owner."""
+    high = chebyshev_rule_data(ClenshawCurtisRule(method.initial_order), dtype=dtype)
+    low_order = (method.initial_order + 1) // 2
+    low = chebyshev_rule_data(ClenshawCurtisRule(low_order), dtype=dtype)
+    return NestedRulePair(
+        nodes=high.nodes,
+        high_weights=high.weights,
+        low_indices=jnp.arange(0, method.initial_order, 2, dtype=jnp.int32),
+        low_weights=low.weights,
+    )
+
+
+def _node_weighted_sum(values: Array, weights: Array) -> Array:
+    shape = (weights.shape[0],) + (1,) * (values.ndim - 1)
+    return jnp.sum(values * jnp.reshape(weights, shape), axis=0)
+
+
+def nested_rule_estimate_values(
+    values: Array, pair: NestedRulePair
+) -> NestedRuleEstimate:
+    """Reduce one nested pair after a single high-node evaluation."""
+    values = validate_node_values(
+        values, pair.nodes.shape[0], context="nested quadrature"
+    )
+    if jnp.issubdtype(values.dtype, jnp.complexfloating):
+        target_dtype = (
+            jnp.complex64 if pair.nodes.dtype == jnp.float32 else jnp.complex128
+        )
+    else:
+        target_dtype = pair.nodes.dtype
+    values = values.astype(target_dtype)
+    high_value = _node_weighted_sum(values, pair.high_weights)
+    low_value = _node_weighted_sum(values[pair.low_indices], pair.low_weights)
+    raw_error = jnp.abs(high_value - low_value)
+    resabs = _node_weighted_sum(jnp.abs(values), pair.high_weights)
+    machine = jnp.finfo(pair.nodes.dtype)
+    floor = jnp.where(
+        resabs > machine.tiny / (50.0 * machine.eps),
+        50.0 * machine.eps * resabs,
+        0.0,
+    )
+    error = jnp.maximum(raw_error, floor)
+    nonfinite = ~(
+        jnp.all(jnp.isfinite(values))
+        & jnp.all(jnp.isfinite(high_value))
+        & jnp.all(jnp.isfinite(low_value))
+        & jnp.all(jnp.isfinite(raw_error))
+        & jnp.all(jnp.isfinite(resabs))
+        & jnp.all(jnp.isfinite(floor))
+        & jnp.all(jnp.isfinite(error))
+    )
+    return NestedRuleEstimate(
+        value=high_value,
+        error=error,
+        raw_error=raw_error,
+        roundoff_floor=floor,
+        nonfinite=nonfinite,
+    )
 
 
 def validate_adaptive_capacities(

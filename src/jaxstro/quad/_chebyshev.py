@@ -68,14 +68,18 @@ def _fejer_ii_weights(theta: Array) -> Array:
 
 def chebyshev_rule_data(
     rule: ClenshawCurtisRule | FejerIRule | FejerIIRule,
+    *,
+    dtype=None,
 ) -> FixedRuleData:
     """Construct an interpolatory rule on a Chebyshev point family."""
-    dtype = jnp.asarray(0.0).dtype
-    index = jnp.arange(rule.order, dtype=dtype)
+    selected_dtype = jnp.asarray(0.0).dtype if dtype is None else jnp.dtype(dtype)
+    if selected_dtype not in (jnp.dtype(jnp.float32), jnp.dtype(jnp.float64)):
+        raise TypeError("Chebyshev rule dtype must be float32 or float64")
+    index = jnp.arange(rule.order, dtype=selected_dtype)
     if isinstance(rule, ClenshawCurtisRule):
         if rule.order == 1:
-            theta = jnp.zeros((1,), dtype=dtype)
-            nodes = jnp.zeros((1,), dtype=dtype)
+            theta = jnp.zeros((1,), dtype=selected_dtype)
+            nodes = jnp.zeros((1,), dtype=selected_dtype)
         else:
             theta = jnp.pi * index / (rule.order - 1)
             nodes = jnp.cos(theta)

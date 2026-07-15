@@ -9,7 +9,9 @@ import jax.numpy as jnp
 from ._adaptive import (
     LocalEstimate,
     adaptive_controller,
+    clenshaw_curtis_pair_data,
     infer_payload_zero,
+    nested_rule_estimate_values,
     reference_partition,
     transformed_integrand,
     validate_adaptive_capacities,
@@ -17,7 +19,7 @@ from ._adaptive import (
 from ._gk import gauss_kronrod_data, gauss_kronrod_estimate_values
 from .domains import Infinite, Interval, LeftInfinite, RightInfinite
 from .measures import LebesgueMeasure, WeightedMeasure
-from .methods import GaussKronrod
+from .methods import AdaptiveClenshawCurtis, GaussKronrod
 from .result import ErrorKind, QuadError, QuadResult, QuadStatus, QuadWork
 from .tolerance import ErrorNorm, MaxNorm
 from .tolerance import error_norm as reduce_error_norm
@@ -26,14 +28,14 @@ Domain = Interval | RightInfinite | LeftInfinite | Infinite
 AdaptiveMeasure = LebesgueMeasure | WeightedMeasure
 
 
-def _assembled_result(controller, norm: ErrorNorm) -> QuadResult:
+def _assembled_result(controller, norm: ErrorNorm, kind: ErrorKind) -> QuadResult:
     error_norm = reduce_error_norm(controller.error, norm)
     return QuadResult(
         value=controller.value,
         error=QuadError(
             estimate=controller.error,
             norm=error_norm,
-            kind=jnp.asarray(ErrorKind.EMBEDDED_RULE, dtype=jnp.int32),
+            kind=jnp.asarray(kind, dtype=jnp.int32),
             confidence_level=jnp.asarray(jnp.nan, dtype=error_norm.dtype),
         ),
         tolerance=controller.tolerance,
@@ -48,7 +50,7 @@ def _assembled_result(controller, norm: ErrorNorm) -> QuadResult:
     )
 
 
-def _zero_result(value, epsabs, epsrel, norm: ErrorNorm) -> QuadResult:
+def _zero_result(value, epsabs, epsrel, norm: ErrorNorm, kind: ErrorKind) -> QuadResult:
     error = jnp.zeros_like(jnp.real(value))
     value_norm = reduce_error_norm(value, norm)
     dtype = jnp.result_type(value_norm, epsabs, epsrel, 0.0)
@@ -62,7 +64,7 @@ def _zero_result(value, epsabs, epsrel, norm: ErrorNorm) -> QuadResult:
         error=QuadError(
             estimate=error,
             norm=error_norm,
-            kind=jnp.asarray(ErrorKind.EMBEDDED_RULE, dtype=jnp.int32),
+            kind=jnp.asarray(kind, dtype=jnp.int32),
             confidence_level=jnp.asarray(jnp.nan, dtype=error_norm.dtype),
         ),
         tolerance=tolerance,
@@ -97,10 +99,10 @@ def integrate(
             'Phase A2 accepts only gradient="stop"; Phase A3 replay is not yet '
             "implemented"
         )
-    if not isinstance(method, GaussKronrod):
+    if not isinstance(method, (GaussKronrod, AdaptiveClenshawCurtis)):
         raise TypeError(f"{type(method).__name__} is not implemented in Phase A2")
     if not isinstance(domain, Interval):
-        raise TypeError("GaussKronrod requires a finite Interval")
+        raise TypeError(f"{type(method).__name__} requires a finite Interval")
     selected_measure: AdaptiveMeasure = (
         LebesgueMeasure() if measure is None else measure
     )
@@ -109,8 +111,11 @@ def integrate(
             "adaptive quadrature requires LebesgueMeasure or WeightedMeasure"
         )
 
+    node_cost = (
+        method.pair if isinstance(method, GaussKronrod) else method.initial_order
+    )
     validate_adaptive_capacities(
-        node_cost=method.pair,
+        node_cost=node_cost,
         max_evaluations=max_evaluations,
         max_regions=max_regions,
         initial_regions=len(domain.breakpoints) + 1,
@@ -133,33 +138,48 @@ def integrate(
         relative_tolerance,
         0.0,
     )
-    data = gauss_kronrod_data(method, dtype=dtype)
+    if isinstance(method, GaussKronrod):
+        data = gauss_kronrod_data(method, dtype=dtype)
+        rule_nodes = data.nodes
+        error_kind = ErrorKind.EMBEDDED_RULE
+
+        def reduce_values(values):
+            return gauss_kronrod_estimate_values(values, data)
+
+    else:
+        pair = clenshaw_curtis_pair_data(method, dtype=dtype)
+        rule_nodes = pair.nodes
+        error_kind = ErrorKind.REFINEMENT_DIFFERENCE
+
+        def reduce_values(values):
+            return nested_rule_estimate_values(values, pair)
+
     partition = reference_partition(domain)
     inferred_zero = infer_payload_zero(
         fun,
         args=args,
-        node_count=method.pair,
-        node_dtype=data.nodes.dtype,
+        node_count=node_cost,
+        node_dtype=rule_nodes.dtype,
     )
     if jnp.issubdtype(inferred_zero.dtype, jnp.complexfloating):
         zero_dtype = (
-            jnp.complex64 if data.nodes.dtype == jnp.float32 else jnp.complex128
+            jnp.complex64 if rule_nodes.dtype == jnp.float32 else jnp.complex128
         )
     else:
-        zero_dtype = data.nodes.dtype
+        zero_dtype = rule_nodes.dtype
     zero_value = inferred_zero.astype(zero_dtype)
 
     def local_estimator(lower, upper):
         transformed = transformed_integrand(
             fun,
             domain,
-            data.nodes,
+            rule_nodes,
             region_lower=lower,
             region_upper=upper,
             args=args,
             measure=selected_measure,
         )
-        estimate = gauss_kronrod_estimate_values(transformed.values, data)
+        estimate = reduce_values(transformed.values)
         return LocalEstimate(
             value=estimate.value,
             error=estimate.error,
@@ -179,18 +199,20 @@ def integrate(
         controller = adaptive_controller(
             partition,
             local_estimator,
-            node_cost=method.pair,
+            node_cost=node_cost,
             max_evaluations=max_evaluations,
             max_regions=max_regions,
             epsabs=epsabs,
             epsrel=epsrel,
             error_norm=error_norm,
         )
-        return _assembled_result(controller, error_norm)
+        return _assembled_result(controller, error_norm, error_kind)
 
     result = jax.lax.cond(
         use_zero,
-        lambda _operand: _zero_result(zero_value, epsabs, epsrel, error_norm),
+        lambda _operand: _zero_result(
+            zero_value, epsabs, epsrel, error_norm, error_kind
+        ),
         run_controller,
         operand=None,
     )
