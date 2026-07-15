@@ -261,7 +261,7 @@ git commit -m "feat(quad): add shared Gaussian recurrence engine"
 - Produces: `chebyshev_rule_data(rule) -> FixedRuleData` for Clenshaw-Curtis, Fejer I, and Fejer II.
 - Preserves: `numerics.quadrature.clenshaw_curtis_nodes is quad.clenshaw_curtis_nodes` after ownership inversion.
 
-- [ ] **Step 1: Write failing node, weight, nesting, and exactness tests**
+- [x] **Step 1: Write failing node, weight, nesting, and exactness tests**
 
 ```python
 @pytest.mark.parametrize("rule", [ClenshawCurtisRule(9), FejerIRule(8), FejerIIRule(8)])
@@ -277,13 +277,13 @@ def test_clenshaw_curtis_legacy_helper_is_canonical_identity() -> None:
     assert numerics_quadrature.clenshaw_curtis_nodes is quad.clenshaw_curtis_nodes
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_chebyshev_rules.py tests/unit/test_quadrature.py -k 'clenshaw or fejer'`
 
 Expected: Fejer imports fail and canonical ownership assertion fails.
 
-- [ ] **Step 3: Implement one cosine-moment construction substrate**
+- [x] **Step 3: Implement one cosine-moment construction substrate**
 
 ```python
 def _interpolatory_weights(nodes: Array) -> Array:
@@ -305,13 +305,13 @@ def chebyshev_rule_data(rule):
 
 Replace the direct dense solve with the shared stable cosine-series formulas before accepting orders above 32; retain explicit order-one behavior. Make the legacy helper a re-export of the canonical constructor.
 
-- [ ] **Step 4: Run exactness and legacy regression suites**
+- [x] **Step 4: Run exactness and legacy regression suites**
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_chebyshev_rules.py tests/unit/test_quadrature.py tests/integration/test_quad_compatibility.py`
 
 Expected: all tests pass without changing the existing helper's values or ordering.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/jaxstro/quad/_chebyshev.py src/jaxstro/numerics/quadrature.py tests/unit/quad/test_chebyshev_rules.py tests/unit/test_quadrature.py tests/integration/test_quad_compatibility.py

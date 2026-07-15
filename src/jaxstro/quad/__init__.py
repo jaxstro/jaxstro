@@ -1,7 +1,6 @@
 """Canonical namespace for current integration foundations and methods."""
 
 from jaxstro.numerics.quadrature import (
-    clenshaw_curtis_nodes,
     gauss_hermite_nodes,
     gauss_laguerre_nodes,
     gauss_legendre_nodes,
@@ -9,6 +8,7 @@ from jaxstro.numerics.quadrature import (
     hermite_e_basis,
 )
 
+from ._chebyshev import clenshaw_curtis_nodes
 from .domains import (
     Infinite,
     Interval,

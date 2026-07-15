@@ -62,6 +62,8 @@ import jax.numpy as jnp
 import numpy as np  # constants only: quadrature node/weight generation at call time
 from jaxtyping import Array, Float
 
+from jaxstro.quad._chebyshev import clenshaw_curtis_nodes
+
 
 def gauss_legendre_nodes(n: int) -> tuple[Array, Array]:
     r"""Gauss-Legendre nodes and weights on :math:`[-1, 1]`.
@@ -129,41 +131,6 @@ def gauss_laguerre_nodes(n: int) -> tuple[Array, Array]:
     if n < 1:
         raise ValueError("gauss_laguerre_nodes requires n >= 1")
     nodes, weights = np.polynomial.laguerre.laggauss(n)
-    return jnp.asarray(nodes), jnp.asarray(weights)
-
-
-def clenshaw_curtis_nodes(n: int) -> tuple[Array, Array]:
-    r"""Clenshaw-Curtis nodes and weights on :math:`[-1, 1]`.
-
-    The nodes are Chebyshev-Lobatto points ordered from ``1`` to ``-1``. The
-    weights are generated host-side by the standard cosine-series construction
-    from Trefethen's ``clencurt`` algorithm and frozen as JAX constants.
-    """
-    if n < 1:
-        raise ValueError("clenshaw_curtis_nodes requires n >= 1")
-    if n == 1:
-        return jnp.asarray([0.0]), jnp.asarray([2.0])
-
-    intervals = n - 1
-    theta = np.pi * np.arange(n) / intervals
-    nodes = np.cos(theta)
-    weights = np.zeros(n)
-    interior = np.arange(1, intervals)
-    v = np.ones(intervals - 1)
-
-    if intervals % 2 == 0:
-        weights[0] = 1.0 / (intervals**2 - 1.0)
-        weights[-1] = weights[0]
-        for k in range(1, intervals // 2):
-            v -= 2.0 * np.cos(2.0 * k * theta[interior]) / (4.0 * k**2 - 1.0)
-        v -= np.cos(intervals * theta[interior]) / (intervals**2 - 1.0)
-    else:
-        weights[0] = 1.0 / intervals**2
-        weights[-1] = weights[0]
-        for k in range(1, (intervals + 1) // 2):
-            v -= 2.0 * np.cos(2.0 * k * theta[interior]) / (4.0 * k**2 - 1.0)
-
-    weights[interior] = 2.0 * v / intervals
     return jnp.asarray(nodes), jnp.asarray(weights)
 
 
