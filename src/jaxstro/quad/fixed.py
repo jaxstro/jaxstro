@@ -7,6 +7,13 @@ import jax
 import jax.numpy as jnp
 
 from ._chebyshev import chebyshev_rule_data
+from ._integrand import (
+    call_integrand,
+    density_values,
+    has_explicit_args,
+    infer_payload_zero,
+    validate_node_values,
+)
 from ._recurrence import gaussian_rule_data
 from ._tanh_sinh import tanh_sinh_rule_data
 from .domains import (
@@ -47,60 +54,9 @@ Measure = (
 Rule = GaussianRule | ClenshawCurtisRule | FejerIRule | FejerIIRule | TanhSinhRule
 
 
-def _has_explicit_args(args: Any) -> bool:
-    return not (isinstance(args, tuple) and len(args) == 0)
-
-
-def _call_integrand(fun: Callable, nodes, args: Any, has_args: bool):
-    return fun(nodes, args) if has_args else fun(nodes)
-
-
-def _validate_values(values, node_count: int):
-    values = jnp.asarray(values)
-    if values.ndim == 0 or values.shape[0] != node_count:
-        raise ValueError(
-            "fixed quadrature integrand output must have a leading node axis"
-        )
-    return values
-
-
 def _weighted_sum(values, weights):
     shape = (weights.shape[0],) + (1,) * (values.ndim - 1)
     return jnp.sum(values * jnp.reshape(weights, shape), axis=0)
-
-
-def _payload_zero(
-    fun: Callable,
-    args: Any,
-    has_args: bool,
-    node_count: int,
-    node_dtype,
-):
-    abstract_nodes = jax.ShapeDtypeStruct((node_count,), node_dtype)
-    abstract = jax.eval_shape(
-        lambda nodes: _call_integrand(fun, nodes, args, has_args),
-        abstract_nodes,
-    )
-    if not hasattr(abstract, "shape") or len(abstract.shape) == 0:
-        raise ValueError(
-            "fixed quadrature integrand output must have a leading node axis"
-        )
-    if abstract.shape[0] != node_count:
-        raise ValueError(
-            "fixed quadrature integrand output must have a leading node axis"
-        )
-    return jnp.zeros(abstract.shape[1:], dtype=abstract.dtype)
-
-
-def _density_values(measure: Measure, nodes, args: Any):
-    if isinstance(measure, WeightedMeasure):
-        density = jnp.asarray(measure.density(nodes, args))
-        if density.ndim == 0:
-            return jnp.broadcast_to(density, nodes.shape)
-        if density.shape != nodes.shape:
-            raise ValueError("weighted measure density must preserve the node shape")
-        return density
-    return jnp.ones_like(nodes)
 
 
 def _evaluate_mapped(
@@ -111,10 +67,12 @@ def _evaluate_mapped(
     mapped: DomainMapResult,
     measure: Measure,
 ):
-    values = _validate_values(
-        _call_integrand(fun, mapped.x, args, has_args), data.nodes.shape[0]
+    values = validate_node_values(
+        call_integrand(fun, mapped.x, args, has_args),
+        data.nodes.shape[0],
+        context="fixed quadrature",
     )
-    density = _density_values(measure, mapped.x, args)
+    density = density_values(measure, mapped.x, args)
     weights = data.weights * mapped.jacobian * density
     value = mapped.orientation * _weighted_sum(values, weights)
     return jnp.where(mapped.valid, value, jnp.full_like(value, jnp.nan))
@@ -140,12 +98,12 @@ def _evaluate_interval_segments(
     data: FixedRuleData,
     measure: Measure,
 ):
-    zero = _payload_zero(
+    zero = infer_payload_zero(
         fun,
-        args,
-        has_args,
-        data.nodes.shape[0],
-        data.nodes.dtype,
+        args=args,
+        node_count=data.nodes.shape[0],
+        node_dtype=data.nodes.dtype,
+        context="fixed quadrature",
     )
 
     def evaluate_segment(bounds):
@@ -218,7 +176,7 @@ def fixed(
 ):
     """Evaluate a declared one-dimensional fixed quadrature formula."""
     selected_measure: Measure = LebesgueMeasure() if measure is None else measure
-    has_args = _has_explicit_args(args)
+    has_args = has_explicit_args(args)
     if isinstance(rule, GaussianRule):
         return _gaussian_fixed(fun, domain, args, has_args, rule, selected_measure)
     if isinstance(rule, (ClenshawCurtisRule, FejerIRule, FejerIIRule)):

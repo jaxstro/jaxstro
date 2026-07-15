@@ -630,6 +630,7 @@ git commit -m "feat(quad): add Gauss-Kronrod pair family"
 
 **Files:**
 - Create: `src/jaxstro/quad/_adaptive.py`
+- Create: `src/jaxstro/quad/_integrand.py` for behavior-identical shared node-axis helpers
 - Create: `tests/unit/quad/test_adaptive_substrate.py`
 - Modify: `src/jaxstro/quad/transforms.py`
 - Modify: `src/jaxstro/quad/fixed.py` only to extract genuinely shared, behavior-identical integrand helpers if needed
@@ -638,26 +639,26 @@ git commit -m "feat(quad): add Gauss-Kronrod pair family"
 - Produces normalized reference regions, finite-breakpoint conversion, transformed-node evaluation, density application, and fixed-shape local records.
 - Reuses A1 domain maps and weighted-density semantics without duplicating them.
 
-- [ ] **Step 1: Write failing reference-map, density, orientation, and payload tests**
+- [x] **Step 1: Write failing reference-map, density, orientation, and payload tests**
 
 Test finite/reversed intervals, finite breakpoints, all three improper domain types, weighted density exactly once, explicit `args`, scalar/vector/complex payloads, invalid breakpoint masks, and zero-width payload inference.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_adaptive_substrate.py`
 
-- [ ] **Step 3: Implement one transformed-integrand owner**
+- [x] **Step 3: Implement one transformed-integrand owner**
 
 Convert physical finite breakpoints to increasing normalized reference coordinates. Compose local reference, global domain, local Jacobian, global Jacobian, orientation, and optional general density. Preserve the leading node axis and fixed payload shape. Return explicit validity and nonfinite flags rather than raising from traced values.
 
-- [ ] **Step 4: Prove A1 did not drift**
+- [x] **Step 4: Prove A1 did not drift**
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_adaptive_substrate.py tests/unit/quad/test_fixed.py tests/integration/test_quad_fixed_transforms.py`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
-git add src/jaxstro/quad/_adaptive.py src/jaxstro/quad/transforms.py src/jaxstro/quad/fixed.py tests/unit/quad/test_adaptive_substrate.py
+git add src/jaxstro/quad/_adaptive.py src/jaxstro/quad/_integrand.py src/jaxstro/quad/transforms.py src/jaxstro/quad/fixed.py tests/unit/quad/test_adaptive_substrate.py
 git commit -m "feat(quad): add adaptive reference substrate"
 ```
 
