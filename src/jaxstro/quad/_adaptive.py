@@ -88,6 +88,25 @@ class _ControllerState(NamedTuple):
     growth_count: Array
 
 
+def validate_adaptive_capacities(
+    *, node_cost: int, max_evaluations: int, max_regions: int, initial_regions: int
+) -> None:
+    """Reject structurally impossible adaptive workspaces before tracing user code."""
+    for name, value in (
+        ("node_cost", node_cost),
+        ("max_evaluations", max_evaluations),
+        ("max_regions", max_regions),
+        ("initial_regions", initial_regions),
+    ):
+        if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
+            raise ValueError(f"adaptive {name} must be a positive integer")
+    initial_cost = initial_regions * node_cost
+    if max_regions < initial_regions:
+        raise ValueError("max_regions is smaller than the initial partition")
+    if max_evaluations < initial_cost:
+        raise ValueError("max_evaluations is smaller than the initial node cost")
+
+
 def _masked_region_sum(values: Array, active: Array) -> Array:
     mask = jnp.reshape(active, active.shape + (1,) * (values.ndim - 1))
     return jnp.sum(jnp.where(mask, values, 0.0), axis=0)
@@ -256,19 +275,14 @@ def adaptive_controller(
     error_norm: ErrorNorm,
 ) -> AdaptiveControllerResult:
     """Run one deterministic fixed-capacity h-adaptive refinement loop."""
-    for name, value in (
-        ("node_cost", node_cost),
-        ("max_evaluations", max_evaluations),
-        ("max_regions", max_regions),
-    ):
-        if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
-            raise ValueError(f"adaptive {name} must be a positive integer")
     initial_regions = partition.lower.shape[0]
+    validate_adaptive_capacities(
+        node_cost=node_cost,
+        max_evaluations=max_evaluations,
+        max_regions=max_regions,
+        initial_regions=initial_regions,
+    )
     initial_cost = initial_regions * node_cost
-    if max_regions < initial_regions:
-        raise ValueError("max_regions is smaller than the initial partition")
-    if max_evaluations < initial_cost:
-        raise ValueError("max_evaluations is smaller than the initial node cost")
     absolute_tolerance = jnp.asarray(epsabs)
     relative_tolerance = jnp.asarray(epsrel)
     if absolute_tolerance.ndim != 0 or relative_tolerance.ndim != 0:

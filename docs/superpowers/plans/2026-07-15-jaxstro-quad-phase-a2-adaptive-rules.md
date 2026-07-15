@@ -715,7 +715,7 @@ git commit -m "feat(quad): add fixed-capacity adaptive controller"
 - Produces the public `integrate` evaluator for all six Gauss-Kronrod methods.
 - Freezes public validation and stopped-result assembly reused by later methods.
 
-- [ ] **Step 1: Write failing public scalar, payload, breakpoint, and status tests**
+- [x] **Step 1: Write failing public scalar, payload, breakpoint, and status tests**
 
 Cover polynomial/exponential integrals, reversed orientation, multiple
 breakpoints, weighted measures, explicit args, complex payloads, tolerance
@@ -724,23 +724,23 @@ complex/nonscalar tolerance rejection, dynamic invalid input, nonfinite
 integrands, both capacity statuses, deterministic stagnation and adjacent-endpoint
 roundoff, and valid-versus-invalid zero-width behavior.
 
-- [ ] **Step 2: Write failing JIT, VMAP, and stop-gradient tests**
+- [x] **Step 2: Write failing JIT, VMAP, and stop-gradient tests**
 
 Test compiled bounds/args/tolerances, vmap over explicit parameter batches, and forward/reverse gradients equal to exact zero for every result leaf under `gradient="stop"`. Reject `gradient="replay"` eagerly with an A3-directed message.
 
-- [ ] **Step 3: Verify RED**
+- [x] **Step 3: Verify RED**
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_integrate_gk.py tests/integration/test_quad_adaptive_transforms.py`
 
-- [ ] **Step 4: Implement public validation, dispatch, and result assembly**
+- [x] **Step 4: Implement public validation, dispatch, and result assembly**
 
 Use static Python dispatch on the method type and call the shared controller. Validate structural capacities before allocating. Construct `QuadError`, scalar tolerance, scalar status code, and `QuadWork`; explicitly stop all leaves. Do not catch or relabel user Python exceptions that occur eagerly outside traced numerical evaluation.
 
-- [ ] **Step 5: Run the first adaptive checkpoint**
+- [x] **Step 5: Run the first adaptive checkpoint**
 
 Run all Tasks 1-5 tests plus A1 fixed and compatibility tests. Dispatch a fresh read-only subagent to inspect table correctness, controller invariants, status precedence, work counts, transform contracts, and absence of runtime Python loops. Resolve all Critical and Important findings from failing regressions.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/jaxstro/quad/adaptive.py src/jaxstro/quad/__init__.py tests/unit/quad/test_integrate_gk.py tests/integration/test_quad_adaptive_transforms.py

@@ -8,6 +8,7 @@ from jaxstro.numerics.quadrature import (
 
 from ._chebyshev import clenshaw_curtis_nodes
 from ._recurrence import gauss_laguerre_nodes, gauss_legendre_nodes
+from .adaptive import integrate
 from .domains import (
     Infinite,
     Interval,
@@ -67,6 +68,7 @@ __all__ = [
     "FejerIIRule",
     "fixed",
     "Infinite",
+    "integrate",
     "Interval",
     "JacobiMeasure",
     "LaguerreMeasure",

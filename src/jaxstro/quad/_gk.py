@@ -88,7 +88,15 @@ def gauss_kronrod_estimate(
     """Evaluate one embedded pair and its stabilized local error indicator."""
     data = gauss_kronrod_data(method, dtype=dtype)
     values = jnp.asarray(fun(data.nodes))
-    if values.ndim == 0 or values.shape[0] != method.pair:
+    return gauss_kronrod_estimate_values(values, data)
+
+
+def gauss_kronrod_estimate_values(
+    values: Array, data: GaussKronrodData
+) -> GaussKronrodEstimate:
+    """Reduce already transformed values with one embedded rule pair."""
+    values = jnp.asarray(values)
+    if values.ndim == 0 or values.shape[0] != data.nodes.shape[0]:
         raise ValueError("Gauss-Kronrod integrand output must have a leading node axis")
     if jnp.issubdtype(values.dtype, jnp.complexfloating):
         target_dtype = (
@@ -139,4 +147,8 @@ def gauss_kronrod_estimate(
     )
 
 
-__all__ = ["gauss_kronrod_data", "gauss_kronrod_estimate"]
+__all__ = [
+    "gauss_kronrod_data",
+    "gauss_kronrod_estimate",
+    "gauss_kronrod_estimate_values",
+]
