@@ -18,21 +18,21 @@ def _clenshaw_curtis_weights(theta: Array) -> Array:
         return jnp.asarray([2.0], dtype=theta.dtype)
 
     interior_theta = theta[1:-1]
-    interior = jnp.ones_like(interior_theta)
     if intervals % 2 == 0:
         endpoint = 1.0 / (intervals**2 - 1.0)
-        for index in range(1, intervals // 2):
-            interior = interior - 2.0 * jnp.cos(2.0 * index * interior_theta) / (
-                4.0 * index**2 - 1.0
-            )
-        interior = interior - jnp.cos(intervals * interior_theta) / (intervals**2 - 1.0)
+        modes = jnp.arange(1, intervals // 2, dtype=theta.dtype)
+        endpoint_correction = jnp.cos(intervals * interior_theta) / (intervals**2 - 1.0)
     else:
         endpoint = 1.0 / intervals**2
-        for index in range(1, (intervals + 1) // 2):
-            interior = interior - 2.0 * jnp.cos(2.0 * index * interior_theta) / (
-                4.0 * index**2 - 1.0
-            )
-    interior = 2.0 * interior / intervals
+        modes = jnp.arange(1, (intervals + 1) // 2, dtype=theta.dtype)
+        endpoint_correction = jnp.zeros_like(interior_theta)
+    cosine_series = jnp.sum(
+        2.0
+        * jnp.cos(2.0 * modes[:, None] * interior_theta[None, :])
+        / (4.0 * modes[:, None] ** 2 - 1.0),
+        axis=0,
+    )
+    interior = 2.0 * (1.0 - cosine_series - endpoint_correction) / intervals
     return jnp.concatenate(
         (
             jnp.asarray([endpoint], dtype=theta.dtype),

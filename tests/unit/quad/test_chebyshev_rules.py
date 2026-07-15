@@ -70,3 +70,9 @@ def test_high_order_chebyshev_rules_preserve_mass_and_positivity(rule) -> None:
 def test_chebyshev_construction_has_no_dense_linear_solve(rule) -> None:
     jaxpr = str(jax.make_jaxpr(lambda: chebyshev_rule_data(rule))())
     assert "custom_linear_solve" not in jaxpr
+
+
+def test_clenshaw_curtis_trace_does_not_unroll_with_order() -> None:
+    small = str(jax.make_jaxpr(lambda: chebyshev_rule_data(ClenshawCurtisRule(17)))())
+    large = str(jax.make_jaxpr(lambda: chebyshev_rule_data(ClenshawCurtisRule(129)))())
+    assert large.count("cos") <= small.count("cos") + 1
