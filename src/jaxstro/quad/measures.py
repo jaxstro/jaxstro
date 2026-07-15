@@ -1,11 +1,17 @@
 """Measure declarations for fixed and adaptive integration."""
 
+import math
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
 import jax
 
 from jaxstro.quantity import Unit
+
+
+def _validate_classical_parameter(value: float, label: str) -> None:
+    if not math.isfinite(value) or value <= -1.0:
+        raise ValueError(f"{label} must be finite and greater than -1")
 
 
 class _StaticMeasure:
@@ -42,8 +48,8 @@ class JacobiMeasure(_StaticMeasure):
     normalized: bool = field(default=False, kw_only=True)
 
     def __post_init__(self) -> None:
-        if self.alpha <= -1.0 or self.beta <= -1.0:
-            raise ValueError("Jacobi alpha and beta must be greater than -1")
+        _validate_classical_parameter(self.alpha, "Jacobi alpha")
+        _validate_classical_parameter(self.beta, "Jacobi beta")
 
 
 @jax.tree_util.register_pytree_node_class
@@ -53,8 +59,7 @@ class LaguerreMeasure(_StaticMeasure):
     normalized: bool = field(default=False, kw_only=True)
 
     def __post_init__(self) -> None:
-        if self.alpha <= -1.0:
-            raise ValueError("Laguerre alpha must be greater than -1")
+        _validate_classical_parameter(self.alpha, "Laguerre alpha")
 
 
 @jax.tree_util.register_pytree_node_class

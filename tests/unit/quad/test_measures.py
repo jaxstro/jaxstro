@@ -1,4 +1,5 @@
 import inspect
+import math
 
 import jax
 import jax.numpy as jnp
@@ -87,6 +88,22 @@ def test_normalized_is_a_declaration_not_a_numerical_action() -> None:
 )
 def test_nonintegrable_classical_parameters_raise_eagerly(factory) -> None:
     with pytest.raises(ValueError, match="greater than -1"):
+        factory()
+
+
+@pytest.mark.parametrize(
+    "factory",
+    (
+        lambda: quad.JacobiMeasure(math.nan, 0.0),
+        lambda: quad.JacobiMeasure(0.0, math.nan),
+        lambda: quad.JacobiMeasure(math.inf, 0.0),
+        lambda: quad.JacobiMeasure(0.0, math.inf),
+        lambda: quad.LaguerreMeasure(math.nan),
+        lambda: quad.LaguerreMeasure(math.inf),
+    ),
+)
+def test_nonfinite_classical_parameters_raise_eagerly(factory) -> None:
+    with pytest.raises(ValueError, match="finite and greater than -1"):
         factory()
 
 
