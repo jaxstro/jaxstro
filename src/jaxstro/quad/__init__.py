@@ -18,6 +18,7 @@ from .domains import (
     interval_orientation,
     sorted_breakpoints,
 )
+from .fixed import fixed
 from .measures import (
     JacobiMeasure,
     LaguerreMeasure,
@@ -56,6 +57,7 @@ __all__ = [
     "ErrorNorm",
     "FejerIRule",
     "FejerIIRule",
+    "fixed",
     "Infinite",
     "Interval",
     "JacobiMeasure",

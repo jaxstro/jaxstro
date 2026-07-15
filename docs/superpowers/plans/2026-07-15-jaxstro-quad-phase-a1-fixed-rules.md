@@ -396,7 +396,7 @@ git commit -m "feat(quad): add fixed tanh-sinh domain formulas"
 - Produces: `fixed(fun, domain, *, args=(), rule, measure=None)`.
 - Consumes: rule data, domain maps, measure declarations, and breakpoints.
 
-- [ ] **Step 1: Write failing scalar, payload, weighted, breakpoint, orientation, and zero-width tests**
+- [x] **Step 1: Write failing scalar, payload, weighted, breakpoint, orientation, and zero-width tests**
 
 ```python
 def test_fixed_vector_payload_and_args() -> None:
@@ -418,13 +418,13 @@ def test_weighted_measure_is_applied_exactly_once() -> None:
     assert jnp.allclose(got, 2.0 / 3.0)
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_fixed.py tests/integration/test_quad_fixed_transforms.py`
 
 Expected: import failure for `fixed`.
 
-- [ ] **Step 3: Implement dispatch and one vectorized reduction path**
+- [x] **Step 3: Implement dispatch and one vectorized reduction path**
 
 ```python
 def _weighted_sum(values, weights):
@@ -445,13 +445,13 @@ def fixed(fun, domain, *, args=(), rule, measure=None):
 
 Support both `fun(x)` and `fun(x, args)` without inspecting traced values. Require `fun(x, args)` whenever `args != ()`. Validate structural rule/domain/measure incompatibilities eagerly. For traced invalid bounds, return `nan` rather than raising from compiled code. Infer zero-width payload shape through `jax.eval_shape` and return exact zeros without numerical evaluation.
 
-- [ ] **Step 4: Run transformation, payload, gradient, and compatibility gates**
+- [x] **Step 4: Run transformation, payload, gradient, and compatibility gates**
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad tests/integration/test_quad_compatibility.py tests/integration/test_quad_fixed_transforms.py tests/validation/test_quad_fixed_reference.py`
 
 Expected: all Phase A1 tests pass; `jax.jit`, `jax.vmap`, and gradients with respect to explicit integrand parameters and finite bounds pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/jaxstro/quad/fixed.py src/jaxstro/quad/__init__.py tests/unit/quad/test_fixed.py tests/integration/test_quad_fixed_transforms.py
