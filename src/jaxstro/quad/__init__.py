@@ -27,6 +27,13 @@ from .measures import (
     WeightedMeasure,
 )
 from .result import ErrorKind, QuadError, QuadResult, QuadStatus, QuadWork
+from .rules import (
+    ClenshawCurtisRule,
+    FejerIRule,
+    FejerIIRule,
+    GaussianRule,
+    TanhSinhRule,
+)
 from .sampled import cumulative_simpson, cumulative_trapezoid, simpson, trapezoid
 from .tolerance import (
     ErrorNorm,
@@ -41,10 +48,13 @@ from .transforms import AffineMapResult, map_interval
 __all__ = [
     "AffineMapResult",
     "clenshaw_curtis_nodes",
+    "ClenshawCurtisRule",
     "cumulative_simpson",
     "cumulative_trapezoid",
     "ErrorKind",
     "ErrorNorm",
+    "FejerIRule",
+    "FejerIIRule",
     "Infinite",
     "Interval",
     "JacobiMeasure",
@@ -54,6 +64,7 @@ __all__ = [
     "gauss_hermite_nodes",
     "gauss_laguerre_nodes",
     "gauss_legendre_nodes",
+    "GaussianRule",
     "hermite_coefficients",
     "hermite_e_basis",
     "L1Norm",
@@ -66,6 +77,7 @@ __all__ = [
     "QuadWork",
     "RightInfinite",
     "StandardNormalMeasure",
+    "TanhSinhRule",
     "WeightedMeasure",
     "error_norm",
     "interval_is_valid",

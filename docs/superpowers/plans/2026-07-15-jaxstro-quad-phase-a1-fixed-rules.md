@@ -116,7 +116,7 @@ git commit -m "refactor(quad): make sampled integration canonical"
 - Produces: `GaussianRule(order)`, `ClenshawCurtisRule(order)`, `FejerIRule(order)`, `FejerIIRule(order)`, `TanhSinhRule(level)`.
 - Produces internal `FixedRuleData(nodes, weights, degree, nested)` with array nodes and weights and static metadata.
 
-- [ ] **Step 1: Write failing validation and PyTree tests**
+- [x] **Step 1: Write failing validation and PyTree tests**
 
 ```python
 @pytest.mark.parametrize("factory", [GaussianRule, ClenshawCurtisRule, FejerIRule, FejerIIRule])
@@ -133,13 +133,13 @@ def test_tanh_sinh_level_is_nonnegative() -> None:
         TanhSinhRule(-1)
 ```
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_rules.py`
 
 Expected: import failures for undefined rule types.
 
-- [ ] **Step 3: Implement frozen static configurations**
+- [x] **Step 3: Implement frozen static configurations**
 
 ```python
 @jax.tree_util.register_pytree_node_class
@@ -158,13 +158,13 @@ class GaussianRule:
 
 Use the same explicit validation pattern for the four remaining configurations. Define `FixedRuleData` as a `NamedTuple` with `nodes`, `weights`, `degree`, and `nested`.
 
-- [ ] **Step 4: Run tests, Ruff, and MyPy**
+- [x] **Step 4: Run tests, Ruff, and MyPy**
 
 Run: `env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_rules.py && env -u VIRTUAL_ENV uv run --no-sync ruff check src/jaxstro/quad/rules.py tests/unit/quad/test_rules.py && env -u VIRTUAL_ENV uv run --no-sync mypy src/jaxstro/quad/rules.py`
 
 Expected: all checks pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/jaxstro/quad/rules.py src/jaxstro/quad/__init__.py tests/unit/quad/test_rules.py
