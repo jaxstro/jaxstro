@@ -588,13 +588,13 @@ git commit -m "docs(quad): publish fixed quadrature contracts"
 **Interfaces:**
 - Produces a verified A1 state suitable for a fresh A2 plan.
 
-- [ ] **Step 1: Run the focused A1 gate**
+- [x] **Step 1: Run the focused A1 gate**
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad tests/unit/test_quadrature.py tests/integration/test_quad_compatibility.py tests/integration/test_quad_fixed_transforms.py tests/validation/test_quad_fixed_reference.py tests/integration/test_method_page_contract.py tests/integration/test_grouped_api_reference.py`
 
 Expected: all focused tests pass.
 
-- [ ] **Step 2: Run static checks and generated-artifact freshness**
+- [x] **Step 2: Run static checks and generated-artifact freshness**
 
 Run: `env -u VIRTUAL_ENV uv run --no-sync ruff check src tests`
 
@@ -606,11 +606,11 @@ Run: `env -u VIRTUAL_ENV uv run --no-sync python scripts/build_contract_registry
 
 Expected: all checks pass.
 
-- [ ] **Step 3: Dispatch a fresh read-only A1 checkpoint reviewer**
+- [x] **Step 3: Dispatch a fresh read-only A1 checkpoint reviewer**
 
 The reviewer must inspect numerical correctness, compatibility identity, JAX transform contracts, support matrices, tests, and documentation claims. Resolve every Critical and Important finding with a failing regression before correction. Record Minor findings explicitly.
 
-- [ ] **Step 4: Run the full repository and strict documentation gates**
+- [x] **Step 4: Run the full repository and strict documentation gates**
 
 Run: `env -u VIRTUAL_ENV uv run --no-sync pytest -q`
 
@@ -618,7 +618,7 @@ Run: `DOCS_APP_PORT=4381 DOCS_SERVER_PORT=4382 bash scripts/check_docs.sh`
 
 Expected: the full suite and strict documentation gate pass.
 
-- [ ] **Step 5: Update status and commit verification evidence**
+- [x] **Step 5: Update status and commit verification evidence**
 
 Record the exact commits, test counts, checkpoint disposition, route count, supported methods, and explicit exclusions in `STATUS.md`.
 
