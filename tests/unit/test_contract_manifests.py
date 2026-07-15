@@ -21,6 +21,7 @@ PUBLIC = {
         "params",
         "provenance",
         "quantity",
+        "quad",
         "spatial",
         "spectra",
         "testing",
@@ -49,6 +50,17 @@ assert 'jaxstro.numerics' not in sys.modules
 assert 'jaxstro.quantity' not in sys.modules
 assert 'jaxstro.spectra' not in sys.modules
 assert all(name not in sys.modules for name in ('polars', 'numpyro', 'optax'))
+"""
+    subprocess.run([sys.executable, "-c", code], check=True)
+
+
+def test_quad_contract_collection_does_not_import_runtime_quad() -> None:
+    code = """
+import sys
+from jaxstro.contracts import collect_contracts
+assert 'jaxstro.quad' not in sys.modules
+collect_contracts()
+assert 'jaxstro.quad' not in sys.modules
 """
     subprocess.run([sys.executable, "-c", code], check=True)
 

@@ -1,45 +1,20 @@
 ---
-title: Sampled integration
+title: Legacy sampled-integration import path
 ---
 
-# Sampled integration
+# Legacy sampled-integration import path
 
-## Owner import path
-
-`jaxstro.numerics.integration`
-
-## Purpose
-
-Trapezoid and Simpson integration for sampled arrays, including cumulative
-forms.
-
-## Public records and callables
-
-`trapz`, `cumulative_trapz`, `simpson`, and `cumulative_simpson`.
-
-## Shape and dtype expectations
-
-Samples are floating arrays with an explicit integration axis. Coordinates are
-one-dimensional or the caller supplies scalar uniform spacing.
-
-## JAX transforms and AD classification
-
-Reductions compose with JIT, VMAP, and AD. The canonical uniform cumulative
-trapezoid path sums panels before multiplying by scalar `dx`.
-
-## Failure behavior
-
-Incompatible sample/coordinate lengths raise. The routines do not estimate
-discretization error or certify convergence.
-
-## Contract and evidence links
-
-See [](../../20-methods/approximation-integration/cumulative-trapz.md),
-[](../../20-methods/approximation-integration/quadrature.md), and
-[](../../60-validation/validation.md).
-
-## Canonical import example
-
-```python
-from jaxstro.numerics.integration import cumulative_trapz
+```{important}
+`jaxstro.quad` is the canonical owner. `jaxstro.numerics.integration` is a
+temporary compatibility path retained while sibling packages migrate.
 ```
+
+| Legacy name | Canonical name |
+| --- | --- |
+| `jaxstro.numerics.integration.trapz` | `jaxstro.quad.trapezoid` |
+| `jaxstro.numerics.integration.cumulative_trapz` | `jaxstro.quad.cumulative_trapezoid` |
+| `jaxstro.numerics.integration.simpson` | `jaxstro.quad.simpson` |
+| `jaxstro.numerics.integration.cumulative_simpson` | `jaxstro.quad.cumulative_simpson` |
+
+Phase A0 preserves exact callable identity and emits no deprecation warning.
+Use the [Jaxstro quadrature foundation](./quad.md) for the current API.

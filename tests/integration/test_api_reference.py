@@ -40,6 +40,7 @@ def test_documented_public_module_surface_is_executable() -> None:
         "params",
         "provenance",
         "quantity",
+        "quad",
         "spatial",
         "testing",
         "units",

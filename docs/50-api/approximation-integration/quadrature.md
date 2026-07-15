@@ -1,44 +1,22 @@
 ---
-title: Fixed-node quadrature
+title: Legacy fixed-quadrature import path
 ---
 
-# Fixed-node quadrature
+# Legacy fixed-quadrature import path
 
-## Owner import path
-
-`jaxstro.numerics.quadrature`
-
-## Purpose
-
-Deterministic fixed-node factories and Hermite expansion helpers.
-
-## Public records and callables
-
-`gauss_legendre_nodes`, `gauss_hermite_nodes`, `gauss_laguerre_nodes`,
-`clenshaw_curtis_nodes`, `hermite_e_basis`, and `hermite_coefficients`.
-
-## Shape and dtype expectations
-
-Node count and expansion order are concrete integers. Returned nodes and
-weights are one-dimensional floating arrays.
-
-## JAX transforms and AD classification
-
-Nodes and weights are generated host-side as setup constants. Gradients flow
-through integrand values, not through rule construction or node count.
-
-## Failure behavior
-
-Invalid rule orders raise. The factory does not adapt order or supply an error
-estimate.
-
-## Contract and evidence links
-
-See [](../../20-methods/approximation-integration/quadrature.md) and
-[](../../60-validation/validation.md).
-
-## Canonical import example
-
-```python
-from jaxstro.numerics.quadrature import gauss_hermite_nodes
+```{important}
+`jaxstro.quad` is the canonical owner. `jaxstro.numerics.quadrature` is a
+temporary compatibility path retained while sibling packages migrate.
 ```
+
+| Legacy name | Canonical name |
+| --- | --- |
+| `jaxstro.numerics.quadrature.gauss_legendre_nodes` | `jaxstro.quad.gauss_legendre_nodes` |
+| `jaxstro.numerics.quadrature.gauss_laguerre_nodes` | `jaxstro.quad.gauss_laguerre_nodes` |
+| `jaxstro.numerics.quadrature.gauss_hermite_nodes` | `jaxstro.quad.gauss_hermite_nodes` |
+| `jaxstro.numerics.quadrature.clenshaw_curtis_nodes` | `jaxstro.quad.clenshaw_curtis_nodes` |
+| `jaxstro.numerics.quadrature.hermite_e_basis` | `jaxstro.quad.hermite_e_basis` |
+| `jaxstro.numerics.quadrature.hermite_coefficients` | `jaxstro.quad.hermite_coefficients` |
+
+Phase A0 preserves exact callable identity and emits no deprecation warning.
+Use the [Jaxstro quadrature foundation](./quad.md) for the current API.

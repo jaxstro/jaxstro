@@ -1,6 +1,6 @@
 ---
 title: Sampled Newton-Cotes integration
-short_title: Cumulative trapz
+short_title: Cumulative trapezoid
 description: >-
   Trapezoid accumulation, local and global discretization error, and the
   canonical dx-outside floating-point ordering.
@@ -14,7 +14,7 @@ trapezoidal rule is the degree-one Newton-Cotes rule. Its cumulative form can,
 for example, turn sampled density values into an approximate cumulative integral.
 
 :::{tip}
-Use `cumulative_trapz` when a running value is needed at every sample. Use
+Use `cumulative_trapezoid` when a running value is needed at every sample. Use
 `cumulative_simpson` only when a uniform odd-length grid and panel-endpoint
 output match the problem.
 :::
@@ -85,14 +85,14 @@ last bits differ.
 
 ## What the algorithm actually does
 
-`trapz(y, x=None)` returns a total over the default last axis. With no `x`, it
+`trapezoid(y, x=None)` returns a total over the default last axis. With no `x`, it
 uses unit spacing; with `x`, each panel carries `diff(x)` inside the reduction.
-The function signature exposes `axis=-1`, but nondefault `trapz` axes are not
+The function signature exposes `axis=-1`, but nondefault `trapezoid` axes are not
 currently supported. Passing `axis` explicitly, even as `axis=-1`, traces
 that argument through plain `jax.jit` and raises
 `TracerIntegerConversionError` when Python indexes the shape.
 
-`cumulative_trapz(y, x=None, dx=1.0)` returns the same shape as `y` with a
+`cumulative_trapezoid(y, x=None, dx=1.0)` returns the same shape as `y` with a
 leading zero on the default last axis. Its supported multidimensional paths
 likewise keep the integration coordinate last.
 
@@ -123,7 +123,7 @@ continuous function between them.
 
 Sample count and Simpson panel count are shape choices. The present public
 trapezoid contract is deliberately narrower than the signatures: use the
-default last axis, and do not pass `axis` to `trapz` until its static-argument
+default last axis, and do not pass `axis` to `trapezoid` until its static-argument
 handling is repaired.
 
 :::{warning}
@@ -138,12 +138,12 @@ resolution or convert the discrete integral into an exact continuous one.
 ```python
 import jax.numpy as jnp
 
-from jaxstro.numerics.integration import cumulative_trapz, trapz
+from jaxstro import quad
 
 x = jnp.linspace(0.0, 1.0, 101)
 y = x**2
-running = cumulative_trapz(y, x)
-total = trapz(y, x)
+running = quad.cumulative_trapezoid(y, x)
+total = quad.trapezoid(y, x)
 
 assert running.shape == y.shape
 assert running[0] == 0.0
@@ -161,7 +161,7 @@ the error ratio should approach four when the global $O(h^2)$ regime is reached.
 Check cumulative shape, leading zero, final-value parity with the total, both
 spacing modes on the default last axis, and dx-outside byte parity. Compare AD
 in sample values with independently computed trapezoid weights. Keep explicit
-failure probes for `trapz(..., axis=-1)` and for nonuniform multidimensional
+failure probes for `trapezoid(..., axis=-1)` and for nonuniform multidimensional
 cumulative integration on a non-last axis so that these current limitations
 cannot be mistaken for supported negative or selected axes.
 
@@ -181,7 +181,9 @@ apply to a nonuniform or nonsmooth case outside its assumptions.
 Connect integration units to
 [](../../30-representations/units-quantities/quantities.md), approximation error
 to [](../../10-foundations/models-and-computation/sensitivity-conditioning-identifiability.md),
-owner signatures to [](../../50-api/approximation-integration/integration.md),
-and executable checks to [](../../60-validation/validation.md). Fixed-node
-Gaussian rules are in [](./quadrature.md).
+owner signatures to [](../../50-api/approximation-integration/quad.md),
+and executable checks to [](../../60-validation/validation.md). The
+[legacy sampled-integration page](../../50-api/approximation-integration/integration.md)
+records the temporary import-name mapping. Fixed-node Gaussian rules are in
+[](./quadrature.md).
 :::

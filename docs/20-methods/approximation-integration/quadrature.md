@@ -126,15 +126,12 @@ interchanged and quadrature error is controlled for that derivative integrand.
 ```python
 import jax.numpy as jnp
 
-from jaxstro.numerics.quadrature import (
-    gauss_hermite_nodes,
-    gauss_legendre_nodes,
-)
+from jaxstro import quad
 
-legendre_x, legendre_w = gauss_legendre_nodes(8)
+legendre_x, legendre_w = quad.gauss_legendre_nodes(8)
 poly_integral = jnp.sum(legendre_w * legendre_x**6)
 
-normal_x, normal_w = gauss_hermite_nodes(8)
+normal_x, normal_w = quad.gauss_hermite_nodes(8)
 normal_second_moment = jnp.sum(normal_w * normal_x**2)
 
 assert jnp.allclose(poly_integral, 2.0 / 7.0)
@@ -171,8 +168,10 @@ that a truncated expansion is scientifically adequate.
 Connect weighted integrals to
 [](../../10-foundations/mathematical-objects/probability-and-distributions.md),
 units to [](../../30-representations/units-quantities/quantities.md), owner
-signatures to [](../../50-api/approximation-integration/quadrature.md), and
-evidence to [](../../60-validation/validation.md). Sampled Newton-Cotes rules are
-in [](./cumulative-trapz.md); delegated adaptive methods are described in
+signatures to [](../../50-api/approximation-integration/quad.md), and evidence
+to [](../../60-validation/validation.md). The
+[legacy fixed-quadrature page](../../50-api/approximation-integration/quadrature.md)
+records the temporary import-name mapping. Sampled Newton-Cotes rules are in
+[](./cumulative-trapz.md); delegated adaptive methods are described in
 [](./adaptive-quadrature.md).
 :::

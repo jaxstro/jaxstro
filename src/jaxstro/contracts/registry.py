@@ -35,6 +35,7 @@ def collect_contracts(*, source_revision: str = "unknown") -> ContractInventory:
             "numerics",
             "params",
             "quantity",
+            "quad",
             "spatial",
             "spectra",
             "testing",

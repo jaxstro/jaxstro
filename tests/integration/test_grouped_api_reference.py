@@ -25,8 +25,7 @@ API_OWNERS = {
     "approximation-integration/interpolation.md": "jaxstro.numerics.interpolation",
     "approximation-integration/regular-grid.md": "jaxstro.numerics.regular_grid",
     "approximation-integration/splines.md": "jaxstro.numerics.splines",
-    "approximation-integration/integration.md": "jaxstro.numerics.integration",
-    "approximation-integration/quadrature.md": "jaxstro.numerics.quadrature",
+    "approximation-integration/quad.md": "jaxstro.quad",
     "linear-structure/linear-algebra.md": "jaxstro.numerics.linear_algebra",
     "linear-structure/compensated.md": "jaxstro.numerics.compensated",
     "linear-structure/operators.md": "jaxstro.numerics.operators",
@@ -65,6 +64,11 @@ PRIVATE_NUMERICS_MODULE_EXCLUSIONS = {
     "_implicit_root": "private rootfinding implementation",
 }
 
+COMPATIBILITY_NUMERICS_MODULE_EXCLUSIONS = {
+    "integration": "temporary sampled-integration compatibility import",
+    "quadrature": "temporary fixed-helper compatibility import",
+}
+
 REQUIRED_SECTIONS = (
     "## Owner import path",
     "## Purpose",
@@ -92,8 +96,12 @@ def test_every_public_numerics_module_has_exactly_one_owner_page() -> None:
     private = {name for name in discovered if name.startswith("_")}
     assert private == set(PRIVATE_NUMERICS_MODULE_EXCLUSIONS)
 
+    compatibility = set(COMPATIBILITY_NUMERICS_MODULE_EXCLUSIONS)
+    assert compatibility < discovered
     public_owners = {
-        f"jaxstro.numerics.{name}" for name in discovered if not name.startswith("_")
+        f"jaxstro.numerics.{name}"
+        for name in discovered
+        if not name.startswith("_") and name not in compatibility
     }
     owner_counts = Counter(API_OWNERS.values())
     assert len(owner_counts) == len(API_OWNERS), "each owner must appear exactly once"
@@ -109,6 +117,16 @@ def test_api_landing_teaches_route_first_owner_qualified_imports() -> None:
     assert "legacy inventory awaiting Project 2" in text
     assert "not the canonical documentation path" in text
     assert "Planned Jaxstro capability" not in text
+
+
+def test_quad_owner_page_teaches_canonical_and_legacy_boundaries() -> None:
+    text = (API_ROOT / "approximation-integration/quad.md").read_text()
+    assert "`jaxstro.quad`" in text
+    assert "from jaxstro import quad" in text
+    assert "jaxstro.numerics.integration" in text
+    assert "jaxstro.numerics.quadrature" in text
+    assert "temporary compatibility" in text
+    assert "does not yet provide adaptive integration" in text
 
 
 def test_grouped_api_pages_are_navigable_with_canonical_routes() -> None:
@@ -211,5 +229,5 @@ def test_random_reference_documents_zero_weight_and_tracing_boundaries() -> None
 
 def test_status_counts_the_corrected_api_surface() -> None:
     text = (ROOT / "STATUS.md").read_text(encoding="utf-8")
-    assert "38 current owner pages, including `jaxstro.numerics.types`" in text
+    assert "37 current owner pages, including `jaxstro.quad`" in text
     assert "164 unique routes" in text

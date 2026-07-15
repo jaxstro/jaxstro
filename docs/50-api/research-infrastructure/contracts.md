@@ -56,6 +56,7 @@ from jaxstro.contracts import get_callable_contract
 | `jaxstro.numerics` | validated | runtime | Caller-owned units; each callable declares dimensional behavior. | Generic numerical mechanics. | Domain acceptance, retry policy, or physical state. |
 | `jaxstro.params` | validated | runtime | Leaf units remain caller-owned through transformations. | Selective PyTree/vector parameter bridges. | Inference algorithms or identifiability. |
 | `jaxstro.provenance` | validated | tooling | Metric units remain explicit in producer-owned payloads. | Runtime artifact manifests. | Scientific-source validation. |
+| `jaxstro.quad` | experimental | runtime | Caller-owned units; Phase A0 records metadata but performs no quantity integration. | Canonical integration namespace, typed configuration, and current sampled/fixed helper facade. | Adaptive controllers, quantity-valued integration, physical-model policy, inference, ODE solving, or scientific acceptance. |
 | `jaxstro.quantity` | validated | runtime | Dimensions and scales are represented explicitly in Unit metadata. | Dimensional quantity evaluation. | Approved ecosystem adoption or cutover. |
 | `jaxstro.spatial` | validated | mixed | Coordinates use caller-owned consistent length units. | Spatial indexing, candidates, and exact pairs. | Force or encounter semantics. |
 | `jaxstro.spectra` | validated | mixed | Spectral coordinates and density semantics carry explicit unit metadata. | Generic spectral representations and remapping. | Filters, photometry, or instruments. |
@@ -85,7 +86,7 @@ from jaxstro.contracts import get_callable_contract
 
 ## Unclassified callable surfaces
 
-The runtime export audit found **208** public callables without callable-level records:
+The runtime export audit found **224** public callables without callable-level records:
 
 - `jaxstro.atmospheres.acquisition_rows_to_markdown`
 - `jaxstro.atmospheres.build_bosz_index`
@@ -241,6 +242,22 @@ The runtime export audit found **208** public callables without callable-level r
 - `jaxstro.provenance.hash_artifact`
 - `jaxstro.provenance.manifest_to_json`
 - `jaxstro.provenance.manifest_to_markdown`
+- `jaxstro.quad.clenshaw_curtis_nodes`
+- `jaxstro.quad.cumulative_simpson`
+- `jaxstro.quad.cumulative_trapezoid`
+- `jaxstro.quad.error_norm`
+- `jaxstro.quad.gauss_hermite_nodes`
+- `jaxstro.quad.gauss_laguerre_nodes`
+- `jaxstro.quad.gauss_legendre_nodes`
+- `jaxstro.quad.hermite_coefficients`
+- `jaxstro.quad.hermite_e_basis`
+- `jaxstro.quad.interval_is_valid`
+- `jaxstro.quad.interval_orientation`
+- `jaxstro.quad.map_interval`
+- `jaxstro.quad.simpson`
+- `jaxstro.quad.sorted_breakpoints`
+- `jaxstro.quad.tolerance_threshold`
+- `jaxstro.quad.trapezoid`
 - `jaxstro.quantity.format_unit`
 - `jaxstro.quantity.from_dict`
 - `jaxstro.quantity.get_unit`
@@ -390,6 +407,26 @@ These immutable record or type constructors inherit their module-level contract:
 - `jaxstro.provenance.ArtifactHash`
 - `jaxstro.provenance.EnvironmentSnapshot`
 - `jaxstro.provenance.MethodManifest`
+- `jaxstro.quad.AffineMapResult`
+- `jaxstro.quad.ErrorKind`
+- `jaxstro.quad.ErrorNorm`
+- `jaxstro.quad.Infinite`
+- `jaxstro.quad.Interval`
+- `jaxstro.quad.JacobiMeasure`
+- `jaxstro.quad.L1Norm`
+- `jaxstro.quad.L2Norm`
+- `jaxstro.quad.LaguerreMeasure`
+- `jaxstro.quad.LebesgueMeasure`
+- `jaxstro.quad.LeftInfinite`
+- `jaxstro.quad.MaxNorm`
+- `jaxstro.quad.PhysicistsHermiteMeasure`
+- `jaxstro.quad.QuadError`
+- `jaxstro.quad.QuadResult`
+- `jaxstro.quad.QuadStatus`
+- `jaxstro.quad.QuadWork`
+- `jaxstro.quad.RightInfinite`
+- `jaxstro.quad.StandardNormalMeasure`
+- `jaxstro.quad.WeightedMeasure`
 - `jaxstro.quantity.Dimension`
 - `jaxstro.quantity.DimensionError`
 - `jaxstro.quantity.EquivalencyError`

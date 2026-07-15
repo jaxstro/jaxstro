@@ -193,6 +193,7 @@ project:
             - file: 50-api/approximation-integration/interpolation.md
             - file: 50-api/approximation-integration/regular-grid.md
             - file: 50-api/approximation-integration/splines.md
+            - file: 50-api/approximation-integration/quad.md
             - file: 50-api/approximation-integration/integration.md
             - file: 50-api/approximation-integration/quadrature.md
         - title: Linear structure

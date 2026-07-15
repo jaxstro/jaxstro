@@ -71,13 +71,13 @@ PAGE_SPECS = {
         ),
     ),
     "approximation-integration/cumulative-trapz.md": (
-        "jaxstro.numerics.integration",
-        "../../50-api/approximation-integration/integration.md",
+        "jaxstro.quad",
+        "../../50-api/approximation-integration/quad.md",
         ("eq-trapezoid-panel", "eq-cumulative-trapezoid", "eq-trapezoid-error"),
     ),
     "approximation-integration/quadrature.md": (
-        "jaxstro.numerics.quadrature",
-        "../../50-api/approximation-integration/quadrature.md",
+        "jaxstro.quad",
+        "../../50-api/approximation-integration/quad.md",
         (
             "eq-fixed-node-quadrature",
             "eq-gaussian-exactness",
@@ -283,7 +283,12 @@ def test_current_method_pages_expose_assumptions_boundaries_choice_and_links(
 
     for directive in ("important", "warning", "tip", "seealso"):
         assert f":::{{{directive}}}" in text, (relative, directive)
-    assert f"from {owner} import" in text, relative
+    expected_import = (
+        "from jaxstro import quad"
+        if owner == "jaxstro.quad"
+        else f"from {owner} import"
+    )
+    assert expected_import in text, relative
     assert "../../10-foundations/" in text, relative
     assert "../../30-representations/" in text, relative
     assert f"[]({api_route})" in text, relative
@@ -433,7 +438,7 @@ def test_reviewed_runtime_boundaries_are_stated_explicitly() -> None:
         _page("approximation-integration/cumulative-trapz.md").split()
     )
     assert "supported default-last-axis paths" in integration
-    assert "nondefault `trapz` axes are not currently supported" in integration
+    assert "nondefault `trapezoid` axes are not currently supported" in integration
     assert "nonuniform multidimensional cumulative integration" in integration
     assert "direct width broadcasting" in integration
 
@@ -524,7 +529,7 @@ def _run_runtime_shape_status_and_failure_probes() -> None:
     import jax.numpy as jnp
     import jax.random as jrandom
 
-    from jaxstro import constants
+    from jaxstro import constants, quad
     from jaxstro.numerics.autodiff import jvp, vjp
     from jaxstro.numerics.distributions import (
         powerlaw_cdf,
@@ -532,7 +537,6 @@ def _run_runtime_shape_status_and_failure_probes() -> None:
         powerlaw_ppf,
     )
     from jaxstro.numerics.grids import conservative_rebin
-    from jaxstro.numerics.integration import cumulative_trapz, trapz
     from jaxstro.numerics.interpolation import (
         cubic_hermite_interp,
         monotone_cubic_interp,
@@ -549,7 +553,6 @@ def _run_runtime_shape_status_and_failure_probes() -> None:
     from jaxstro.numerics.ode import solve_fixed_step, velocity_verlet
     from jaxstro.numerics.operators import DenseOperator, compose
     from jaxstro.numerics.optimization import armijo_backtracking
-    from jaxstro.numerics.quadrature import gauss_laguerre_nodes
     from jaxstro.numerics.random import (
         key_stream,
         residual_resample,
@@ -632,9 +635,9 @@ def _run_runtime_shape_status_and_failure_probes() -> None:
         natural_cubic_spline_coeffs(grid, payload)
 
     with pytest.raises(jax.errors.TracerIntegerConversionError):
-        trapz(jnp.ones((3, 4)), axis=-1)
+        quad.trapezoid(jnp.ones((3, 4)), axis=-1)
     with pytest.raises(ValueError, match="Incompatible shapes for broadcasting"):
-        cumulative_trapz(jnp.ones((3, 4)), grid, axis=0)
+        quad.cumulative_trapezoid(jnp.ones((3, 4)), grid, axis=0)
 
     with pytest.raises(ValueError, match="outside query points"):
         regular_grid_interp(
@@ -648,10 +651,10 @@ def _run_runtime_shape_status_and_failure_probes() -> None:
     with pytest.raises(ValueError, match="coefficient axis length"):
         bspline_eval(knots, jnp.ones(3), jnp.array([0.5]), degree=3)
 
-    nodes, weights = gauss_laguerre_nodes(4)
+    nodes, weights = quad.gauss_laguerre_nodes(4)
     assert nodes.shape == weights.shape == (4,)
     with pytest.raises(ValueError, match="n >= 1"):
-        gauss_laguerre_nodes(0)
+        quad.gauss_laguerre_nodes(0)
 
     observations = jnp.array([[1.0, 2.0], [3.0, 4.0], [5.0, 8.0]])
     centered = observations - jnp.mean(observations, axis=0)

@@ -73,9 +73,11 @@ This reference does not change runtime exports.
 - **Approximation and integration:**
   [](./approximation-integration/interpolation.md),
   [](./approximation-integration/regular-grid.md),
-  [](./approximation-integration/splines.md),
-  [](./approximation-integration/integration.md), and
-  [](./approximation-integration/quadrature.md).
+  [](./approximation-integration/splines.md), and
+  [`jaxstro.quad`](./approximation-integration/quad.md). The
+  [sampled-integration](./approximation-integration/integration.md) and
+  [fixed-quadrature](./approximation-integration/quadrature.md) pages document
+  temporary compatibility paths, not current owners.
 - **Linear structure:** [](./linear-structure/linear-algebra.md),
   [](./linear-structure/compensated.md), [](./linear-structure/operators.md), and
   [](./linear-structure/special.md).
