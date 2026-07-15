@@ -672,23 +672,29 @@ git commit -m "feat(quad): add adaptive reference substrate"
 - Consumes any static local estimator with a fixed node cost.
 - Produces deterministic region selection, global value/error accounting, status, and exact work evidence.
 
-- [ ] **Step 1: Write failing controller-state and status tests**
+- [x] **Step 1: Write failing controller-state and status tests**
 
 Use a synthetic local estimator with known values/errors. Test initial segment accounting, lowest-index tie breaking, parent replacement plus child append, exact refinements/evaluations/active regions, convergence, evaluation exhaustion, region exhaustion, nonfinite precedence, invalid input precedence, midpoint collapse, payload error summation, and error-norm selection.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_adaptive_controller.py`
 
-- [ ] **Step 3: Implement one `jax.lax.while_loop` controller**
+- [x] **Step 3: Implement one `jax.lax.while_loop` controller**
 
-Allocate all region arrays from static `max_regions`. Batch initial segments and two children with JAX transforms. Before every split, check the complete node cost and region slot. Maintain incremental global sums without recomputing inactive slots. Select priorities with inactive entries set to negative infinity and preserve deterministic first-index ties.
+Allocate all region arrays from static `max_regions`. Batch initial segments and
+two children with JAX transforms. Before every split, check the complete node
+cost and region slot. After an accepted split, recompute the global value and
+payload error from the masked active-region arrays; do not use
+`global - parent + children`, which can permanently lose a small untouched
+region that was rounded out of an earlier sum. Select priorities with inactive
+entries set to negative infinity and preserve deterministic first-index ties.
 
-- [ ] **Step 4: Prove the trace is bounded structurally**
+- [x] **Step 4: Prove the trace is bounded structurally**
 
 Compare serialized JAXPR primitive counts across small and large capacities. Array shapes may change; the number of controller-body copies and integrand primitives must not grow with `max_regions` or `max_evaluations`.
 
-- [ ] **Step 5: Run focused tests and commit**
+- [x] **Step 5: Run focused tests and commit**
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad/test_adaptive_controller.py`
 
