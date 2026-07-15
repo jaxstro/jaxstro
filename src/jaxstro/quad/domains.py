@@ -74,6 +74,7 @@ def sorted_breakpoints(domain: Interval) -> Array:
     if not domain.breakpoints:
         return jnp.empty((0,), dtype=dtype)
     values = jnp.asarray(domain.breakpoints, dtype=dtype)
+    values = jax.lax.stop_gradient(values)
     ascending = jnp.sort(values)
     return jnp.where(interval_orientation(domain) < 0.0, ascending[::-1], ascending)
 

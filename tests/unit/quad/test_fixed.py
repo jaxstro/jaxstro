@@ -1,5 +1,6 @@
 """Public fixed quadrature evaluator contracts."""
 
+import jax
 import jax.numpy as jnp
 import pytest
 
@@ -9,6 +10,7 @@ from jaxstro.quad import (
     GaussianRule,
     Infinite,
     Interval,
+    JacobiMeasure,
     LaguerreMeasure,
     LebesgueMeasure,
     RightInfinite,
@@ -41,6 +43,27 @@ def test_fixed_breakpoints_sum_vectorized_segments() -> None:
     domain = Interval(0.0, 1.0, breakpoints=(0.25, 0.75))
     got = fixed(lambda x: x**3, domain, rule=GaussianRule(2))
     assert jnp.allclose(got, 0.25, rtol=1e-12, atol=1e-12)
+
+
+def test_fixed_stops_breakpoint_motion_in_derivatives() -> None:
+    derivative = jax.grad(
+        lambda breakpoint: fixed(
+            lambda x: jnp.exp(x),
+            Interval(0.0, 1.0, breakpoints=(breakpoint,)),
+            rule=GaussianRule(2),
+        )
+    )(0.3)
+    assert jnp.array_equal(derivative, 0.0)
+
+
+def test_jacobi_measure_rejects_breakpoints() -> None:
+    with pytest.raises(TypeError, match="JacobiMeasure does not support breakpoints"):
+        fixed(
+            lambda x: jnp.exp(x),
+            Interval(-1.0, 1.0, breakpoints=(0.2,)),
+            rule=GaussianRule(8),
+            measure=JacobiMeasure(0.25, 0.5),
+        )
 
 
 def test_fixed_preserves_reversed_orientation() -> None:
@@ -88,6 +111,38 @@ def test_gaussian_laguerre_and_normal_use_natural_supports() -> None:
     )
     assert jnp.allclose(laguerre, 1.0, rtol=2e-12, atol=2e-12)
     assert jnp.allclose(normal, 1.0, rtol=2e-12, atol=2e-12)
+
+
+def test_classical_measure_coordinate_conventions() -> None:
+    alpha = 0.25
+    beta = 0.5
+    jacobi = JacobiMeasure(alpha, beta, normalized=True)
+    domain = Interval(2.0, 6.0)
+    mass = fixed(
+        lambda x: jnp.ones_like(x),
+        domain,
+        rule=GaussianRule(8),
+        measure=jacobi,
+    )
+    first_moment = fixed(
+        lambda x: x,
+        domain,
+        rule=GaussianRule(8),
+        measure=jacobi,
+    )
+    reference_mean = (beta - alpha) / (alpha + beta + 2.0)
+    assert jnp.allclose(mass, 2.0, rtol=2e-12, atol=2e-12)
+    assert jnp.allclose(first_moment / mass, 4.0 + 2.0 * reference_mean)
+
+    lower = 3.0
+    laguerre = LaguerreMeasure(alpha, normalized=True)
+    shifted_mean = fixed(
+        lambda x: x,
+        RightInfinite(lower),
+        rule=GaussianRule(8),
+        measure=laguerre,
+    )
+    assert jnp.allclose(shifted_mean, lower + alpha + 1.0, rtol=2e-12, atol=2e-12)
 
 
 def test_fixed_tanh_sinh_handles_infinite_domain() -> None:

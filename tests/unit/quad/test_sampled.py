@@ -19,6 +19,12 @@ def test_trapezoid_uniform_dx() -> None:
     assert jnp.array_equal(quad.trapezoid(y, dx=0.25), 1.125)
 
 
+def test_trapezoid_accepts_explicit_static_axis() -> None:
+    y = jnp.arange(6.0).reshape(2, 3)
+    assert jnp.allclose(quad.trapezoid(y, axis=0), jnp.array([1.5, 2.5, 3.5]))
+    assert jnp.allclose(quad.trapezoid(y, axis=1), jnp.array([2.0, 8.0]))
+
+
 def test_simpson_uniform_dx() -> None:
     y = jnp.asarray([0.0, 1.0, 4.0])
     assert jnp.array_equal(quad.simpson(y, dx=0.5), 4.0 / 3.0)

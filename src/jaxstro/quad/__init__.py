@@ -29,8 +29,8 @@ from .measures import (
 from .result import ErrorKind, QuadError, QuadResult, QuadStatus, QuadWork
 from .rules import (
     ClenshawCurtisRule,
-    FejerIRule,
     FejerIIRule,
+    FejerIRule,
     GaussianRule,
     TanhSinhRule,
 )

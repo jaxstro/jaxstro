@@ -634,8 +634,7 @@ def _run_runtime_shape_status_and_failure_probes() -> None:
     with pytest.raises(TypeError, match="different numbers of dimensions"):
         natural_cubic_spline_coeffs(grid, payload)
 
-    with pytest.raises(jax.errors.TracerIntegerConversionError):
-        quad.trapezoid(jnp.ones((3, 4)), axis=-1)
+    assert jnp.array_equal(quad.trapezoid(jnp.ones((3, 4)), axis=-1), jnp.full(3, 3.0))
     with pytest.raises(ValueError, match="Incompatible shapes for broadcasting"):
         quad.cumulative_trapezoid(jnp.ones((3, 4)), grid, axis=0)
 

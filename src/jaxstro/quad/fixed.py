@@ -181,6 +181,8 @@ def _gaussian_fixed(
             raise TypeError(
                 "Gaussian Legendre and Jacobi rules require a finite Interval"
             )
+        if isinstance(measure, JacobiMeasure) and domain.breakpoints:
+            raise TypeError("JacobiMeasure does not support breakpoints")
         return _evaluate_interval_segments(fun, domain, args, has_args, data, measure)
     if isinstance(measure, LaguerreMeasure):
         if not isinstance(domain, RightInfinite):

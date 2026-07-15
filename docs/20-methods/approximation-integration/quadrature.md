@@ -104,6 +104,64 @@ standard-normal Gauss-Hermite rules. An $n$-node Gaussian rule satisfies
 The degree statement is exact for the matched polynomial class. It is not a
 general error estimate.
 
+#### Classical measure conventions
+
+Jaxstro fixes the density and parameter orientation rather than relying on a
+family name alone. The Gaussian recurrence uses the following reference
+measures:
+
+| Declaration | Coordinate and support | Unnormalized density | Total mass |
+| --- | --- | --- | --- |
+| `LebesgueMeasure()` | $t\in[-1,1]$ | $1$ | $2$ |
+| `JacobiMeasure(alpha, beta)` | $t\in[-1,1]$ | $(1-t)^{\alpha}(1+t)^{\beta}$ | $2^{\alpha+\beta+1}B(\alpha+1,\beta+1)$ |
+| `LaguerreMeasure(alpha)` | $u\in[0,\infty)$ | $u^{\alpha}e^{-u}$ | $\Gamma(\alpha+1)$ |
+| `PhysicistsHermiteMeasure()` | $x\in(-\infty,\infty)$ | $e^{-x^2}$ | $\sqrt{\pi}$ |
+| `StandardNormalMeasure()` | $x\in(-\infty,\infty)$ | $e^{-x^2/2}/\sqrt{2\pi}$ | $1$ |
+
+For Jacobi and generalized Laguerre, $\alpha>-1$ and $\beta>-1$. Setting
+`normalized=True` divides the reference weights by the total mass in the last
+column. It does not estimate a normalization numerically.
+
+On `Interval(a, b)`, let
+
+```{math}
+:label: eq-jacobi-reference-pushforward
+m=\frac{a+b}{2},
+\qquad
+h=\frac{|b-a|}{2},
+\qquad
+s=\operatorname{sign}(b-a).
+```
+
+Jaxstro interprets the Jacobi density in the reference coordinate $t$ and
+returns
+
+```{math}
+:label: eq-jacobi-interval-convention
+Q_n[f]
+=s h\sum_{i=1}^{n}w_i f(m+h t_i)
+\approx
+s h\int_{-1}^{1}f(m+h t)
+(1-t)^{\alpha}(1+t)^{\beta}\,\mathrm{d}t.
+```
+
+Thus `alpha` belongs to the $t=+1$ endpoint and `beta` belongs to the $t=-1$
+endpoint. This is a reference-density convention; it is not silently replaced
+by the physical density $(b-x)^{\alpha}(x-a)^{\beta}$. Jacobi rules reject
+breakpoints because applying a new reference density on every segment would
+change the declared measure.
+
+For `RightInfinite(lower)`, generalized Laguerre uses the shifted coordinate
+$u=x-\mathtt{lower}$:
+
+```{math}
+:label: eq-laguerre-shift-convention
+Q_n[f]
+=\sum_{i=1}^{n}w_i f(\mathtt{lower}+u_i)
+\approx
+\int_{0}^{\infty}f(\mathtt{lower}+u)u^{\alpha}e^{-u}\,\mathrm{d}u.
+```
+
 #### The standard-normal convention
 
 The legacy compatibility helper begins with the physicists' Hermite rule and
@@ -138,7 +196,9 @@ x(t)=\frac{x_{\min}+x_{\max}}{2}
 
 The orientation sign is stored separately, so reversing the requested bounds
 negates the result without making the measure Jacobian negative. Breakpoints
-produce a static collection of subintervals evaluated together.
+produce a static collection of subintervals evaluated together for Lebesgue
+and general weighted formulas. Their values are stopped in derivatives, and
+Jacobi rules reject them for the measure reason above.
 
 `WeightedMeasure` evaluates its declared density exactly once. A matched
 Gaussian rule already contains its classical weight and therefore does not

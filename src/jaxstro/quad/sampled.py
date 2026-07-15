@@ -10,7 +10,7 @@ from jaxtyping import Array, Float
 from jaxstro.numerics.checks import try_concrete_bool
 
 
-@jax.jit
+@partial(jax.jit, static_argnames="axis")
 def trapezoid(
     y: Float[Array, "..."],
     x: Optional[Float[Array, " n"]] = None,

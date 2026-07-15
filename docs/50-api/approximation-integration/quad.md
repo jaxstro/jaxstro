@@ -122,7 +122,7 @@ float64.
 
 | Rule | Domain | Measure |
 | --- | --- | --- |
-| `GaussianRule` | `Interval` | `LebesgueMeasure` or `JacobiMeasure` |
+| `GaussianRule` | `Interval` | `LebesgueMeasure`, or `JacobiMeasure` without breakpoints |
 | `GaussianRule` | `RightInfinite` | `LaguerreMeasure` |
 | `GaussianRule` | `Infinite` | `PhysicistsHermiteMeasure` or `StandardNormalMeasure` |
 | `ClenshawCurtisRule`, `FejerIRule`, `FejerIIRule` | `Interval` | `LebesgueMeasure` or `WeightedMeasure` |
@@ -131,6 +131,15 @@ float64.
 Unsupported structural pairings raise eagerly. Value-dependent invalid finite
 domains return `nan` when traced. Zero-width finite intervals return an exact
 zero after static payload-shape inference.
+
+`JacobiMeasure(alpha, beta)` means
+$(1-t)^{\alpha}(1+t)^{\beta}\,\mathrm{d}t$ on the reference interval. An
+arbitrary finite interval uses the documented affine reference-density
+convention; it does not reinterpret `alpha` and `beta` as an unstated physical
+density. `LaguerreMeasure(alpha)` on `RightInfinite(lower)` uses
+$u=x-\mathtt{lower}$ and the density $u^{\alpha}e^{-u}\,\mathrm{d}u$. See the
+[method derivation](../../20-methods/approximation-integration/quadrature.md#classical-measure-conventions)
+for the masses and normalization equations.
 
 ## JAX transforms and AD classification
 
