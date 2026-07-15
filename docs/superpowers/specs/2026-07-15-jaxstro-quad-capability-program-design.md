@@ -1,7 +1,7 @@
 ---
 title: Jaxstro quad capability program design
 date: 2026-07-15
-status: approved in dialogue; written-spec review pending
+status: approved
 ---
 
 # Jaxstro quad capability program design
