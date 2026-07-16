@@ -683,6 +683,8 @@ def run_evidence() -> tuple[dict[str, Any], dict[str, str]]:
                 ),
             ]
         )
+    for case in cases:
+        case["status_name"] = quad.QuadStatus(case["status"]).name
     payload = {
         "claim": "replay-differentiable adaptive one-dimensional quadrature",
         "report_mode": "progressive",

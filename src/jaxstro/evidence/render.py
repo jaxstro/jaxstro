@@ -190,8 +190,8 @@ def _progressive_artifact_to_markdown(artifact: EvidenceArtifact) -> str:
         "",
         "## Case map",
         "",
-        "| Method | Case family | Variant | Status code | Accepted evidence | Gates |",
-        "| --- | --- | --- | ---: | --- | --- |",
+        "| Method | Case family | Variant | Status | Accepted evidence | Gates |",
+        "| --- | --- | --- | --- | --- | --- |",
     ]
     for case in payload.get("cases", ()):
         gates = case.get("gates", ())
@@ -206,7 +206,8 @@ def _progressive_artifact_to_markdown(artifact: EvidenceArtifact) -> str:
             f"| {_table_cell(str(case.get('method', 'n/a')))} | "
             f"{_table_cell(str(case.get('family', 'n/a')))} | "
             f"{_table_cell(str(case.get('variant', 'not applicable')))} | "
-            f"{case.get('status', 'n/a')} | {_table_cell(evidence)} | {gate_status} |"
+            f"{_table_cell(str(case.get('status_name', 'not recorded')))} | "
+            f"{_table_cell(evidence)} | {gate_status} |"
         )
     lines.extend(["", "## Main limitations", ""])
     lines.extend(f"- {item}" for item in artifact.limitations)

@@ -62,6 +62,7 @@ def test_replay_evidence_schema_and_required_case_families():
             "parameter_unit",
             "integral_unit",
             "derivative_unit",
+            "status_name",
             "gates",
         } <= case.keys()
 
