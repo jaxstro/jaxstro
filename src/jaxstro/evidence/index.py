@@ -49,6 +49,12 @@ _TARGETS = (
         "No external data required.",
     ),
     (
+        "quad.replay-derivatives",
+        EvidenceClass.COMPUTATIONAL,
+        "docs/validation/quad-replay-derivatives.json",
+        "No external data required.",
+    ),
+    (
         "spectra.performance",
         EvidenceClass.COMPUTATIONAL,
         "docs/validation/spectra-performance.json",
