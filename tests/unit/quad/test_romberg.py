@@ -370,7 +370,12 @@ def test_romberg_families_compile_vmap_and_stop_gradients() -> None:
                     lambda x, args: jnp.exp(args * x),
                     Interval(0.0, 1.0),
                     args=scale,
-                    **_options(method, epsabs=1e-7, epsrel=1e-7),
+                    **_options(
+                        method,
+                        epsabs=1e-7,
+                        epsrel=1e-7,
+                        gradient="stop",
+                    ),
                 )
             )
         )
@@ -383,7 +388,12 @@ def test_romberg_families_compile_vmap_and_stop_gradients() -> None:
                     lambda x, args: jnp.exp(args * x),
                     Interval(0.0, 1.0),
                     args=scale,
-                    **_options(method, epsabs=1e-7, epsrel=1e-7),
+                    **_options(
+                        method,
+                        epsabs=1e-7,
+                        epsrel=1e-7,
+                        gradient="stop",
+                    ),
                 ).value
             )
         )(0.2)
