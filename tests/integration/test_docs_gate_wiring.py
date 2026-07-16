@@ -93,6 +93,9 @@ def test_committed_route_manifest_matches_authored_navigation_routes() -> None:
     assert manifest["60-validation/numerical/implicit-root-gradients.md"] == (
         "/implicit-root-gradients"
     )
+    assert manifest["60-validation/numerical/quadrature-replay-derivatives.md"] == (
+        "/quadrature-replay-derivatives"
+    )
     assert manifest["60-validation/data/spectra-performance.md"] == (
         "/spectra-performance"
     )

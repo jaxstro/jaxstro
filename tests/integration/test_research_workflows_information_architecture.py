@@ -89,7 +89,7 @@ def test_methods_and_representations_keep_their_existing_routes() -> None:
         for page, route in routes.items()
         if page.startswith(("20-methods/", "30-representations/"))
     }
-    assert len(retained) == 50
+    assert len(retained) == 51
     for page, route in retained.items():
         assert route == f"/{Path(page).stem}", page
         assert (DOCS / page).is_file(), page

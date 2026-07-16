@@ -85,6 +85,7 @@ project:
             - file: 20-methods/approximation-integration/cumulative-trapz.md
             - file: 20-methods/approximation-integration/quadrature.md
             - file: 20-methods/approximation-integration/adaptive-quadrature.md
+            - file: 20-methods/approximation-integration/differentiating-an-integral.md
         - title: Linear structure and reusable operators
           children:
             - file: 20-methods/linear-structure/linear-algebra.md
@@ -244,6 +245,7 @@ project:
         - file: 60-validation/evidence-index.md
         - file: 60-validation/numerical/rootfinding-performance.md
         - file: 60-validation/numerical/implicit-root-gradients.md
+        - file: 60-validation/numerical/quadrature-replay-derivatives.md
         - file: 60-validation/data/spectra-performance.md
         - file: 60-validation/methods/validation-methods.md
     - title: Project

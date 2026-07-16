@@ -58,6 +58,7 @@ TOC_FAMILIES = {
         "cumulative-trapz",
         "quadrature",
         "adaptive-quadrature",
+        "differentiating-an-integral",
     ),
     "linear-structure": (
         "linear-algebra",

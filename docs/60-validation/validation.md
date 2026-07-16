@@ -23,10 +23,10 @@ Read the rows with the corresponding explanations: gradient contracts in
 ::::{grid} 1 1 3 3
 
 :::{card} Does the numerical method meet its contract?
-:link: ./numerical/rootfinding-performance.md
+:link: ./numerical/quadrature-replay-derivatives.md
 
 Inspect deterministic comparison policies, measured quantities, tolerances,
-and assertion-bearing numerical anchors.
+accepted formulas, units, and assertion-bearing numerical anchors.
 :::
 
 :::{card} Does the scientific data path preserve meaning?
@@ -80,6 +80,7 @@ it does not inherit model adequacy or scientific acceptance from a passing test.
 | B-spline basis, evaluation, calculus helpers, fitting, and tensor designs preserve local-basis invariants | Exact synthetic identities and FD-vs-AD checks | Partition of unity, nonnegativity, local support, Bernstein cubic, degree-1 parity with `interp1d`, de Boor parity, analytic derivatives, antiderivative/integral checks, roughness penalties, quantile knots, tensor-product designs, least-squares recovery, PyTree/JAX transforms | `tests/unit/test_splines.py`, `tests/validation/test_grad_checks.py` |
 | Fixed-node quadrature and cumulative Simpson preserve their exactness contracts | Exact polynomial/moment identities and FD-vs-AD checks | Gauss-Legendre, Gauss-Laguerre, Gauss-Hermite, Clenshaw-Curtis, Hermite coefficients, cumulative Simpson panel sums | `tests/unit/test_quadrature.py`, `tests/unit/test_numerics.py`, `tests/validation/test_grad_checks.py` |
 | Adaptive quadrature preserves its declared analytic acceptance and honest-failure envelope | Predeclared per-case observed-error thresholds across three requested tolerances; explicit acceptable nonconverged statuses | Gauss-Kronrod, adaptive Clenshaw-Curtis, adaptive tanh-sinh, Romberg, and Romberg-tanh-sinh on smooth, complex, vector, breakpoint, improper-tail, endpoint-singular, nonfinite, and exhausted-budget cases | `tests/validation/test_quad_gk_tables.py`, `tests/validation/test_quad_adaptive_reference.py` |
+| Adaptive replay derivatives preserve accepted-formula and representation contracts | Analytic and frozen-formula agreement at predeclared float64 thresholds; diagnostic adaptive reruns; exact failure statuses | All five adaptive methods on scalar, vector, complex, moving-bound, improper, weighted, exhausted-capacity, quantity-rescaling, invalid, and nonfinite cases | `tests/validation/test_quad_replay_derivatives.py`, `docs/validation/quad-replay-derivatives.json`, [](./numerical/quadrature-replay-derivatives.md) |
 | Dense linear algebra helpers expose stable contracts for small fits and diagnostics | Exact synthetic identities, invalid eager-input rejection, executable documentation, and FD-vs-AD checks away from rank/cutoff boundaries | Weighted least squares, finite weights, positive covariance normalization, covariance/correlation guards, QR/SVD solves, and positive-definite jitter search | `tests/unit/test_linear_algebra.py`, `tests/integration/test_linear_algebra_docs.py`, `tests/validation/test_grad_checks.py` |
 | Autodiff product helpers match explicit dense derivatives and independent finite-difference checks | Dense-Jacobian/Hessian parity and finite-difference gradient-direction checks | JVP, VJP, HVP, Jacobian-vector, vector-Jacobian, Gauss-Newton, and empirical Fisher-style products | `tests/unit/test_autodiff.py`, `tests/validation/test_grad_checks.py` |
 | Distribution kernels preserve normalization, monotone CDFs, inverse-CDF round trips, and smooth interior gradients | Numerical integration tolerances, exact round trips within floating tolerance, analytic alpha=-1 limits, and central-FD-vs-AD checks through the removable singularity | Normal, lognormal, finite power law (including normalization/logpdf/CDF/PPF through alpha=-1), and truncated normal helpers | `tests/unit/test_distributions.py`, `tests/validation/test_grad_checks.py` |
@@ -123,6 +124,7 @@ uv run pytest tests/unit/test_quadrature.py tests/unit/test_numerics.py tests/va
 uv run --no-sync pytest tests/unit/test_numerics.py tests/validation/test_grad_checks.py
 uv run --no-sync python scripts/benchmark_rootfinding.py --check
 uv run --no-sync python scripts/benchmark_implicit_root.py --check
+uv run --no-sync python scripts/generate_quad_replay_evidence.py --check
 uv run --no-sync pytest tests/unit/test_implicit_root.py tests/validation/test_implicit_root_gradients.py
 uv run pytest tests/unit/test_linear_algebra.py tests/validation/test_grad_checks.py
 uv run pytest tests/unit/test_autodiff.py tests/validation/test_grad_checks.py

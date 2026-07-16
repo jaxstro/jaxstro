@@ -42,8 +42,10 @@ The current support boundary is:
 | `Romberg` | finite `Interval` | no | extrapolated refinement difference |
 | `RombergTanhSinh` | finite or improper | no | adjacent global-level difference |
 
-Adaptive methods accept `LebesgueMeasure` and `WeightedMeasure`. Inputs are raw
-arrays; quantity-valued integration remains a later boundary.
+Adaptive methods accept `LebesgueMeasure` and `WeightedMeasure`. Raw arrays are
+the numerical kernel representation. `quad.integrate` also provides an alpha,
+opt-in quantity boundary that validates units, converts to raw arrays, calls
+the same engine, and restores integral units.
 
 ## Define the mathematical objects
 
@@ -230,17 +232,25 @@ methods.
 
 ## What JAX differentiates
 
-Phase A2 is primal-only. The only accepted policy is `gradient="stop"`, and
-Jaxstro applies `jax.lax.stop_gradient` to the complete result tree. JIT and
-VMAP are supported within the static boundaries above, but VMAP repeats the
-bounded controller independently for each batch member; it is not shared
-adaptive work.
+`gradient="replay"` differentiates the fixed formula accepted by the primal
+adaptive solve. It does not differentiate sorting, region selection,
+refinement, stopping, capacity decisions, breakpoint motion, status, error
+estimation, or work accounting. Only `QuadResult.value` receives the replay
+derivative. Diagnostics have exact zero or JAX `float0` tangents.
+
+`gradient="stop"` remains available and applies `jax.lax.stop_gradient` to the
+complete result tree. JIT and VMAP are supported within the static boundaries
+above, but VMAP repeats the bounded controller independently for each batch
+member; it is not shared adaptive work.
 
 :::{warning}
-A zero automatic derivative here means differentiation was deliberately
-stopped. It is not the derivative of the mathematical integral. Replay
-derivatives and moving-bound derivative evidence remain later work.
+Replay is a derivative of the accepted quadrature formula, not a derivative of
+adaptive control flow. For `INVALID_INPUT` and `NONFINITE_INTEGRAND`, the
+primal value is nonfinite and the derivative is undefined.
 :::
+
+The derivation, moving-bound contract, units, complex conventions, and
+independent audit are in [](./differentiating-an-integral.md).
 
 ## Using it in Jaxstro
 
@@ -278,6 +288,12 @@ The same call shape selects each family. Use `quad.Infinite()`,
 `AdaptiveTanhSinh` or `RombergTanhSinh`. The complete callable contract is in
 [](../../50-api/approximation-integration/quad.md).
 
+Quantity mode is activated by quantity-valued coordinates,
+`Infinite(unit=...)`, or a quantity `epsabs`. A raw domain activated by
+quantity `epsabs` is dimensionless. Quantity mode requires a
+quantity-returning integrand and a quantity `epsabs` compatible with the
+integral unit. Lower-level `quad.fixed` and mapping helpers remain raw-only.
+
 ## How to audit the result
 
 Check the status before using the value. Then compare observed behavior across
@@ -298,8 +314,11 @@ not prove that the true error is below that tolerance. In particular, embedded
 or nested rules can both miss the same narrow feature and report false
 estimator convergence. Independent structure-aware checks remain necessary.
 
-Jaxstro does not yet claim replay derivatives, quantity-valued inputs,
-multidimensional integration, universal convergence, or performance superiority.
+Replay derivatives are validated first-order derivatives of accepted formulas;
+they do not establish differentiability of adaptive decisions. Quantity-aware
+adaptive integration is alpha and opt-in. Jaxstro does not claim direct
+Quantity-PyTree quotient-unit Jacobians, multidimensional integration,
+universal convergence, or performance superiority.
 [Quadax](https://github.com/f0uriest/quadax) is an independent comparison and
 benchmark implementation, not Jaxstro's runtime owner or dependency.
 

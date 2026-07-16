@@ -65,6 +65,51 @@ explicitly; a finite fallback tangent can conceal a failed primal assumption.
 7. Record errors as named metrics with thresholds justified by the study.
 8. Link the executable validation target and state the limitation.
 
+## Auditing an adaptive integral
+
+An adaptive integral needs two finite-difference questions because its public
+program contains both continuous arithmetic and discrete decisions.
+
+1. Compare replay AD with the analytic derivative of the exact integral.
+2. Freeze the center run's accepted regions or level and finite-difference that
+   fixed formula.
+3. Rerun the full adaptive solve at both finite-difference samples.
+4. Record the accepted regions or levels for every comparison.
+
+The frozen-formula comparison tests the custom derivative directly. The
+adaptive-rerun comparison is diagnostic: a change in partition or level can
+create a difference without proving that replay is wrong. Repeat the audit over
+at least three tolerances and two nonbinding capacities.
+
+For a parameterized integral, record four distinct values:
+
+```{math}
+:label: eq-workflow-quad-audit
+
+\frac{\mathrm{d}I}{\mathrm{d}\theta}\bigg|_{\mathrm{analytic}},
+\qquad
+\frac{\mathrm{d}Q}{\mathrm{d}\theta}\bigg|_{\mathrm{replay\ AD}},
+\qquad
+D_h Q_{\mathrm{frozen}},
+\qquad
+D_h Q_{\mathrm{adaptive\ rerun}}.
+```
+
+Moving-bound audits must use the signed interval map and include reversed and
+coincident bounds. Invalid and nonfinite primal statuses have undefined
+derivatives; audit their statuses and fail-closed values without inventing a
+tangent layout.
+
+When quantities are involved, differentiate selected raw numerical values and
+record the parameter, integral, and derivative units. Repeat one fixture in two
+compatible unit representations and convert the resulting physical
+derivatives to one common unit.
+
+See [](../../20-methods/approximation-integration/differentiating-an-integral.md)
+for the derivation and
+[](../../60-validation/numerical/quadrature-replay-derivatives.md) for the
+generated five-method evidence.
+
 ## Evidence and claim boundaries
 
 AD-versus-FD agreement supports the local derivative of the implemented map at

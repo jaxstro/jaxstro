@@ -46,6 +46,13 @@ The integrand receives a node array with shape `(n,)` and returns `(n,)` or
 rule order or level, breakpoint count, and payload shape are static under JIT.
 Bounds, breakpoint values, and explicit `args` leaves may be dynamic.
 
+For replay differentiation, smooth finite bounds and explicit floating or
+complex `args` leaves are differentiable. Breakpoint motion, method and measure
+configuration, capacities, error norms, payload shape, refinement decisions,
+statuses, error estimates, and work records are static or stopped. A parameter
+to be differentiated must be passed through `args` or a supported bound; hiding
+it in the integrand closure is unsupported.
+
 Supported rule declarations:
 
 - `GaussianRule`
@@ -145,10 +152,31 @@ breakpoint values follow the active JAX dtype policy. Reference validation uses
 float64.
 
 Adaptive integrands follow the same leading-node convention and may return
-scalar, complex, vector, or higher-rank trailing payloads. `epsabs` and
-`epsrel` are scalar real values. Method type and configuration,
+scalar, complex, vector, or higher-rank trailing payloads. In raw mode,
+`epsabs` and `epsrel` are scalar real values. Method type and configuration,
 `max_evaluations`, `max_regions`, breakpoint count, and payload shape remain
 static under JIT.
+
+### Quantity activation
+
+Quantity handling belongs only to `quad.integrate` and is alpha. The adapter
+validates and unwraps units before calling the same raw engine, then restores
+the integral unit on `value`, `error.estimate`, `error.norm`, and `tolerance`.
+Status, work, error kind, and confidence level remain unitless.
+
+| Input condition | Mode and requirement |
+| --- | --- |
+| Any quantity-valued bound or breakpoint | Quantity mode; all dimensional coordinates must be compatible quantities |
+| `Infinite(unit=unit)` | Quantity mode with the declared coordinate unit |
+| Quantity `epsabs` with a raw domain | Quantity mode with dimensionless coordinates |
+| Quantity integrand output without a quantity trigger | Eager error explaining that quantity `epsabs` activates a dimensionless quantity domain |
+| Quantity mode integrand | Must return a `Quantity` with one stable output unit |
+| Quantity mode `epsabs` | Required and compatible with the complete integral unit |
+| Quantity `epsrel` | Must be dimensionless |
+| Quantity `WeightedMeasure` density | Receives quantity coordinates and must match `density_unit` |
+
+`quad.fixed`, `map_domain`, and `map_interval` reject quantity-valued domains,
+including `Infinite(unit=...)`. The raw `Infinite()` form is unchanged.
 
 ## Failure behavior
 
@@ -195,7 +223,7 @@ which precedes exhausted region capacity. A roundoff-scale error floor alone
 does not emit `ROUNDOFF_LIMITED`. Regional controllers distinguish
 `MAX_EVALUATIONS` and `MAX_REGIONS`.
 `DIVERGENCE_SUSPECTED` and `ERROR_ESTIMATE_UNAVAILABLE` are reserved statuses,
-not current A2 outputs. Sparse-grid and replicate error kinds are likewise
+not current controller outputs. Sparse-grid and replicate error kinds are likewise
 reserved.
 
 ## JAX transforms and AD classification
@@ -207,23 +235,38 @@ configuration, node count, and discrete breakpoint partition are not
 differentiated.
 
 `integrate` supports `jax.jit` and `jax.vmap` under its static capacity and
-configuration boundaries. Its only current policy is `gradient="stop"`: the
-complete primal result tree is passed through `jax.lax.stop_gradient`.
-Consequently a zero derivative means AD was deliberately stopped, not that the
-mathematical integral has zero derivative. VMAP runs one bounded adaptive
-controller per batch member.
+configuration boundaries. `gradient="replay"` returns the exact primal result
+tree while differentiating the accepted fixed formula. Only `value` receives
+that derivative; diagnostic tangents are exact zero or JAX `float0`.
+`gradient="stop"` passes the complete result tree through
+`jax.lax.stop_gradient`. VMAP runs one bounded adaptive controller per batch
+member.
+
+Replay supports JVP, selected VJP projections, value-only `jacfwd` and
+`jacrev`, JIT, VMAP, real-to-complex realified Jacobians, complex-to-real JAX
+cotangents, and realified complex-to-complex Jacobians. Do not apply `jacrev`
+to the integer-bearing complete `QuadResult`.
+
+For `INVALID_INPUT` and `NONFINITE_INTEGRAND`, the primal value is nonfinite
+and derivatives are undefined. No tangent-layout promise is made for those
+statuses.
 
 Reference validation uses float64. Normal calls follow the active JAX precision
-policy. The current API accepts raw arrays only; quantity-valued inputs and
-adaptive replay derivatives remain later work.
+policy. A quantity result JVP retains the static integral unit. To obtain a
+physical Jacobian unit, differentiate selected numerical values and declare
+the input and output units. Direct differentiation of a `Quantity` PyTree does
+not infer quotient-unit algebra.
 
 ## Contract and evidence links
 
 Review [fixed and weighted quadrature](../../20-methods/approximation-integration/quadrature.md)
 and [adaptive quadrature](../../20-methods/approximation-integration/adaptive-quadrature.md)
-for derivations and audit procedures. The
+for primal derivations. [Differentiating an integral](../../20-methods/approximation-integration/differentiating-an-integral.md)
+derives replay, moving-bound, complex, and unit contracts. The
 [validation index](../../60-validation/validation.md) names the executable
-envelope, and
+envelopes,
+[`quad-replay-derivatives.json`](../../validation/quad-replay-derivatives.json)
+records replay evidence, and
 [`quad-adaptive-envelope.json`](../../validation/quad-adaptive-envelope.json)
 records the generated tolerance sweeps.
 
