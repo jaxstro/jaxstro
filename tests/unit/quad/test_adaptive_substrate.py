@@ -16,29 +16,45 @@ from jaxstro.quad import (
 from jaxstro.quad._adaptive import (
     infer_payload_zero,
     reference_partition,
+    select_segment,
     transformed_integrand,
 )
 
 
-def test_reference_partition_normalizes_breakpoints_independently_of_orientation() -> (
-    None
-):
+def test_reference_partition_is_segment_local_and_preserves_orientation() -> None:
     forward = reference_partition(Interval(0.0, 10.0, breakpoints=(7.0, 2.0)))
     reverse = reference_partition(Interval(10.0, 0.0, breakpoints=(2.0, 7.0)))
-    expected_lower = jnp.asarray([-1.0, -0.6, 0.4])
-    expected_upper = jnp.asarray([-0.6, 0.4, 1.0])
-    assert jnp.allclose(forward.lower, expected_lower)
-    assert jnp.allclose(forward.upper, expected_upper)
-    assert jnp.allclose(reverse.lower, expected_lower)
-    assert jnp.allclose(reverse.upper, expected_upper)
+    assert jnp.array_equal(forward.lower, -jnp.ones(3))
+    assert jnp.array_equal(forward.upper, jnp.ones(3))
+    assert jnp.array_equal(forward.segment_id, jnp.arange(3, dtype=jnp.int32))
+    assert jnp.array_equal(reverse.lower, forward.lower)
+    assert jnp.array_equal(reverse.upper, forward.upper)
+    assert jnp.array_equal(reverse.segment_id, forward.segment_id)
+    assert [
+        (
+            select_segment(Interval(0.0, 10.0, breakpoints=(7.0, 2.0)), index).lower,
+            select_segment(Interval(0.0, 10.0, breakpoints=(7.0, 2.0)), index).upper,
+        )
+        for index in range(3)
+    ] == [(0.0, 2.0), (2.0, 7.0), (7.0, 10.0)]
+    assert [
+        (
+            select_segment(Interval(10.0, 0.0, breakpoints=(2.0, 7.0)), index).lower,
+            select_segment(Interval(10.0, 0.0, breakpoints=(2.0, 7.0)), index).upper,
+        )
+        for index in range(3)
+    ] == [(10.0, 7.0), (7.0, 2.0), (2.0, 0.0)]
     assert forward.valid
     assert reverse.valid
 
 
 def test_reference_partition_stops_breakpoint_motion() -> None:
     derivative = jax.grad(
-        lambda breakpoint: jnp.sum(
-            reference_partition(Interval(0.0, 1.0, breakpoints=(breakpoint,))).upper
+        lambda breakpoint: (
+            select_segment(
+                Interval(0.0, 1.0, breakpoints=(breakpoint,)),
+                0,
+            ).upper
         )
     )(jnp.asarray(0.3))
     assert jnp.array_equal(derivative, 0.0)
