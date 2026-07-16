@@ -9,9 +9,16 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
-from ._adaptive import select_segment, transformed_integrand
+from ._adaptive import (
+    clenshaw_curtis_pair_data,
+    nested_rule_estimate_values,
+    select_segment,
+    tanh_sinh_estimate_values,
+    tanh_sinh_pair_data,
+    transformed_integrand,
+)
 from ._gk import gauss_kronrod_data, gauss_kronrod_estimate_values
-from .methods import GaussKronrod
+from .methods import AdaptiveClenshawCurtis, AdaptiveTanhSinh, GaussKronrod
 from .result import QuadError, QuadResult, QuadWork
 
 
@@ -64,6 +71,41 @@ def result_tangent(result: QuadResult, value_tangent) -> QuadResult:
     )
 
 
+def _regional_rule(config: IntegrateConfig, dtype):
+    if isinstance(config.method, GaussKronrod):
+        data = gauss_kronrod_data(config.method, dtype=dtype)
+        return (
+            data.nodes,
+            lambda values: gauss_kronrod_estimate_values(values, data).value,
+            False,
+        )
+    if isinstance(config.method, AdaptiveClenshawCurtis):
+        clenshaw_curtis_pair = clenshaw_curtis_pair_data(config.method, dtype=dtype)
+        return (
+            clenshaw_curtis_pair.nodes,
+            lambda values: (
+                nested_rule_estimate_values(
+                    values,
+                    clenshaw_curtis_pair,
+                ).value
+            ),
+            False,
+        )
+    if isinstance(config.method, AdaptiveTanhSinh):
+        tanh_sinh_pair = tanh_sinh_pair_data(config.method, dtype=dtype)
+        return (
+            tanh_sinh_pair.nodes,
+            lambda values: (
+                tanh_sinh_estimate_values(
+                    values,
+                    tanh_sinh_pair,
+                ).value
+            ),
+            True,
+        )
+    raise TypeError(f"{type(config.method).__name__} is not a regional replay method")
+
+
 def replay_value(
     config: IntegrateConfig,
     domain,
@@ -72,14 +114,12 @@ def replay_value(
     primal_value,
 ):
     """Reconstruct the stopped accepted quadrature formula."""
-    if not isinstance(config.method, GaussKronrod) or not isinstance(
-        evidence, RegionalReplayEvidence
-    ):
+    if not isinstance(evidence, RegionalReplayEvidence):
         raise TypeError(f"{type(config.method).__name__} replay is not implemented")
 
-    data = gauss_kronrod_data(
-        config.method,
-        dtype=evidence.segment_local_lower.dtype,
+    nodes, reduce_values, open_region = _regional_rule(
+        config,
+        evidence.segment_local_lower.dtype,
     )
     zero = jnp.zeros_like(primal_value)
 
@@ -91,14 +131,15 @@ def replay_value(
             transformed = transformed_integrand(
                 config.fun,
                 segment_domain,
-                data.nodes,
+                nodes,
                 region_lower=lower,
                 region_upper=upper,
                 args=args,
                 measure=config.measure,
+                open_region=open_region,
                 replay=True,
             )
-            return gauss_kronrod_estimate_values(transformed.values, data).value
+            return reduce_values(transformed.values)
 
         return jax.lax.cond(active, evaluate, lambda _operand: zero, operand=None)
 
