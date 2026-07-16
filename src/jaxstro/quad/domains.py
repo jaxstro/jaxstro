@@ -7,6 +7,8 @@ import jax
 import jax.numpy as jnp
 from jaxtyping import Array
 
+from jaxstro.quantity import Unit
+
 
 @jax.tree_util.register_pytree_node_class
 @dataclass(frozen=True)
@@ -56,12 +58,14 @@ class LeftInfinite:
 @jax.tree_util.register_pytree_node_class
 @dataclass(frozen=True)
 class Infinite:
+    unit: Unit | None = None
+
     def tree_flatten(self):
-        return (), None
+        return (), self.unit
 
     @classmethod
-    def tree_unflatten(cls, _aux, _children):
-        return cls()
+    def tree_unflatten(cls, unit, _children):
+        return cls(unit=unit)
 
 
 def interval_orientation(domain: Interval) -> Array:

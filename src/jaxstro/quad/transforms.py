@@ -5,6 +5,7 @@ from typing import NamedTuple
 import jax.numpy as jnp
 from jaxtyping import Array
 
+from ._quantity import validate_raw_domain
 from .domains import (
     Infinite,
     Interval,
@@ -30,6 +31,7 @@ class DomainMapResult(NamedTuple):
 
 
 def map_interval(domain: Interval, reference: Array) -> AffineMapResult:
+    validate_raw_domain(domain)
     lower = jnp.asarray(domain.lower)
     upper = jnp.asarray(domain.upper)
     lo = jnp.minimum(lower, upper)
@@ -47,6 +49,7 @@ def map_interval(domain: Interval, reference: Array) -> AffineMapResult:
 
 def map_interval_replay(domain: Interval, reference: Array) -> AffineMapResult:
     """Map a finite interval with its signed affine Jacobian."""
+    validate_raw_domain(domain)
     lower = jnp.asarray(domain.lower)
     upper = jnp.asarray(domain.upper)
     half_width = 0.5 * (upper - lower)
@@ -65,6 +68,7 @@ def map_domain(
     reference: Array,
 ) -> DomainMapResult:
     """Map reference coordinates in ``(-1, 1)`` to a Phase A domain."""
+    validate_raw_domain(domain)
     reference = jnp.asarray(reference)
     if isinstance(domain, Interval):
         mapped = map_interval(domain, reference)
@@ -103,6 +107,7 @@ def map_domain_replay(
     reference: Array,
 ) -> DomainMapResult:
     """Use signed finite maps while retaining established improper maps."""
+    validate_raw_domain(domain)
     if isinstance(domain, Interval):
         return DomainMapResult(*map_interval_replay(domain, reference))
     return map_domain(domain, reference)

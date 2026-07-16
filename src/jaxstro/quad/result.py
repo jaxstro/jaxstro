@@ -28,7 +28,7 @@ class ErrorKind(IntEnum):
 
 class QuadError(NamedTuple):
     estimate: Any
-    norm: Array
+    norm: Any
     kind: Array
     confidence_level: Array
 
@@ -44,6 +44,6 @@ class QuadWork(NamedTuple):
 class QuadResult(NamedTuple):
     value: Any
     error: QuadError
-    tolerance: Array
+    tolerance: Any
     status: Array
     work: QuadWork

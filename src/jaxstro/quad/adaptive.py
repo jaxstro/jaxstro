@@ -20,6 +20,7 @@ from ._adaptive import (
     validate_adaptive_capacities,
 )
 from ._gk import gauss_kronrod_data, gauss_kronrod_estimate_values
+from ._quantity import normalize_call, quantity_mode, restore_result
 from ._replay import (
     GlobalReplayEvidence,
     IntegrateConfig,
@@ -440,6 +441,22 @@ def integrate(
     selected_measure: AdaptiveMeasure = (
         LebesgueMeasure() if measure is None else measure
     )
+    normalized = None
+    if quantity_mode(domain, epsabs):
+        normalized = normalize_call(
+            fun,
+            domain,
+            args,
+            selected_measure,
+            epsabs,
+            epsrel,
+        )
+        fun = normalized.fun
+        domain = normalized.domain
+        args = normalized.args
+        selected_measure = normalized.measure
+        epsabs = normalized.epsabs
+        epsrel = normalized.epsrel
     config = IntegrateConfig(
         fun=fun,
         method=method,
@@ -450,8 +467,12 @@ def integrate(
     )
     if gradient == "stop":
         solve = _solve_raw(config, domain, args, epsabs, epsrel)
-        return jax.tree.map(jax.lax.stop_gradient, solve.result)
-    return integrate_replay_core(config, domain, args, epsabs, epsrel)
+        result = jax.tree.map(jax.lax.stop_gradient, solve.result)
+    else:
+        result = integrate_replay_core(config, domain, args, epsabs, epsrel)
+    if normalized is not None:
+        return restore_result(result, normalized.result_unit)
+    return result
 
 
 __all__ = ["integrate"]

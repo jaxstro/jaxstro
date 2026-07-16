@@ -14,6 +14,7 @@ from ._integrand import (
     infer_payload_zero,
     validate_node_values,
 )
+from ._quantity import validate_raw_domain
 from ._recurrence import gaussian_rule_data
 from ._tanh_sinh import tanh_sinh_rule_data
 from .domains import (
@@ -175,6 +176,7 @@ def fixed(
     measure: Measure | None = None,
 ):
     """Evaluate a declared one-dimensional fixed quadrature formula."""
+    validate_raw_domain(domain)
     selected_measure: Measure = LebesgueMeasure() if measure is None else measure
     has_args = has_explicit_args(args)
     if isinstance(rule, GaussianRule):
