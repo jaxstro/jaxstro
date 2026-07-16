@@ -276,7 +276,7 @@ result = quad.integrate(
     epsrel=1e-5,
     max_evaluations=2048,
     max_regions=64,
-    gradient="stop",
+    gradient="replay",
 )
 
 assert result.status == quad.QuadStatus.CONVERGED

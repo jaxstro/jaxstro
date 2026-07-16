@@ -21,7 +21,7 @@ feature list.
 | Conditioning | validated | Denominator, slope, covariance, positive-definite, and removable-limit checks are explicit. |
 | AD honesty | ratified | Smooth, zero, blocked, surrogate, validation-only, value-first, and certified implicit paths remain distinct. |
 | JAX transform coverage | validated | Selected `jit`, `vmap`, `lax.map`, `grad`, JVP/VJP, scan, and PyTree behavior is tested with named exceptions. |
-| Dimensional safety | implemented | `jaxstro.units` is canonical; `jaxstro.quantity` is implemented without claiming ecosystem adoption. |
+| Dimensional safety | implemented | `jaxstro.units` is canonical; `jaxstro.quantity` is implemented, and adaptive quadrature has an alpha opt-in adapter without claiming ecosystem adoption. |
 | API cohesion | validated | Grouped owner pages, export checks, typed results, and focused tests expose stable contracts. |
 | Serialization | implemented | Quantity and provenance records have explicit round trips, but no public root-result replay serializer is validated. |
 | Performance and compilation evidence | implemented | Rootfinding and spectra use units-explicit evidence records; compile, graph, runtime, and memory coverage is not uniform. |
@@ -47,10 +47,10 @@ feature list.
 Future runtime ownership follows this exact order:
 
 The active exception is to complete the approved `jaxstro.quad` program before this queue.
-Its Phase A1 fixed methods and Phase A2 primal adaptive methods are implemented
-with analytic and failure-envelope evidence. Replay derivatives, quantity
-integration, matched external performance comparisons, later-dimensional
-methods, and downstream adoption remain open gates.
+Its fixed and adaptive methods, first-order accepted-formula replay derivatives,
+moving-bound contracts, alpha quantity adapter, derivations, and deterministic
+evidence are implemented. Matched external performance comparisons,
+later-dimensional methods, and downstream adoption remain open gates.
 
 1. `jaxstro.ml`
 2. `jaxstro.numerics.qmc`

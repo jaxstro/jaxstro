@@ -882,7 +882,7 @@
           "import_path": "jaxstro.quad.fixed",
           "limitations": [
             "A fixed rule does not estimate truncation error or select its order.",
-            "Quantity-valued integration and adaptive replay derivatives are not implemented."
+            "Quantity-valued fixed integration is not implemented."
           ],
           "maturity": "experimental",
           "outputs": "An array value with the integrand node axis reduced.",
@@ -908,7 +908,7 @@
           ]
         },
         {
-          "ad_semantics": "known_zero",
+          "ad_semantics": "smooth_pathwise",
           "boundaries": [
             {
               "evidence_ids": [
@@ -926,7 +926,7 @@
             }
           ],
           "cost_notes": "Regional logical work is node_count * (initial_regions + 2 * refinements); global methods report their finest completed active grid.",
-          "domain": "Supported one-dimensional domain and measure pairings, a static method declaration and capacities, scalar real tolerances, and an integrand with a leading node axis.",
+          "domain": "Supported one-dimensional domain and measure pairings, a static method declaration and capacities, scalar real tolerances or the alpha quantity boundary, and an integrand with a leading node axis.",
           "evidence": [
             {
               "claim": "Deterministic tolerance sweeps record requested tolerances, observed errors, statuses, and logical work for all five method families.",
@@ -935,7 +935,19 @@
               "target": "docs/validation/quad-adaptive-envelope.json"
             },
             {
-              "claim": "JIT, VMAP, stopped gradients, payload shapes, and bounded controller execution are executable.",
+              "claim": "The alpha quantity adapter preserves physical values, derivative scaling, density units, and JIT and VMAP composition.",
+              "id": "quad-adaptive-quantity",
+              "kind": "integration_test",
+              "target": "tests/integration/test_quad_quantity_transforms.py"
+            },
+            {
+              "claim": "All five methods have analytic, frozen-formula, adaptive-rerun, stability-ladder, failure-status, and quantity-rescaling evidence.",
+              "id": "quad-adaptive-replay",
+              "kind": "validation_test",
+              "target": "tests/validation/test_quad_replay_derivatives.py"
+            },
+            {
+              "claim": "JIT, VMAP, replay and stopped gradients, payload shapes, and bounded controller execution are executable.",
               "id": "quad-adaptive-transforms",
               "kind": "integration_test",
               "target": "tests/integration/test_quad_adaptive_transforms.py"
@@ -945,6 +957,12 @@
               "id": "quad-adaptive-validation",
               "kind": "validation_test",
               "target": "tests/validation/test_quad_adaptive_reference.py"
+            },
+            {
+              "claim": "Deterministic first-order replay measurements, units, gates, accepted regions or levels, and limitations are freshness checked.",
+              "id": "quad-replay-derivatives",
+              "kind": "artifact",
+              "target": "docs/validation/quad-replay-derivatives.json"
             }
           ],
           "id": "quad-integrate",
@@ -952,15 +970,25 @@
           "limitations": [
             "Estimator convergence is not a universal bound on true error.",
             "Related rules can miss the same unresolved narrow feature.",
-            "Only gradient=stop is implemented; replay and moving-bound derivatives are not.",
-            "Quantity-valued and multidimensional integration are not implemented.",
+            "Replay is the default first-order derivative of the accepted fixed formula; gradient=stop remains explicit.",
+            "Quantity-aware adaptive integration is alpha and opt-in.",
+            "Direct Quantity-PyTree quotient-unit Jacobians and higher derivatives are not claimed.",
+            "Multidimensional integration is not implemented.",
             "No performance-superiority claim is established."
           ],
           "maturity": "experimental",
-          "outputs": "A QuadResult containing the primal value and bounded evidence records.",
+          "outputs": "A QuadResult containing the exact adaptive primal value, bounded evidence records, and a replay derivative on value.",
           "precision": "The active JAX precision policy; scientific reference validation uses float64.",
-          "purpose": "Adaptively estimate a raw-array one-dimensional integral with typed error, status, and logical-work evidence.",
+          "purpose": "Adaptively estimate a one-dimensional integral with typed error, status, logical-work, replay-derivative, and optional quantity evidence.",
           "transforms": [
+            {
+              "conditions": "Apply to value only, using JAX realified conventions for complex maps.",
+              "evidence_ids": [
+                "quad-adaptive-replay"
+              ],
+              "support": "conditional",
+              "transform": "jacfwd/jacrev"
+            },
             {
               "conditions": "Method configuration, capacities, breakpoint count, and payload shape remain static.",
               "evidence_ids": [
@@ -976,11 +1004,28 @@
               ],
               "support": "supported",
               "transform": "jax.vmap"
+            },
+            {
+              "conditions": "First-order replay of value on a successful solve with parameters passed through explicit args or smooth finite bounds.",
+              "evidence_ids": [
+                "quad-adaptive-replay",
+                "quad-replay-derivatives"
+              ],
+              "support": "conditional",
+              "transform": "jvp"
+            },
+            {
+              "conditions": "Project value or a floating diagnostic; full integer-bearing result Jacobians are outside the contract.",
+              "evidence_ids": [
+                "quad-adaptive-replay"
+              ],
+              "support": "conditional",
+              "transform": "vjp"
             }
           ]
         }
       ],
-      "dimensional_policy": "Caller-owned units; current fixed and adaptive APIs accept raw arrays only.",
+      "dimensional_policy": "Raw kernels with an alpha quantity adapter owned only by quad.integrate.",
       "evidence": [],
       "execution_boundary": "runtime",
       "id": "quad",
@@ -989,7 +1034,7 @@
         "Integrating sampled arrays and evaluating declared fixed formulas or bounded adaptive controllers over supported one-dimensional domains."
       ],
       "maturity": "experimental",
-      "non_ownership": "Quantity-valued or multidimensional integration, physical-model policy, inference, ODE solving, or scientific acceptance.",
+      "non_ownership": "Multidimensional integration, direct Quantity-PyTree quotient-unit Jacobians, physical-model policy, inference, ODE solving, or scientific acceptance.",
       "ownership": "Canonical sampled-data integration, fixed and adaptive one-dimensional quadrature, typed domains, measures, methods, and result evidence."
     },
     {
@@ -1138,7 +1183,7 @@
   ],
   "package_version": "0.1.0",
   "schema_version": "1",
-  "source_revision": "sha256:051b01ea07311168f05dafc95dafd4bc25bad3129f03bf4b3e392c97656c4404",
+  "source_revision": "sha256:2bde13bb16920df32a118ac65e8e5e7fb44096a3edf4b5036e16a2362f304ce1",
   "unclassified_callables": [
     "jaxstro.atmospheres.acquisition_rows_to_markdown",
     "jaxstro.atmospheres.build_bosz_index",

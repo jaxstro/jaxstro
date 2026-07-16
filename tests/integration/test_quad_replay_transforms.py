@@ -52,6 +52,22 @@ def test_stop_mode_remains_exactly_zero() -> None:
     assert jax.grad(lambda theta: _integrate(theta, gradient="stop").value)(0.7) == 0.0
 
 
+def test_integrate_defaults_to_replay_after_promotion_gate():
+    def value(theta):
+        return quad.integrate(
+            lambda x, args: args * x,
+            quad.Interval(0.0, 1.0),
+            args=theta,
+            method=quad.GaussKronrod(15),
+            epsabs=1e-9,
+            epsrel=1e-9,
+            max_evaluations=45,
+            max_regions=2,
+        ).value
+
+    assert jax.grad(value)(2.0) == 0.5
+
+
 def test_replay_diagnostic_tangents_are_exact_zero_or_float0() -> None:
     _, tangent = jax.jvp(_integrate, (0.7,), (1.0,))
 

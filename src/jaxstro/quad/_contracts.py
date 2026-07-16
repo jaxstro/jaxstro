@@ -82,7 +82,7 @@ _FIXED_CONTRACT = CallableContract(
     evidence=(_FIXED_UNIT_EVIDENCE, _FIXED_TRANSFORM_EVIDENCE),
     limitations=(
         "A fixed rule does not estimate truncation error or select its order.",
-        "Quantity-valued integration and adaptive replay derivatives are not implemented.",
+        "Quantity-valued fixed integration is not implemented.",
     ),
     cost_notes=(
         "Integrand work is the static node count multiplied by the static "
@@ -95,8 +95,8 @@ _ADAPTIVE_TRANSFORM_EVIDENCE = EvidenceReference(
     kind=EvidenceKind.INTEGRATION_TEST,
     target="tests/integration/test_quad_adaptive_transforms.py",
     claim=(
-        "JIT, VMAP, stopped gradients, payload shapes, and bounded controller "
-        "execution are executable."
+        "JIT, VMAP, replay and stopped gradients, payload shapes, and bounded "
+        "controller execution are executable."
     ),
 )
 
@@ -120,20 +120,53 @@ _ADAPTIVE_ARTIFACT_EVIDENCE = EvidenceReference(
     ),
 )
 
+_ADAPTIVE_REPLAY_EVIDENCE = EvidenceReference(
+    id="quad-adaptive-replay",
+    kind=EvidenceKind.VALIDATION_TEST,
+    target="tests/validation/test_quad_replay_derivatives.py",
+    claim=(
+        "All five methods have analytic, frozen-formula, adaptive-rerun, "
+        "stability-ladder, failure-status, and quantity-rescaling evidence."
+    ),
+)
+
+_ADAPTIVE_REPLAY_ARTIFACT = EvidenceReference(
+    id="quad-replay-derivatives",
+    kind=EvidenceKind.ARTIFACT,
+    target="docs/validation/quad-replay-derivatives.json",
+    claim=(
+        "Deterministic first-order replay measurements, units, gates, accepted "
+        "regions or levels, and limitations are freshness checked."
+    ),
+)
+
+_ADAPTIVE_QUANTITY_EVIDENCE = EvidenceReference(
+    id="quad-adaptive-quantity",
+    kind=EvidenceKind.INTEGRATION_TEST,
+    target="tests/integration/test_quad_quantity_transforms.py",
+    claim=(
+        "The alpha quantity adapter preserves physical values, derivative "
+        "scaling, density units, and JIT and VMAP composition."
+    ),
+)
+
 _ADAPTIVE_CONTRACT = CallableContract(
     id="quad-integrate",
     import_path="jaxstro.quad.integrate",
     purpose=(
-        "Adaptively estimate a raw-array one-dimensional integral with typed "
-        "error, status, and logical-work evidence."
+        "Adaptively estimate a one-dimensional integral with typed error, "
+        "status, logical-work, replay-derivative, and optional quantity evidence."
     ),
     domain=(
         "Supported one-dimensional domain and measure pairings, a static "
-        "method declaration and capacities, scalar real tolerances, and an "
-        "integrand with a leading node axis."
+        "method declaration and capacities, scalar real tolerances or the alpha "
+        "quantity boundary, and an integrand with a leading node axis."
     ),
-    outputs="A QuadResult containing the primal value and bounded evidence records.",
-    ad_semantics=ADSemantics.KNOWN_ZERO,
+    outputs=(
+        "A QuadResult containing the exact adaptive primal value, bounded "
+        "evidence records, and a replay derivative on value."
+    ),
+    ad_semantics=ADSemantics.SMOOTH_PATHWISE,
     precision=(
         "The active JAX precision policy; scientific reference validation uses float64."
     ),
@@ -154,6 +187,32 @@ _ADAPTIVE_CONTRACT = CallableContract(
             conditions="Each batch member runs one independent bounded controller.",
             evidence_ids=("quad-adaptive-transforms",),
         ),
+        TransformContract(
+            "jvp",
+            SupportLevel.CONDITIONAL,
+            conditions=(
+                "First-order replay of value on a successful solve with "
+                "parameters passed through explicit args or smooth finite bounds."
+            ),
+            evidence_ids=("quad-adaptive-replay", "quad-replay-derivatives"),
+        ),
+        TransformContract(
+            "vjp",
+            SupportLevel.CONDITIONAL,
+            conditions=(
+                "Project value or a floating diagnostic; full integer-bearing "
+                "result Jacobians are outside the contract."
+            ),
+            evidence_ids=("quad-adaptive-replay",),
+        ),
+        TransformContract(
+            "jacfwd/jacrev",
+            SupportLevel.CONDITIONAL,
+            conditions=(
+                "Apply to value only, using JAX realified conventions for complex maps."
+            ),
+            evidence_ids=("quad-adaptive-replay",),
+        ),
     ),
     boundaries=(
         BoundaryContract(
@@ -171,12 +230,17 @@ _ADAPTIVE_CONTRACT = CallableContract(
         _ADAPTIVE_TRANSFORM_EVIDENCE,
         _ADAPTIVE_VALIDATION_EVIDENCE,
         _ADAPTIVE_ARTIFACT_EVIDENCE,
+        _ADAPTIVE_REPLAY_EVIDENCE,
+        _ADAPTIVE_REPLAY_ARTIFACT,
+        _ADAPTIVE_QUANTITY_EVIDENCE,
     ),
     limitations=(
         "Estimator convergence is not a universal bound on true error.",
         "Related rules can miss the same unresolved narrow feature.",
-        "Only gradient=stop is implemented; replay and moving-bound derivatives are not.",
-        "Quantity-valued and multidimensional integration are not implemented.",
+        "Replay is the default first-order derivative of the accepted fixed formula; gradient=stop remains explicit.",
+        "Quantity-aware adaptive integration is alpha and opt-in.",
+        "Direct Quantity-PyTree quotient-unit Jacobians and higher derivatives are not claimed.",
+        "Multidimensional integration is not implemented.",
         "No performance-superiority claim is established.",
     ),
     cost_notes=(
@@ -193,14 +257,15 @@ MODULE_CONTRACT = replace(
             "quadrature, typed domains, measures, methods, and result evidence."
         ),
         (
-            "Quantity-valued or multidimensional integration, physical-model "
-            "policy, inference, ODE solving, or scientific acceptance."
+            "Multidimensional integration, direct Quantity-PyTree quotient-unit "
+            "Jacobians, physical-model policy, inference, ODE solving, or "
+            "scientific acceptance."
         ),
         (
             "Integrating sampled arrays and evaluating declared fixed formulas "
             "or bounded adaptive controllers over supported one-dimensional domains."
         ),
-        "Caller-owned units; current fixed and adaptive APIs accept raw arrays only.",
+        "Raw kernels with an alpha quantity adapter owned only by quad.integrate.",
         maturity=MaturityLevel.EXPERIMENTAL,
     ),
     callables=(_FIXED_CONTRACT, _ADAPTIVE_CONTRACT),

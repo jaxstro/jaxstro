@@ -37,7 +37,7 @@ quad.integrate(
     max_evaluations,
     max_regions,
     error_norm=quad.MaxNorm(),
-    gradient="stop",
+    gradient="replay",
 )
 ```
 
@@ -295,7 +295,7 @@ adaptive = quad.integrate(
     epsrel=1e-8,
     max_evaluations=2048,
     max_regions=64,
-    gradient="stop",
+    gradient="replay",
 )
 ```
 

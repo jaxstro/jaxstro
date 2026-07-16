@@ -433,7 +433,7 @@ def integrate(
     max_evaluations: int,
     max_regions: int,
     error_norm: ErrorNorm = MaxNorm(),
-    gradient: str = "stop",
+    gradient: str = "replay",
 ) -> QuadResult:
     """Adaptively integrate with stopped or fixed-formula replay derivatives."""
     if gradient not in {"replay", "stop"}:

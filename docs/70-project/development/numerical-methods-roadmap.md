@@ -37,7 +37,9 @@ stellar-model policy, and data packages own their archive-specific schemas.
 - [x] **Adaptive one-dimensional quadrature.** Gauss-Kronrod pairs, nested
   Clenshaw-Curtis, adaptive tanh-sinh, Romberg variants, deterministic status
   precedence, fixed-capacity work evidence, and an analytic and failure-envelope
-  validation suite. Replay derivatives and quantity inputs remain later work.
+  validation suite. All five methods have first-order accepted-formula replay
+  derivatives; replay is the default, explicit stop remains available, and an
+  alpha quantity adapter normalizes into the same raw engine.
 - [x] **Root-finding and monotone inversion.** Bracket discovery, vectorized
   independent solves, and monotone inverse interpolation for CDF-like tables.
 - [x] **Linear algebra primitives.** Weighted least squares, QR/SVD solve

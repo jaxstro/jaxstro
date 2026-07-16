@@ -32,3 +32,29 @@ def test_machine_inventory_reports_unclassified_callables_and_content_revision()
     assert payload["unclassified_callables"] == sorted(
         payload["unclassified_callables"]
     )
+
+
+def test_quad_contract_records_replay_default_and_alpha_quantity_boundary() -> None:
+    payload = json.loads(
+        (ROOT / "docs/validation/contracts.json").read_text(encoding="utf-8")
+    )
+    quad_module = next(
+        module for module in payload["modules"] if module["id"] == "quad"
+    )
+    integrate = next(
+        item for item in quad_module["callables"] if item["id"] == "quad-integrate"
+    )
+
+    assert integrate["ad_semantics"] == "smooth_pathwise"
+    assert {item["transform"] for item in integrate["transforms"]} >= {
+        "jvp",
+        "vjp",
+        "jacfwd/jacrev",
+    }
+    evidence_ids = {item["id"] for item in integrate["evidence"]}
+    assert {"quad-adaptive-replay", "quad-replay-derivatives"} <= evidence_ids
+    limitations = " ".join(integrate["limitations"])
+    assert "Replay is the default" in limitations
+    assert "alpha and opt-in" in limitations
+    assert "higher derivatives are not claimed" in limitations
+    assert "performance-superiority claim" in limitations
