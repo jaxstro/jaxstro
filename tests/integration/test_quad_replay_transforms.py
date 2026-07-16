@@ -265,3 +265,199 @@ def test_global_replay_parameter_derivative(method, max_evaluations, rtol) -> No
         rtol=rtol,
         atol=2e-8,
     )
+
+
+def _assert_zero_or_float0(primal, tangent):
+    for primal_leaf, tangent_leaf in zip(
+        jax.tree.leaves(primal), jax.tree.leaves(tangent), strict=True
+    ):
+        if jnp.issubdtype(jnp.asarray(primal_leaf).dtype, jnp.inexact):
+            assert jnp.all(jnp.asarray(tangent_leaf) == 0)
+        else:
+            assert jnp.asarray(tangent_leaf).dtype == jax.dtypes.float0
+
+
+@pytest.mark.parametrize(
+    ("method", "max_evaluations", "max_regions"),
+    [
+        (quad.GaussKronrod(21), 147, 4),
+        (quad.AdaptiveClenshawCurtis(17), 153, 4),
+        (quad.AdaptiveTanhSinh(3), 600, 8),
+        (quad.Romberg(2), 257, 1),
+        (quad.RombergTanhSinh(2), 801, 1),
+    ],
+)
+def test_full_result_jvp_stops_every_diagnostic(method, max_evaluations, max_regions):
+    def solve(theta):
+        return quad.integrate(
+            lambda x, args: jnp.exp(args * x),
+            quad.Interval(0.0, 1.0),
+            args=theta,
+            method=method,
+            epsabs=1e-9,
+            epsrel=1e-9,
+            max_evaluations=max_evaluations,
+            max_regions=max_regions,
+            gradient="replay",
+        )
+
+    primal, tangent = jax.jvp(solve, (0.4,), (1.0,))
+    assert jnp.isfinite(tangent.value)
+    _assert_zero_or_float0(primal._replace(value=0.0), tangent._replace(value=0.0))
+
+
+def test_value_only_jacobians_agree_under_jit_and_vmap():
+    def value(theta):
+        return _integrate(theta).value
+
+    forward = jax.jit(jax.jacfwd(value))
+    reverse = jax.jit(jax.jacrev(value))
+    theta = jnp.array([0.2, 0.5, 0.8])
+    assert jnp.allclose(
+        jax.vmap(forward)(theta),
+        jax.vmap(reverse)(theta),
+        rtol=2e-8,
+    )
+
+
+def test_diagnostic_vjp_projection_is_zero():
+    _, pullback = jax.vjp(lambda theta: _integrate(theta).tolerance, 0.4)
+    assert pullback(jnp.asarray(1.0))[0] == 0.0
+
+
+def test_differentiated_parameter_hidden_in_integrand_closure_is_rejected():
+    def hidden(theta):
+        return quad.integrate(
+            lambda x: theta * x,
+            quad.Interval(0.0, 1.0),
+            method=quad.GaussKronrod(15),
+            epsabs=1e-9,
+            epsrel=1e-9,
+            max_evaluations=45,
+            max_regions=2,
+            gradient="replay",
+        ).value
+
+    with pytest.raises(
+        (jax.errors.UnexpectedTracerError, ValueError),
+        match="closed-over|Tracer|tracer|nondiff",
+    ):
+        jax.grad(hidden)(2.0)
+
+
+def test_same_parameter_is_supported_through_explicit_args():
+    def explicit(theta):
+        return quad.integrate(
+            lambda x, args: args * x,
+            quad.Interval(0.0, 1.0),
+            args=theta,
+            method=quad.GaussKronrod(15),
+            epsabs=1e-9,
+            epsrel=1e-9,
+            max_evaluations=45,
+            max_regions=2,
+            gradient="replay",
+        ).value
+
+    assert jax.grad(explicit)(2.0) == 0.5
+
+
+def test_real_parameter_to_complex_output_uses_realified_jacobian():
+    def value(theta):
+        result = quad.integrate(
+            lambda x, args: jnp.exp(1j * args * x),
+            quad.Interval(0.0, 1.0),
+            args=theta,
+            method=quad.GaussKronrod(21),
+            epsabs=1e-10,
+            epsrel=1e-10,
+            max_evaluations=147,
+            max_regions=4,
+            gradient="replay",
+        ).value
+        return jnp.stack((jnp.real(result), jnp.imag(result)))
+
+    theta = 0.7
+    z = 1j * theta
+    derivative = 1j * (((z - 1.0) * jnp.exp(z) + 1.0) / z**2)
+    expected = jnp.stack((jnp.real(derivative), jnp.imag(derivative)))
+    assert jnp.allclose(jax.jacrev(value)(theta), expected, rtol=2e-8, atol=2e-10)
+
+
+def _complex_integral(theta):
+    return quad.integrate(
+        lambda x, args: jnp.exp(args * x),
+        quad.Interval(0.0, 1.0),
+        args=theta,
+        method=quad.GaussKronrod(21),
+        epsabs=1e-10,
+        epsrel=1e-10,
+        max_evaluations=147,
+        max_regions=4,
+        gradient="replay",
+    ).value
+
+
+def test_complex_parameter_to_real_output_uses_jax_cotangent_convention():
+    theta = 0.7 + 0.2j
+    expected = ((theta - 1.0) * jnp.exp(theta) + 1.0) / theta**2
+    assert jnp.allclose(
+        jax.grad(lambda value: jnp.real(_complex_integral(value)))(theta),
+        expected,
+        rtol=2e-8,
+        atol=2e-10,
+    )
+
+
+def test_complex_to_complex_is_realified_not_forced_holomorphic():
+    def realified(parts):
+        theta = parts[0] + 1j * parts[1]
+        value = _complex_integral(theta)
+        return jnp.stack((jnp.real(value), jnp.imag(value)))
+
+    parts = jnp.array([0.7, 0.2])
+    theta = parts[0] + 1j * parts[1]
+    derivative = ((theta - 1.0) * jnp.exp(theta) + 1.0) / theta**2
+    expected = jnp.asarray(
+        [
+            [jnp.real(derivative), -jnp.imag(derivative)],
+            [jnp.imag(derivative), jnp.real(derivative)],
+        ]
+    )
+    assert jnp.allclose(jax.jacrev(realified)(parts), expected, rtol=2e-8, atol=2e-10)
+
+
+UNDEFINED_FAILURE_DERIVATIVE_NOTE = (
+    "Derivatives are undefined for INVALID_INPUT and NONFINITE_INTEGRAND results."
+)
+
+
+def test_invalid_and_nonfinite_statuses_are_fail_closed_under_jit_and_vmap():
+    def solve(upper):
+        return quad.integrate(
+            lambda x: jnp.where(x > 1.5, jnp.nan, x),
+            quad.Interval(0.0, upper),
+            method=quad.GaussKronrod(15),
+            epsabs=1e-8,
+            epsrel=1e-8,
+            max_evaluations=45,
+            max_regions=2,
+            gradient="replay",
+        )
+
+    eager = solve(jnp.nan)
+    compiled = jax.jit(solve)(2.0)
+    batched = jax.vmap(solve)(jnp.asarray([jnp.nan, 2.0]))
+
+    assert eager.status == quad.QuadStatus.INVALID_INPUT
+    assert compiled.status == quad.QuadStatus.NONFINITE_INTEGRAND
+    assert jnp.array_equal(
+        batched.status,
+        jnp.asarray(
+            [quad.QuadStatus.INVALID_INPUT, quad.QuadStatus.NONFINITE_INTEGRAND]
+        ),
+    )
+    assert not jnp.isfinite(eager.value)
+    assert not jnp.isfinite(compiled.value)
+    assert jnp.all(~jnp.isfinite(batched.value))
+    assert "undefined" in UNDEFINED_FAILURE_DERIVATIVE_NOTE

@@ -97,3 +97,11 @@ def test_inverse_length_density_converts_with_coordinate_representation():
     metres = _normalized_weighted_integral(1.0, q.m).to_value(q.cm)
     centimetres = _normalized_weighted_integral(100.0, q.cm).to_value(q.cm)
     assert jnp.allclose(metres, centimetres, rtol=2e-8)
+
+
+def test_quantity_replay_composes_with_jit_and_vmap():
+    derivative = jax.jit(
+        jax.grad(lambda value: _length_integral(value, q.cm).to_value(q.cm**2))
+    )
+    bounds = jnp.asarray([50.0, 100.0, 200.0])
+    assert jnp.allclose(jax.vmap(derivative)(bounds), bounds, rtol=2e-10)
