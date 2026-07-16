@@ -264,7 +264,7 @@ Agreement between adjacent fixed tanh-sinh levels measures discretization
 change, not omitted endpoint mass. Once the terminal mapped coordinate stops
 moving, that difference can shrink even though a substantial tail remains.
 Use an analytic or independently validated reference for a fixed-rule audit;
-Phase A2 adaptive tanh-sinh also carries explicit terminal-tail evidence.
+Adaptive tanh-sinh also carries explicit terminal-tail evidence.
 :::
 
 ## What the algorithm actually does
