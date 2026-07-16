@@ -19,7 +19,6 @@ GUIDES = {
     "change-constraints-evolution/adaptive-differential-equations.md": (
         "Ecosystem guide"
     ),
-    "approximation-integration/adaptive-quadrature.md": "Ecosystem guide",
     "linear-structure/iterative-linear-solvers.md": "Ecosystem guide",
     "probability-sampling/quasi-monte-carlo.md": "Planned Jaxstro capability",
     "signals/signal-axes.md": "Planned Jaxstro capability",
@@ -50,10 +49,6 @@ DELEGATED_OWNERS = {
         "Diffrax",
         "https://docs.kidger.site/diffrax/",
     ),
-    "approximation-integration/adaptive-quadrature.md": (
-        "Quadax",
-        "https://quadax.readthedocs.io/en/",
-    ),
     "linear-structure/iterative-linear-solvers.md": (
         "Lineax",
         "https://docs.kidger.site/lineax/",
@@ -70,6 +65,9 @@ CURRENT_METHOD_ROUTES = {
     "20-methods/approximation-integration/bsplines.md": "/bsplines",
     "20-methods/approximation-integration/cumulative-trapz.md": ("/cumulative-trapz"),
     "20-methods/approximation-integration/quadrature.md": "/quadrature",
+    "20-methods/approximation-integration/adaptive-quadrature.md": (
+        "/adaptive-quadrature"
+    ),
     "20-methods/linear-structure/linear-algebra.md": "/linear-algebra",
     "20-methods/linear-structure/operators.md": "/operators",
     "20-methods/linear-structure/special-functions.md": "/special-functions",
@@ -128,7 +126,7 @@ def test_all_guides_exist_once_in_toc_and_manifest_with_native_routes() -> None:
     myst = (DOCS / "myst.yml").read_text(encoding="utf-8")
     manifest = json.loads((DOCS / "route-manifest.json").read_text(encoding="utf-8"))
 
-    assert len(GUIDES) == 9
+    assert len(GUIDES) == 8
     for relative in GUIDES:
         source = f"20-methods/{relative}"
         assert (METHODS / relative).is_file(), source
@@ -345,9 +343,9 @@ def test_new_sources_are_ascii_and_use_latex_for_math() -> None:
         assert "```{math}" in text, relative
 
 
-def test_new_routes_preserve_all_eighteen_current_method_routes() -> None:
+def test_new_routes_preserve_all_nineteen_current_method_routes() -> None:
     manifest = json.loads((DOCS / "route-manifest.json").read_text(encoding="utf-8"))
-    assert len(CURRENT_METHOD_ROUTES) == 18
+    assert len(CURRENT_METHOD_ROUTES) == 19
     for source, route in CURRENT_METHOD_ROUTES.items():
         assert manifest[source] == route
 

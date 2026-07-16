@@ -360,8 +360,9 @@ pairings have executable tests. Evidence is indexed in
 Fixed quadrature does not estimate error, choose an order, diagnose divergence,
 or certify interchange of differentiation and integration. A converged-looking
 order sweep is evidence for the tested sequence, not a universal guarantee.
-Adaptive Gauss-Kronrod, adaptive Clenshaw-Curtis, adaptive tanh-sinh, and
-Romberg controllers are Phase A2 work.
+Current adaptive Gauss-Kronrod, Clenshaw-Curtis, tanh-sinh, and Romberg methods
+are documented separately because their estimator, status, and work contracts
+are different from a declared fixed formula.
 
 ## Connected ideas
 
@@ -370,6 +371,6 @@ Connect measures to
 [](../../10-foundations/mathematical-objects/probability-and-distributions.md),
 units to [](../../30-representations/units-quantities/quantities.md), the public
 owner to [](../../50-api/approximation-integration/quad.md), sampled-data rules
-to [](./cumulative-trapz.md), and the planned controller layer to
+to [](./cumulative-trapz.md), and the adaptive controller layer to
 [](./adaptive-quadrature.md).
 :::

@@ -1,105 +1,292 @@
 ---
-title: Adaptive quadrature in the JAX ecosystem
-description: Local error indicators, interval refinement, and delegated adaptive quadrature ownership.
+title: Adaptive quadrature
+description: Error indicators, refinement, stopping, and auditable one-dimensional integration in Jaxstro.
 ---
 
-# Adaptive quadrature in the JAX ecosystem
+# Adaptive quadrature
 
-Use this page when an integral cannot be resolved efficiently by a fixed rule
-and you need to understand how local estimates drive interval refinement.
+## The question this method answers
 
-:::{important} Ecosystem guide
-[Quadax](https://quadax.readthedocs.io/en/) owns adaptive quadrature algorithms
-for JAX. Jaxstro does not duplicate that runtime method family.
+Adaptive quadrature estimates a one-dimensional integral while deciding where
+additional function evaluations are most useful. It is appropriate when a
+single fixed rule would waste work on easy regions or miss difficult local
+structure.
+
+:::{important}
+The reported error is evidence from a named estimator, not an exact error
+certificate. Two related rules can miss the same unresolved feature.
 :::
 
-## The scientific question
+## Before computation: what should be true?
 
-Adaptive quadrature asks where additional integrand evaluations are most useful.
-It estimates local error on current intervals, refines selected intervals, and
-combines local contributions into a global integral and error account.
+Write the integral, domain, measure, and expected difficult structure before
+choosing a method. Known discontinuities or sharp transitions should be passed
+as breakpoints when the method supports them. Decide what absolute and relative
+errors would be scientifically meaningful in the units of the raw-array
+problem.
 
-The difficult part is often structural rather than merely numerical: endpoint
-singularities, discontinuities, sharp interior features, oscillations, or
-infinite domains can invalidate a naive error estimate or transformation.
+:::{tip} A first method choice
+Use `GaussKronrod` for a general smooth finite interval, add breakpoints for
+known interior structure, try `AdaptiveTanhSinh` for endpoint singularities or
+improper domains, and use a Romberg family only when global refinement matches
+the integrand's structure.
+:::
 
-## Mathematical objects
+The current support boundary is:
 
-Let $I=\int_a^b f(x)\,dx$. Partition the finite domain into intervals
-$[a_i,b_i]$. A paired or nested rule supplies two approximations, commonly of
-different order or resolution, on each interval. Their difference is a local
-error indicator, not an exact error.
+| Method | Domain | Breakpoints | Error evidence |
+| --- | --- | --- | --- |
+| `GaussKronrod` | finite `Interval` | yes | embedded Gauss-Kronrod difference |
+| `AdaptiveClenshawCurtis` | finite `Interval` | yes | nested-resolution difference |
+| `AdaptiveTanhSinh` | finite or improper | finite intervals only | adjacent-level, summation, and tail evidence |
+| `Romberg` | finite `Interval` | no | extrapolated refinement difference |
+| `RombergTanhSinh` | finite or improper | no | adjacent global-level difference |
 
-For an infinite domain, an explicit change of variables maps a finite parameter
-interval to the original domain and introduces a Jacobian. That transformation
-changes the endpoint behavior seen by the quadrature rule.
+Adaptive methods accept `LebesgueMeasure` and `WeightedMeasure`. Inputs are raw
+arrays; quantity-valued integration remains a later boundary.
 
-## Core derivation
+## Define the mathematical objects
 
-Write the local high-order estimate as $Q_i^{(h)}$ and its paired estimate as
-$Q_i^{(l)}$. A basic adaptive account is:
+Let
 
 ```{math}
-:label: eq-adaptive-quadrature-account
-
-\begin{aligned}
-\widehat{I} &= \sum_{i=1}^{M}Q_i^{(h)}, \\
-e_i &= \left|Q_i^{(h)}-Q_i^{(l)}\right|, \\
-E &= \sum_{i=1}^{M}e_i.
-\end{aligned}
+I = \int_a^b f(x)\,\mathrm{d}x
 ```
 
-The algorithm can refine the interval with the largest $e_i$, update only the
-affected terms in [](#eq-adaptive-quadrature-account), and stop when the chosen
-global tolerance rule passes. The sum $E$ is conservative only under the
-assumptions of the estimator and accounting policy; cancellation in the true
-error is not a license to report a smaller unsupported bound.
+and partition the transformed reference domain into active regions
+$[a_i,b_i]$. A regional method produces a value $Q_i$ and a nonnegative
+payload-shaped indicator $e_i$. An error norm maps scalar, vector, complex, or
+higher-rank payload evidence to one scalar stopping quantity.
 
-## What the ecosystem already owns
+`QuadResult` returns the value, `QuadError`, effective tolerance, `QuadStatus`,
+and `QuadWork`. These records distinguish a numerical estimate from evidence
+about how it was obtained.
 
-[Quadax](https://quadax.readthedocs.io/en/) owns adaptive interval selection,
-rule evaluation, refinement, stopping, and runtime result states for this
-ecosystem. Jaxstro's current quadrature page covers fixed-node and cumulative
-rules with different transform contracts; it is not an adaptive engine.
+## Derive the method
 
-## What Jaxstro may add
+### Regional accounting and tolerance
 
-A consumer-driven Jaxstro adapter may later define unit-aware integral input and
-output contracts, attach domain transformations and singular-point declarations
-to provenance, and publish evidence envelopes for named integral families. No
-such adapter exists.
+For active regions, Jaxstro accumulates the value and componentwise error
+evidence before applying the chosen norm:
 
-The adapter would delegate all adaptive decisions to Quadax and would not
-reimplement interval trees, paired rules, or stopping logic.
+```{math}
+:label: eq-adaptive-error-account
 
-## Evidence required before implementation
+\widehat I = \sum_{i=1}^{M} Q_i,
+\qquad
+\widehat E = \left\lVert\sum_{i=1}^{M} e_i\right\rVert.
+```
 
-An adapter would require:
+The effective stopping threshold is
 
-- analytic finite-domain integrals across smooth and endpoint-limited cases;
-- independent references for discontinuous, peaked, and oscillatory examples;
-- transformed infinite-domain cases with Jacobian and tail checks;
-- tolerance sweeps that compare reported estimates with observed error;
-- unit conversion tests for integrand, coordinate, and integral dimensions;
-- nonfinite, exhausted-budget, and unresolved-singularity failure cases; and
-- provenance checks for domain maps, tolerances, status, and evaluation count.
+```{math}
+:label: eq-adaptive-tolerance
 
-## Claim boundary
+\tau = \max\!\left(\epsilon_{\mathrm{abs}},
+\epsilon_{\mathrm{rel}}\lVert\widehat I\rVert\right),
+\qquad \widehat E \le \tau.
+```
 
-:::{warning}
-A small paired-rule difference is not a universal error certificate. Both rules
-can miss the same unresolved feature. Singularities and infinite-domain tails
-must be modeled and audited explicitly.
+The absolute term protects integrals near zero; the relative term scales with
+the estimated integral. Neither term can repair a structurally blind estimator.
+
+### Embedded Gauss-Kronrod
+
+A Kronrod rule reuses the Gauss nodes and adds nodes. If $Q_K$ and $Q_G$ are
+the paired estimates, the raw embedded indicator is stabilized by a
+roundoff-scale floor $E_{\mathrm{round}}$:
+
+```{math}
+:label: eq-adaptive-gk
+
+Q_i = Q_K,
+\qquad
+e_i = \max\!\left(\lvert Q_K-Q_G\rvert,
+E_{\mathrm{round}}\right).
+```
+
+The public pairs contain 15, 21, 31, 41, 51, or 61 Kronrod nodes.
+
+### Nested Clenshaw-Curtis
+
+Clenshaw-Curtis evaluates cosine-spaced nodes. An order $n=2^k+1$ rule contains
+the lower-resolution node set, so one high-resolution evaluation supplies both
+approximations:
+
+```{math}
+:label: eq-adaptive-clenshaw-curtis
+
+Q_i = Q_n,
+\qquad
+e_i = \max\!\left(\lvert Q_n-Q_{(n+1)/2}\rvert,
+E_{\mathrm{round}}\right).
+```
+
+### Double-exponential refinement
+
+Tanh-sinh maps a real parameter $t$ toward the endpoints double
+exponentially,
+
+```{math}
+x(t)=\tanh\!\left(\frac{\pi}{2}\sinh t\right).
+```
+
+Jaxstro combines adjacent-level disagreement, floating-point summation
+evidence, and an outer-shell tail account:
+
+```{math}
+:label: eq-adaptive-tanh-sinh
+
+e_i = \lvert Q_{h/2}-Q_h\rvert
+      + E_{\mathrm{sum}} + E_{\mathrm{tail}}.
+```
+
+This open rule avoids evaluating finite endpoints directly. Domain maps and
+their Jacobians extend the same logic to half-infinite and infinite domains.
+
+### Romberg families
+
+Classical Romberg starts from nested trapezoid estimates and applies Richardson
+extrapolation:
+
+```{math}
+:label: eq-adaptive-romberg
+
+R_{k,0}=T_k,
+\qquad
+R_{k,j}=R_{k,j-1}
++\frac{R_{k,j-1}-R_{k-1,j-1}}{4^j-1}.
+```
+
+`RombergTanhSinh` instead compares nested global tanh-sinh levels without using
+the polynomial-error assumption behind Richardson extrapolation.
+
+### Logical work
+
+For a regional rule with $n$ nodes, $M_0$ initial regions, and $r$ bisections,
+the exact logical integrand count is
+
+```{math}
+:label: eq-adaptive-work
+
+N_{\mathrm{eval}} = n\left(M_0+2r\right).
+```
+
+Classical Romberg at completed level $k$ uses $2^k+1$ unique logical points.
+`RombergTanhSinh` reports the active-node count at its finest completed level.
+These are integrand evaluations, not padded accelerator lanes, compile time, or
+wall time.
+
+## What the algorithm actually does
+
+Regional controllers evaluate every declared initial region, sum their value
+and error evidence, and repeatedly bisect the region with the largest scalar
+error priority. Arrays have fixed capacity so the loop remains JAX
+transformable. Global Romberg controllers increase one shared level instead of
+building a region partition.
+
+The effective status precedence is invalid input, nonfinite integrand,
+convergence, roundoff limitation, and then exhausted capacity. Regional
+capacity distinguishes `MAX_EVALUATIONS` from `MAX_REGIONS`. Current A2
+controllers emit `INVALID_INPUT`, `NONFINITE_INTEGRAND`, `CONVERGED`,
+`ROUNDOFF_LIMITED`, `MAX_EVALUATIONS`, or `MAX_REGIONS` as applicable.
+`DIVERGENCE_SUSPECTED` and `ERROR_ESTIMATE_UNAVAILABLE` are reserved vocabulary,
+not current controller outputs.
+
+`ErrorKind.EMBEDDED_RULE` identifies Gauss-Kronrod evidence; the other current
+families use `ErrorKind.REFINEMENT_DIFFERENCE`. Sparse-grid and replicate-based
+kinds are reserved for later method families.
+
+:::{note}
+Method configuration, capacity, breakpoint count, and payload shape are static
+under JIT. `QuadWork.evaluations` records logical integrand evaluations.
+`confidence_level` and `replicates` are not meaningful for these deterministic
+methods.
 :::
 
-This guide makes no performance or convergence-rate claim for Quadax, and it
-does not establish an adaptive Jaxstro API.
+## What JAX differentiates
 
-## Connected foundations and methods
+Phase A2 is primal-only. The only accepted policy is `gradient="stop"`, and
+Jaxstro applies `jax.lax.stop_gradient` to the complete result tree. JIT and
+VMAP are supported within the static boundaries above, but VMAP repeats the
+bounded controller independently for each batch member; it is not shared
+adaptive work.
 
-Review [](../../10-foundations/mathematical-objects/functions-units-scales.md)
-for dimensional maps. Compare fixed rules in [](./quadrature.md), sampled
-accumulation in [](./cumulative-trapz.md), and finite-data approximation in
-[](./interpolation.md). The conditioning perspective in
+:::{warning}
+A zero automatic derivative here means differentiation was deliberately
+stopped. It is not the derivative of the mathematical integral. Replay
+derivatives and moving-bound derivative evidence remain later work.
+:::
+
+## Using it in Jaxstro
+
+```python
+import jax.numpy as jnp
+
+from jaxstro import quad
+
+domain = quad.Interval(0.0, 1.0)
+methods = (
+    quad.GaussKronrod(pair=21),
+    quad.AdaptiveClenshawCurtis(initial_order=17),
+    quad.AdaptiveTanhSinh(initial_level=3),
+    quad.Romberg(initial_level=1),
+    quad.RombergTanhSinh(initial_level=1),
+)
+
+result = quad.integrate(
+    lambda x: x**2,
+    domain,
+    method=methods[0],
+    epsabs=1e-5,
+    epsrel=1e-5,
+    max_evaluations=2048,
+    max_regions=64,
+    gradient="stop",
+)
+
+assert result.status == quad.QuadStatus.CONVERGED
+assert jnp.allclose(result.value, 1.0 / 3.0, rtol=1e-6, atol=1e-6)
+```
+
+The same call shape selects each family. Use `quad.Infinite()`,
+`quad.RightInfinite(lower)`, or `quad.LeftInfinite(upper)` only with
+`AdaptiveTanhSinh` or `RombergTanhSinh`. The complete callable contract is in
+[](../../50-api/approximation-integration/quad.md).
+
+## How to audit the result
+
+Check the status before using the value. Then compare observed behavior across
+tolerances or capacities, inspect `result.error.kind`, and verify that
+`result.work.evaluations` matches the chosen family's logical cost. Use known
+breakpoints and independent references whenever the integrand has narrow or
+nonsmooth structure.
+
+Executable analytic and failure-envelope cases live in
+`tests/validation/test_quad_adaptive_reference.py`; their generated record is
+[`docs/validation/quad-adaptive-envelope.json`](../../validation/quad-adaptive-envelope.json).
+The broader evidence boundary is indexed in [](../../60-validation/validation.md).
+
+## Where the claim stops
+
+`CONVERGED` means the named estimator satisfied the named tolerance. It does
+not prove that the true error is below that tolerance. In particular, embedded
+or nested rules can both miss the same narrow feature and report false
+estimator convergence. Independent structure-aware checks remain necessary.
+
+Jaxstro does not yet claim replay derivatives, quantity-valued inputs,
+multidimensional integration, universal convergence, or performance superiority.
+[Quadax](https://github.com/f0uriest/quadax) is an independent comparison and
+benchmark implementation, not Jaxstro's runtime owner or dependency.
+
+## Connected ideas
+
+:::{seealso}
+Start with [](../../10-foundations/mathematical-objects/functions-units-scales.md)
+for functions and scales, then connect raw-array representation to
+[](../../30-representations/units-quantities/quantities.md). Compare the fixed
+rules in [](./quadrature.md), and use
 [](../../10-foundations/models-and-computation/sensitivity-conditioning-identifiability.md)
-helps explain why narrow features can defeat an otherwise plausible estimate.
+to understand why unresolved local structure can defeat an apparently small
+error indicator.
+:::

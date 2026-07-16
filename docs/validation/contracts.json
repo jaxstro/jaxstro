@@ -88,6 +88,8 @@
     "jaxstro.provenance.ArtifactHash",
     "jaxstro.provenance.EnvironmentSnapshot",
     "jaxstro.provenance.MethodManifest",
+    "jaxstro.quad.AdaptiveClenshawCurtis",
+    "jaxstro.quad.AdaptiveTanhSinh",
     "jaxstro.quad.AffineMapResult",
     "jaxstro.quad.ClenshawCurtisRule",
     "jaxstro.quad.DomainMapResult",
@@ -95,6 +97,7 @@
     "jaxstro.quad.ErrorNorm",
     "jaxstro.quad.FejerIIRule",
     "jaxstro.quad.FejerIRule",
+    "jaxstro.quad.GaussKronrod",
     "jaxstro.quad.GaussianRule",
     "jaxstro.quad.Infinite",
     "jaxstro.quad.Interval",
@@ -111,6 +114,8 @@
     "jaxstro.quad.QuadStatus",
     "jaxstro.quad.QuadWork",
     "jaxstro.quad.RightInfinite",
+    "jaxstro.quad.Romberg",
+    "jaxstro.quad.RombergTanhSinh",
     "jaxstro.quad.StandardNormalMeasure",
     "jaxstro.quad.TanhSinhRule",
     "jaxstro.quad.WeightedMeasure",
@@ -901,19 +906,91 @@
               "transform": "jax.vmap"
             }
           ]
+        },
+        {
+          "ad_semantics": "known_zero",
+          "boundaries": [
+            {
+              "evidence_ids": [
+                "quad-adaptive-validation"
+              ],
+              "failure_mode": "raises",
+              "summary": "Unsupported method, domain, measure, breakpoint, or capacity declarations raise eagerly."
+            },
+            {
+              "evidence_ids": [
+                "quad-adaptive-validation"
+              ],
+              "failure_mode": "structured_result",
+              "summary": "Dynamic invalid, nonfinite, roundoff-limited, or exhausted cases return a typed status."
+            }
+          ],
+          "cost_notes": "Regional logical work is node_count * (initial_regions + 2 * refinements); global methods report their finest completed active grid.",
+          "domain": "Supported one-dimensional domain and measure pairings, a static method declaration and capacities, scalar real tolerances, and an integrand with a leading node axis.",
+          "evidence": [
+            {
+              "claim": "Deterministic tolerance sweeps record requested tolerances, observed errors, statuses, and logical work for all five method families.",
+              "id": "quad-adaptive-envelope",
+              "kind": "artifact",
+              "target": "docs/validation/quad-adaptive-envelope.json"
+            },
+            {
+              "claim": "JIT, VMAP, stopped gradients, payload shapes, and bounded controller execution are executable.",
+              "id": "quad-adaptive-transforms",
+              "kind": "integration_test",
+              "target": "tests/integration/test_quad_adaptive_transforms.py"
+            },
+            {
+              "claim": "Analytic, complex, vector, breakpoint, improper-domain, singular, nonfinite, and exhausted-budget cases are executable.",
+              "id": "quad-adaptive-validation",
+              "kind": "validation_test",
+              "target": "tests/validation/test_quad_adaptive_reference.py"
+            }
+          ],
+          "id": "quad-integrate",
+          "import_path": "jaxstro.quad.integrate",
+          "limitations": [
+            "Estimator convergence is not a universal bound on true error.",
+            "Related rules can miss the same unresolved narrow feature.",
+            "Only gradient=stop is implemented; replay and moving-bound derivatives are not.",
+            "Quantity-valued and multidimensional integration are not implemented.",
+            "No performance-superiority claim is established."
+          ],
+          "maturity": "experimental",
+          "outputs": "A QuadResult containing the primal value and bounded evidence records.",
+          "precision": "The active JAX precision policy; scientific reference validation uses float64.",
+          "purpose": "Adaptively estimate a raw-array one-dimensional integral with typed error, status, and logical-work evidence.",
+          "transforms": [
+            {
+              "conditions": "Method configuration, capacities, breakpoint count, and payload shape remain static.",
+              "evidence_ids": [
+                "quad-adaptive-transforms"
+              ],
+              "support": "supported",
+              "transform": "jax.jit"
+            },
+            {
+              "conditions": "Each batch member runs one independent bounded controller.",
+              "evidence_ids": [
+                "quad-adaptive-transforms"
+              ],
+              "support": "supported",
+              "transform": "jax.vmap"
+            }
+          ]
         }
       ],
-      "dimensional_policy": "Caller-owned units; Phase A1 accepts raw arrays only.",
+      "dimensional_policy": "Caller-owned units; current fixed and adaptive APIs accept raw arrays only.",
       "evidence": [],
       "execution_boundary": "runtime",
       "id": "quad",
       "import_path": "jaxstro.quad",
       "intended_uses": [
-        "Integrating sampled arrays and evaluating declared fixed formulas over supported one-dimensional domains."
+        "Integrating sampled arrays and evaluating declared fixed formulas or bounded adaptive controllers over supported one-dimensional domains."
       ],
       "maturity": "experimental",
-      "non_ownership": "Adaptive controllers, quantity-valued integration, physical-model policy, inference, ODE solving, or scientific acceptance.",
-      "ownership": "Canonical sampled-data integration, fixed one-dimensional quadrature, typed domains, measures, rules, and result evidence."
+      "non_ownership": "Quantity-valued or multidimensional integration, physical-model policy, inference, ODE solving, or scientific acceptance.",
+      "ownership": "Canonical sampled-data integration, fixed and adaptive one-dimensional quadrature, typed domains, measures, methods, and result evidence."
     },
     {
       "callables": [],
@@ -1061,7 +1138,7 @@
   ],
   "package_version": "0.1.0",
   "schema_version": "1",
-  "source_revision": "sha256:c81ba370cc0ad8a7acb01d593c9098eee44c23d4e0f214ed49ea9ef2c0658ffb",
+  "source_revision": "sha256:051b01ea07311168f05dafc95dafd4bc25bad3129f03bf4b3e392c97656c4404",
   "unclassified_callables": [
     "jaxstro.atmospheres.acquisition_rows_to_markdown",
     "jaxstro.atmospheres.build_bosz_index",

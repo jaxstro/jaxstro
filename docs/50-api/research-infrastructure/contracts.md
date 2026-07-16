@@ -56,7 +56,7 @@ from jaxstro.contracts import get_callable_contract
 | `jaxstro.numerics` | validated | runtime | Caller-owned units; each callable declares dimensional behavior. | Generic numerical mechanics. | Domain acceptance, retry policy, or physical state. |
 | `jaxstro.params` | validated | runtime | Leaf units remain caller-owned through transformations. | Selective PyTree/vector parameter bridges. | Inference algorithms or identifiability. |
 | `jaxstro.provenance` | validated | tooling | Metric units remain explicit in producer-owned payloads. | Runtime artifact manifests. | Scientific-source validation. |
-| `jaxstro.quad` | experimental | runtime | Caller-owned units; Phase A1 accepts raw arrays only. | Canonical sampled-data integration, fixed one-dimensional quadrature, typed domains, measures, rules, and result evidence. | Adaptive controllers, quantity-valued integration, physical-model policy, inference, ODE solving, or scientific acceptance. |
+| `jaxstro.quad` | experimental | runtime | Caller-owned units; current fixed and adaptive APIs accept raw arrays only. | Canonical sampled-data integration, fixed and adaptive one-dimensional quadrature, typed domains, measures, methods, and result evidence. | Quantity-valued or multidimensional integration, physical-model policy, inference, ODE solving, or scientific acceptance. |
 | `jaxstro.quantity` | validated | runtime | Dimensions and scales are represented explicitly in Unit metadata. | Dimensional quantity evaluation. | Approved ecosystem adoption or cutover. |
 | `jaxstro.spatial` | validated | mixed | Coordinates use caller-owned consistent length units. | Spatial indexing, candidates, and exact pairs. | Force or encounter semantics. |
 | `jaxstro.spectra` | validated | mixed | Spectral coordinates and density semantics carry explicit unit metadata. | Generic spectral representations and remapping. | Filters, photometry, or instruments. |
@@ -81,6 +81,7 @@ from jaxstro.contracts import get_callable_contract
 | `jaxstro.numerics.universal_kepler_step` | validated | smooth_pathwise | `jit`: supported; `vmap`: supported; `jvp`: conditional (Continuous state on one converged route with fixed shape, iteration budget, status path, and Stumpff branch.); `vjp`: conditional (Continuous state on one converged route with fixed shape, iteration budget, status path, and Stumpff branch.) | Invalid input, nonfinite iteration, singular radius, or exhausted iteration budget. [structured_result] | [`numerics.universal_kepler_step.value`](https://github.com/drannarosen/jaxstro/blob/main/tests/unit/test_kepler.py) (unit_test); [`numerics.universal_kepler_step.fixed_route_ad`](https://github.com/drannarosen/jaxstro/blob/main/tests/validation/test_kepler_gradients.py) (validation_test) | No derivative claim across status, iteration-count, Stumpff-route, conic-label, or collision boundaries.; No implicit-root derivative claim; AD follows the finite executed Newton map.; Units, object identity, encounter selection, and state-commit policy belong to callers.; Runs a fixed 12-slot Newton scan by default; converged lanes freeze numerically. |
 | `jaxstro.numerics.update_bracket` | validated | value_first | none claimed | none registered | [`root.update_bracket`](https://github.com/drannarosen/jaxstro/blob/main/tests/unit/test_bracketed_root.py) (unit_test) | Primary purpose is auditable forward-value control flow. |
 | `jaxstro.quad.fixed` | experimental | smooth_pathwise | `jax.jit`: supported (Rule type, rule order or level, measure type, breakpoint count, and payload shape remain static.); `jax.vmap`: supported (Batch explicit arguments or numerical bounds.) | Unsupported rule, domain, and measure pairings raise eagerly. [raises]; Value-dependent invalid finite domains return NaN under tracing. [returns_nan] | [`quad-fixed-unit`](https://github.com/drannarosen/jaxstro/blob/main/tests/unit/quad/test_fixed.py) (unit_test); [`quad-fixed-transforms`](https://github.com/drannarosen/jaxstro/blob/main/tests/integration/test_quad_fixed_transforms.py) (integration_test) | A fixed rule does not estimate truncation error or select its order.; Quantity-valued integration and adaptive replay derivatives are not implemented.; Integrand work is the static node count multiplied by the static number of finite breakpoint segments. |
+| `jaxstro.quad.integrate` | experimental | known_zero | `jax.jit`: supported (Method configuration, capacities, breakpoint count, and payload shape remain static.); `jax.vmap`: supported (Each batch member runs one independent bounded controller.) | Unsupported method, domain, measure, breakpoint, or capacity declarations raise eagerly. [raises]; Dynamic invalid, nonfinite, roundoff-limited, or exhausted cases return a typed status. [structured_result] | [`quad-adaptive-transforms`](https://github.com/drannarosen/jaxstro/blob/main/tests/integration/test_quad_adaptive_transforms.py) (integration_test); [`quad-adaptive-validation`](https://github.com/drannarosen/jaxstro/blob/main/tests/validation/test_quad_adaptive_reference.py) (validation_test); [`quad-adaptive-envelope`](https://github.com/drannarosen/jaxstro/blob/main/docs/validation/quad-adaptive-envelope.json) (artifact) | Estimator convergence is not a universal bound on true error.; Related rules can miss the same unresolved narrow feature.; Only gradient=stop is implemented; replay and moving-bound derivatives are not.; Quantity-valued and multidimensional integration are not implemented.; No performance-superiority claim is established.; Regional logical work is node_count * (initial_regions + 2 * refinements); global methods report their finest completed active grid. |
 | `jaxstro.testing.compare_gradients` | validated | validation_only | none claimed | none registered | [`testing.compare_gradients`](https://github.com/drannarosen/jaxstro/blob/main/tests/integration/test_grad_audit.py) (integration_test) | Does not determine downstream scientific acceptance. |
 | `jaxstro.testing.render_registry` | validated | validation_only | none claimed | none registered | [`testing.render_registry`](https://github.com/drannarosen/jaxstro/blob/main/tests/validation/provenance_cards/test_registry.py) (integration_test) | Does not determine downstream scientific acceptance. |
 | `jaxstro.testing.validate_card` | validated | validation_only | none claimed | none registered | [`testing.validate_card`](https://github.com/drannarosen/jaxstro/blob/main/tests/validation/provenance_cards/test_registry.py) (integration_test) | Does not determine downstream scientific acceptance. |
@@ -409,6 +410,8 @@ These immutable record or type constructors inherit their module-level contract:
 - `jaxstro.provenance.ArtifactHash`
 - `jaxstro.provenance.EnvironmentSnapshot`
 - `jaxstro.provenance.MethodManifest`
+- `jaxstro.quad.AdaptiveClenshawCurtis`
+- `jaxstro.quad.AdaptiveTanhSinh`
 - `jaxstro.quad.AffineMapResult`
 - `jaxstro.quad.ClenshawCurtisRule`
 - `jaxstro.quad.DomainMapResult`
@@ -416,6 +419,7 @@ These immutable record or type constructors inherit their module-level contract:
 - `jaxstro.quad.ErrorNorm`
 - `jaxstro.quad.FejerIIRule`
 - `jaxstro.quad.FejerIRule`
+- `jaxstro.quad.GaussKronrod`
 - `jaxstro.quad.GaussianRule`
 - `jaxstro.quad.Infinite`
 - `jaxstro.quad.Interval`
@@ -432,6 +436,8 @@ These immutable record or type constructors inherit their module-level contract:
 - `jaxstro.quad.QuadStatus`
 - `jaxstro.quad.QuadWork`
 - `jaxstro.quad.RightInfinite`
+- `jaxstro.quad.Romberg`
+- `jaxstro.quad.RombergTanhSinh`
 - `jaxstro.quad.StandardNormalMeasure`
 - `jaxstro.quad.TanhSinhRule`
 - `jaxstro.quad.WeightedMeasure`

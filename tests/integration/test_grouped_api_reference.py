@@ -126,7 +126,27 @@ def test_quad_owner_page_teaches_canonical_and_legacy_boundaries() -> None:
     assert "jaxstro.numerics.integration" in text
     assert "jaxstro.numerics.quadrature" in text
     assert "temporary compatibility" in text
-    assert "does not yet provide adaptive integration" in text
+    assert "does not yet provide adaptive integration" not in text
+
+
+def test_quad_owner_page_publishes_the_adaptive_contract() -> None:
+    text = (API_ROOT / "approximation-integration/quad.md").read_text()
+    normalized = " ".join(text.split())
+    for required in (
+        "quad.integrate",
+        "GaussKronrod",
+        "AdaptiveClenshawCurtis",
+        "AdaptiveTanhSinh",
+        "Romberg",
+        "RombergTanhSinh",
+        'gradient="stop"',
+        "primal result",
+        "status precedence",
+        "integrand evaluations",
+        "not an exact error certificate",
+        "quad-adaptive-envelope.json",
+    ):
+        assert required in normalized
 
 
 def test_quad_owner_page_lists_the_complete_public_surface() -> None:

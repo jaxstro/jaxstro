@@ -84,6 +84,19 @@ PAGE_SPECS = {
             "eq-standard-normal-hermite",
         ),
     ),
+    "approximation-integration/adaptive-quadrature.md": (
+        "jaxstro.quad",
+        "../../50-api/approximation-integration/quad.md",
+        (
+            "eq-adaptive-error-account",
+            "eq-adaptive-tolerance",
+            "eq-adaptive-gk",
+            "eq-adaptive-clenshaw-curtis",
+            "eq-adaptive-tanh-sinh",
+            "eq-adaptive-romberg",
+            "eq-adaptive-work",
+        ),
+    ),
     "linear-structure/linear-algebra.md": (
         "jaxstro.numerics.linear_algebra",
         "../../50-api/linear-structure/linear-algebra.md",
@@ -264,6 +277,38 @@ def _missing_exact_relations(relative: str, text: str) -> tuple[str, ...]:
     return _missing_exact_relations_from_compact(
         relative, _compact(_derivation(relative, text))
     )
+
+
+def test_adaptive_quadrature_page_publishes_current_capability_and_boundaries() -> None:
+    text = _page("approximation-integration/adaptive-quadrature.md")
+    normalized = " ".join(text.split())
+
+    for required in (
+        "quad.integrate",
+        "GaussKronrod",
+        "AdaptiveClenshawCurtis",
+        "AdaptiveTanhSinh",
+        "Romberg",
+        "RombergTanhSinh",
+        "QuadStatus",
+        "QuadWork",
+        "ErrorKind",
+        "INVALID_INPUT",
+        "NONFINITE_INTEGRAND",
+        "CONVERGED",
+        "ROUNDOFF_LIMITED",
+        "MAX_EVALUATIONS",
+        "MAX_REGIONS",
+        'gradient="stop"',
+        "integrand evaluations",
+        "not an exact error certificate",
+        "tests/validation/test_quad_adaptive_reference.py",
+        "docs/validation/quad-adaptive-envelope.json",
+    ):
+        assert required in normalized
+
+    assert "Quadax owns adaptive quadrature" not in text
+    assert "does not establish an adaptive Jaxstro API" not in text
 
 
 @pytest.mark.parametrize("relative", PAGE_SPECS)

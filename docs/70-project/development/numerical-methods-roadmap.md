@@ -34,9 +34,10 @@ stellar-model policy, and data packages own their archive-specific schemas.
   Gaussian recurrence engine, Legendre, Jacobi, generalized Laguerre, both
   Hermite conventions, Clenshaw-Curtis, Fejer I and II, fixed tanh-sinh,
   explicit domains and measures, and a JAX-transformable fixed evaluator.
-- [ ] **Adaptive one-dimensional quadrature.** Gauss-Kronrod pairs, nested
+- [x] **Adaptive one-dimensional quadrature.** Gauss-Kronrod pairs, nested
   Clenshaw-Curtis, adaptive tanh-sinh, Romberg variants, deterministic status
-  precedence, and fixed-capacity work evidence.
+  precedence, fixed-capacity work evidence, and an analytic and failure-envelope
+  validation suite. Replay derivatives and quantity inputs remain later work.
 - [x] **Root-finding and monotone inversion.** Bracket discovery, vectorized
   independent solves, and monotone inverse interpolation for CDF-like tables.
 - [x] **Linear algebra primitives.** Weighted least squares, QR/SVD solve

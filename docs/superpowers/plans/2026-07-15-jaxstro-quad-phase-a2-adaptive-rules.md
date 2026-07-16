@@ -966,23 +966,23 @@ git commit -m "test(quad): validate adaptive quadrature envelope"
 - Makes the adaptive page current and Jaxstro-owned.
 - Keeps Quadax as a comparator rather than a delegated owner.
 
-- [ ] **Step 1: Write failing current-capability and claim-boundary ratchets**
+- [x] **Step 1: Write failing current-capability and claim-boundary ratchets**
 
 Require every method/configuration name, `quad.integrate`, support matrix, status precedence, work definitions, error-kind semantics, primal-only stop policy, exact-evidence disclaimer, cost model, validation links, and absence of the stale “Quadax owns” claim.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/integration/test_method_page_contract.py tests/integration/test_grouped_api_reference.py tests/unit/test_contract_manifests.py`
 
-- [ ] **Step 3: Write the researcher-first adaptive guide**
+- [x] **Step 3: Write the researcher-first adaptive guide**
 
 Follow the ten-stage method-page sequence. Include labeled LaTeX derivations for the local/global error account, tolerance, Gauss-Kronrod embedding and stabilization, nested Clenshaw-Curtis, double-exponential refinement, Romberg recurrence, and work scaling. Use MyST `important`, `warning`, `note`, `tip`, and `seealso` only for their intended semantic roles. Include executable raw-array examples for each method family and a method-choice table for new researchers.
 
-- [ ] **Step 4: Update API, roadmaps, SOTA, scorecard, contracts, and evidence together**
+- [x] **Step 4: Update API, roadmaps, SOTA, scorecard, contracts, and evidence together**
 
 Mark A2 runtime methods current while keeping replay derivatives, quantities, formal comparisons, sibling migration, and later-dimensional methods planned. Register a callable contract for `jaxstro.quad.integrate` with exact evidence links and limitations.
 
-- [ ] **Step 5: Regenerate and verify**
+- [x] **Step 5: Regenerate and verify**
 
 Run: `env -u VIRTUAL_ENV uv run --no-sync python scripts/build_contract_registry.py --emit`
 

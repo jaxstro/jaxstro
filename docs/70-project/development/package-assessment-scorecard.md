@@ -10,7 +10,7 @@ research-software package. The companion [](./sota-assessment.md) ranks
 investments; this page records current evidence and what would justify changing
 an assessment.
 
-**Assessment date: 2026-07-14; registry reconciliation: 2026-07-14.** Grades
+**Assessment date: 2026-07-15; registry reconciliation: 2026-07-15.** Grades
 describe repository evidence reviewed on that date and must be re-audited when
 supporting contracts change.
 
@@ -34,7 +34,7 @@ supporting contracts change.
 | Evidence linkage | A- | [](../../60-validation/evidence-index.md) | Computational evidence, source provenance, and scientific policy remain distinct and freshness checked | Evidence depth is uneven by module | Method-appropriate artifacts for consequential contracts |
 | Limitation coverage | B+ | [](../../40-workflows/reproducible-research/evidence-and-claim-boundaries.md) | Workflows and contracts record bounded non-claims | Limitation coverage is not generated for every public callable | A limitation-coverage ratchet tied to contract records |
 | Architecture and ownership | A | [](../direction/architecture.md) | The thin foundation and one-way ecosystem boundary are explicit | Consumer evidence for future abstractions is incomplete | Pinned multi-consumer ownership evidence |
-| Numerical correctness | A- | [](../../60-validation/validation.md) | Analytic cases, limits, round trips, convergence, and FD comparisons cover major kernels | Validation and performance artifacts remain uneven | Per-contract evidence coverage and missing-evidence ratchets |
+| Numerical correctness | A- | [](../../60-validation/validation.md) | Analytic cases, limits, round trips, convergence, adaptive-quadrature failure envelopes, and FD comparisons cover major kernels | Validation and performance artifacts remain uneven | Per-contract evidence coverage and missing-evidence ratchets |
 | AD honesty | A | [](../../20-methods/change-constraints-evolution/rootfinding.md) | Smooth, blocked, zero, value-first, validation-only, and certified implicit paths are distinguished | The taxonomy is not uniformly generated per callable | Callable-level AD coverage with evidence links |
 | JAX architecture | A- | [](../../20-methods/methods.md) | JIT, VMAP, scan, PyTree, JVP/VJP, and gradient behavior are tested on substantial surfaces | Transform and batching-cost behavior is hard to discover per callable | Generated transform matrix linked to executable evidence |
 | Units and dimensional safety | B+ | [](../../30-representations/units-quantities/quantity-system.md) | `UnitSystem` is mature and `quantity` is implemented | Adoption remains deferred while two dimensional surfaces coexist | Downstream parity, performance, serialization, and migration evidence |
@@ -68,9 +68,9 @@ and an unclassified symbol is not treated as supported.
 | Metric identity | Symbol | Value | Units |
 | --- | --- | ---: | --- |
 | Registered public modules | `N_module,contract` | 17 | modules |
-| Callable-level contracts | `N_callable,contract` | 17 | callables |
+| Callable-level contracts | `N_callable,contract` | 18 | callables |
 | Explicitly unclassified public callables | `N_callable,unclassified` | 225 | callables |
-| Module-inherited public record types | `N_symbol,inherited` | 152 | symbols |
+| Module-inherited public record types | `N_symbol,inherited` | 157 | symbols |
 
 **Unified evidence infrastructure: implemented.** Computational measurements,
 source provenance, and scientific policy remain separate evidence classes.

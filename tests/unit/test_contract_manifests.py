@@ -80,8 +80,24 @@ def test_quad_contract_registers_fixed_evaluation() -> None:
     assert {item.transform for item in fixed.transforms} == {"jax.jit", "jax.vmap"}
 
 
+def test_quad_contract_registers_adaptive_integration() -> None:
+    records = {item.import_path: item for item in collect_contracts().modules}
+    adaptive = {item.import_path: item for item in records["jaxstro.quad"].callables}[
+        "jaxstro.quad.integrate"
+    ]
+    assert adaptive.ad_semantics.value == "known_zero"
+    assert {item.transform for item in adaptive.transforms} == {"jax.jit", "jax.vmap"}
+    assert {item.support.value for item in adaptive.transforms} == {"supported"}
+    assert {item.kind.value for item in adaptive.evidence} == {
+        "integration_test",
+        "validation_test",
+        "artifact",
+    }
+
+
 def test_contract_resolution_prefers_public_callable_over_same_named_module() -> None:
     assert resolve_import_path("jaxstro.quad.fixed") is jaxstro.quad.fixed
+    assert resolve_import_path("jaxstro.quad.integrate") is jaxstro.quad.integrate
 
 
 def test_core_dimensional_and_ownership_policies_are_specific() -> None:

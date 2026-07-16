@@ -47,8 +47,10 @@ feature list.
 Future runtime ownership follows this exact order:
 
 The active exception is to complete the approved `jaxstro.quad` program before this queue.
-Its Phase A1 fixed methods are implemented; adaptive control and
-its evidence gates remain unfinished.
+Its Phase A1 fixed methods and Phase A2 primal adaptive methods are implemented
+with analytic and failure-envelope evidence. Replay derivatives, quantity
+integration, matched external performance comparisons, later-dimensional
+methods, and downstream adoption remain open gates.
 
 1. `jaxstro.ml`
 2. `jaxstro.numerics.qmc`

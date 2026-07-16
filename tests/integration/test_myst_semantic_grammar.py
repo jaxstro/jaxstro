@@ -42,7 +42,6 @@ STATUS_PAGES = {
     "20-methods/change-constraints-evolution/adaptive-differential-equations.md": (
         "Ecosystem guide"
     ),
-    "20-methods/approximation-integration/adaptive-quadrature.md": "Ecosystem guide",
     "20-methods/linear-structure/iterative-linear-solvers.md": "Ecosystem guide",
     "20-methods/probability-sampling/quasi-monte-carlo.md": (
         "Planned Jaxstro capability"
@@ -86,6 +85,7 @@ CURRENT_METHOD_PAGES = {
     "20-methods/approximation-integration/bsplines.md",
     "20-methods/approximation-integration/cumulative-trapz.md",
     "20-methods/approximation-integration/quadrature.md",
+    "20-methods/approximation-integration/adaptive-quadrature.md",
     "20-methods/linear-structure/linear-algebra.md",
     "20-methods/linear-structure/operators.md",
     "20-methods/linear-structure/special-functions.md",

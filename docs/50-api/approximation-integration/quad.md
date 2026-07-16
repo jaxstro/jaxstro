@@ -1,6 +1,6 @@
 ---
 title: Jaxstro quadrature
-description: Canonical sampled-data and one-dimensional fixed-quadrature API.
+description: Canonical sampled-data, fixed, and adaptive one-dimensional quadrature API.
 ---
 
 # Jaxstro quadrature
@@ -11,20 +11,34 @@ description: Canonical sampled-data and one-dimensional fixed-quadrature API.
 
 ## Purpose
 
-This is the canonical integration namespace. Phase A1 provides sampled-data
-integration, a common fixed evaluator, classical Gaussian rules,
-Clenshaw-Curtis, Fejer type I and II, fixed tanh-sinh, domains, measures, and
-typed result foundations. It does not yet provide adaptive integration.
+This is the canonical integration namespace. It provides sampled-data
+integration, fixed rules, five adaptive method families, domains, measures,
+typed error and work evidence, and deterministic stopping statuses.
 
 ```python
 from jaxstro import quad
-from jaxstro.quad import fixed
+from jaxstro.quad import fixed, integrate
 ```
 
 ## Public records and callables
 
 ```python
 quad.fixed(fun, domain, *, args=(), rule, measure=None)
+
+quad.integrate(
+    fun,
+    domain,
+    *,
+    args=(),
+    method,
+    measure=None,
+    epsabs,
+    epsrel,
+    max_evaluations,
+    max_regions,
+    error_norm=quad.MaxNorm(),
+    gradient="stop",
+)
 ```
 
 The integrand receives a node array with shape `(n,)` and returns `(n,)` or
@@ -44,6 +58,11 @@ Supported rule declarations:
 Gauss-Laguerre, physicists' Gauss-Hermite, or standard-normal Gauss-Hermite from
 the declared domain and measure.
 
+Supported adaptive declarations are `GaussKronrod`,
+`AdaptiveClenshawCurtis`, `AdaptiveTanhSinh`, `Romberg`, and
+`RombergTanhSinh`. `integrate` returns a `QuadResult` containing the primal
+value, `QuadError`, effective tolerance, `QuadStatus`, and `QuadWork`.
+
 ### Complete public inventory
 
 Sampled values:
@@ -61,6 +80,15 @@ Fixed evaluation and rules:
 - `FejerIRule`
 - `FejerIIRule`
 - `TanhSinhRule`
+
+Adaptive evaluation and methods:
+
+- `integrate`
+- `GaussKronrod`
+- `AdaptiveClenshawCurtis`
+- `AdaptiveTanhSinh`
+- `Romberg`
+- `RombergTanhSinh`
 
 Compatibility and expansion helpers:
 
@@ -94,7 +122,7 @@ Measures:
 - `PhysicistsHermiteMeasure`
 - `StandardNormalMeasure`
 
-Results and tolerances reserved for the adaptive layer:
+Results, statuses, work, and tolerances:
 
 - `QuadStatus`
 - `ErrorKind`
@@ -115,6 +143,12 @@ and `fixed` removes the leading node axis. Sampled methods reduce or retain the
 selected array axis according to their individual contracts. Bounds and
 breakpoint values follow the active JAX dtype policy. Reference validation uses
 float64.
+
+Adaptive integrands follow the same leading-node convention and may return
+scalar, complex, vector, or higher-rank trailing payloads. `epsabs` and
+`epsrel` are scalar real values. Method type and configuration,
+`max_evaluations`, `max_regions`, breakpoint count, and payload shape remain
+static under JIT.
 
 ## Failure behavior
 
@@ -141,6 +175,25 @@ $u=x-\mathtt{lower}$ and the density $u^{\alpha}e^{-u}\,\mathrm{d}u$. See the
 [method derivation](../../20-methods/approximation-integration/quadrature.md#classical-measure-conventions)
 for the masses and normalization equations.
 
+### Supported adaptive pairings
+
+| Method | Domain | Breakpoints | Measure | Current error kind |
+| --- | --- | --- | --- | --- |
+| `GaussKronrod` | finite `Interval` | yes | `LebesgueMeasure`, `WeightedMeasure` | `EMBEDDED_RULE` |
+| `AdaptiveClenshawCurtis` | finite `Interval` | yes | `LebesgueMeasure`, `WeightedMeasure` | `REFINEMENT_DIFFERENCE` |
+| `AdaptiveTanhSinh` | any current domain | finite intervals only | `LebesgueMeasure`, `WeightedMeasure` | `REFINEMENT_DIFFERENCE` |
+| `Romberg` | finite `Interval` | no | `LebesgueMeasure`, `WeightedMeasure` | `REFINEMENT_DIFFERENCE` |
+| `RombergTanhSinh` | any current domain | no | `LebesgueMeasure`, `WeightedMeasure` | `REFINEMENT_DIFFERENCE` |
+
+Structural incompatibilities raise before tracing. Dynamic invalid inputs,
+nonfinite integrands, roundoff limits, and capacity exhaustion return a typed
+result. Current status precedence is invalid input, nonfinite integrand,
+convergence, roundoff limitation, and then exhausted capacity. Regional
+controllers distinguish `MAX_EVALUATIONS` and `MAX_REGIONS`.
+`DIVERGENCE_SUSPECTED` and `ERROR_ESTIMATE_UNAVAILABLE` are reserved statuses,
+not current A2 outputs. Sparse-grid and replicate error kinds are likewise
+reserved.
+
 ## JAX transforms and AD classification
 
 `fixed` supports `jax.jit` and `jax.vmap` with the static boundaries above. It
@@ -149,15 +202,26 @@ flow through explicit integrand parameters and smooth finite bounds. The rule
 configuration, node count, and discrete breakpoint partition are not
 differentiated.
 
+`integrate` supports `jax.jit` and `jax.vmap` under its static capacity and
+configuration boundaries. Its only current policy is `gradient="stop"`: the
+complete primal result tree is passed through `jax.lax.stop_gradient`.
+Consequently a zero derivative means AD was deliberately stopped, not that the
+mathematical integral has zero derivative. VMAP runs one bounded adaptive
+controller per batch member.
+
 Reference validation uses float64. Normal calls follow the active JAX precision
-policy. Phase A1 accepts raw arrays only; quantity-valued inputs remain Phase A3
-work.
+policy. The current API accepts raw arrays only; quantity-valued inputs and
+adaptive replay derivatives remain later work.
 
 ## Contract and evidence links
 
 Review [fixed and weighted quadrature](../../20-methods/approximation-integration/quadrature.md)
-for derivations and audit procedures, and the
-[validation index](../../60-validation/validation.md) for evidence boundaries.
+and [adaptive quadrature](../../20-methods/approximation-integration/adaptive-quadrature.md)
+for derivations and audit procedures. The
+[validation index](../../60-validation/validation.md) names the executable
+envelope, and
+[`quad-adaptive-envelope.json`](../../validation/quad-adaptive-envelope.json)
+records the generated tolerance sweeps.
 
 ## Canonical import example
 
@@ -172,6 +236,31 @@ value = quad.fixed(
     rule=quad.TanhSinhRule(6),
 )
 ```
+
+An adaptive call has the same canonical owner:
+
+```python
+adaptive = quad.integrate(
+    lambda x: x**2,
+    quad.Interval(0.0, 1.0),
+    method=quad.GaussKronrod(pair=21),
+    epsabs=1e-8,
+    epsrel=1e-8,
+    max_evaluations=2048,
+    max_regions=64,
+    gradient="stop",
+)
+```
+
+`QuadWork.evaluations` means logical integrand evaluations, not padded device
+lanes or wall time. For an `n`-node regional rule, `M` initial regions, and `r`
+splits, the count is `n * (M + 2 * r)`. Classical Romberg reports `2**k + 1`
+at completed level `k`; Romberg-tanh-sinh reports the active-node count at its
+finest completed level.
+
+The reported estimator is not an exact error certificate. Related rules can
+miss the same unresolved narrow feature even when the returned status is
+`CONVERGED`.
 
 ### Compatibility boundary
 

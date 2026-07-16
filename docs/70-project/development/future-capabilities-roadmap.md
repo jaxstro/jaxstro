@@ -24,7 +24,7 @@ surface is indexed at [](../../50-api/api.md), with evidence boundaries at
 [](../../60-validation/validation.md).
 
 Implemented numerical families include interpolation, complete one-dimensional
-fixed quadrature,
+fixed quadrature, primal adaptive one-dimensional quadrature,
 fixed-step differential equations, scalar roots, distributions, random-state
 mechanics, small dense linear algebra, operators, structured one-dimensional
 meshes, and differentiability audits. These foundations do not authorize a
@@ -48,7 +48,7 @@ or the public owner of Jaxstro's integration contract.
 - [x] Establish the canonical namespace, domains, measures, rules, and result
   vocabulary.
 - [x] Add sampled-data canonicalization and the complete fixed-rule family.
-- [ ] Add adaptive Gauss-Kronrod, Clenshaw-Curtis, tanh-sinh, and Romberg
+- [x] Add adaptive Gauss-Kronrod, Clenshaw-Curtis, tanh-sinh, and Romberg
   controllers with typed failure evidence.
 - [ ] Add replay derivatives, moving-bound evidence, and the quantity boundary.
 - [ ] Complete comparisons, documentation, migration guidance, and the Phase A
@@ -147,7 +147,9 @@ consumers establish a shared topology and conservation boundary.
 ## Build checklist
 
 - [ ] Generate callable-level transform and maturity coverage.
-- [ ] Complete the approved `jaxstro.quad` adaptive and evidence phases.
+- [ ] Complete the remaining `jaxstro.quad` replay, quantity, matched-comparison,
+  migration, and release gates; the primal A2 adaptive methods and analytic
+  evidence envelope are complete.
 - [ ] Decide quantity adoption from downstream parity and migration evidence.
 - [ ] Deliver the smallest evidence-complete `jaxstro.ml` vertical slice.
 - [ ] Deliver reference-sequence and convergence gates for `jaxstro.numerics.qmc`.
