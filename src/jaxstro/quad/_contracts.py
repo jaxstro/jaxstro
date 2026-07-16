@@ -192,7 +192,8 @@ _ADAPTIVE_CONTRACT = CallableContract(
             SupportLevel.CONDITIONAL,
             conditions=(
                 "First-order replay of value on a successful solve with "
-                "parameters passed through explicit args or smooth finite bounds."
+                "parameters passed through explicit args, smooth finite bounds, "
+                "or the finite boundary of a supported semi-infinite domain."
             ),
             evidence_ids=("quad-adaptive-replay", "quad-replay-derivatives"),
         ),

@@ -1006,7 +1006,7 @@
               "transform": "jax.vmap"
             },
             {
-              "conditions": "First-order replay of value on a successful solve with parameters passed through explicit args or smooth finite bounds.",
+              "conditions": "First-order replay of value on a successful solve with parameters passed through explicit args, smooth finite bounds, or the finite boundary of a supported semi-infinite domain.",
               "evidence_ids": [
                 "quad-adaptive-replay",
                 "quad-replay-derivatives"
@@ -1183,7 +1183,7 @@
   ],
   "package_version": "0.1.0",
   "schema_version": "1",
-  "source_revision": "sha256:2bde13bb16920df32a118ac65e8e5e7fb44096a3edf4b5036e16a2362f304ce1",
+  "source_revision": "sha256:34169cac7ba55b3ac617ba8440061240934c056990daa776376fd32cb070d4a0",
   "unclassified_callables": [
     "jaxstro.atmospheres.acquisition_rows_to_markdown",
     "jaxstro.atmospheres.build_bosz_index",

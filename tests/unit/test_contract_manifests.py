@@ -85,9 +85,21 @@ def test_quad_contract_registers_adaptive_integration() -> None:
     adaptive = {item.import_path: item for item in records["jaxstro.quad"].callables}[
         "jaxstro.quad.integrate"
     ]
-    assert adaptive.ad_semantics.value == "known_zero"
-    assert {item.transform for item in adaptive.transforms} == {"jax.jit", "jax.vmap"}
-    assert {item.support.value for item in adaptive.transforms} == {"supported"}
+    assert adaptive.ad_semantics.value == "smooth_pathwise"
+    assert {item.transform for item in adaptive.transforms} == {
+        "jax.jit",
+        "jax.vmap",
+        "jvp",
+        "vjp",
+        "jacfwd/jacrev",
+    }
+    assert {item.transform: item.support.value for item in adaptive.transforms} == {
+        "jax.jit": "supported",
+        "jax.vmap": "supported",
+        "jvp": "conditional",
+        "vjp": "conditional",
+        "jacfwd/jacrev": "conditional",
+    }
     assert {item.kind.value for item in adaptive.evidence} == {
         "integration_test",
         "validation_test",
