@@ -39,9 +39,45 @@ def test_quantity_mode_accepts_dimensionless_domain_with_dimensionful_integrand(
     assert jnp.allclose(result.value.value, 1.0)
 
 
+def test_quantity_output_without_quantity_trigger_explains_activation():
+    with pytest.raises(
+        TypeError,
+        match="quantity epsabs activates a dimensionless quantity domain",
+    ):
+        quad.integrate(
+            lambda x: jnp.ones_like(x) * q.erg,
+            quad.Interval(0.0, 1.0),
+            method=quad.GaussKronrod(15),
+            epsabs=1e-9,
+            epsrel=1e-9,
+            max_evaluations=45,
+            max_regions=2,
+            gradient="stop",
+        )
+
+
 def test_fully_infinite_quantity_domain_requires_static_unit():
     domain = quad.Infinite(unit=q.cm)
     assert domain.unit == q.cm
+
+
+def test_fully_infinite_quantity_domain_runs_through_adaptive_boundary():
+    scale = 2.0 * q.cm
+    result = quad.integrate(
+        lambda x, args: q.math.exp(-1.0 * (x / args) ** 2),
+        quad.Infinite(unit=q.cm),
+        args=scale,
+        method=quad.AdaptiveTanhSinh(3),
+        epsabs=5e-4 * q.cm,
+        epsrel=1e-4,
+        max_evaluations=1800,
+        max_regions=24,
+        gradient="stop",
+    )
+
+    assert result.status == quad.QuadStatus.CONVERGED
+    assert result.value.unit == q.cm
+    assert jnp.allclose(result.value.value, 2.0 * jnp.sqrt(jnp.pi), rtol=2e-5)
 
 
 def test_raw_fixed_and_transform_paths_reject_unit_bearing_infinite_domain():

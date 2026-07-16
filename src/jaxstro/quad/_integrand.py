@@ -6,7 +6,14 @@ from typing import Any
 import jax
 import jax.numpy as jnp
 
+from jaxstro.quantity import Quantity
+
 from .measures import WeightedMeasure
+
+_QUANTITY_ACTIVATION_MESSAGE = (
+    "quantity-valued integrand output requires quad.integrate with quantity "
+    "epsabs; quantity epsabs activates a dimensionless quantity domain"
+)
 
 
 def has_explicit_args(args: Any) -> bool:
@@ -18,6 +25,8 @@ def call_integrand(fun: Callable, nodes, args: Any, has_args: bool):
 
 
 def validate_node_values(values, node_count: int, *, context: str):
+    if isinstance(values, Quantity):
+        raise TypeError(_QUANTITY_ACTIVATION_MESSAGE)
     values = jnp.asarray(values)
     if values.ndim == 0 or values.shape[0] != node_count:
         raise ValueError(f"{context} integrand output must have a leading node axis")
@@ -39,6 +48,8 @@ def infer_payload_zero(
         lambda nodes: call_integrand(fun, nodes, args, has_args),
         abstract_nodes,
     )
+    if isinstance(abstract, Quantity):
+        raise TypeError(_QUANTITY_ACTIVATION_MESSAGE)
     if (
         not hasattr(abstract, "shape")
         or len(abstract.shape) == 0
