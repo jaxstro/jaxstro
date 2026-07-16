@@ -138,6 +138,125 @@ def _richardson_row(table, floors, level, base, base_floor, max_level):
     return jax.lax.fori_loop(1, max_level + 1, column, (table, floors))
 
 
+def _romberg_initialize(
+    evaluate_one,
+    zero,
+    *,
+    initial_level: int,
+    max_level: int,
+    lane_count: int,
+    dtype,
+):
+    """Build the shared nested initial grid and Richardson rows."""
+    payload_shape = zero.shape
+    real_dtype = jnp.real(zero).dtype
+    table = jnp.zeros(
+        (max_level + 1, max_level + 1) + payload_shape,
+        dtype=zero.dtype,
+    )
+    floors = jnp.zeros(
+        (max_level + 1, max_level + 1) + payload_shape,
+        dtype=real_dtype,
+    )
+    fine_count = 2**initial_level + 1
+    lane = jnp.arange(max(lane_count, fine_count), dtype=jnp.int32)
+    initial_active = lane < fine_count
+    initial_nodes = -1.0 + 2.0 * lane.astype(dtype) / (fine_count - 1)
+    initial_values, initial_nonfinite, initial_roundoff = _masked_evaluate(
+        evaluate_one,
+        initial_nodes,
+        initial_active,
+        zero,
+    )
+
+    def initialize(level, state):
+        current_table, current_floors = state
+        stride = 2 ** (initial_level - level)
+        selected = initial_active & (lane % stride == 0)
+        endpoint = (lane == 0) | (lane == fine_count - 1)
+        coefficients = jnp.where(
+            selected,
+            jnp.where(endpoint, 0.5, 1.0),
+            0.0,
+        )
+        shape = coefficients.shape + (1,) * len(payload_shape)
+        step = jnp.asarray(2.0 / 2**level, dtype=dtype)
+        base = step * jnp.sum(
+            initial_values * jnp.reshape(coefficients, shape),
+            axis=0,
+        )
+        resabs = step * jnp.sum(
+            jnp.abs(initial_values) * jnp.reshape(coefficients, shape),
+            axis=0,
+        )
+        base_floor = _gamma(2**level + 1, real_dtype) * resabs
+        return _richardson_row(
+            current_table,
+            current_floors,
+            level,
+            base,
+            base_floor,
+            max_level,
+        )
+
+    table, floors = jax.lax.fori_loop(
+        0,
+        initial_level + 1,
+        initialize,
+        (table, floors),
+    )
+    return table, floors, initial_nonfinite, initial_roundoff
+
+
+def _romberg_advance_level(
+    evaluate_one,
+    zero,
+    table,
+    floors,
+    level,
+    *,
+    lane_count: int,
+    max_level: int,
+    dtype,
+):
+    """Advance the shared nested trapezoid and Richardson recurrence once."""
+    payload_shape = zero.shape
+    real_dtype = jnp.real(zero).dtype
+    lane = jnp.arange(lane_count, dtype=jnp.int32)
+    new_count = 2 ** (level - 1)
+    new_active = lane < new_count
+    odd = 2 * lane + 1
+    nodes = -1.0 + 2.0 * odd.astype(dtype) / (2**level)
+    values, lane_nonfinite, lane_roundoff = _masked_evaluate(
+        evaluate_one,
+        nodes,
+        new_active,
+        zero,
+    )
+    shape = new_active.shape + (1,) * len(payload_shape)
+    selected_values = jnp.where(jnp.reshape(new_active, shape), values, 0.0)
+    step = jnp.asarray(2.0, dtype=dtype) / (2**level)
+    base = 0.5 * table[level - 1, 0] + step * jnp.sum(selected_values, axis=0)
+    previous_resabs = floors[level - 1, 0] / _gamma(
+        2 ** (level - 1) + 1,
+        real_dtype,
+    )
+    resabs = 0.5 * previous_resabs + step * jnp.sum(
+        jnp.abs(selected_values),
+        axis=0,
+    )
+    base_floor = _gamma(2**level + 1, real_dtype) * resabs
+    new_table, new_floors = _richardson_row(
+        table,
+        floors,
+        level,
+        base,
+        base_floor,
+        max_level,
+    )
+    return new_table, new_floors, lane_nonfinite, lane_roundoff
+
+
 def romberg_refine(
     evaluate_one: Callable[[Array], tuple[Array, Array, Array]],
     zero: Array,
@@ -161,43 +280,14 @@ def romberg_refine(
     )
     max_level = (max_evaluations - 1).bit_length() - 1
     lane_count = 2 ** max(max_level - 1, 0)
-    payload_shape = zero.shape
-    value_dtype = zero.dtype
-    real_dtype = jnp.real(zero).dtype
-    table = jnp.zeros((max_level + 1, max_level + 1) + payload_shape, dtype=value_dtype)
-    floors = jnp.zeros((max_level + 1, max_level + 1) + payload_shape, dtype=real_dtype)
-
-    fine_count = 2**initial_level + 1
-    lane = jnp.arange(max(lane_count, fine_count), dtype=jnp.int32)
-    initial_active = lane < fine_count
-    initial_nodes = -1.0 + 2.0 * lane.astype(dtype) / (fine_count - 1)
-    initial_values, initial_nonfinite, initial_roundoff = _masked_evaluate(
-        evaluate_one, initial_nodes, initial_active, zero
+    table, floors, initial_nonfinite, initial_roundoff = _romberg_initialize(
+        evaluate_one,
+        zero,
+        initial_level=initial_level,
+        max_level=max_level,
+        lane_count=lane_count,
+        dtype=dtype,
     )
-
-    def initialize(level, state):
-        current_table, current_floors = state
-        stride = 2 ** (initial_level - level)
-        selected = initial_active & (lane % stride == 0)
-        endpoint = (lane == 0) | (lane == fine_count - 1)
-        coefficients = jnp.where(selected, jnp.where(endpoint, 0.5, 1.0), 0.0)
-        shape = coefficients.shape + (1,) * len(payload_shape)
-        step = jnp.asarray(2.0 / 2**level, dtype=dtype)
-        base = step * jnp.sum(initial_values * jnp.reshape(coefficients, shape), axis=0)
-        resabs = step * jnp.sum(
-            jnp.abs(initial_values) * jnp.reshape(coefficients, shape), axis=0
-        )
-        base_floor = _gamma(2**level + 1, real_dtype) * resabs
-        return _richardson_row(
-            current_table,
-            current_floors,
-            level,
-            base,
-            base_floor,
-            max_level,
-        )
-
-    table, floors = jax.lax.fori_loop(0, initial_level + 1, initialize, (table, floors))
     value = table[initial_level, initial_level]
     previous = table[initial_level - 1, initial_level - 1]
     error = _richardson_error(
@@ -261,30 +351,15 @@ def romberg_refine(
 
     def body(current):
         level = current.level + 1
-        new_count = 2 ** (level - 1)
-        new_active = jnp.arange(lane_count) < new_count
-        odd = 2 * jnp.arange(lane_count) + 1
-        nodes = -1.0 + 2.0 * odd.astype(dtype) / (2**level)
-        values, lane_nonfinite, lane_roundoff = _masked_evaluate(
-            evaluate_one, nodes, new_active, zero
-        )
-        shape = new_active.shape + (1,) * len(payload_shape)
-        selected_values = jnp.where(jnp.reshape(new_active, shape), values, 0.0)
-        step = jnp.asarray(2.0, dtype=dtype) / (2**level)
-        base = 0.5 * current.table[level - 1, 0] + step * jnp.sum(
-            selected_values, axis=0
-        )
-        resabs = 0.5 * (
-            current.floors[level - 1, 0] / _gamma(2 ** (level - 1) + 1, real_dtype)
-        ) + step * jnp.sum(jnp.abs(selected_values), axis=0)
-        base_floor = _gamma(2**level + 1, real_dtype) * resabs
-        new_table, new_floors = _richardson_row(
+        new_table, new_floors, lane_nonfinite, lane_roundoff = _romberg_advance_level(
+            evaluate_one,
+            zero,
             current.table,
             current.floors,
             level,
-            base,
-            base_floor,
-            max_level,
+            lane_count=lane_count,
+            max_level=max_level,
+            dtype=dtype,
         )
         new_value = new_table[level, level]
         new_error = _richardson_error(
@@ -353,103 +428,29 @@ def romberg_replay_value(
     max_level = (max_evaluations - 1).bit_length() - 1
     accepted_level = jax.lax.stop_gradient(jnp.asarray(accepted_level, dtype=jnp.int32))
     lane_count = 2 ** max(max_level - 1, 0)
-    payload_shape = zero.shape
-    value_dtype = zero.dtype
-    real_dtype = jnp.real(zero).dtype
-    table = jnp.zeros(
-        (max_level + 1, max_level + 1) + payload_shape,
-        dtype=value_dtype,
-    )
-    floors = jnp.zeros(
-        (max_level + 1, max_level + 1) + payload_shape,
-        dtype=real_dtype,
-    )
-
-    fine_count = 2**initial_level + 1
-    lane = jnp.arange(max(lane_count, fine_count), dtype=jnp.int32)
-    initial_active = lane < fine_count
-    initial_nodes = -1.0 + 2.0 * lane.astype(dtype) / (fine_count - 1)
-    initial_values, _, _ = _masked_evaluate(
+    table, floors, _, _ = _romberg_initialize(
         evaluate_one,
-        initial_nodes,
-        initial_active,
         zero,
-    )
-
-    def initialize(level, state):
-        current_table, current_floors = state
-        stride = 2 ** (initial_level - level)
-        selected = initial_active & (lane % stride == 0)
-        endpoint = (lane == 0) | (lane == fine_count - 1)
-        coefficients = jnp.where(
-            selected,
-            jnp.where(endpoint, 0.5, 1.0),
-            0.0,
-        )
-        shape = coefficients.shape + (1,) * len(payload_shape)
-        step = jnp.asarray(2.0 / 2**level, dtype=dtype)
-        weighted = initial_values * jnp.reshape(coefficients, shape)
-        base = step * jnp.sum(weighted, axis=0)
-        resabs = step * jnp.sum(jnp.abs(weighted), axis=0)
-        base_floor = _gamma(2**level + 1, real_dtype) * resabs
-        return _richardson_row(
-            current_table,
-            current_floors,
-            level,
-            base,
-            base_floor,
-            max_level,
-        )
-
-    table, floors = jax.lax.fori_loop(
-        0,
-        initial_level + 1,
-        initialize,
-        (table, floors),
+        initial_level=initial_level,
+        max_level=max_level,
+        lane_count=lane_count,
+        dtype=dtype,
     )
 
     def maybe_advance(level, state):
         def advance(current):
             current_table, current_floors = current
-            new_count = 2 ** (level - 1)
-            lane = jnp.arange(lane_count, dtype=jnp.int32)
-            new_active = lane < new_count
-            odd = 2 * lane + 1
-            nodes = -1.0 + 2.0 * odd.astype(dtype) / (2**level)
-            values, _, _ = _masked_evaluate(
+            new_table, new_floors, _, _ = _romberg_advance_level(
                 evaluate_one,
-                nodes,
-                new_active,
                 zero,
-            )
-            shape = new_active.shape + (1,) * len(payload_shape)
-            selected_values = jnp.where(
-                jnp.reshape(new_active, shape),
-                values,
-                0.0,
-            )
-            step = jnp.asarray(2.0, dtype=dtype) / (2**level)
-            base = 0.5 * current_table[level - 1, 0] + step * jnp.sum(
-                selected_values,
-                axis=0,
-            )
-            previous_resabs = current_floors[level - 1, 0] / _gamma(
-                2 ** (level - 1) + 1,
-                real_dtype,
-            )
-            resabs = 0.5 * previous_resabs + step * jnp.sum(
-                jnp.abs(selected_values),
-                axis=0,
-            )
-            base_floor = _gamma(2**level + 1, real_dtype) * resabs
-            return _richardson_row(
                 current_table,
                 current_floors,
                 level,
-                base,
-                base_floor,
-                max_level,
+                lane_count=lane_count,
+                max_level=max_level,
+                dtype=dtype,
             )
+            return new_table, new_floors
 
         return jax.lax.cond(
             level <= accepted_level,
