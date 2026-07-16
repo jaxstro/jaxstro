@@ -25,6 +25,12 @@ Phase A3 owns:
 - researcher-facing derivations and contract documentation; and
 - promotion of replay to the default after the complete evidence gate passes.
 
+The Phase A3 quantity boundary belongs only to adaptive `quad.integrate`.
+`quad.fixed`, `map_domain`, and `map_interval` retain their raw Phase A1
+contracts and must eagerly reject quantity-valued domains. In particular, they
+must reject `Infinite(unit is not None)` rather than silently discard its unit.
+`Infinite()` and every existing raw fixed or transform call remain unchanged.
+
 Phase A3 does not own:
 
 - multidimensional integration;
@@ -100,8 +106,9 @@ _PrimalSolve
 |-- result: QuadResult
 `-- evidence
     |-- _RegionalReplayEvidence
-    |   |-- reference_lower
-    |   |-- reference_upper
+    |   |-- segment_local_lower
+    |   |-- segment_local_upper
+    |   |-- segment_id
     |   `-- active_mask
     `-- _GlobalReplayEvidence
         `-- accepted_level
@@ -113,15 +120,28 @@ Regional and global methods use distinct private evidence types rather than one
 overfilled structure with irrelevant fields.
 
 The existing regional controller already retains fixed-capacity normalized
-region endpoints and an active mask. Phase A3 preserves those arrays through
-the private solve boundary. The global Romberg engines retain the accepted
-level required to reconstruct the executed rule. Method configuration and
-fixed rule data remain static rather than being copied into dynamic evidence.
+region endpoints and an active mask. Phase A3 adds an original-segment identity
+that propagates unchanged when a region is split. Accepted endpoints are
+recorded locally within that original segment. This provenance lets replay use
+live outer bounds while reconstructing interior segment endpoints from stopped
+physical breakpoints. A globally normalized breakpoint is not sufficient:
+replaying it through live outer bounds would move a breakpoint that the public
+contract declares fixed.
+
+The global Romberg engines retain the accepted level and reconstruct the exact
+returned formula at that level, including the accepted extrapolation rather
+than merely the finest unextrapolated base rule. Method configuration and fixed
+rule data remain static rather than being copied into dynamic evidence.
 
 ### One custom JVP boundary
 
-One internal custom-JVP boundary separates the primal solve from derivative
-replay. A normal primal call returns the controller's exact `QuadResult` and
+One private, all-positional custom-JVP core separates the primal solve from
+derivative replay. The public keyword-oriented wrapper performs eager
+validation and quantity normalization, creates one static configuration that
+owns the callable, method, measure, norm, capacities, and gradient policy, and
+passes only dynamic domain, argument, and tolerance PyTrees to the custom-JVP
+core. Array-valued inputs are never hidden in `nondiff_argnums` or a traced
+closure. A normal primal call returns the controller's exact `QuadResult` and
 does not evaluate the integral a second time. When JAX requests a derivative,
 the JVP rule:
 
@@ -130,7 +150,9 @@ the JVP rule:
 3. reconstructs the accepted fixed formula from that evidence;
 4. computes the tangent of the reconstructed formula with respect to the
    supported live inputs; and
-5. returns stopped tangents for every diagnostic leaf.
+5. returns a shape-matched numerical zero tangent for every floating or complex
+   diagnostic leaf; and
+6. returns a JAX `float0` tangent for every integer or Boolean diagnostic leaf.
 
 JAX transposes this one JVP definition for reverse mode. Phase A3 does not
 maintain separate hand-written forward and reverse replay formulas. Method
@@ -140,6 +162,11 @@ shared derivative boundary.
 This architecture preserves the exact primal summation and avoids the cost of
 an unconditional second evaluation when the caller does not request a
 derivative.
+
+The zero-width primal branch synthesizes shape-compatible replay evidence even
+though it does not execute adaptive refinement. A stopped breakpoint child is
+rebuilt explicitly before replay; the fact that `Interval.breakpoints` are
+ordinary PyTree children does not make them differentiable.
 
 ## Mathematical derivative contract
 
@@ -162,12 +189,35 @@ while treating the accepted partition
 sorting, interval selection, region subdivision, stopping, capacity logic,
 breakpoint motion, status selection, or error estimation.
 
-Regional replay freezes accepted endpoints in normalized reference
+Regional replay freezes accepted endpoints in original-segment-local normalized
 coordinates. It reconstructs physical nodes, weights, transformations, and
-Jacobians from the stopped reference partition and the live domain values.
-Stopped physical endpoints are never the source of replay nodes. Global replay
-reconstructs exactly the accepted Romberg level from the live domain and
-parameters.
+Jacobians from stopped segment-local evidence and live domain values. Stopped
+accepted adaptive endpoints are never the source of replay nodes; explicitly
+declared physical breakpoints are stopped by contract and do define their
+segment boundaries. Global replay reconstructs exactly the accepted Romberg
+level from the live domain and parameters.
+
+For a finite segment with differentiable endpoints, replay uses the signed
+affine formula directly:
+
+```{math}
+:label: eq-a3-signed-affine-map
+
+x_i
+=
+\frac{a+b}{2}
++
+\frac{b-a}{2}\xi_i,
+\qquad
+w_i^{(a,b)}
+=
+\frac{b-a}{2}w_i.
+```
+
+The differentiable replay path does not express this map through `minimum`,
+`maximum`, `absolute`, or `sign`. This distinction is required at coincident
+bounds, where the algebraically equivalent primal maps do not have equivalent
+JAX derivatives.
 
 The supported differentiable inputs are:
 
@@ -175,7 +225,8 @@ The supported differentiable inputs are:
 - finite interval bounds;
 - supported semi-infinite boundary and transformation values;
 - supported weighted-density parameters supplied through `args`; and
-- quantity values after their unit metadata is validated and held static.
+- numerical values inside a quantity-normalized call after unit metadata is
+  validated and held static.
 
 The following inputs are nondifferentiable controls or metadata:
 
@@ -190,6 +241,9 @@ The following inputs are nondifferentiable controls or metadata:
 
 Model parameters intended for differentiation must be explicit in `args` or in
 a supported domain value. Hidden mutable state is outside the contract.
+Passing a traced model or density parameter through a callable closure is
+rejected; the same parameter is supported when supplied explicitly through
+`args`.
 
 ### Moving finite bounds
 
@@ -214,9 +268,13 @@ it is not replaced by a derivative-blind constant zero. This permits the
 coincident-bound case to recover the boundary contribution when the two bounds
 have different tangents.
 
-Breakpoint positions are stopped. A change that crosses a breakpoint,
-refinement boundary, capacity boundary, method boundary, or singularity
-declaration is outside the smooth replay contract.
+Breakpoint positions are stopped in physical coordinates. Accepted regions
+retain their original-segment identity and segment-local coordinates. Replay
+therefore reconstructs an outer segment endpoint from its live domain bound
+and an interior segment endpoint from its stopped physical breakpoint. A
+change that crosses a breakpoint, refinement boundary, capacity boundary,
+method boundary, or singularity declaration is outside the smooth replay
+contract.
 
 ### Derivative order
 
@@ -251,20 +309,53 @@ returned while preserving their status:
 - finite `DIVERGENCE_SUSPECTED`; and
 - finite `ERROR_ESTIMATE_UNAVAILABLE`.
 
-`INVALID_INPUT` and `NONFINITE_INTEGRAND` must not return a silently plausible
-zero or finite value derivative. Their value tangent is nonfinite. A
+`INVALID_INPUT` and `NONFINITE_INTEGRAND` return a nonfinite primal value so a
+failed solve cannot look scientifically usable. Replay derivatives are
+undefined for those statuses. The API does not promise a particular NaN layout
+across JVPs, VJPs, Jacobians, JIT, or VMAP because no one linear custom-JVP rule
+can make such a layout invariant under every transposition and batching order.
+Callers must check `status` before interpreting a derivative. A
 `DIVERGENCE_SUSPECTED` result is differentiated only when its accepted formula
 is finite. Replay never upgrades or hides a primal status.
+
+### Complex differentiation envelope
+
+Complex integration and complex differentiation are separate claims. Phase A3
+uses the following JAX-compatible envelopes:
+
+- real parameters to complex output use direct JVP/VJP checks and Jacobians of
+  stacked real and imaginary output components;
+- complex parameters to real scalar output use JAX's documented complex
+  cotangent convention; and
+- complex parameters to complex output are realified as a map from
+  `\(\mathbb{R}^2\)` to `\(\mathbb{R}^2\)` unless the integrand is explicitly
+  declared and independently checked as holomorphic.
+
+The implementation never sets `holomorphic=True` merely to bypass a transform
+error.
 
 ## Quantity boundary
 
 ### Activation and normalization
 
-Quantity mode uses the same `quad.integrate` entry point and activates when a
-domain carries quantity-valued bounds or a fully infinite domain declares a
-static coordinate unit. It performs eager dimensional validation, chooses a
-coordinate representation, wraps the user integrand, and calls the existing
-raw adaptive and replay engines.
+Quantity mode uses the same `quad.integrate` entry point. It performs eager
+dimensional validation and normalization before any current raw dispatch calls
+`jnp.asarray` or `jnp.result_type`, then wraps both the user integrand and any
+weighted density before calling the existing raw adaptive and replay engines.
+
+Mode resolution is explicit:
+
+| Submitted call | Selected mode | Required outcome |
+| --- | --- | --- |
+| Any coordinate is a `Quantity` | quantity | All dimensional coordinates and breakpoints are compatible quantities |
+| `Infinite.unit` is set | quantity | The declared unit is the coordinate unit |
+| `epsabs` is a `Quantity` | quantity | A raw domain is interpreted as dimensionless unless another coordinate unit is present |
+| No quantity trigger | raw | The integrand and tolerance outputs remain raw arrays |
+| Quantity integrand output without a quantity trigger | invalid | Fail eagerly and explain that quantity `epsabs` activates a dimensionless quantity domain |
+
+Quantity mode requires a stable quantity integrand output and a quantity
+`epsabs`. Raw dimensionless coordinates are valid in quantity mode and use
+`\(U_x=1\)`. Incidental `jnp.asarray` failures are not part of mode selection.
 
 Finite and semi-infinite domains infer a coordinate unit from their dimensional
 bound. All other bounds and breakpoints must be quantities compatible with that
@@ -281,11 +372,20 @@ Infinite(unit=units.cm)
 dimensional quantity calculation must provide its coordinate unit because no
 finite bound exists from which to infer one.
 
+Because `Infinite` is shared by fixed and adaptive APIs, adding this metadata
+does not authorize unit handling elsewhere. `quad.fixed`, `map_domain`, and
+`map_interval` reject quantity-valued domains, including unit-bearing
+`Infinite`, until a separate fixed-rule quantity contract is approved. Focused
+regressions prove that these paths cannot silently strip metadata.
+
 The quantity wrapper presents `Quantity` coordinates to the user integrand and
-requires a stable `Quantity` output unit. It unwraps only numerical values for
-the hot kernel. The existing `WeightedMeasure` numerical density contract
-remains raw and uses its required static `density_unit` declaration for result
-unit accounting; this avoids duplicating or breaking the raw measure engine.
+requires a stable `Quantity` output unit. In quantity mode it also presents
+`Quantity` coordinates to `WeightedMeasure.density`, requires a quantity output
+compatible with the declared `density_unit`, converts that output to the
+declared representation, and unwraps it. The raw weighted-density contract is
+unchanged in raw mode. This paired adapter is required for centimetre-versus-
+metre representation invariance; an output-unit declaration alone cannot tell
+a raw density callable which coordinate representation it received.
 Differentiable density parameters are explicit in `args`.
 
 ### Result units
@@ -310,6 +410,12 @@ Quantity mode restores `\(U_I\)` on:
 - `QuadResult.error.norm`; and
 - `QuadResult.tolerance`.
 
+The public `NamedTuple` field layout remains unchanged, but the annotations for
+`QuadError.norm` and `QuadResult.tolerance` become quantity-capable rather than
+`Array`-only. Raw calls retain their current array leaves. Raw and quantity
+results must preserve compatible PyTree structure through primal execution,
+`lax.cond`, JVP, VJP, JIT, and VMAP.
+
 Status, work, error kind, and confidence level remain unitless. `epsabs` must be
 a quantity compatible with `\(U_I\)`. `epsrel` may be a raw dimensionless
 scalar or a dimensionless quantity. Incompatible bounds, breakpoints, density
@@ -318,7 +424,32 @@ layer's dimensional error types.
 
 Unit metadata remains static under JIT. Replay differentiates only quantity
 values. Quantity conversion must change numerical representation without
-changing the represented physical integral or derivative.
+changing the represented physical integral.
+
+### Derivative units
+
+JAX tangents and physical Jacobians require distinct unit statements. A JVP
+direction represents a physical perturbation in the selected input
+representation, and its output tangent has integral unit `\(U_I\)`. A reported
+Jacobian is computed from normalized raw values,
+
+```{math}
+:label: eq-a3-dimensional-jacobian
+
+\frac{\partial I_{\mathrm{value}}}{\partial \theta_{\mathrm{value}}},
+\qquad
+U_{\partial I/\partial\theta}
+=
+\frac{U_I}{U_\theta}.
+```
+
+The derivative evidence records `parameter_unit`, `integral_unit`, and
+`derivative_unit` explicitly. Bare `jax.grad`, `jax.jacfwd`, or `jax.jacrev`
+over a `Quantity` PyTree does not synthesize quotient-unit algebra and is not a
+Phase A3 claim. Researcher-facing examples differentiate selected raw values
+inside a fixed-unit quantity calculation and then attach the declared quotient
+unit. Metre-versus-centimetre tests verify the expected numerical rescaling and
+the invariant physical derivative.
 
 ## Delivery slices
 
@@ -356,7 +487,8 @@ Unit tests establish:
 - inactive capacity slots contribute exactly zero;
 - stopped evidence cannot carry tangents;
 - reversed and zero-width interval contracts;
-- exact status-dependent tangent behavior;
+- nonfinite primal values and explicitly undefined derivative semantics for
+  invalid and nonfinite statuses;
 - stopped diagnostic leaves;
 - eager rejection of unsupported gradient strings;
 - quantity conversion invariance;
@@ -367,14 +499,21 @@ Unit tests establish:
 
 Each supported adaptive method is exercised through:
 
-- `jax.jvp` and `jax.vjp`;
-- `jax.jacfwd` and `jax.jacrev`;
+- `jax.jvp` over the complete nested result, including exact zero and `float0`
+  diagnostic tangents;
+- selected `jax.vjp` projections proving that diagnostics contribute no
+  cotangent;
+- `jax.jacfwd` and `jax.jacrev` applied to
+  `lambda ...: integrate(...).value`, never to the integer-bearing complete
+  result;
 - `jax.jit`;
 - `jax.vmap`;
 - explicit scalar and array parameters;
 - moving finite bounds where applicable;
-- real, vector, array, and complex outputs where claimed; and
-- raw-array and quantity-valued calls.
+- real, vector, and array outputs;
+- the separately declared complex differentiation envelopes; and
+- raw-array calls plus fixed-unit quantity workflows differentiated through
+  selected numerical values.
 
 The tests also establish that no Python loop advances regions or global levels
 and that the custom JVP does not differentiate the primal adaptive
@@ -415,23 +554,43 @@ The benchmark set covers:
 - quantity conversion invariance.
 
 Thresholds are predeclared, dtype-aware, and tied to each method's stated
-envelope. Analytic derivatives and central finite differences are independent
-references; agreement between two JAX transforms alone is insufficient.
+envelope. Agreement between two JAX transforms alone is insufficient. The
+validation distinguishes three different derivative questions:
+
+1. replay AD versus the analytic derivative of the exact integral;
+2. replay AD versus central differences of the explicitly frozen replay
+   formula; and
+3. central differences of independently rerun public adaptive solves as a
+   partition-stability diagnostic, not a universal replay-correctness gate.
+
+Every finite-difference column names which function it perturbs. A refinement
+or stopping boundary may make the third quantity differ from the first two
+without invalidating a correct frozen-formula replay derivative.
+
+Before replay becomes the default, tolerance and capacity ladders record both
+primal and derivative stabilization, accepted region counts or global levels,
+and cases near but not across partition changes. The evidence artifact records
+`parameter_unit`, `integral_unit`, `derivative_unit`, replay partition or level
+metadata, and metre-versus-centimetre derivative rescaling where quantities are
+used.
 
 ### Replay-default promotion gate
 
 The default changes to `gradient="replay"` only when all five Phase A2 adaptive
 methods pass:
 
-- analytic derivative comparisons;
-- independent finite-difference comparisons;
+- analytic exact-integral derivative comparisons;
+- independent finite differences of the frozen replay formula;
+- adaptive-rerun finite differences reported as a stability diagnostic;
+- tolerance and capacity ladders for both primal and derivative stabilization;
 - moving-bound Leibniz checks where applicable;
 - forward and reverse automatic differentiation;
 - JIT and VMAP compositions;
 - declared payload and dtype cases;
 - failure-status derivative tests;
 - stopped diagnostic evidence tests;
-- quantity tests for the supported quantity envelope; and
+- quantity representation and derivative-unit rescaling tests for the
+  supported quantity envelope; and
 - the full existing primal, numerical-validation, lint, type, and strict-docs
   gates.
 
@@ -441,7 +600,22 @@ than weakened or waived.
 ## Documentation design
 
 Phase A3 updates the MyST table of contents and the method-family navigation
-rather than adding disconnected pages. It adds or revises:
+rather than adding disconnected pages. The required reading route is
+
+```text
+Quadrature
+  -> Adaptive Quadrature
+  -> Differentiating an Integral
+  -> Auditing Derivatives
+  -> Quadrature Replay Derivative Evidence
+```
+
+The new methods page is
+`docs/20-methods/approximation-integration/differentiating-an-integral.md` and
+appears immediately after `adaptive-quadrature.md` in `docs/myst.yml`. The
+generated validation page is
+`docs/60-validation/numerical/quadrature-replay-derivatives.md` and appears in
+the Validation and evidence section. Phase A3 adds or revises:
 
 - a dedicated **Differentiating an Integral** methods page;
 - **Adaptive Quadrature**;
@@ -457,6 +631,16 @@ ideas to the public API. It uses LaTeX for mathematical notation, MyST
 admonitions for assumptions and failure boundaries, worked derivations,
 contract tables, and explicit links between method, API, workflow, and evidence
 pages. It contains no course or instructor framing.
+
+The derivation route links explicitly to **Why JAX?**, **What is a
+Derivative?**, **What JAX Differentiates**, and **Quantities**. It states the
+conditions for differentiating under the integral sign; derives the exact
+integral derivative and the accepted fixed-formula derivative separately;
+explains why those derivatives may differ near adaptive decision boundaries;
+works one analytic, AD, frozen-formula finite-difference, and adaptive-rerun
+finite-difference example completely; derives quantity rescaling; and uses
+admonitions to mark convergence, smoothness, breakpoint, invalid-status, and
+unit assumptions.
 
 The documentation distinguishes:
 
