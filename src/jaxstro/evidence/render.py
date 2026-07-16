@@ -147,39 +147,15 @@ def _require_exact_fields(
 def artifact_to_markdown(artifact: EvidenceArtifact) -> str:
     """Render a human-auditable metric and comparison report."""
     validate_artifact(artifact)
+    if artifact.method_payload.get("report_mode") == "progressive":
+        return _progressive_artifact_to_markdown(artifact)
+
     lines = [
         f"# {artifact.artifact_id}",
         "",
         f"Artifact version: `{artifact.artifact_version}`",
-        "",
-        "## Metrics",
-        "",
-        "| Metric identity | Symbol | Value | Units | Status |",
-        "| --- | --- | ---: | --- | --- |",
     ]
-    for metric in sorted(artifact.metrics, key=lambda item: item.identity):
-        lines.append(
-            f"| {_table_cell(metric.identity)} | `{_table_cell(metric.symbol)}` | "
-            f"{metric.value} | {_table_cell(metric.units)} | "
-            f"{_table_cell(metric.status.value)} |"
-        )
-    lines.extend(["", "## Comparisons", ""])
-    if artifact.comparisons:
-        lines.extend(
-            [
-                "| Comparison | Metric | Relation | Reference | Units | Absolute tolerance | Relative tolerance | Status | Note |",
-                "| --- | --- | --- | ---: | --- | ---: | ---: | --- | --- |",
-            ]
-        )
-        for item in sorted(artifact.comparisons, key=lambda value: value.identity):
-            lines.append(
-                f"| {_table_cell(item.identity)} | `{_table_cell(item.metric_id)}` | "
-                f"{_table_cell(item.relation.value)} | {item.reference} | "
-                f"{_table_cell(item.units)} | {item.atol} | {item.rtol} | "
-                f"{_table_cell(item.status.value)} | {_table_cell(item.note)} |"
-            )
-    else:
-        lines.append("- none")
+    _append_gate_tables(lines, artifact)
     lines.extend(["", "## Environment policy", "", artifact.environment.policy])
     lines.extend(["", "## Limitations", ""])
     lines.extend(f"- {item}" for item in artifact.limitations)
@@ -191,6 +167,113 @@ def artifact_to_markdown(artifact: EvidenceArtifact) -> str:
     )
     lines.extend(["```", ""])
     return "\n".join(lines)
+
+
+def _progressive_artifact_to_markdown(artifact: EvidenceArtifact) -> str:
+    payload = artifact.method_payload
+    lines = [
+        f"# {artifact.artifact_id}",
+        "",
+        f"Artifact version: `{artifact.artifact_version}`",
+        "",
+        "## What this evidence tests",
+        "",
+        f"This report audits **{payload.get('claim', artifact.artifact_id)}**. "
+        "Each case compares the accepted replay derivative with an analytic "
+        "reference and, where applicable, a finite difference of the frozen "
+        "accepted formula. Adaptive-rerun finite differences remain diagnostic "
+        "because the controller may choose different evidence at nearby inputs.",
+        "",
+        "The case map is the researcher-facing summary. Complete numerical gates "
+        "and the machine-readable payload remain available below without "
+        "overloading the main reading path.",
+        "",
+        "## Case map",
+        "",
+        "| Method | Case family | Variant | Status code | Accepted evidence | Gates |",
+        "| --- | --- | --- | ---: | --- | --- |",
+    ]
+    for case in payload.get("cases", ()):
+        gates = case.get("gates", ())
+        gate_status = (
+            "pass" if all(item.get("passed", False) for item in gates) else "fail"
+        )
+        evidence = (
+            f"regions={case.get('accepted_regions', 'n/a')}; "
+            f"level={case.get('accepted_level', 'n/a')}"
+        )
+        lines.append(
+            f"| {_table_cell(str(case.get('method', 'n/a')))} | "
+            f"{_table_cell(str(case.get('family', 'n/a')))} | "
+            f"{_table_cell(str(case.get('variant', 'not applicable')))} | "
+            f"{case.get('status', 'n/a')} | {_table_cell(evidence)} | {gate_status} |"
+        )
+    lines.extend(["", "## Main limitations", ""])
+    lines.extend(f"- {item}" for item in artifact.limitations)
+    if not artifact.limitations:
+        lines.append("- none registered")
+    lines.extend(
+        [
+            "",
+            ":::{dropdown} Complete gate records",
+            ":class: full-width",
+            "",
+        ]
+    )
+    _append_gate_tables(lines, artifact)
+    lines.extend(
+        [
+            ":::",
+            "",
+            ":::{dropdown} Complete machine-readable method payload",
+            "",
+            "```json",
+            json.dumps(_normalize(payload), indent=2, sort_keys=True),
+            "```",
+            ":::",
+            "",
+            "## Environment policy",
+            "",
+            artifact.environment.policy,
+            "",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def _append_gate_tables(lines: list[str], artifact: EvidenceArtifact) -> None:
+    lines.extend(
+        [
+            "",
+            "## Metrics",
+            "",
+            "| Metric identity | Symbol | Value | Units | Status |",
+            "| --- | --- | ---: | --- | --- |",
+        ]
+    )
+    for metric in sorted(artifact.metrics, key=lambda item: item.identity):
+        lines.append(
+            f"| {_table_cell(metric.identity)} | `{_table_cell(metric.symbol)}` | "
+            f"{metric.value} | {_table_cell(metric.units)} | "
+            f"{_table_cell(metric.status.value)} |"
+        )
+    lines.extend(["", "## Comparisons", ""])
+    if not artifact.comparisons:
+        lines.append("- none")
+        return
+    lines.extend(
+        [
+            "| Comparison | Metric | Relation | Reference | Units | Absolute tolerance | Relative tolerance | Status | Note |",
+            "| --- | --- | --- | ---: | --- | ---: | ---: | --- | --- |",
+        ]
+    )
+    for item in sorted(artifact.comparisons, key=lambda value: value.identity):
+        lines.append(
+            f"| {_table_cell(item.identity)} | `{_table_cell(item.metric_id)}` | "
+            f"{_table_cell(item.relation.value)} | {item.reference} | "
+            f"{_table_cell(item.units)} | {item.atol} | {item.rtol} | "
+            f"{_table_cell(item.status.value)} | {_table_cell(item.note)} |"
+        )
 
 
 def _table_cell(value: str) -> str:

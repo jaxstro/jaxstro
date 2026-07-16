@@ -53,10 +53,10 @@ g(x,\theta)\,\mathrm{d}x,
 g(x,\theta)=f(x,\theta)\rho(x,\theta).
 ```
 
-The measure density is included in (g). For Lebesgue integration,
-(\rho=1). An adaptive run does not manipulate this exact object directly. It
+The measure density is included in $g$. For Lebesgue integration,
+$\rho=1$. An adaptive run does not manipulate this exact object directly. It
 chooses a finite set of regions or a global refinement level and returns an
-accepted approximation (Q(\theta)).
+accepted approximation $Q(\theta)$.
 
 :::{note}
 The controller's region choices, stopping decision, and reported error are
@@ -66,7 +66,7 @@ the exact integral.
 
 ## The exact integral derivative
 
-Suppose (g) and (\partial g/\partial\theta) are continuous on the relevant
+Suppose $g$ and $\partial g/\partial\theta$ are continuous on the relevant
 domain, the moving bounds are differentiable, and an integrable dominating
 function permits differentiation under the integral sign. The Leibniz rule is
 
@@ -109,8 +109,8 @@ J_r(\theta)\,
 g\!\left(x_{rj}(\theta),\theta\right),
 ```
 
-where (\mathcal{A}) is the stopped set of accepted regions, (w_{rj}) are
-fixed reference weights, (x_{rj}) are mapped nodes, and (J_r) is the map
+where $\mathcal{A}$ is the stopped set of accepted regions, $w_{rj}$ are
+fixed reference weights, $x_{rj}$ are mapped nodes, and $J_r$ is the map
 Jacobian. Replay differentiates
 
 ```{math}
@@ -156,7 +156,7 @@ Where both derivatives exist,
 \frac{\mathrm{d}e}{\mathrm{d}\theta}.
 ```
 
-A small (e) at one parameter does not by itself bound its derivative.
+A small $e$ at one parameter does not by itself bound its derivative.
 Derivative trust therefore needs analytic fixtures, a frozen-formula finite
 difference, tolerance and capacity ladders, and an adaptive-rerun diagnostic.
 
@@ -178,12 +178,12 @@ J=\frac{b-a}{2},
 -1\le t\le 1.
 ```
 
-The sign is retained in (J). Replay does not differentiate through
+The sign is retained in $J$. Replay does not differentiate through
 `minimum`, `maximum`, an absolute width, or a discrete orientation. Therefore
 reversed intervals preserve the correct sign.
 
-At (a=b=c), the primal integral is zero, but its bound derivatives need not
-be zero. A rule exact for constants has (\sum_j w_j=2), so the coincident
+At $a=b=c$, the primal integral is zero, but its bound derivatives need not
+be zero. A rule exact for constants has $\sum_j w_j=2$, so the coincident
 limit gives
 
 ```{math}
@@ -200,7 +200,7 @@ parameters.
 
 ## Units of a derivative
 
-Let (U_f), (U_x), and (U_\rho) denote the integrand, coordinate, and
+Let $U_f$, $U_x$, and $U_\rho$ denote the integrand, coordinate, and
 density units. The integral unit is
 
 ```{math}
@@ -209,8 +209,8 @@ density units. The integral unit is
 U_I=U_f U_x U_\rho.
 ```
 
-For a raw numerical parameter (\theta_{\mathrm{value}}) representing a
-physical quantity with unit (U_\theta), the physical Jacobian unit is
+For a raw numerical parameter $\theta_{\mathrm{value}}$ representing a
+physical quantity with unit $U_\theta$, the physical Jacobian unit is
 
 ```{math}
 :label: eq-diff-integral-jacobian-units
@@ -218,7 +218,7 @@ physical quantity with unit (U_\theta), the physical Jacobian unit is
 U_{\mathrm{d}I/\mathrm{d}\theta}=\frac{U_I}{U_\theta}.
 ```
 
-Jaxstro's alpha quantity boundary restores (U_I) on the result and on a JVP
+Jaxstro's alpha quantity boundary restores $U_I$ on the result and on a JVP
 tangent. For an auditable quotient unit, differentiate a selected numerical
 value and declare the input and output units explicitly. Direct
 `jax.grad` over a `Quantity` PyTree does not infer quotient-unit algebra.
@@ -307,6 +307,7 @@ limitations.
 | `Romberg` | Replays the accepted global Richardson level |
 | `RombergTanhSinh` | Replays the accepted global double-exponential level |
 | Moving finite bounds | Differentiable through the signed affine map |
+| Supported semi-infinite bounds | The finite boundary value is differentiable through the improper map |
 | Physical breakpoints | Stopped |
 | `INVALID_INPUT` | Nonfinite primal value; derivative undefined |
 | `NONFINITE_INTEGRAND` | Nonfinite primal value; derivative undefined |

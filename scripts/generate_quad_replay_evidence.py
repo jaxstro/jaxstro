@@ -82,11 +82,12 @@ def relative_error(actual, expected):
     return _max_abs(jax.tree.map(lambda x, y: x - y, actual, expected)) / scale
 
 
-def gate(name, observed, threshold):
+def gate(name, observed, threshold, unit="dimensionless"):
     return {
         "name": name,
         "observed": float(observed),
         "threshold": float(threshold),
+        "unit": unit,
         "passed": bool(observed <= threshold),
     }
 
@@ -334,6 +335,93 @@ def _failure_case(spec, family, domain, fun, expected_status):
     }
 
 
+def _semi_infinite_bound_case(spec: MethodSpec, side: str):
+    parameter = 0.2
+
+    def fun(x):
+        return jnp.exp(-x) if side == "right" else jnp.exp(x)
+
+    def domain_builder(bound):
+        if side == "right":
+            return quad.RightInfinite(bound)
+        return quad.LeftInfinite(bound)
+
+    def analytic_value(bound):
+        return jnp.exp(-bound) if side == "right" else jnp.exp(bound)
+
+    def analytic_derivative(bound):
+        return -jnp.exp(-bound) if side == "right" else jnp.exp(bound)
+
+    domain = domain_builder(parameter)
+    config = _config(spec, fun, quad.LebesgueMeasure())
+    solve = _solve_raw(config, domain, (), 1.0e-10, 1.0e-10)
+
+    def public(bound):
+        return quad.integrate(
+            fun,
+            domain_builder(bound),
+            method=spec.method,
+            epsabs=1.0e-10,
+            epsrel=1.0e-10,
+            max_evaluations=spec.max_evaluations,
+            max_regions=spec.max_regions,
+            gradient="replay",
+        ).value
+
+    def frozen(bound):
+        return replay_value(
+            config,
+            domain_builder(bound),
+            (),
+            jax.tree.map(jax.lax.stop_gradient, solve.evidence),
+            solve.result.value,
+        )
+
+    replay_ad = jax.grad(public)(parameter)
+    frozen_fd = central_difference(frozen, parameter, FD_STEP)
+    rerun_fd = central_difference(public, parameter, FD_STEP)
+    expected_value = analytic_value(parameter)
+    expected_derivative = analytic_derivative(parameter)
+    return {
+        "name": f"{spec.name}.semi_infinite_bound.{side}",
+        "method": spec.name,
+        "family": "semi_infinite_bound",
+        "variant": side,
+        "dtype": str(jnp.asarray(parameter).dtype),
+        "primal_value": _portable(solve.result.value),
+        "analytic_value": _portable(expected_value),
+        "observed_primal_error": abs(float(solve.result.value - expected_value)),
+        "reported_primal_error": float(solve.result.error.norm),
+        "replay_ad_derivative": _portable(replay_ad),
+        "analytic_derivative": _portable(expected_derivative),
+        "frozen_formula_fd": _portable(frozen_fd),
+        "adaptive_rerun_fd": _portable(rerun_fd),
+        "accepted_regions": int(solve.result.work.active_regions),
+        "accepted_level": int(solve.result.work.levels),
+        "parameter_unit": "coordinate",
+        "integral_unit": "coordinate times integrand",
+        "derivative_unit": "integrand",
+        "status": int(solve.result.status),
+        "gates": [
+            gate(
+                "primal_absolute_error",
+                abs(float(solve.result.value - expected_value)),
+                ABSOLUTE_GATE,
+            ),
+            gate(
+                "analytic_derivative_absolute_error",
+                abs(float(replay_ad - expected_derivative)),
+                ABSOLUTE_GATE,
+            ),
+            gate(
+                "frozen_formula_absolute_error",
+                abs(float(replay_ad - frozen_fd)),
+                2.0e-8,
+            ),
+        ],
+    }
+
+
 def _quantity_case():
     def physical(bound_value, unit, output_unit):
         return quad.integrate(
@@ -380,11 +468,17 @@ def _quantity_case():
         "derivative_unit": "cm^2/m converted to cm^2/cm",
         "status": int(quad.QuadStatus.CONVERGED),
         "gates": [
-            gate("physical_value_absolute_error_cm2", value_error, 2.0e-8),
+            gate(
+                "physical_value_absolute_error_cm2",
+                value_error,
+                2.0e-8,
+                "cm^2",
+            ),
             gate(
                 "physical_derivative_absolute_error_cm2_per_cm",
                 derivative_error,
                 2.0e-8,
+                "cm^2/cm",
             ),
         ],
     }
@@ -504,7 +598,12 @@ def _additional_cases():
             0,
         )
     )
-    return [improper, endpoint, weighted, exhausted]
+    semi_infinite_bounds = [
+        _semi_infinite_bound_case(spec, side)
+        for spec in (METHODS[2], METHODS[4])
+        for side in ("right", "left")
+    ]
+    return [improper, endpoint, weighted, exhausted, *semi_infinite_bounds]
 
 
 def run_evidence() -> tuple[dict[str, Any], dict[str, str]]:
@@ -586,6 +685,7 @@ def run_evidence() -> tuple[dict[str, Any], dict[str, str]]:
         )
     payload = {
         "claim": "replay-differentiable adaptive one-dimensional quadrature",
+        "report_mode": "progressive",
         "controls": {
             "fd_step": FD_STEP,
             "relative_gate": RELATIVE_GATE,
@@ -624,6 +724,7 @@ def _validate(payload: dict[str, Any]) -> None:
         "moving_bounds",
         "reversed_bounds",
         "coincident_bounds",
+        "semi_infinite_bound",
         "improper_tail",
         "endpoint_singularity",
         "weighted_density",
@@ -663,7 +764,7 @@ def build_artifact(
                     identity,
                     item["name"],
                     item["observed"],
-                    "dimensionless",
+                    item["unit"],
                     EvidenceStatus.INFO,
                 )
             )
@@ -673,7 +774,7 @@ def build_artifact(
                     identity,
                     ComparisonRelation.LESS_EQUAL,
                     item["threshold"],
-                    "dimensionless",
+                    item["unit"],
                     EvidenceStatus.PASS,
                     note="Predeclared Phase A3 replay evidence threshold.",
                 )

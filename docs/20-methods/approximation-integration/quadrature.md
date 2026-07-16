@@ -296,15 +296,18 @@ derivative, not proof that quadrature error is sufficiently small for the
 derivative integrand.
 
 :::{note}
-Adaptive replay differentiation is a separate Phase A3 contract. No adaptive
-controller is implemented by the fixed evaluator.
+The fixed evaluator remains a raw fixed-formula owner. Adaptive replay is now
+implemented by `quad.integrate`; see [Differentiating an integral](./differentiating-an-integral.md)
+for the exact mathematical and numerical contract.
 :::
 
 ### Units, shapes, and precision
 
-Phase A1 accepts raw arrays. The caller owns units and must ensure that the
+`quad.fixed` accepts raw arrays. The caller owns units and must ensure that the
 integrand value multiplied by the measure has the intended integral dimension.
-Quantity-valued boundaries remain planned for Phase A3.
+`quad.integrate` additionally provides an alpha, opt-in quantity boundary over
+the same raw numerical engine; the lower-level fixed and mapping APIs remain
+raw-only and fail closed on quantity domains.
 
 The node input has shape `(n,)`. The integrand returns `(n,)` or `(n, ...)`, and
 the result has shape `(...)`. Scientific reference tests use float64. The active

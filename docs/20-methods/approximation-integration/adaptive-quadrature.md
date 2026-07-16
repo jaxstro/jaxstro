@@ -213,7 +213,7 @@ capacity, which takes precedence over exhausted region capacity. Thus a
 floor-dominated error at an already exhausted budget returns
 `MAX_EVALUATIONS`, not `ROUNDOFF_LIMITED`; an error floor is evidence, not by
 itself a status trigger. Regional capacity distinguishes `MAX_EVALUATIONS` from
-`MAX_REGIONS`. Current A2 controllers emit `INVALID_INPUT`,
+`MAX_REGIONS`. Current controllers emit `INVALID_INPUT`,
 `NONFINITE_INTEGRAND`, `CONVERGED`, `ROUNDOFF_LIMITED`, `MAX_EVALUATIONS`, or
 `MAX_REGIONS` as applicable.
 `DIVERGENCE_SUSPECTED` and `ERROR_ESTIMATE_UNAVAILABLE` are reserved vocabulary,

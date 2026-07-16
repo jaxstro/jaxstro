@@ -135,6 +135,38 @@ def test_adaptive_tanh_sinh_replay_on_right_infinite_domain() -> None:
     assert jnp.allclose(jax.grad(integral)(1.3), -1.0 / 1.3**2, rtol=3e-6)
 
 
+@pytest.mark.parametrize(
+    "method",
+    [quad.AdaptiveTanhSinh(3), quad.RombergTanhSinh(2)],
+    ids=["adaptive-tanh-sinh", "romberg-tanh-sinh"],
+)
+@pytest.mark.parametrize("side", ["right", "left"])
+def test_improper_replay_matches_moving_finite_boundary(method, side) -> None:
+    def integral(bound):
+        if side == "right":
+            domain = quad.RightInfinite(bound)
+        else:
+            domain = quad.LeftInfinite(bound)
+
+        def fun(x):
+            return jnp.exp(-x) if side == "right" else jnp.exp(x)
+
+        return quad.integrate(
+            fun,
+            domain,
+            method=method,
+            epsabs=1e-10,
+            epsrel=1e-10,
+            max_evaluations=1600,
+            max_regions=16,
+            gradient="replay",
+        ).value
+
+    bound = 0.2
+    expected = -jnp.exp(-bound) if side == "right" else jnp.exp(bound)
+    assert jnp.allclose(jax.grad(integral)(bound), expected, rtol=3e-6)
+
+
 def test_breakpoint_tangent_is_stopped() -> None:
     def value(breakpoint):
         return quad.integrate(

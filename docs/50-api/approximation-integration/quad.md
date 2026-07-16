@@ -46,12 +46,13 @@ The integrand receives a node array with shape `(n,)` and returns `(n,)` or
 rule order or level, breakpoint count, and payload shape are static under JIT.
 Bounds, breakpoint values, and explicit `args` leaves may be dynamic.
 
-For replay differentiation, smooth finite bounds and explicit floating or
-complex `args` leaves are differentiable. Breakpoint motion, method and measure
-configuration, capacities, error norms, payload shape, refinement decisions,
-statuses, error estimates, and work records are static or stopped. A parameter
-to be differentiated must be passed through `args` or a supported bound; hiding
-it in the integrand closure is unsupported.
+For replay differentiation, smooth finite bounds, the finite boundary of a
+supported semi-infinite domain, and explicit floating or complex `args` leaves
+are differentiable. Breakpoint motion, method and measure configuration,
+`epsabs`, `epsrel`, capacities, error norms, payload shape, refinement
+decisions, statuses, error estimates, and work records are static or stopped.
+A parameter to be differentiated must be passed through `args` or a supported
+bound; hiding it in the integrand closure is unsupported.
 
 Supported rule declarations:
 

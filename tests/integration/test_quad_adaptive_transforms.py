@@ -69,6 +69,7 @@ def test_integrate_stop_policy_zeroes_parameter_and_bound_derivatives() -> None:
                 args=scale,
                 epsabs=1e-10,
                 epsrel=1e-10,
+                gradient="stop",
                 **OPTIONS,
             ).value
         )
@@ -80,6 +81,7 @@ def test_integrate_stop_policy_zeroes_parameter_and_bound_derivatives() -> None:
                 Interval(0.0, upper),
                 epsabs=1e-10,
                 epsrel=1e-10,
+                gradient="stop",
                 **OPTIONS,
             ).value
         )
@@ -96,6 +98,7 @@ def test_integrate_stop_policy_zeroes_every_result_leaf_in_both_ad_modes() -> No
             args=scale,
             epsabs=1e-10,
             epsrel=1e-10,
+            gradient="stop",
             **OPTIONS,
         )
 
