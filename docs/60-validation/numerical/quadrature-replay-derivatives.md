@@ -10,45 +10,45 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
 
 ## Case map
 
-| Method | Case family | Variant | Status code | Accepted evidence | Gates |
-| --- | --- | --- | ---: | --- | --- |
-| gauss_kronrod | smooth_parameter | not applicable | 0 | regions=1; level=0 | pass |
-| gauss_kronrod | vector_payload | not applicable | 0 | regions=1; level=0 | pass |
-| gauss_kronrod | complex_payload | not applicable | 0 | regions=1; level=0 | pass |
-| adaptive_clenshaw_curtis | smooth_parameter | not applicable | 0 | regions=1; level=0 | pass |
-| adaptive_clenshaw_curtis | vector_payload | not applicable | 0 | regions=1; level=0 | pass |
-| adaptive_clenshaw_curtis | complex_payload | not applicable | 0 | regions=1; level=0 | pass |
-| adaptive_tanh_sinh | smooth_parameter | not applicable | 0 | regions=1; level=0 | pass |
-| adaptive_tanh_sinh | vector_payload | not applicable | 0 | regions=1; level=0 | pass |
-| adaptive_tanh_sinh | complex_payload | not applicable | 0 | regions=1; level=0 | pass |
-| romberg | smooth_parameter | not applicable | 0 | regions=1; level=5 | pass |
-| romberg | vector_payload | not applicable | 0 | regions=1; level=5 | pass |
-| romberg | complex_payload | not applicable | 0 | regions=1; level=5 | pass |
-| romberg_tanh_sinh | smooth_parameter | not applicable | 0 | regions=1; level=4 | pass |
-| romberg_tanh_sinh | vector_payload | not applicable | 0 | regions=1; level=4 | pass |
-| romberg_tanh_sinh | complex_payload | not applicable | 0 | regions=1; level=4 | pass |
-| gauss_kronrod | moving_bounds | not applicable | 0 | regions=1; level=0 | pass |
-| gauss_kronrod | reversed_bounds | not applicable | 0 | regions=1; level=0 | pass |
-| gauss_kronrod | coincident_bounds | not applicable | 0 | regions=0; level=0 | pass |
-| adaptive_tanh_sinh | improper_tail | not applicable | 0 | regions=3; level=0 | pass |
-| adaptive_tanh_sinh | endpoint_singularity | not applicable | 1 | regions=3; level=0 | pass |
-| gauss_kronrod | weighted_density | not applicable | 0 | regions=1; level=0 | pass |
-| gauss_kronrod | exhausted_finite | not applicable | 1 | regions=1; level=0 | pass |
-| adaptive_tanh_sinh | semi_infinite_bound | right | 0 | regions=3; level=0 | pass |
-| adaptive_tanh_sinh | semi_infinite_bound | left | 0 | regions=3; level=0 | pass |
-| romberg_tanh_sinh | semi_infinite_bound | right | 0 | regions=1; level=6 | pass |
-| romberg_tanh_sinh | semi_infinite_bound | left | 0 | regions=1; level=6 | pass |
-| gauss_kronrod | quantity_rescaling | not applicable | 0 | regions=1; level=0 | pass |
-| gauss_kronrod | invalid_input | not applicable | 6 | regions=1; level=0 | pass |
-| gauss_kronrod | nonfinite_integrand | not applicable | 3 | regions=1; level=0 | pass |
-| adaptive_clenshaw_curtis | invalid_input | not applicable | 6 | regions=1; level=0 | pass |
-| adaptive_clenshaw_curtis | nonfinite_integrand | not applicable | 3 | regions=1; level=0 | pass |
-| adaptive_tanh_sinh | invalid_input | not applicable | 6 | regions=1; level=0 | pass |
-| adaptive_tanh_sinh | nonfinite_integrand | not applicable | 3 | regions=1; level=0 | pass |
-| romberg | invalid_input | not applicable | 6 | regions=1; level=3 | pass |
-| romberg | nonfinite_integrand | not applicable | 3 | regions=1; level=3 | pass |
-| romberg_tanh_sinh | invalid_input | not applicable | 6 | regions=1; level=3 | pass |
-| romberg_tanh_sinh | nonfinite_integrand | not applicable | 3 | regions=1; level=3 | pass |
+| Method | Case family | Variant | Status | Accepted evidence | Gates |
+| --- | --- | --- | --- | --- | --- |
+| gauss_kronrod | smooth_parameter | not applicable | CONVERGED | regions=1; level=0 | pass |
+| gauss_kronrod | vector_payload | not applicable | CONVERGED | regions=1; level=0 | pass |
+| gauss_kronrod | complex_payload | not applicable | CONVERGED | regions=1; level=0 | pass |
+| adaptive_clenshaw_curtis | smooth_parameter | not applicable | CONVERGED | regions=1; level=0 | pass |
+| adaptive_clenshaw_curtis | vector_payload | not applicable | CONVERGED | regions=1; level=0 | pass |
+| adaptive_clenshaw_curtis | complex_payload | not applicable | CONVERGED | regions=1; level=0 | pass |
+| adaptive_tanh_sinh | smooth_parameter | not applicable | CONVERGED | regions=1; level=0 | pass |
+| adaptive_tanh_sinh | vector_payload | not applicable | CONVERGED | regions=1; level=0 | pass |
+| adaptive_tanh_sinh | complex_payload | not applicable | CONVERGED | regions=1; level=0 | pass |
+| romberg | smooth_parameter | not applicable | CONVERGED | regions=1; level=5 | pass |
+| romberg | vector_payload | not applicable | CONVERGED | regions=1; level=5 | pass |
+| romberg | complex_payload | not applicable | CONVERGED | regions=1; level=5 | pass |
+| romberg_tanh_sinh | smooth_parameter | not applicable | CONVERGED | regions=1; level=4 | pass |
+| romberg_tanh_sinh | vector_payload | not applicable | CONVERGED | regions=1; level=4 | pass |
+| romberg_tanh_sinh | complex_payload | not applicable | CONVERGED | regions=1; level=4 | pass |
+| gauss_kronrod | moving_bounds | not applicable | CONVERGED | regions=1; level=0 | pass |
+| gauss_kronrod | reversed_bounds | not applicable | CONVERGED | regions=1; level=0 | pass |
+| gauss_kronrod | coincident_bounds | not applicable | CONVERGED | regions=0; level=0 | pass |
+| adaptive_tanh_sinh | improper_tail | not applicable | CONVERGED | regions=3; level=0 | pass |
+| adaptive_tanh_sinh | endpoint_singularity | not applicable | MAX_EVALUATIONS | regions=3; level=0 | pass |
+| gauss_kronrod | weighted_density | not applicable | CONVERGED | regions=1; level=0 | pass |
+| gauss_kronrod | exhausted_finite | not applicable | MAX_EVALUATIONS | regions=1; level=0 | pass |
+| adaptive_tanh_sinh | semi_infinite_bound | right | CONVERGED | regions=3; level=0 | pass |
+| adaptive_tanh_sinh | semi_infinite_bound | left | CONVERGED | regions=3; level=0 | pass |
+| romberg_tanh_sinh | semi_infinite_bound | right | CONVERGED | regions=1; level=6 | pass |
+| romberg_tanh_sinh | semi_infinite_bound | left | CONVERGED | regions=1; level=6 | pass |
+| gauss_kronrod | quantity_rescaling | not applicable | CONVERGED | regions=1; level=0 | pass |
+| gauss_kronrod | invalid_input | not applicable | INVALID_INPUT | regions=1; level=0 | pass |
+| gauss_kronrod | nonfinite_integrand | not applicable | NONFINITE_INTEGRAND | regions=1; level=0 | pass |
+| adaptive_clenshaw_curtis | invalid_input | not applicable | INVALID_INPUT | regions=1; level=0 | pass |
+| adaptive_clenshaw_curtis | nonfinite_integrand | not applicable | NONFINITE_INTEGRAND | regions=1; level=0 | pass |
+| adaptive_tanh_sinh | invalid_input | not applicable | INVALID_INPUT | regions=1; level=0 | pass |
+| adaptive_tanh_sinh | nonfinite_integrand | not applicable | NONFINITE_INTEGRAND | regions=1; level=0 | pass |
+| romberg | invalid_input | not applicable | INVALID_INPUT | regions=1; level=3 | pass |
+| romberg | nonfinite_integrand | not applicable | NONFINITE_INTEGRAND | regions=1; level=3 | pass |
+| romberg_tanh_sinh | invalid_input | not applicable | INVALID_INPUT | regions=1; level=3 | pass |
+| romberg_tanh_sinh | nonfinite_integrand | not applicable | NONFINITE_INTEGRAND | regions=1; level=3 | pass |
 
 ## Main limitations
 
@@ -320,7 +320,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "primal_value": 1.2295617441031759,
       "replay_ad_derivative": 0.6556573838452363,
       "reported_primal_error": 1.3650877585016106e-14,
-      "status": 0
+      "status": 0,
+      "status_name": "CONVERGED"
     },
     {
       "accepted_level": 0,
@@ -381,7 +382,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
         0.49999999999999994
       ],
       "reported_primal_error": 1.3650877585016106e-14,
-      "status": 0
+      "status": 0,
+      "status_name": "CONVERGED"
     },
     {
       "accepted_level": 0,
@@ -442,7 +444,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
         "real": -0.13121215442185288
       },
       "reported_primal_error": 1.1102230246251562e-14,
-      "status": 0
+      "status": 0,
+      "status_name": "CONVERGED"
     },
     {
       "accepted_level": 0,
@@ -485,7 +488,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "primal_value": 1.2295617441031759,
       "replay_ad_derivative": 0.6556573838452364,
       "reported_primal_error": 1.3650877585016106e-14,
-      "status": 0
+      "status": 0,
+      "status_name": "CONVERGED"
     },
     {
       "accepted_level": 0,
@@ -546,7 +550,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
         0.5
       ],
       "reported_primal_error": 1.3650877585016106e-14,
-      "status": 0
+      "status": 0,
+      "status_name": "CONVERGED"
     },
     {
       "accepted_level": 0,
@@ -607,7 +612,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
         "real": -0.13121215442185288
       },
       "reported_primal_error": 1.1102230246251565e-14,
-      "status": 0
+      "status": 0,
+      "status_name": "CONVERGED"
     },
     {
       "accepted_level": 0,
@@ -650,7 +656,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "primal_value": 1.2295617441031754,
       "replay_ad_derivative": 0.6556573838452361,
       "reported_primal_error": 7.039307423150065e-14,
-      "status": 0
+      "status": 0,
+      "status_name": "CONVERGED"
     },
     {
       "accepted_level": 0,
@@ -711,7 +718,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
         0.49999999999999983
       ],
       "reported_primal_error": 7.039307423150065e-14,
-      "status": 0
+      "status": 0,
+      "status_name": "CONVERGED"
     },
     {
       "accepted_level": 0,
@@ -772,7 +780,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
         "real": -0.13121215442185286
       },
       "reported_primal_error": 5.670983335888175e-14,
-      "status": 0
+      "status": 0,
+      "status_name": "CONVERGED"
     },
     {
       "accepted_level": 5,
@@ -815,7 +824,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "primal_value": 1.229561744103176,
       "replay_ad_derivative": 0.6556573838452364,
       "reported_primal_error": 1.81482053338333e-13,
-      "status": 0
+      "status": 0,
+      "status_name": "CONVERGED"
     },
     {
       "accepted_level": 5,
@@ -876,7 +886,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
         0.5
       ],
       "reported_primal_error": 1.81482053338333e-13,
-      "status": 0
+      "status": 0,
+      "status_name": "CONVERGED"
     },
     {
       "accepted_level": 5,
@@ -937,7 +948,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
         "real": -0.13121215442185288
       },
       "reported_primal_error": 1.4828858196045177e-13,
-      "status": 0
+      "status": 0,
+      "status_name": "CONVERGED"
     },
     {
       "accepted_level": 4,
@@ -980,7 +992,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "primal_value": 1.2295617441031759,
       "replay_ad_derivative": 0.6556573838452364,
       "reported_primal_error": 9.24277439101969e-13,
-      "status": 0
+      "status": 0,
+      "status_name": "CONVERGED"
     },
     {
       "accepted_level": 4,
@@ -1041,7 +1054,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
         0.49999999999999994
       ],
       "reported_primal_error": 9.24277439101969e-13,
-      "status": 0
+      "status": 0,
+      "status_name": "CONVERGED"
     },
     {
       "accepted_level": 4,
@@ -1102,7 +1116,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
         "real": -0.13121215442185286
       },
       "reported_primal_error": 1.9860943949946536e-12,
-      "status": 0
+      "status": 0,
+      "status_name": "CONVERGED"
     },
     {
       "accepted_level": 0,
@@ -1145,7 +1160,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "primal_value": 0.31999999999999995,
       "replay_ad_derivative": 0.8,
       "reported_primal_error": 3.5527136788005005e-15,
-      "status": 0
+      "status": 0,
+      "status_name": "CONVERGED"
     },
     {
       "accepted_level": 0,
@@ -1188,7 +1204,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "primal_value": -0.31999999999999995,
       "replay_ad_derivative": -0.8,
       "reported_primal_error": 3.5527136788005005e-15,
-      "status": 0
+      "status": 0,
+      "status_name": "CONVERGED"
     },
     {
       "accepted_level": 0,
@@ -1231,7 +1248,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "primal_value": 0.0,
       "replay_ad_derivative": 0.4,
       "reported_primal_error": 0.0,
-      "status": 0
+      "status": 0,
+      "status_name": "CONVERGED"
     },
     {
       "accepted_level": 0,
@@ -1274,7 +1292,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "primal_value": 0.769230769230769,
       "replay_ad_derivative": -0.5917159763313609,
       "reported_primal_error": 4.600634126666863e-12,
-      "status": 0
+      "status": 0,
+      "status_name": "CONVERGED"
     },
     {
       "accepted_level": 0,
@@ -1317,7 +1336,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "primal_value": 1.3999999919536192,
       "replay_ad_derivative": 1.99999998850517,
       "reported_primal_error": 1.898970151784915e-07,
-      "status": 1
+      "status": 1,
+      "status_name": "MAX_EVALUATIONS"
     },
     {
       "accepted_level": 0,
@@ -1360,7 +1380,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "primal_value": 0.3333333333333333,
       "replay_ad_derivative": 0.8333333333333334,
       "reported_primal_error": 3.700743415417188e-15,
-      "status": 0
+      "status": 0,
+      "status_name": "CONVERGED"
     },
     {
       "accepted_level": 0,
@@ -1410,7 +1431,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "primal_value": 1.2295617441031756,
       "replay_ad_derivative": 0.6556573838452363,
       "reported_primal_error": 1.3650877585016103e-14,
-      "status": 1
+      "status": 1,
+      "status_name": "MAX_EVALUATIONS"
     },
     {
       "accepted_level": 0,
@@ -1454,6 +1476,7 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "replay_ad_derivative": -0.8187307530779818,
       "reported_primal_error": 1.8605701986428846e-11,
       "status": 0,
+      "status_name": "CONVERGED",
       "variant": "right"
     },
     {
@@ -1498,6 +1521,7 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "replay_ad_derivative": 1.2214027581601696,
       "reported_primal_error": 2.775660435363415e-11,
       "status": 0,
+      "status_name": "CONVERGED",
       "variant": "left"
     },
     {
@@ -1542,6 +1566,7 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "replay_ad_derivative": -0.8187307530779823,
       "reported_primal_error": 6.335506683453906e-14,
       "status": 0,
+      "status_name": "CONVERGED",
       "variant": "right"
     },
     {
@@ -1586,6 +1611,7 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "replay_ad_derivative": 1.2214027581601699,
       "reported_primal_error": 9.416691920596359e-14,
       "status": 0,
+      "status_name": "CONVERGED",
       "variant": "left"
     },
     {
@@ -1631,7 +1657,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
         "cm2_per_m": 20000.0
       },
       "reported_primal_error": "see raw method cases",
-      "status": 0
+      "status": 0,
+      "status_name": "CONVERGED"
     },
     {
       "accepted_level": 0,
@@ -1667,7 +1694,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "primal_value": "nonfinite",
       "replay_ad_derivative": "undefined",
       "reported_primal_error": "not_applicable",
-      "status": 6
+      "status": 6,
+      "status_name": "INVALID_INPUT"
     },
     {
       "accepted_level": 0,
@@ -1703,7 +1731,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "primal_value": "nonfinite",
       "replay_ad_derivative": "undefined",
       "reported_primal_error": "not_applicable",
-      "status": 3
+      "status": 3,
+      "status_name": "NONFINITE_INTEGRAND"
     },
     {
       "accepted_level": 0,
@@ -1739,7 +1768,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "primal_value": "nonfinite",
       "replay_ad_derivative": "undefined",
       "reported_primal_error": "not_applicable",
-      "status": 6
+      "status": 6,
+      "status_name": "INVALID_INPUT"
     },
     {
       "accepted_level": 0,
@@ -1775,7 +1805,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "primal_value": "nonfinite",
       "replay_ad_derivative": "undefined",
       "reported_primal_error": "not_applicable",
-      "status": 3
+      "status": 3,
+      "status_name": "NONFINITE_INTEGRAND"
     },
     {
       "accepted_level": 0,
@@ -1811,7 +1842,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "primal_value": "nonfinite",
       "replay_ad_derivative": "undefined",
       "reported_primal_error": "not_applicable",
-      "status": 6
+      "status": 6,
+      "status_name": "INVALID_INPUT"
     },
     {
       "accepted_level": 0,
@@ -1847,7 +1879,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "primal_value": "nonfinite",
       "replay_ad_derivative": "undefined",
       "reported_primal_error": "not_applicable",
-      "status": 3
+      "status": 3,
+      "status_name": "NONFINITE_INTEGRAND"
     },
     {
       "accepted_level": 3,
@@ -1883,7 +1916,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "primal_value": "nonfinite",
       "replay_ad_derivative": "undefined",
       "reported_primal_error": "not_applicable",
-      "status": 6
+      "status": 6,
+      "status_name": "INVALID_INPUT"
     },
     {
       "accepted_level": 3,
@@ -1919,7 +1953,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "primal_value": "nonfinite",
       "replay_ad_derivative": "undefined",
       "reported_primal_error": "not_applicable",
-      "status": 3
+      "status": 3,
+      "status_name": "NONFINITE_INTEGRAND"
     },
     {
       "accepted_level": 3,
@@ -1955,7 +1990,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "primal_value": "nonfinite",
       "replay_ad_derivative": "undefined",
       "reported_primal_error": "not_applicable",
-      "status": 6
+      "status": 6,
+      "status_name": "INVALID_INPUT"
     },
     {
       "accepted_level": 3,
@@ -1991,7 +2027,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "primal_value": "nonfinite",
       "replay_ad_derivative": "undefined",
       "reported_primal_error": "not_applicable",
-      "status": 3
+      "status": 3,
+      "status_name": "NONFINITE_INTEGRAND"
     }
   ],
   "claim": "replay-differentiable adaptive one-dimensional quadrature",

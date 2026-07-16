@@ -25,7 +25,7 @@
       "target": "docs/50-api/research-infrastructure/source-provenance/source-provenance.md"
     },
     {
-      "content_digest": "sha256:85a92e2cc9f078084e05bc2224c9f9fc856351103c8569c9240413283fde571f",
+      "content_digest": "sha256:039d60413f749f305383d97de9b61b5940098bb922555572b3d3735559cf72c5",
       "evidence_class": "computational",
       "id": "quad.replay-derivatives",
       "limitations": [
@@ -36,7 +36,7 @@
       ],
       "optional_data_policy": "No external data required.",
       "schema_version": "1",
-      "source_revision": "c71b31eb11e577d451b5417101ef84666269bc9d",
+      "source_revision": "88192affca0b0191da2d5371f295fde66223d106",
       "target": "docs/validation/quad-replay-derivatives.json"
     },
     {
