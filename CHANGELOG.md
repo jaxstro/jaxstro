@@ -13,6 +13,18 @@ Phase B consolidation/hardening arc and the `jaxstro.params` selective-gradient 
 
 ### Added
 
+- **Replay-differentiable adaptive quadrature** — all five one-dimensional
+  adaptive families (`GaussKronrod`, `AdaptiveClenshawCurtis`,
+  `AdaptiveTanhSinh`, `Romberg`, and `RombergTanhSinh`) now differentiate the
+  accepted fixed formula while stopping controller decisions and every
+  diagnostic leaf. New derivation and generated evidence routes cover analytic,
+  frozen-formula, adaptive-rerun, moving and reversed finite bounds,
+  semi-infinite bounds, complex/vector payloads, failure statuses, and
+  tolerance/capacity stability.
+- **Alpha quantity-aware adaptive integration** — `quad.integrate` accepts
+  quantity domains, absolute tolerances, integrand values, and weighted density
+  units through one normalization boundary over the unchanged raw numerical
+  engine. Lower-level fixed and mapping APIs remain raw-only and fail closed.
 - **`jaxstro.params`** — Equinox-only selective-gradient layer for gradient-based
   inference over a *subset* of a model's leaves: `Parameterization`
   (`from_where` / `from_filter` front doors, `to_vector` / `from_vector` PyTree↔flat-vector
@@ -49,6 +61,10 @@ Phase B consolidation/hardening arc and the `jaxstro.params` selective-gradient 
 
 ### Changed
 
+- **Adaptive quadrature derivative default** — `quad.integrate` now defaults to
+  `gradient="replay"`; the previous complete-result zero derivative remains
+  available explicitly with `gradient="stop"` for compatibility during sibling
+  migrations.
 - **`cumulative_trapz` uniform path → dx-outside** — the uniform-grid branch now factors
   the constant `dx` out of the running sum, for byte-parity with the progenax
   implementation it consolidates.
