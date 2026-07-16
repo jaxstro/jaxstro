@@ -907,18 +907,18 @@ git commit -m "feat(quad): add Romberg refinement family"
 **Interfaces:**
 - Establishes an explicit numerical envelope without making a universal error-bound or superiority claim.
 
-- [ ] **Step 1: Predeclare float64 thresholds and benchmark meanings**
+- [x] **Step 1: Predeclare float64 thresholds and benchmark meanings**
 
 Record per-family tolerances before running comparisons. Include analytic polynomials/exponentials, peaked Lorentzian profiles, declared discontinuities, endpoint algebraic singularities, semi-infinite exponential tails, full-line Gaussians, complex oscillation over a modest finite interval, and vector payloads. State which methods are expected to succeed and why.
 
-- [ ] **Step 2: Write independent analytic and secondary comparison tests**
+- [x] **Step 2: Write independent analytic and secondary comparison tests**
 
 Use analytic values as the independent acceptance oracle. SciPy and Quadax may
 be secondary comparison checks but cannot be the only oracle for copied
 QUADPACK data, controller behavior, or error calibration. Do not add mpmath or
 another development dependency in A2.
 
-- [ ] **Step 3: Add tolerance sweeps**
+- [x] **Step 3: Add tolerance sweeps**
 
 For each method, sweep at least three tolerances and record requested tolerance,
 reported indicator norm, observed error, status, evaluations, refinements,
@@ -927,7 +927,7 @@ observed-error envelope when `CONVERGED` is expected or an explicit acceptable
 nonconverged status set. The indicator need not upper-bound every observed
 error, but a benchmark cannot pass on “stable convergence” alone.
 
-- [ ] **Step 4: Add failure-envelope tests**
+- [x] **Step 4: Add failure-envelope tests**
 
 Include a missed narrow feature without a breakpoint, a nonintegrable or
 nonfinite case, exhausted budgets, adjacent representable endpoints, and an
@@ -937,7 +937,7 @@ feature, explicitly permit and ratchet false estimator convergence: preserve
 exceeds tolerance and that the limitation is documented. Do not require a
 failure heuristic the controller does not own.
 
-- [ ] **Step 5: Run validation and commit**
+- [x] **Step 5: Run validation and commit**
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/validation/test_quad_gk_tables.py tests/validation/test_quad_adaptive_reference.py`
 

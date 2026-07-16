@@ -1,0 +1,174 @@
+{
+  "analytic_value": 2.3504023872876028,
+  "benchmark": "integral_exp_minus1_plus1",
+  "claim_boundary": "Analytic acceptance and work evidence only; no universal error bound or cross-library superiority claim.",
+  "precision": "float64",
+  "records": [
+    {
+      "active_regions": 1,
+      "evaluations": 21,
+      "levels": 0,
+      "method": "gauss-kronrod-21",
+      "observed_absolute_error": 0.0,
+      "refinements": 0,
+      "reported_indicator_norm": 2.609470847500631e-14,
+      "requested_tolerance": 0.0001,
+      "status": 0
+    },
+    {
+      "active_regions": 1,
+      "evaluations": 21,
+      "levels": 0,
+      "method": "gauss-kronrod-21",
+      "observed_absolute_error": 0.0,
+      "refinements": 0,
+      "reported_indicator_norm": 2.609470847500631e-14,
+      "requested_tolerance": 1e-07,
+      "status": 0
+    },
+    {
+      "active_regions": 1,
+      "evaluations": 21,
+      "levels": 0,
+      "method": "gauss-kronrod-21",
+      "observed_absolute_error": 0.0,
+      "refinements": 0,
+      "reported_indicator_norm": 2.609470847500631e-14,
+      "requested_tolerance": 1e-10,
+      "status": 0
+    },
+    {
+      "active_regions": 1,
+      "evaluations": 17,
+      "levels": 0,
+      "method": "adaptive-clenshaw-curtis-17",
+      "observed_absolute_error": 0.0,
+      "refinements": 0,
+      "reported_indicator_norm": 2.0463630789890885e-11,
+      "requested_tolerance": 0.0001,
+      "status": 0
+    },
+    {
+      "active_regions": 1,
+      "evaluations": 17,
+      "levels": 0,
+      "method": "adaptive-clenshaw-curtis-17",
+      "observed_absolute_error": 0.0,
+      "refinements": 0,
+      "reported_indicator_norm": 2.0463630789890885e-11,
+      "requested_tolerance": 1e-07,
+      "status": 0
+    },
+    {
+      "active_regions": 1,
+      "evaluations": 17,
+      "levels": 0,
+      "method": "adaptive-clenshaw-curtis-17",
+      "observed_absolute_error": 0.0,
+      "refinements": 0,
+      "reported_indicator_norm": 2.0463630789890885e-11,
+      "requested_tolerance": 1e-10,
+      "status": 0
+    },
+    {
+      "active_regions": 1,
+      "evaluations": 101,
+      "levels": 0,
+      "method": "adaptive-tanh-sinh-3",
+      "observed_absolute_error": 4.440892098500626e-16,
+      "refinements": 0,
+      "reported_indicator_norm": 1.5024426935832905e-13,
+      "requested_tolerance": 0.0001,
+      "status": 0
+    },
+    {
+      "active_regions": 1,
+      "evaluations": 101,
+      "levels": 0,
+      "method": "adaptive-tanh-sinh-3",
+      "observed_absolute_error": 4.440892098500626e-16,
+      "refinements": 0,
+      "reported_indicator_norm": 1.5024426935832905e-13,
+      "requested_tolerance": 1e-07,
+      "status": 0
+    },
+    {
+      "active_regions": 1,
+      "evaluations": 101,
+      "levels": 0,
+      "method": "adaptive-tanh-sinh-3",
+      "observed_absolute_error": 4.440892098500626e-16,
+      "refinements": 0,
+      "reported_indicator_norm": 1.5024426935832905e-13,
+      "requested_tolerance": 1e-10,
+      "status": 0
+    },
+    {
+      "active_regions": 1,
+      "evaluations": 9,
+      "levels": 4,
+      "method": "romberg-1",
+      "observed_absolute_error": 1.0674648986963575e-07,
+      "refinements": 3,
+      "reported_indicator_norm": 6.840953530417188e-05,
+      "requested_tolerance": 0.0001,
+      "status": 0
+    },
+    {
+      "active_regions": 1,
+      "evaluations": 17,
+      "levels": 5,
+      "method": "romberg-1",
+      "observed_absolute_error": 4.2089887131169235e-11,
+      "refinements": 4,
+      "reported_indicator_norm": 1.0670443802493604e-07,
+      "requested_tolerance": 1e-07,
+      "status": 0
+    },
+    {
+      "active_regions": 1,
+      "evaluations": 33,
+      "levels": 6,
+      "method": "romberg-1",
+      "observed_absolute_error": 4.440892098500626e-15,
+      "refinements": 5,
+      "reported_indicator_norm": 4.2147999260416024e-11,
+      "requested_tolerance": 1e-10,
+      "status": 0
+    },
+    {
+      "active_regions": 1,
+      "evaluations": 25,
+      "levels": 3,
+      "method": "romberg-tanh-sinh-1",
+      "observed_absolute_error": 8.136158413662997e-11,
+      "refinements": 2,
+      "reported_indicator_norm": 0.00012031242708596929,
+      "requested_tolerance": 0.0001,
+      "status": 0
+    },
+    {
+      "active_regions": 1,
+      "evaluations": 51,
+      "levels": 4,
+      "method": "romberg-tanh-sinh-1",
+      "observed_absolute_error": 4.440892098500626e-16,
+      "refinements": 3,
+      "reported_indicator_norm": 8.147127627068705e-11,
+      "requested_tolerance": 1e-07,
+      "status": 0
+    },
+    {
+      "active_regions": 1,
+      "evaluations": 51,
+      "levels": 4,
+      "method": "romberg-tanh-sinh-1",
+      "observed_absolute_error": 4.440892098500626e-16,
+      "refinements": 3,
+      "reported_indicator_norm": 8.147127627068705e-11,
+      "requested_tolerance": 1e-10,
+      "status": 0
+    }
+  ],
+  "schema_version": 1
+}
