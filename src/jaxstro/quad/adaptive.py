@@ -13,6 +13,7 @@ from ._adaptive import (
     infer_payload_zero,
     nested_rule_estimate_values,
     reference_partition,
+    select_segment,
     tanh_sinh_estimate_values,
     tanh_sinh_pair_data,
     transformed_integrand,
@@ -90,6 +91,17 @@ def _zero_result(value, epsabs, epsrel, norm: ErrorNorm, kind: ErrorKind) -> Qua
             replicates=jnp.asarray(0, dtype=jnp.int32),
         ),
     )
+
+
+def _fail_closed_value(result: QuadResult) -> QuadResult:
+    failed = (result.status == QuadStatus.INVALID_INPUT) | (
+        result.status == QuadStatus.NONFINITE_INTEGRAND
+    )
+    value = jax.tree.map(
+        lambda leaf: jnp.where(failed, jnp.full_like(leaf, jnp.nan), leaf),
+        result.value,
+    )
+    return result._replace(value=value)
 
 
 def integrate(
@@ -275,7 +287,7 @@ def integrate(
             run_engine,
             operand=None,
         )
-        return jax.tree.map(jax.lax.stop_gradient, result)
+        return jax.tree.map(jax.lax.stop_gradient, _fail_closed_value(result))
 
     if isinstance(method, GaussKronrod):
         data = gauss_kronrod_data(method, dtype=dtype)
@@ -325,10 +337,11 @@ def integrate(
         zero_dtype = rule_nodes.dtype
     zero_value = inferred_zero.astype(zero_dtype)
 
-    def local_estimator(lower, upper):
+    def local_estimator(lower, upper, segment_id):
+        segment_domain = select_segment(domain, segment_id)
         transformed = transformed_integrand(
             fun,
-            domain,
+            segment_domain,
             rule_nodes,
             region_lower=lower,
             region_upper=upper,
@@ -378,7 +391,7 @@ def integrate(
         run_controller,
         operand=None,
     )
-    return jax.tree.map(jax.lax.stop_gradient, result)
+    return jax.tree.map(jax.lax.stop_gradient, _fail_closed_value(result))
 
 
 __all__ = ["integrate"]

@@ -18,11 +18,12 @@ def _partition(lower=(-1.0,), upper=(1.0,), *, valid=True):
     return ReferencePartition(
         lower=jnp.asarray(lower),
         upper=jnp.asarray(upper),
+        segment_id=jnp.arange(len(lower), dtype=jnp.int32),
         valid=jnp.asarray(valid),
     )
 
 
-def _quadratic_error_estimator(lower, upper):
+def _quadratic_error_estimator(lower, upper, _segment_id):
     width = upper - lower
     return LocalEstimate(
         value=width,
@@ -90,7 +91,7 @@ def test_controller_stops_before_incomplete_evaluation_batch() -> None:
 
 
 def test_controller_reduction_recovers_untouched_small_regions() -> None:
-    def cancellation_estimator(lower, upper):
+    def cancellation_estimator(lower, upper, _segment_id):
         width = upper - lower
         large_parent = (lower < 0.0) & (width == 1.0)
         small_region = (lower >= 0.0) & (width == 1.0)
@@ -117,7 +118,7 @@ def test_controller_reduction_recovers_untouched_small_regions() -> None:
 
 
 def test_controller_status_precedence_invalid_before_nonfinite() -> None:
-    def nonfinite_estimator(lower, upper):
+    def nonfinite_estimator(lower, upper, _segment_id):
         width = upper - lower
         return LocalEstimate(width, width, jnp.asarray(True))
 
@@ -168,7 +169,7 @@ def test_controller_invalid_dynamic_tolerances_have_input_precedence(
 def test_controller_rejects_norm_overflow_before_initial_convergence() -> None:
     maximum = jnp.finfo(jnp.float32).max
 
-    def overflow_estimator(_lower, _upper):
+    def overflow_estimator(_lower, _upper, _segment_id):
         payload = jnp.asarray([maximum, maximum], dtype=jnp.float32)
         return LocalEstimate(payload, payload, jnp.asarray(False))
 
@@ -188,7 +189,7 @@ def test_controller_rejects_norm_overflow_before_initial_convergence() -> None:
 def test_controller_rejects_norm_overflow_after_split() -> None:
     maximum = jnp.finfo(jnp.float32).max
 
-    def overflow_after_split(lower, upper):
+    def overflow_after_split(lower, upper, _segment_id):
         width = upper - lower
         child = jnp.asarray([0.3 * maximum, 0.3 * maximum], dtype=jnp.float32)
         initial = jnp.asarray([1.0, 1.0], dtype=jnp.float32)
@@ -209,11 +210,11 @@ def test_controller_rejects_norm_overflow_after_split() -> None:
 
 
 def test_controller_rejects_mismatched_or_nonreal_error_payloads() -> None:
-    def mismatched(lower, upper):
+    def mismatched(lower, upper, _segment_id):
         width = upper - lower
         return LocalEstimate(jnp.stack((width, width)), width, jnp.asarray(False))
 
-    def complex_error(lower, upper):
+    def complex_error(lower, upper, _segment_id):
         width = upper - lower
         return LocalEstimate(width, width + 0j, jnp.asarray(False))
 
@@ -298,7 +299,7 @@ def test_controller_combined_exit_precedence_is_frozen() -> None:
 
 
 def test_controller_payload_error_summation_and_error_norm_policy() -> None:
-    def payload_estimator(lower, upper):
+    def payload_estimator(lower, upper, _segment_id):
         width = upper - lower
         return LocalEstimate(
             value=jnp.stack((width, 2.0 * width)),
@@ -332,7 +333,7 @@ def test_controller_payload_error_summation_and_error_norm_policy() -> None:
 
 
 def test_controller_no_improvement_roundoff_threshold_is_exact() -> None:
-    def unchanged_estimator(lower, upper):
+    def unchanged_estimator(lower, upper, _segment_id):
         width = upper - lower
         return LocalEstimate(width, width, jnp.asarray(False))
 
@@ -363,7 +364,7 @@ def test_controller_no_improvement_roundoff_threshold_is_exact() -> None:
 
 
 def test_stagnation_adds_child_scalar_priorities_for_disjoint_payloads() -> None:
-    def disjoint_estimator(lower, upper):
+    def disjoint_estimator(lower, upper, _segment_id):
         width = upper - lower
         parent_error = jnp.asarray([1.5, 0.0])
         child_error = jnp.where(
@@ -391,7 +392,7 @@ def test_stagnation_adds_child_scalar_priorities_for_disjoint_payloads() -> None
 
 
 def test_controller_error_growth_roundoff_threshold_is_exact() -> None:
-    def growing_estimator(lower, upper):
+    def growing_estimator(lower, upper, _segment_id):
         width = upper - lower
         return LocalEstimate(width + width**2, 1.0 / width, jnp.asarray(False))
 

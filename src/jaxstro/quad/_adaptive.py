@@ -17,7 +17,14 @@ from ._integrand import (
     validate_node_values,
 )
 from ._tanh_sinh import _tanh_sinh_lattice_data
-from .domains import Infinite, Interval, LeftInfinite, RightInfinite, interval_is_valid
+from .domains import (
+    Infinite,
+    Interval,
+    LeftInfinite,
+    RightInfinite,
+    interval_is_valid,
+    sorted_breakpoints,
+)
 from .measures import LebesgueMeasure, WeightedMeasure
 from .methods import AdaptiveClenshawCurtis, AdaptiveTanhSinh
 from .result import QuadStatus
@@ -35,6 +42,7 @@ class ReferencePartition(NamedTuple):
 
     lower: Array
     upper: Array
+    segment_id: Array
     valid: Array
 
 
@@ -117,6 +125,7 @@ class AdaptiveControllerResult(NamedTuple):
     region_lower: Array
     region_upper: Array
     region_active: Array
+    region_segment_id: Array
     no_improvement_count: Array
     growth_count: Array
 
@@ -128,6 +137,7 @@ class _ControllerState(NamedTuple):
     lower: Array
     upper: Array
     active: Array
+    segment_id: Array
     global_value: Array
     global_error: Array
     tolerance: Array
@@ -346,30 +356,11 @@ def reference_partition(domain: Domain) -> ReferencePartition:
     """Build initial normalized regions without encoding physical orientation."""
     if isinstance(domain, Interval):
         dtype = jnp.result_type(domain.lower, domain.upper, *domain.breakpoints, 0.0)
-        lower = jnp.asarray(domain.lower, dtype=dtype)
-        upper = jnp.asarray(domain.upper, dtype=dtype)
-        lo = jnp.minimum(lower, upper)
-        hi = jnp.maximum(lower, upper)
-        half_width = 0.5 * (hi - lo)
-        safe_half_width = jnp.where(half_width > 0.0, half_width, 1.0)
-        midpoint = 0.5 * (hi + lo)
-        if domain.breakpoints:
-            points = jax.lax.stop_gradient(
-                jnp.sort(jnp.asarray(domain.breakpoints, dtype=dtype))
-            )
-            normalized = (points - midpoint) / safe_half_width
-        else:
-            normalized = jnp.empty((0,), dtype=dtype)
-        endpoints = jnp.concatenate(
-            (
-                jnp.asarray([-1.0], dtype=dtype),
-                normalized,
-                jnp.asarray([1.0], dtype=dtype),
-            )
-        )
+        count = len(domain.breakpoints) + 1
         return ReferencePartition(
-            lower=endpoints[:-1],
-            upper=endpoints[1:],
+            lower=-jnp.ones((count,), dtype=dtype),
+            upper=jnp.ones((count,), dtype=dtype),
+            segment_id=jnp.arange(count, dtype=jnp.int32),
             valid=interval_is_valid(domain),
         )
 
@@ -391,8 +382,26 @@ def reference_partition(domain: Domain) -> ReferencePartition:
     return ReferencePartition(
         lower=jnp.asarray([-1.0], dtype=dtype),
         upper=jnp.asarray([1.0], dtype=dtype),
+        segment_id=jnp.asarray([0], dtype=jnp.int32),
         valid=valid,
     )
+
+
+def interval_segment_bounds(domain: Interval) -> tuple[Array, Array]:
+    """Return stopped physical bounds for each original interval segment."""
+    points = sorted_breakpoints(domain)
+    dtype = jnp.result_type(domain.lower, domain.upper, *domain.breakpoints, 0.0)
+    lower = jnp.reshape(jnp.asarray(domain.lower, dtype=dtype), (1,))
+    upper = jnp.reshape(jnp.asarray(domain.upper, dtype=dtype), (1,))
+    return jnp.concatenate((lower, points)), jnp.concatenate((points, upper))
+
+
+def select_segment(domain: Domain, segment_id: Array) -> Domain:
+    """Select one stopped physical segment from a normalized partition."""
+    if isinstance(domain, Interval):
+        lower, upper = interval_segment_bounds(domain)
+        return Interval(lower[segment_id], upper[segment_id])
+    return domain
 
 
 def transformed_integrand(
@@ -470,7 +479,7 @@ def transformed_integrand(
 
 def adaptive_controller(
     partition: ReferencePartition,
-    local_estimator: Callable[[Array, Array], LocalEstimate],
+    local_estimator: Callable[[Array, Array, Array], LocalEstimate],
     *,
     node_cost: int,
     max_evaluations: int,
@@ -497,7 +506,11 @@ def adaptive_controller(
     ):
         raise TypeError("adaptive tolerances must have a real dtype")
 
-    initial = jax.vmap(local_estimator)(partition.lower, partition.upper)
+    initial = jax.vmap(local_estimator)(
+        partition.lower,
+        partition.upper,
+        partition.segment_id,
+    )
     if initial.error.shape[1:] != initial.value.shape[1:]:
         raise ValueError("adaptive local error must match the value payload shape")
     if not jnp.issubdtype(initial.error.dtype, jnp.floating):
@@ -533,6 +546,11 @@ def adaptive_controller(
         .set(partition.upper)
     )
     active = jnp.arange(max_regions) < initial_regions
+    segment_id = (
+        jnp.zeros((max_regions,), dtype=jnp.int32)
+        .at[:initial_regions]
+        .set(partition.segment_id)
+    )
     global_value = _masked_region_sum(values, active)
     global_error = _masked_region_sum(errors, active)
     value_norm = reduce_error_norm(global_value, error_norm)
@@ -580,6 +598,7 @@ def adaptive_controller(
         lower=lower,
         upper=upper,
         active=active,
+        segment_id=segment_id,
         global_value=global_value,
         global_error=global_error,
         tolerance=tolerance,
@@ -598,6 +617,7 @@ def adaptive_controller(
         selected = jnp.argmax(jnp.where(current.active, current.priorities, -jnp.inf))
         region_lower = current.lower[selected]
         region_upper = current.upper[selected]
+        region_segment_id = current.segment_id[selected]
         midpoint = 0.5 * (region_lower + region_upper)
         midpoint_collapsed = (midpoint == region_lower) | (midpoint == region_upper)
         evaluation_exhausted = current.evaluations + 2 * node_cost > max_evaluations
@@ -619,7 +639,12 @@ def adaptive_controller(
         def split(operand: _ControllerState) -> _ControllerState:
             child_lower = jnp.stack((region_lower, midpoint))
             child_upper = jnp.stack((midpoint, region_upper))
-            children = jax.vmap(local_estimator)(child_lower, child_upper)
+            child_segment_id = jnp.stack((region_segment_id, region_segment_id))
+            children = jax.vmap(local_estimator)(
+                child_lower,
+                child_upper,
+                child_segment_id,
+            )
             child_priorities = jax.vmap(
                 lambda error: reduce_error_norm(error, error_norm)
             )(children.error)
@@ -635,6 +660,8 @@ def adaptive_controller(
             new_upper = operand.upper.at[selected].set(midpoint)
             new_upper = new_upper.at[append_index].set(region_upper)
             new_active = operand.active.at[append_index].set(True)
+            new_segment_id = operand.segment_id.at[selected].set(region_segment_id)
+            new_segment_id = new_segment_id.at[append_index].set(region_segment_id)
 
             parent_value = operand.values[selected]
             child_value = children.value[0] + children.value[1]
@@ -696,6 +723,7 @@ def adaptive_controller(
                 lower=new_lower,
                 upper=new_upper,
                 active=new_active,
+                segment_id=new_segment_id,
                 global_value=new_global_value,
                 global_error=new_global_error,
                 tolerance=new_tolerance,
@@ -721,6 +749,7 @@ def adaptive_controller(
         region_lower=final.lower,
         region_upper=final.upper,
         region_active=final.active,
+        region_segment_id=final.segment_id,
         no_improvement_count=final.no_improvement_count,
         growth_count=final.growth_count,
     )
@@ -731,5 +760,6 @@ __all__ = [
     "adaptive_controller",
     "infer_payload_zero",
     "reference_partition",
+    "select_segment",
     "transformed_integrand",
 ]

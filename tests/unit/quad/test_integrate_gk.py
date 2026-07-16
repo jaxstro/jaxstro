@@ -200,6 +200,51 @@ def test_integrate_invalid_nonfinite_and_zero_width_precedence() -> None:
     assert invalid_zero.status == QuadStatus.INVALID_INPUT
 
 
+@pytest.mark.parametrize(
+    ("domain", "expected"),
+    [
+        (Interval(0.0, 4.0, breakpoints=(1.0, 3.0)), 4.0),
+        (Interval(4.0, 0.0, breakpoints=(1.0, 3.0)), -4.0),
+    ],
+)
+def test_breakpoint_segments_cover_the_physical_interval_once(domain, expected) -> None:
+    result = integrate(lambda x: jnp.ones_like(x), domain, **_options())
+
+    assert result.status == QuadStatus.CONVERGED
+    assert jnp.allclose(result.value, expected)
+
+
+@pytest.mark.parametrize(
+    ("domain", "fun", "expected_status"),
+    [
+        (Interval(jnp.nan, 1.0), lambda x: x, QuadStatus.INVALID_INPUT),
+        (
+            Interval(0.0, 1.0),
+            lambda x: jnp.where(x > 0.5, jnp.nan, x),
+            QuadStatus.NONFINITE_INTEGRAND,
+        ),
+    ],
+)
+def test_invalid_and_nonfinite_solves_return_nonfinite_values(
+    domain, fun, expected_status
+) -> None:
+    result = integrate(
+        fun,
+        domain,
+        **_options(
+            pair=15,
+            epsabs=1e-6,
+            epsrel=1e-6,
+            max_evaluations=45,
+            max_regions=2,
+            gradient="stop",
+        ),
+    )
+
+    assert result.status == expected_status
+    assert not jnp.all(jnp.isfinite(result.value))
+
+
 def test_integrate_rejects_unsupported_structure_and_gradient_policy() -> None:
     with pytest.raises(TypeError, match="finite Interval"):
         integrate(lambda x: x, Infinite(), **_options())
