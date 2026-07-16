@@ -2,6 +2,7 @@
 
 import jax
 import jax.numpy as jnp
+import pytest
 
 from jaxstro.quad import Interval
 from jaxstro.quad._adaptive import (
@@ -9,6 +10,12 @@ from jaxstro.quad._adaptive import (
     adaptive_controller,
     reference_partition,
     select_segment,
+)
+from jaxstro.quad._romberg import (
+    romberg_refine,
+    romberg_replay_value,
+    romberg_tanh_sinh_refine,
+    romberg_tanh_sinh_replay_value,
 )
 from jaxstro.quad.tolerance import MaxNorm
 from jaxstro.quad.transforms import map_interval_replay
@@ -93,3 +100,56 @@ def test_signed_replay_map_has_leibniz_tangent_at_coincident_bounds() -> None:
     _, upper_tangent = jax.jvp(fixed_formula, (1.0, 1.0), (0.0, 1.0))
     assert lower_tangent == -1.0
     assert upper_tangent == 1.0
+
+
+@pytest.mark.parametrize("initial_level", [1, 2, 3])
+def test_romberg_replay_reconstructs_accepted_diagonal(initial_level) -> None:
+    def evaluate(reference):
+        return jnp.exp(reference), jnp.asarray(False), jnp.asarray(False)
+
+    primal = romberg_refine(
+        evaluate,
+        jnp.asarray(0.0),
+        initial_level=initial_level,
+        max_evaluations=257,
+        max_regions=1,
+        epsabs=1e-12,
+        epsrel=1e-12,
+        error_norm=MaxNorm(),
+        dtype=jnp.float64,
+    )
+    replay = romberg_replay_value(
+        evaluate,
+        jnp.asarray(0.0),
+        initial_level=initial_level,
+        accepted_level=primal.levels - 1,
+        max_evaluations=257,
+        dtype=jnp.float64,
+    )
+    assert jnp.allclose(replay, primal.value, rtol=2e-15, atol=2e-15)
+
+
+def test_global_tanh_sinh_replay_reconstructs_accepted_weight_row() -> None:
+    def evaluate(reference):
+        return jnp.exp(-(reference**2)), jnp.asarray(False), jnp.asarray(False)
+
+    primal = romberg_tanh_sinh_refine(
+        evaluate,
+        jnp.asarray(0.0),
+        initial_level=2,
+        max_evaluations=801,
+        max_regions=1,
+        epsabs=1e-11,
+        epsrel=1e-11,
+        error_norm=MaxNorm(),
+        dtype=jnp.float64,
+    )
+    replay = romberg_tanh_sinh_replay_value(
+        evaluate,
+        jnp.asarray(0.0),
+        initial_level=2,
+        accepted_level=primal.levels - 1,
+        max_evaluations=801,
+        dtype=jnp.float64,
+    )
+    assert jnp.allclose(replay, primal.value, rtol=2e-15, atol=2e-15)

@@ -232,3 +232,36 @@ def test_gauss_kronrod_breakpoint_result_matches_pre_a3_golden_tree(reverse) -> 
     assert result.tolerance == 1e-10
     assert result.status == quad.QuadStatus.CONVERGED
     assert tuple(int(leaf) for leaf in result.work) == (63, 0, 3, 0, 0)
+
+
+@pytest.mark.parametrize(
+    ("method", "max_evaluations", "rtol"),
+    [
+        (quad.Romberg(2), 257, 3e-7),
+        (quad.RombergTanhSinh(2), 801, 3e-6),
+    ],
+)
+def test_global_replay_parameter_derivative(method, max_evaluations, rtol) -> None:
+    def integral(theta):
+        return quad.integrate(
+            lambda x, args: jnp.exp(args * x),
+            quad.Interval(-0.5, 1.0),
+            args=theta,
+            method=method,
+            epsabs=1e-10,
+            epsrel=1e-10,
+            max_evaluations=max_evaluations,
+            max_regions=1,
+            gradient="replay",
+        ).value
+
+    theta = 0.4
+    expected = jax.grad(lambda value: (jnp.exp(value) - jnp.exp(-0.5 * value)) / value)(
+        theta
+    )
+    assert jnp.allclose(
+        jax.grad(integral)(theta),
+        expected,
+        rtol=rtol,
+        atol=2e-8,
+    )

@@ -18,7 +18,14 @@ from ._adaptive import (
     transformed_integrand,
 )
 from ._gk import gauss_kronrod_data, gauss_kronrod_estimate_values
-from .methods import AdaptiveClenshawCurtis, AdaptiveTanhSinh, GaussKronrod
+from ._romberg import romberg_replay_value, romberg_tanh_sinh_replay_value
+from .methods import (
+    AdaptiveClenshawCurtis,
+    AdaptiveTanhSinh,
+    GaussKronrod,
+    Romberg,
+    RombergTanhSinh,
+)
 from .result import QuadError, QuadResult, QuadWork
 
 
@@ -114,6 +121,45 @@ def replay_value(
     primal_value,
 ):
     """Reconstruct the stopped accepted quadrature formula."""
+    if isinstance(evidence, GlobalReplayEvidence):
+        dtype = jnp.real(jnp.asarray(primal_value)).dtype
+        zero = jnp.zeros_like(primal_value)
+
+        def evaluate_one(reference):
+            transformed = transformed_integrand(
+                config.fun,
+                domain,
+                jnp.reshape(reference, (1,)),
+                args=args,
+                measure=config.measure,
+                replay=True,
+            )
+            return (
+                transformed.values[0].astype(zero.dtype),
+                transformed.nonfinite,
+                transformed.roundoff,
+            )
+
+        replay_engine = (
+            romberg_replay_value
+            if isinstance(config.method, Romberg)
+            else romberg_tanh_sinh_replay_value
+            if isinstance(config.method, RombergTanhSinh)
+            else None
+        )
+        if replay_engine is None:
+            raise TypeError(
+                f"{type(config.method).__name__} is not a global replay method"
+            )
+        return replay_engine(
+            evaluate_one,
+            zero,
+            initial_level=config.method.initial_level,
+            accepted_level=evidence.accepted_level,
+            max_evaluations=config.max_evaluations,
+            dtype=dtype,
+        )
+
     if not isinstance(evidence, RegionalReplayEvidence):
         raise TypeError(f"{type(config.method).__name__} replay is not implemented")
 

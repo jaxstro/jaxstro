@@ -340,6 +340,133 @@ def romberg_refine(
     )
 
 
+def romberg_replay_value(
+    evaluate_one,
+    zero,
+    *,
+    initial_level: int,
+    accepted_level,
+    max_evaluations: int,
+    dtype,
+):
+    """Reconstruct one stopped classical Romberg diagonal."""
+    max_level = (max_evaluations - 1).bit_length() - 1
+    accepted_level = jax.lax.stop_gradient(jnp.asarray(accepted_level, dtype=jnp.int32))
+    lane_count = 2 ** max(max_level - 1, 0)
+    payload_shape = zero.shape
+    value_dtype = zero.dtype
+    real_dtype = jnp.real(zero).dtype
+    table = jnp.zeros(
+        (max_level + 1, max_level + 1) + payload_shape,
+        dtype=value_dtype,
+    )
+    floors = jnp.zeros(
+        (max_level + 1, max_level + 1) + payload_shape,
+        dtype=real_dtype,
+    )
+
+    fine_count = 2**initial_level + 1
+    lane = jnp.arange(max(lane_count, fine_count), dtype=jnp.int32)
+    initial_active = lane < fine_count
+    initial_nodes = -1.0 + 2.0 * lane.astype(dtype) / (fine_count - 1)
+    initial_values, _, _ = _masked_evaluate(
+        evaluate_one,
+        initial_nodes,
+        initial_active,
+        zero,
+    )
+
+    def initialize(level, state):
+        current_table, current_floors = state
+        stride = 2 ** (initial_level - level)
+        selected = initial_active & (lane % stride == 0)
+        endpoint = (lane == 0) | (lane == fine_count - 1)
+        coefficients = jnp.where(
+            selected,
+            jnp.where(endpoint, 0.5, 1.0),
+            0.0,
+        )
+        shape = coefficients.shape + (1,) * len(payload_shape)
+        step = jnp.asarray(2.0 / 2**level, dtype=dtype)
+        weighted = initial_values * jnp.reshape(coefficients, shape)
+        base = step * jnp.sum(weighted, axis=0)
+        resabs = step * jnp.sum(jnp.abs(weighted), axis=0)
+        base_floor = _gamma(2**level + 1, real_dtype) * resabs
+        return _richardson_row(
+            current_table,
+            current_floors,
+            level,
+            base,
+            base_floor,
+            max_level,
+        )
+
+    table, floors = jax.lax.fori_loop(
+        0,
+        initial_level + 1,
+        initialize,
+        (table, floors),
+    )
+
+    def maybe_advance(level, state):
+        def advance(current):
+            current_table, current_floors = current
+            new_count = 2 ** (level - 1)
+            lane = jnp.arange(lane_count, dtype=jnp.int32)
+            new_active = lane < new_count
+            odd = 2 * lane + 1
+            nodes = -1.0 + 2.0 * odd.astype(dtype) / (2**level)
+            values, _, _ = _masked_evaluate(
+                evaluate_one,
+                nodes,
+                new_active,
+                zero,
+            )
+            shape = new_active.shape + (1,) * len(payload_shape)
+            selected_values = jnp.where(
+                jnp.reshape(new_active, shape),
+                values,
+                0.0,
+            )
+            step = jnp.asarray(2.0, dtype=dtype) / (2**level)
+            base = 0.5 * current_table[level - 1, 0] + step * jnp.sum(
+                selected_values,
+                axis=0,
+            )
+            previous_resabs = current_floors[level - 1, 0] / _gamma(
+                2 ** (level - 1) + 1,
+                real_dtype,
+            )
+            resabs = 0.5 * previous_resabs + step * jnp.sum(
+                jnp.abs(selected_values),
+                axis=0,
+            )
+            base_floor = _gamma(2**level + 1, real_dtype) * resabs
+            return _richardson_row(
+                current_table,
+                current_floors,
+                level,
+                base,
+                base_floor,
+                max_level,
+            )
+
+        return jax.lax.cond(
+            level <= accepted_level,
+            advance,
+            lambda current: current,
+            state,
+        )
+
+    table, _ = jax.lax.fori_loop(
+        initial_level + 1,
+        max_level + 1,
+        maybe_advance,
+        (table, floors),
+    )
+    return table[accepted_level, accepted_level]
+
+
 @lru_cache(maxsize=None)
 def _tanh_sinh_tables(initial_level: int, max_evaluations: int, dtype_name: str):
     max_level = initial_level
@@ -597,9 +724,36 @@ def romberg_tanh_sinh_refine(
     )
 
 
+def romberg_tanh_sinh_replay_value(
+    evaluate_one,
+    zero,
+    *,
+    initial_level: int,
+    accepted_level,
+    max_evaluations: int,
+    dtype,
+):
+    """Reconstruct one stopped global tanh-sinh weight row."""
+    dtype_name = np.dtype(dtype).name
+    _, nodes_host, weights_host, _, active_host, _, _, _ = _tanh_sinh_tables(
+        initial_level,
+        max_evaluations,
+        dtype_name,
+    )
+    nodes = jnp.asarray(nodes_host, dtype=dtype)
+    weights = jnp.asarray(weights_host, dtype=dtype)
+    active = jnp.asarray(active_host)
+    level = jax.lax.stop_gradient(jnp.asarray(accepted_level, dtype=jnp.int32))
+    values, _, _ = _masked_evaluate(evaluate_one, nodes, active[level], zero)
+    shape = (nodes.shape[0],) + (1,) * zero.ndim
+    return jnp.sum(values * jnp.reshape(weights[level], shape), axis=0)
+
+
 __all__ = [
     "GlobalRefinementResult",
     "romberg_refine",
+    "romberg_replay_value",
     "romberg_tanh_sinh_refine",
+    "romberg_tanh_sinh_replay_value",
     "validate_global_capacities",
 ]
