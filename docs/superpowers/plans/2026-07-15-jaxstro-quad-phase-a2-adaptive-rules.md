@@ -992,7 +992,7 @@ Run: `env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/integration/test_metho
 
 Run: `DOCS_APP_PORT=4381 DOCS_SERVER_PORT=4382 bash scripts/check_docs.sh`
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/jaxstro/contracts/registry.py docs tests/integration/test_method_page_contract.py tests/integration/test_grouped_api_reference.py tests/unit/test_contract_manifests.py
@@ -1008,13 +1008,13 @@ git commit -m "docs(quad): publish adaptive quadrature contracts"
 **Interfaces:**
 - Produces a verified A2 state suitable for a fresh A3 plan, but does not begin A3.
 
-- [ ] **Step 1: Run the exact focused A2 gate**
+- [x] **Step 1: Run the exact focused A2 gate**
 
 Run: `JAX_ENABLE_X64=1 env -u VIRTUAL_ENV uv run --no-sync pytest -q tests/unit/quad tests/integration/test_quad_adaptive_transforms.py tests/integration/test_quad_fixed_transforms.py tests/integration/test_quad_compatibility.py tests/validation/test_quad_gk_tables.py tests/validation/test_quad_adaptive_reference.py`
 
 Expected: all focused tests pass.
 
-- [ ] **Step 2: Run static and freshness checks**
+- [x] **Step 2: Run static and freshness checks**
 
 Run Ruff check/format over `src` and `tests`, MyPy over `src`, all four generated
 registry freshness checks, the QUADPACK fixture freshness check, and
@@ -1022,17 +1022,17 @@ registry freshness checks, the QUADPACK fixture freshness check, and
 
 Run: `env -u VIRTUAL_ENV uv run --no-sync python scripts/build_quadpack_gk_fixture.py --check`
 
-- [ ] **Step 3: Dispatch a fresh read-only complete A2 reviewer**
+- [x] **Step 3: Dispatch a fresh read-only complete A2 reviewer**
 
 The reviewer must inspect primary-source constants, numerical estimators, exact work counts, controller invariants, status precedence, domain/measure pairings, JAX trace structure, stopped AD, validation independence, documentation equations, and public claim calibration. Resolve every Critical and Important finding from a failing regression. Record Minor findings explicitly.
 
-- [ ] **Step 4: Run full repository and strict rendered-documentation gates**
+- [x] **Step 4: Run full repository and strict rendered-documentation gates**
 
 Run: `env -u VIRTUAL_ENV uv run --no-sync pytest -q`
 
 Run: `DOCS_APP_PORT=4381 DOCS_SERVER_PORT=4382 bash scripts/check_docs.sh`
 
-- [ ] **Step 5: Update status and commit verification evidence**
+- [x] **Step 5: Update status and commit verification evidence**
 
 Record exact commits, focused/full counts, checkpoint dispositions, supported methods, reference sources, route count, and exclusions.
 

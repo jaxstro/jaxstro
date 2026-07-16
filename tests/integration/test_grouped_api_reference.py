@@ -143,6 +143,9 @@ def test_quad_owner_page_publishes_the_adaptive_contract() -> None:
         "primal result",
         "status precedence",
         "integrand evaluations",
+        "zero-based finest completed level",
+        "roundoff-scale error floor alone",
+        "all-zero `QuadWork` record",
         "not an exact error certificate",
         "quad-adaptive-envelope.json",
     ):

@@ -9,7 +9,7 @@ SCORECARD = ROOT / "docs/70-project/development/package-assessment-scorecard.md"
 
 def test_scorecard_has_grades_evidence_and_promotion_rules() -> None:
     text = SCORECARD.read_text(encoding="utf-8")
-    assert "Assessment date: 2026-07-14" in text
+    assert "Assessment date: 2026-07-15" in text
     assert "| Dimension | Grade | Evidence |" in text
     for phrase in (
         "# Jaxstro research-software assessment scorecard",

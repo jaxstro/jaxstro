@@ -92,18 +92,27 @@ the estimated integral. Neither term can repair a structurally blind estimator.
 
 ### Embedded Gauss-Kronrod
 
-A Kronrod rule reuses the Gauss nodes and adds nodes. If $Q_K$ and $Q_G$ are
-the paired estimates, the raw embedded indicator is stabilized by a
-roundoff-scale floor $E_{\mathrm{round}}$:
+A Kronrod rule reuses the Gauss nodes and adds nodes. Let
+$\delta=\lvert Q_K-Q_G\rvert$, let $E_{\mathrm{abs}}$ estimate the integral of
+$\lvert f\rvert$, and let $E_{\mathrm{asc}}$ estimate absolute deviation from
+the Kronrod mean. Jaxstro follows the QUADPACK stabilization shape before
+applying a roundoff-scale floor:
 
 ```{math}
 :label: eq-adaptive-gk
 
-Q_i = Q_K,
-\qquad
-e_i = \max\!\left(\lvert Q_K-Q_G\rvert,
-E_{\mathrm{round}}\right).
+\begin{aligned}
+s_i &= E_{\mathrm{asc}}\,\min\!\left[1,
+\left(\frac{200\delta}{E_{\mathrm{asc}}}\right)^{3/2}\right], \\
+E_{\mathrm{round}} &= 50\epsilon_{\mathrm{mach}}E_{\mathrm{abs}}, \\
+Q_i &= Q_K,
+\qquad e_i = \max(s_i,E_{\mathrm{round}}).
+\end{aligned}
 ```
+
+When $E_{\mathrm{asc}}=0$ or $\delta=0$, the implementation uses the raw
+difference rather than dividing by zero. The floor is applied only where its
+floating-point construction is representable.
 
 The public pairs contain 15, 21, 31, 41, 51, or 61 Kronrod nodes.
 
@@ -159,7 +168,13 @@ R_{k,j}=R_{k,j-1}
 ```
 
 `RombergTanhSinh` instead compares nested global tanh-sinh levels without using
-the polynomial-error assumption behind Richardson extrapolation.
+the polynomial-error assumption behind Richardson extrapolation. Its reported
+error retains the adjacent-level, summation, and terminal-tail terms:
+
+```{math}
+e_k = \lvert Q_k-Q_{k-1}\rvert
+      + E_{\mathrm{sum},k} + E_{\mathrm{tail},k}.
+```
 
 ### Logical work
 
@@ -177,6 +192,9 @@ Classical Romberg at completed level $k$ uses $2^k+1$ unique logical points.
 These are integrand evaluations, not padded accelerator lanes, compile time, or
 wall time.
 
+An exact zero-width finite interval takes the shared fast path and returns an
+all-zero `QuadWork` record.
+
 ## What the algorithm actually does
 
 Regional controllers evaluate every declared initial region, sum their value
@@ -185,11 +203,17 @@ error priority. Arrays have fixed capacity so the loop remains JAX
 transformable. Global Romberg controllers increase one shared level instead of
 building a region partition.
 
-The effective status precedence is invalid input, nonfinite integrand,
-convergence, roundoff limitation, and then exhausted capacity. Regional
-capacity distinguishes `MAX_EVALUATIONS` from `MAX_REGIONS`. Current A2
-controllers emit `INVALID_INPUT`, `NONFINITE_INTEGRAND`, `CONVERGED`,
-`ROUNDOFF_LIMITED`, `MAX_EVALUATIONS`, or `MAX_REGIONS` as applicable.
+Initial and completed estimates resolve invalid input before nonfinite values
+and nonfinite values before convergence. An explicit representability failure
+or repeated stagnation then produces `ROUNDOFF_LIMITED`. If another refinement
+cannot begin, midpoint collapse takes precedence over exhausted evaluation
+capacity, which takes precedence over exhausted region capacity. Thus a
+floor-dominated error at an already exhausted budget returns
+`MAX_EVALUATIONS`, not `ROUNDOFF_LIMITED`; an error floor is evidence, not by
+itself a status trigger. Regional capacity distinguishes `MAX_EVALUATIONS` from
+`MAX_REGIONS`. Current A2 controllers emit `INVALID_INPUT`,
+`NONFINITE_INTEGRAND`, `CONVERGED`, `ROUNDOFF_LIMITED`, `MAX_EVALUATIONS`, or
+`MAX_REGIONS` as applicable.
 `DIVERGENCE_SUSPECTED` and `ERROR_ESTIMATE_UNAVAILABLE` are reserved vocabulary,
 not current controller outputs.
 

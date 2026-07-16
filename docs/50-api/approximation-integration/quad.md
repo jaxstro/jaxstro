@@ -187,9 +187,13 @@ for the masses and normalization equations.
 
 Structural incompatibilities raise before tracing. Dynamic invalid inputs,
 nonfinite integrands, roundoff limits, and capacity exhaustion return a typed
-result. Current status precedence is invalid input, nonfinite integrand,
-convergence, roundoff limitation, and then exhausted capacity. Regional
-controllers distinguish `MAX_EVALUATIONS` and `MAX_REGIONS`.
+result. The current status precedence for completed estimates resolves invalid
+input, then nonfinite values, then
+convergence, then explicit representability or stagnation evidence. Before a
+new regional split, midpoint collapse precedes exhausted evaluation capacity,
+which precedes exhausted region capacity. A roundoff-scale error floor alone
+does not emit `ROUNDOFF_LIMITED`. Regional controllers distinguish
+`MAX_EVALUATIONS` and `MAX_REGIONS`.
 `DIVERGENCE_SUSPECTED` and `ERROR_ESTIMATE_UNAVAILABLE` are reserved statuses,
 not current A2 outputs. Sparse-grid and replicate error kinds are likewise
 reserved.
@@ -252,11 +256,18 @@ adaptive = quad.integrate(
 )
 ```
 
-`QuadWork.evaluations` means logical integrand evaluations, not padded device
-lanes or wall time. For an `n`-node regional rule, `M` initial regions, and `r`
-splits, the count is `n * (M + 2 * r)`. Classical Romberg reports `2**k + 1`
-at completed level `k`; Romberg-tanh-sinh reports the active-node count at its
-finest completed level.
+`QuadWork` uses these exact current meanings:
+
+| Field | Regional methods | Global Romberg families |
+| --- | --- | --- |
+| `evaluations` | `n * (M + 2 * r)` logical integrand evaluations | `2**k + 1` for classical Romberg; finest active-node count for Romberg-tanh-sinh |
+| `refinements` | completed region bisections `r` | zero-based finest completed level `k` |
+| `active_regions` | current active partition size | `1` |
+| `levels` | `0` | number of completed levels, `k + 1` |
+| `replicates` | `0` | `0` |
+
+Logical evaluations are not padded device lanes, compile time, or wall time.
+An exact zero-width finite interval returns an all-zero `QuadWork` record.
 
 The reported estimator is not an exact error certificate. Related rules can
 miss the same unresolved narrow feature even when the returned status is

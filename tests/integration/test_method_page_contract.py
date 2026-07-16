@@ -302,6 +302,13 @@ def test_adaptive_quadrature_page_publishes_current_capability_and_boundaries() 
         'gradient="stop"',
         "integrand evaluations",
         "not an exact error certificate",
+        r"E_{\mathrm{asc}}",
+        r"E_{\mathrm{asc}}\,\min",
+        r"200\delta",
+        r"E_{\mathrm{sum},k}",
+        "floor-dominated error",
+        "not by itself a status trigger",
+        "all-zero `QuadWork` record",
         "tests/validation/test_quad_adaptive_reference.py",
         "docs/validation/quad-adaptive-envelope.json",
     ):
