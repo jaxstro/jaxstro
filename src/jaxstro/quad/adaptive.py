@@ -20,6 +20,13 @@ from ._adaptive import (
     validate_adaptive_capacities,
 )
 from ._gk import gauss_kronrod_data, gauss_kronrod_estimate_values
+from ._replay import (
+    GlobalReplayEvidence,
+    IntegrateConfig,
+    PrimalSolve,
+    RegionalReplayEvidence,
+    integrate_replay_core,
+)
 from ._romberg import (
     romberg_refine,
     romberg_tanh_sinh_refine,
@@ -104,26 +111,20 @@ def _fail_closed_value(result: QuadResult) -> QuadResult:
     return result._replace(value=value)
 
 
-def integrate(
-    fun: Callable,
+def _solve_raw(
+    config: IntegrateConfig,
     domain: Domain,
-    *,
-    args: Any = (),
-    method,
-    measure: AdaptiveMeasure | None = None,
+    args,
     epsabs,
     epsrel,
-    max_evaluations: int,
-    max_regions: int,
-    error_norm: ErrorNorm = MaxNorm(),
-    gradient: str = "stop",
-) -> QuadResult:
-    """Adaptively integrate a raw-array one-dimensional integrand."""
-    if gradient != "stop":
-        raise ValueError(
-            'Phase A2 accepts only gradient="stop"; Phase A3 replay is not yet '
-            "implemented"
-        )
+) -> PrimalSolve:
+    """Run the sole raw primal adaptive engine and retain replay evidence."""
+    fun = config.fun
+    method = config.method
+    selected_measure = config.measure
+    max_evaluations = config.max_evaluations
+    max_regions = config.max_regions
+    error_norm = config.error_norm
     if not isinstance(
         method,
         (
@@ -144,9 +145,6 @@ def integrate(
         and domain.breakpoints
     ):
         raise ValueError(f"{type(method).__name__} does not accept breakpoints")
-    selected_measure: AdaptiveMeasure = (
-        LebesgueMeasure() if measure is None else measure
-    )
     if not isinstance(selected_measure, (LebesgueMeasure, WeightedMeasure)):
         raise TypeError(
             "adaptive quadrature requires LebesgueMeasure or WeightedMeasure"
@@ -247,7 +245,7 @@ def integrate(
                 input_valid=domain_valid,
             )
             refined_error_norm = reduce_error_norm(refined.error, error_norm)
-            return QuadResult(
+            result = QuadResult(
                 value=refined.value,
                 error=QuadError(
                     estimate=refined.error,
@@ -267,6 +265,24 @@ def integrate(
                     replicates=jnp.asarray(0, dtype=jnp.int32),
                 ),
             )
+            return PrimalSolve(
+                result,
+                GlobalReplayEvidence(refined.levels - 1),
+            )
+
+        def zero_engine(_operand):
+            return PrimalSolve(
+                _zero_result(
+                    zero_value,
+                    epsabs,
+                    epsrel,
+                    error_norm,
+                    ErrorKind.REFINEMENT_DIFFERENCE,
+                ),
+                GlobalReplayEvidence(
+                    jnp.asarray(method.initial_level, dtype=jnp.int32)
+                ),
+            )
 
         use_zero = (
             domain_valid
@@ -275,19 +291,13 @@ def integrate(
             if isinstance(domain, Interval)
             else jnp.asarray(False)
         )
-        result = jax.lax.cond(
+        solve = jax.lax.cond(
             use_zero,
-            lambda _operand: _zero_result(
-                zero_value,
-                epsabs,
-                epsrel,
-                error_norm,
-                ErrorKind.REFINEMENT_DIFFERENCE,
-            ),
+            zero_engine,
             run_engine,
             operand=None,
         )
-        return jax.tree.map(jax.lax.stop_gradient, _fail_closed_value(result))
+        return solve._replace(result=_fail_closed_value(solve.result))
 
     if isinstance(method, GaussKronrod):
         data = gauss_kronrod_data(method, dtype=dtype)
@@ -381,17 +391,67 @@ def integrate(
             epsrel=epsrel,
             error_norm=error_norm,
         )
-        return _assembled_result(controller, error_norm, error_kind)
+        return PrimalSolve(
+            _assembled_result(controller, error_norm, error_kind),
+            RegionalReplayEvidence(
+                controller.region_lower,
+                controller.region_upper,
+                controller.region_segment_id,
+                controller.region_active,
+            ),
+        )
 
-    result = jax.lax.cond(
+    def zero_controller(_operand):
+        lower = jnp.zeros((max_regions,), dtype=partition.lower.dtype).at[0].set(-1.0)
+        upper = jnp.zeros((max_regions,), dtype=partition.upper.dtype).at[0].set(1.0)
+        segment_id = jnp.zeros((max_regions,), dtype=jnp.int32)
+        active = jnp.zeros((max_regions,), dtype=jnp.bool_).at[0].set(True)
+        return PrimalSolve(
+            _zero_result(zero_value, epsabs, epsrel, error_norm, error_kind),
+            RegionalReplayEvidence(lower, upper, segment_id, active),
+        )
+
+    solve = jax.lax.cond(
         use_zero,
-        lambda _operand: _zero_result(
-            zero_value, epsabs, epsrel, error_norm, error_kind
-        ),
+        zero_controller,
         run_controller,
         operand=None,
     )
-    return jax.tree.map(jax.lax.stop_gradient, _fail_closed_value(result))
+    return solve._replace(result=_fail_closed_value(solve.result))
+
+
+def integrate(
+    fun: Callable,
+    domain: Domain,
+    *,
+    args: Any = (),
+    method,
+    measure: AdaptiveMeasure | None = None,
+    epsabs,
+    epsrel,
+    max_evaluations: int,
+    max_regions: int,
+    error_norm: ErrorNorm = MaxNorm(),
+    gradient: str = "stop",
+) -> QuadResult:
+    """Adaptively integrate with stopped or fixed-formula replay derivatives."""
+    if gradient not in {"replay", "stop"}:
+        raise ValueError('gradient must be "replay" or "stop"')
+    selected_measure: AdaptiveMeasure = (
+        LebesgueMeasure() if measure is None else measure
+    )
+    config = IntegrateConfig(
+        fun=fun,
+        method=method,
+        measure=selected_measure,
+        max_evaluations=max_evaluations,
+        max_regions=max_regions,
+        error_norm=error_norm,
+    )
+    if gradient == "stop":
+        solve = _solve_raw(config, domain, args, epsabs, epsrel)
+        return jax.tree.map(jax.lax.stop_gradient, solve.result)
+    return integrate_replay_core(config, domain, args, epsabs, epsrel)
 
 
 __all__ = ["integrate"]

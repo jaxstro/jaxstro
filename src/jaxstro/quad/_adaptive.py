@@ -31,7 +31,7 @@ from .result import QuadStatus
 from .rules import ClenshawCurtisRule
 from .tolerance import ErrorNorm
 from .tolerance import error_norm as reduce_error_norm
-from .transforms import map_domain
+from .transforms import map_domain, map_domain_replay
 
 Domain = Interval | RightInfinite | LeftInfinite | Infinite
 AdaptiveMeasure = LebesgueMeasure | WeightedMeasure
@@ -414,6 +414,7 @@ def transformed_integrand(
     args: Any = (),
     measure: AdaptiveMeasure | None = None,
     open_region: bool = False,
+    replay: bool = False,
 ) -> TransformedIntegrand:
     """Evaluate one local reference region with every map and density applied."""
     selected_measure: AdaptiveMeasure = (
@@ -437,7 +438,11 @@ def transformed_integrand(
         clipped_reference = jnp.clip(reference, interior_lower, interior_upper)
         roundoff = jnp.any(clipped_reference != reference)
         reference = clipped_reference
-    mapped = map_domain(domain, reference)
+    mapped = (
+        map_domain_replay(domain, reference)
+        if replay
+        else map_domain(domain, reference)
+    )
     has_args = has_explicit_args(args)
     raw_values = validate_node_values(
         call_integrand(fun, mapped.x, args, has_args),

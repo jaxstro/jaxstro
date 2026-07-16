@@ -1,5 +1,6 @@
 """Private replay-evidence and mapping substrate contracts."""
 
+import jax
 import jax.numpy as jnp
 
 from jaxstro.quad import Interval
@@ -10,6 +11,7 @@ from jaxstro.quad._adaptive import (
     select_segment,
 )
 from jaxstro.quad.tolerance import MaxNorm
+from jaxstro.quad.transforms import map_interval_replay
 
 
 def test_reference_partition_is_local_to_each_original_segment() -> None:
@@ -67,3 +69,27 @@ def test_controller_propagates_parent_segment_identity() -> None:
     active_ids = result.region_segment_id[result.region_active]
     assert jnp.all((active_ids == 0) | (active_ids == 1))
     assert jnp.sum(active_ids == 0) + jnp.sum(active_ids == 1) == result.active_regions
+
+
+def test_signed_replay_map_keeps_reversed_orientation_without_sign() -> None:
+    mapped = map_interval_replay(
+        Interval(2.0, -1.0),
+        jnp.array([-1.0, 0.0, 1.0]),
+    )
+    assert jnp.allclose(mapped.x, jnp.array([2.0, 0.5, -1.0]))
+    assert mapped.jacobian == -1.5
+    assert mapped.orientation == 1.0
+
+
+def test_signed_replay_map_has_leibniz_tangent_at_coincident_bounds() -> None:
+    nodes = jnp.array([-0.5, 0.5])
+    weights = jnp.ones(2)
+
+    def fixed_formula(lower, upper):
+        mapped = map_interval_replay(Interval(lower, upper), nodes)
+        return jnp.sum(weights * mapped.x**0 * mapped.jacobian)
+
+    _, lower_tangent = jax.jvp(fixed_formula, (1.0, 1.0), (1.0, 0.0))
+    _, upper_tangent = jax.jvp(fixed_formula, (1.0, 1.0), (0.0, 1.0))
+    assert lower_tangent == -1.0
+    assert upper_tangent == 1.0

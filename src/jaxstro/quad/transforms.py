@@ -45,6 +45,21 @@ def map_interval(domain: Interval, reference: Array) -> AffineMapResult:
     )
 
 
+def map_interval_replay(domain: Interval, reference: Array) -> AffineMapResult:
+    """Map a finite interval with its signed affine Jacobian."""
+    lower = jnp.asarray(domain.lower)
+    upper = jnp.asarray(domain.upper)
+    half_width = 0.5 * (upper - lower)
+    midpoint = 0.5 * (upper + lower)
+    reference = jnp.asarray(reference)
+    return AffineMapResult(
+        x=midpoint + half_width * reference,
+        jacobian=half_width,
+        orientation=jnp.asarray(1.0, dtype=half_width.dtype),
+        valid=interval_is_valid(domain),
+    )
+
+
 def map_domain(
     domain: Interval | RightInfinite | LeftInfinite | Infinite,
     reference: Array,
@@ -83,4 +98,21 @@ def map_domain(
     raise TypeError("unsupported Phase A integration domain")
 
 
-__all__ = ["AffineMapResult", "DomainMapResult", "map_domain", "map_interval"]
+def map_domain_replay(
+    domain: Interval | RightInfinite | LeftInfinite | Infinite,
+    reference: Array,
+) -> DomainMapResult:
+    """Use signed finite maps while retaining established improper maps."""
+    if isinstance(domain, Interval):
+        return DomainMapResult(*map_interval_replay(domain, reference))
+    return map_domain(domain, reference)
+
+
+__all__ = [
+    "AffineMapResult",
+    "DomainMapResult",
+    "map_domain",
+    "map_domain_replay",
+    "map_interval",
+    "map_interval_replay",
+]

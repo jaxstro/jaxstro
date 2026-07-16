@@ -254,11 +254,11 @@ def test_integrate_rejects_unsupported_structure_and_gradient_policy() -> None:
             Interval(-1.0, 1.0),
             **_options(method=object()),
         )
-    with pytest.raises(ValueError, match="Phase A3 replay"):
+    with pytest.raises(ValueError, match='gradient must be "replay" or "stop"'):
         integrate(
             lambda x: x,
             Interval(-1.0, 1.0),
-            **_options(gradient="replay"),
+            **_options(gradient="through"),
         )
 
 
