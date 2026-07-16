@@ -2,6 +2,65 @@
 
 Artifact version: `1`
 
+## What this evidence tests
+
+This report audits **replay-differentiable adaptive one-dimensional quadrature**. Each case compares the accepted replay derivative with an analytic reference and, where applicable, a finite difference of the frozen accepted formula. Adaptive-rerun finite differences remain diagnostic because the controller may choose different evidence at nearby inputs.
+
+The case map is the researcher-facing summary. Complete numerical gates and the machine-readable payload remain available below without overloading the main reading path.
+
+## Case map
+
+| Method | Case family | Variant | Status code | Accepted evidence | Gates |
+| --- | --- | --- | ---: | --- | --- |
+| gauss_kronrod | smooth_parameter | not applicable | 0 | regions=1; level=0 | pass |
+| gauss_kronrod | vector_payload | not applicable | 0 | regions=1; level=0 | pass |
+| gauss_kronrod | complex_payload | not applicable | 0 | regions=1; level=0 | pass |
+| adaptive_clenshaw_curtis | smooth_parameter | not applicable | 0 | regions=1; level=0 | pass |
+| adaptive_clenshaw_curtis | vector_payload | not applicable | 0 | regions=1; level=0 | pass |
+| adaptive_clenshaw_curtis | complex_payload | not applicable | 0 | regions=1; level=0 | pass |
+| adaptive_tanh_sinh | smooth_parameter | not applicable | 0 | regions=1; level=0 | pass |
+| adaptive_tanh_sinh | vector_payload | not applicable | 0 | regions=1; level=0 | pass |
+| adaptive_tanh_sinh | complex_payload | not applicable | 0 | regions=1; level=0 | pass |
+| romberg | smooth_parameter | not applicable | 0 | regions=1; level=5 | pass |
+| romberg | vector_payload | not applicable | 0 | regions=1; level=5 | pass |
+| romberg | complex_payload | not applicable | 0 | regions=1; level=5 | pass |
+| romberg_tanh_sinh | smooth_parameter | not applicable | 0 | regions=1; level=4 | pass |
+| romberg_tanh_sinh | vector_payload | not applicable | 0 | regions=1; level=4 | pass |
+| romberg_tanh_sinh | complex_payload | not applicable | 0 | regions=1; level=4 | pass |
+| gauss_kronrod | moving_bounds | not applicable | 0 | regions=1; level=0 | pass |
+| gauss_kronrod | reversed_bounds | not applicable | 0 | regions=1; level=0 | pass |
+| gauss_kronrod | coincident_bounds | not applicable | 0 | regions=0; level=0 | pass |
+| adaptive_tanh_sinh | improper_tail | not applicable | 0 | regions=3; level=0 | pass |
+| adaptive_tanh_sinh | endpoint_singularity | not applicable | 1 | regions=3; level=0 | pass |
+| gauss_kronrod | weighted_density | not applicable | 0 | regions=1; level=0 | pass |
+| gauss_kronrod | exhausted_finite | not applicable | 1 | regions=1; level=0 | pass |
+| adaptive_tanh_sinh | semi_infinite_bound | right | 0 | regions=3; level=0 | pass |
+| adaptive_tanh_sinh | semi_infinite_bound | left | 0 | regions=3; level=0 | pass |
+| romberg_tanh_sinh | semi_infinite_bound | right | 0 | regions=1; level=6 | pass |
+| romberg_tanh_sinh | semi_infinite_bound | left | 0 | regions=1; level=6 | pass |
+| gauss_kronrod | quantity_rescaling | not applicable | 0 | regions=1; level=0 | pass |
+| gauss_kronrod | invalid_input | not applicable | 6 | regions=1; level=0 | pass |
+| gauss_kronrod | nonfinite_integrand | not applicable | 3 | regions=1; level=0 | pass |
+| adaptive_clenshaw_curtis | invalid_input | not applicable | 6 | regions=1; level=0 | pass |
+| adaptive_clenshaw_curtis | nonfinite_integrand | not applicable | 3 | regions=1; level=0 | pass |
+| adaptive_tanh_sinh | invalid_input | not applicable | 6 | regions=1; level=0 | pass |
+| adaptive_tanh_sinh | nonfinite_integrand | not applicable | 3 | regions=1; level=0 | pass |
+| romberg | invalid_input | not applicable | 6 | regions=1; level=3 | pass |
+| romberg | nonfinite_integrand | not applicable | 3 | regions=1; level=3 | pass |
+| romberg_tanh_sinh | invalid_input | not applicable | 6 | regions=1; level=3 | pass |
+| romberg_tanh_sinh | nonfinite_integrand | not applicable | 3 | regions=1; level=3 | pass |
+
+## Main limitations
+
+- First-order replay differentiates the accepted fixed formula, not adaptive control flow.
+- Adaptive-rerun finite differences are diagnostic near partition or accepted-level changes.
+- Invalid and nonfinite result derivatives are undefined.
+- Quantity derivative units are declared for raw-value parameterizations; direct Quantity-PyTree quotient units are not inferred.
+
+:::{dropdown} Complete gate records
+:class: full-width
+
+
 ## Metrics
 
 | Metric identity | Symbol | Value | Units | Status |
@@ -32,6 +91,12 @@ Artifact version: `1`
 | adaptive_tanh_sinh.invalid_input.status_mismatch | `status_mismatch` | 0.0 | dimensionless | info |
 | adaptive_tanh_sinh.nonfinite_integrand.finite_primal_flag | `finite_primal_flag` | 0.0 | dimensionless | info |
 | adaptive_tanh_sinh.nonfinite_integrand.status_mismatch | `status_mismatch` | 0.0 | dimensionless | info |
+| adaptive_tanh_sinh.semi_infinite_bound.left.analytic_derivative_absolute_error | `analytic_derivative_absolute_error` | 2.220446049250313e-16 | dimensionless | info |
+| adaptive_tanh_sinh.semi_infinite_bound.left.frozen_formula_absolute_error | `frozen_formula_absolute_error` | 8.450218302868961e-11 | dimensionless | info |
+| adaptive_tanh_sinh.semi_infinite_bound.left.primal_absolute_error | `primal_absolute_error` | 0.0 | dimensionless | info |
+| adaptive_tanh_sinh.semi_infinite_bound.right.analytic_derivative_absolute_error | `analytic_derivative_absolute_error` | 0.0 | dimensionless | info |
+| adaptive_tanh_sinh.semi_infinite_bound.right.frozen_formula_absolute_error | `frozen_formula_absolute_error` | 5.4675153293715084e-11 | dimensionless | info |
+| adaptive_tanh_sinh.semi_infinite_bound.right.primal_absolute_error | `primal_absolute_error` | 1.1102230246251565e-16 | dimensionless | info |
 | adaptive_tanh_sinh.smooth_parameter.analytic_derivative_relative_error | `analytic_derivative_relative_error` | 6.773190095802946e-16 | dimensionless | info |
 | adaptive_tanh_sinh.smooth_parameter.frozen_formula_relative_error | `frozen_formula_relative_error` | 3.61960972004132e-11 | dimensionless | info |
 | adaptive_tanh_sinh.smooth_parameter.primal_relative_error | `primal_relative_error` | 1.8058841370913617e-16 | dimensionless | info |
@@ -55,8 +120,8 @@ Artifact version: `1`
 | gauss_kronrod.moving_bounds.primal_absolute_error | `primal_absolute_error` | 1.1102230246251565e-16 | dimensionless | info |
 | gauss_kronrod.nonfinite_integrand.finite_primal_flag | `finite_primal_flag` | 0.0 | dimensionless | info |
 | gauss_kronrod.nonfinite_integrand.status_mismatch | `status_mismatch` | 0.0 | dimensionless | info |
-| gauss_kronrod.quantity_rescaling.physical_derivative_absolute_error_cm2_per_cm | `physical_derivative_absolute_error_cm2_per_cm` | 2.842170943040401e-14 | dimensionless | info |
-| gauss_kronrod.quantity_rescaling.physical_value_absolute_error_cm2 | `physical_value_absolute_error_cm2` | 7.275957614183426e-12 | dimensionless | info |
+| gauss_kronrod.quantity_rescaling.physical_derivative_absolute_error_cm2_per_cm | `physical_derivative_absolute_error_cm2_per_cm` | 2.842170943040401e-14 | cm^2/cm | info |
+| gauss_kronrod.quantity_rescaling.physical_value_absolute_error_cm2 | `physical_value_absolute_error_cm2` | 7.275957614183426e-12 | cm^2 | info |
 | gauss_kronrod.reversed_bounds.analytic_derivative_absolute_error | `analytic_derivative_absolute_error` | 0.0 | dimensionless | info |
 | gauss_kronrod.reversed_bounds.frozen_formula_absolute_error | `frozen_formula_absolute_error` | 2.187694470023871e-12 | dimensionless | info |
 | gauss_kronrod.reversed_bounds.primal_absolute_error | `primal_absolute_error` | 1.1102230246251565e-16 | dimensionless | info |
@@ -89,6 +154,12 @@ Artifact version: `1`
 | romberg_tanh_sinh.invalid_input.status_mismatch | `status_mismatch` | 0.0 | dimensionless | info |
 | romberg_tanh_sinh.nonfinite_integrand.finite_primal_flag | `finite_primal_flag` | 0.0 | dimensionless | info |
 | romberg_tanh_sinh.nonfinite_integrand.status_mismatch | `status_mismatch` | 0.0 | dimensionless | info |
+| romberg_tanh_sinh.semi_infinite_bound.left.analytic_derivative_absolute_error | `analytic_derivative_absolute_error` | 0.0 | dimensionless | info |
+| romberg_tanh_sinh.semi_infinite_bound.left.frozen_formula_absolute_error | `frozen_formula_absolute_error` | 9.005307610721047e-11 | dimensionless | info |
+| romberg_tanh_sinh.semi_infinite_bound.left.primal_absolute_error | `primal_absolute_error` | 0.0 | dimensionless | info |
+| romberg_tanh_sinh.semi_infinite_bound.right.analytic_derivative_absolute_error | `analytic_derivative_absolute_error` | 4.440892098500626e-16 | dimensionless | info |
+| romberg_tanh_sinh.semi_infinite_bound.right.frozen_formula_absolute_error | `frozen_formula_absolute_error` | 5.4674709204505234e-11 | dimensionless | info |
+| romberg_tanh_sinh.semi_infinite_bound.right.primal_absolute_error | `primal_absolute_error` | 1.1102230246251565e-16 | dimensionless | info |
 | romberg_tanh_sinh.smooth_parameter.analytic_derivative_relative_error | `analytic_derivative_relative_error` | 1.6932975239507364e-16 | dimensionless | info |
 | romberg_tanh_sinh.smooth_parameter.frozen_formula_relative_error | `frozen_formula_relative_error` | 2.772910159194357e-11 | dimensionless | info |
 | romberg_tanh_sinh.smooth_parameter.primal_relative_error | `primal_relative_error` | 1.8058841370913617e-16 | dimensionless | info |
@@ -126,6 +197,12 @@ Artifact version: `1`
 | adaptive_tanh_sinh.invalid_input.status_mismatch.gate | `adaptive_tanh_sinh.invalid_input.status_mismatch` | less_equal | 0.0 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
 | adaptive_tanh_sinh.nonfinite_integrand.finite_primal_flag.gate | `adaptive_tanh_sinh.nonfinite_integrand.finite_primal_flag` | less_equal | 0.0 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
 | adaptive_tanh_sinh.nonfinite_integrand.status_mismatch.gate | `adaptive_tanh_sinh.nonfinite_integrand.status_mismatch` | less_equal | 0.0 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
+| adaptive_tanh_sinh.semi_infinite_bound.left.analytic_derivative_absolute_error.gate | `adaptive_tanh_sinh.semi_infinite_bound.left.analytic_derivative_absolute_error` | less_equal | 2e-09 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
+| adaptive_tanh_sinh.semi_infinite_bound.left.frozen_formula_absolute_error.gate | `adaptive_tanh_sinh.semi_infinite_bound.left.frozen_formula_absolute_error` | less_equal | 2e-08 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
+| adaptive_tanh_sinh.semi_infinite_bound.left.primal_absolute_error.gate | `adaptive_tanh_sinh.semi_infinite_bound.left.primal_absolute_error` | less_equal | 2e-09 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
+| adaptive_tanh_sinh.semi_infinite_bound.right.analytic_derivative_absolute_error.gate | `adaptive_tanh_sinh.semi_infinite_bound.right.analytic_derivative_absolute_error` | less_equal | 2e-09 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
+| adaptive_tanh_sinh.semi_infinite_bound.right.frozen_formula_absolute_error.gate | `adaptive_tanh_sinh.semi_infinite_bound.right.frozen_formula_absolute_error` | less_equal | 2e-08 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
+| adaptive_tanh_sinh.semi_infinite_bound.right.primal_absolute_error.gate | `adaptive_tanh_sinh.semi_infinite_bound.right.primal_absolute_error` | less_equal | 2e-09 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
 | adaptive_tanh_sinh.smooth_parameter.analytic_derivative_relative_error.gate | `adaptive_tanh_sinh.smooth_parameter.analytic_derivative_relative_error` | less_equal | 1e-08 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
 | adaptive_tanh_sinh.smooth_parameter.frozen_formula_relative_error.gate | `adaptive_tanh_sinh.smooth_parameter.frozen_formula_relative_error` | less_equal | 1e-08 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
 | adaptive_tanh_sinh.smooth_parameter.primal_relative_error.gate | `adaptive_tanh_sinh.smooth_parameter.primal_relative_error` | less_equal | 1e-08 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
@@ -149,8 +226,8 @@ Artifact version: `1`
 | gauss_kronrod.moving_bounds.primal_absolute_error.gate | `gauss_kronrod.moving_bounds.primal_absolute_error` | less_equal | 2e-09 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
 | gauss_kronrod.nonfinite_integrand.finite_primal_flag.gate | `gauss_kronrod.nonfinite_integrand.finite_primal_flag` | less_equal | 0.0 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
 | gauss_kronrod.nonfinite_integrand.status_mismatch.gate | `gauss_kronrod.nonfinite_integrand.status_mismatch` | less_equal | 0.0 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
-| gauss_kronrod.quantity_rescaling.physical_derivative_absolute_error_cm2_per_cm.gate | `gauss_kronrod.quantity_rescaling.physical_derivative_absolute_error_cm2_per_cm` | less_equal | 2e-08 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
-| gauss_kronrod.quantity_rescaling.physical_value_absolute_error_cm2.gate | `gauss_kronrod.quantity_rescaling.physical_value_absolute_error_cm2` | less_equal | 2e-08 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
+| gauss_kronrod.quantity_rescaling.physical_derivative_absolute_error_cm2_per_cm.gate | `gauss_kronrod.quantity_rescaling.physical_derivative_absolute_error_cm2_per_cm` | less_equal | 2e-08 | cm^2/cm | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
+| gauss_kronrod.quantity_rescaling.physical_value_absolute_error_cm2.gate | `gauss_kronrod.quantity_rescaling.physical_value_absolute_error_cm2` | less_equal | 2e-08 | cm^2 | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
 | gauss_kronrod.reversed_bounds.analytic_derivative_absolute_error.gate | `gauss_kronrod.reversed_bounds.analytic_derivative_absolute_error` | less_equal | 2e-09 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
 | gauss_kronrod.reversed_bounds.frozen_formula_absolute_error.gate | `gauss_kronrod.reversed_bounds.frozen_formula_absolute_error` | less_equal | 2e-08 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
 | gauss_kronrod.reversed_bounds.primal_absolute_error.gate | `gauss_kronrod.reversed_bounds.primal_absolute_error` | less_equal | 2e-09 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
@@ -183,25 +260,21 @@ Artifact version: `1`
 | romberg_tanh_sinh.invalid_input.status_mismatch.gate | `romberg_tanh_sinh.invalid_input.status_mismatch` | less_equal | 0.0 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
 | romberg_tanh_sinh.nonfinite_integrand.finite_primal_flag.gate | `romberg_tanh_sinh.nonfinite_integrand.finite_primal_flag` | less_equal | 0.0 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
 | romberg_tanh_sinh.nonfinite_integrand.status_mismatch.gate | `romberg_tanh_sinh.nonfinite_integrand.status_mismatch` | less_equal | 0.0 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
+| romberg_tanh_sinh.semi_infinite_bound.left.analytic_derivative_absolute_error.gate | `romberg_tanh_sinh.semi_infinite_bound.left.analytic_derivative_absolute_error` | less_equal | 2e-09 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
+| romberg_tanh_sinh.semi_infinite_bound.left.frozen_formula_absolute_error.gate | `romberg_tanh_sinh.semi_infinite_bound.left.frozen_formula_absolute_error` | less_equal | 2e-08 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
+| romberg_tanh_sinh.semi_infinite_bound.left.primal_absolute_error.gate | `romberg_tanh_sinh.semi_infinite_bound.left.primal_absolute_error` | less_equal | 2e-09 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
+| romberg_tanh_sinh.semi_infinite_bound.right.analytic_derivative_absolute_error.gate | `romberg_tanh_sinh.semi_infinite_bound.right.analytic_derivative_absolute_error` | less_equal | 2e-09 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
+| romberg_tanh_sinh.semi_infinite_bound.right.frozen_formula_absolute_error.gate | `romberg_tanh_sinh.semi_infinite_bound.right.frozen_formula_absolute_error` | less_equal | 2e-08 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
+| romberg_tanh_sinh.semi_infinite_bound.right.primal_absolute_error.gate | `romberg_tanh_sinh.semi_infinite_bound.right.primal_absolute_error` | less_equal | 2e-09 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
 | romberg_tanh_sinh.smooth_parameter.analytic_derivative_relative_error.gate | `romberg_tanh_sinh.smooth_parameter.analytic_derivative_relative_error` | less_equal | 1e-08 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
 | romberg_tanh_sinh.smooth_parameter.frozen_formula_relative_error.gate | `romberg_tanh_sinh.smooth_parameter.frozen_formula_relative_error` | less_equal | 1e-08 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
 | romberg_tanh_sinh.smooth_parameter.primal_relative_error.gate | `romberg_tanh_sinh.smooth_parameter.primal_relative_error` | less_equal | 1e-08 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
 | romberg_tanh_sinh.vector_payload.analytic_derivative_relative_error.gate | `romberg_tanh_sinh.vector_payload.analytic_derivative_relative_error` | less_equal | 1e-08 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
 | romberg_tanh_sinh.vector_payload.frozen_formula_relative_error.gate | `romberg_tanh_sinh.vector_payload.frozen_formula_relative_error` | less_equal | 1e-08 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
 | romberg_tanh_sinh.vector_payload.primal_relative_error.gate | `romberg_tanh_sinh.vector_payload.primal_relative_error` | less_equal | 1e-08 | dimensionless | 0.0 | 0.0 | pass | Predeclared Phase A3 replay evidence threshold. |
+:::
 
-## Environment policy
-
-Environment fields are emission snapshots; freshness gates deterministic algorithmic measurements.
-
-## Limitations
-
-- First-order replay differentiates the accepted fixed formula, not adaptive control flow.
-- Adaptive-rerun finite differences are diagnostic near partition or accepted-level changes.
-- Invalid and nonfinite result derivatives are undefined.
-- Quantity derivative units are declared for raw-value parameterizations; direct Quantity-PyTree quotient units are not inferred.
-
-## Method payload
+:::{dropdown} Complete machine-readable method payload
 
 ```json
 {
@@ -221,19 +294,22 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "primal_relative_error",
           "observed": 1.8058841370913617e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "analytic_derivative_relative_error",
           "observed": 3.386595047901473e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_relative_error",
           "observed": 3.619575854090842e-11,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "dimensionless",
@@ -273,19 +349,22 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "primal_relative_error",
           "observed": 1.8058841370913617e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "analytic_derivative_relative_error",
           "observed": 3.386595047901473e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_relative_error",
           "observed": 2.7729101591943573e-11,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "dimensionless",
@@ -331,19 +410,22 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "primal_relative_error",
           "observed": 1.1520567317066819e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "analytic_derivative_relative_error",
           "observed": 5.60366257664641e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_relative_error",
           "observed": 2.9348146251725126e-11,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "dimensionless",
@@ -377,19 +459,22 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "primal_relative_error",
           "observed": 1.8058841370913617e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "analytic_derivative_relative_error",
           "observed": 1.6932975239507364e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_relative_error",
           "observed": 4.4662076830225135e-11,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "dimensionless",
@@ -429,19 +514,22 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "primal_relative_error",
           "observed": 1.8058841370913617e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "analytic_derivative_relative_error",
           "observed": 1.6932975239507364e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_relative_error",
           "observed": 4.4661907500472756e-11,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "dimensionless",
@@ -487,19 +575,22 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "primal_relative_error",
           "observed": 1.1176591980071802e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "analytic_derivative_relative_error",
           "observed": 3.3916587666044645e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_relative_error",
           "observed": 3.2070120874069524e-11,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "dimensionless",
@@ -533,19 +624,22 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "primal_relative_error",
           "observed": 1.8058841370913617e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "analytic_derivative_relative_error",
           "observed": 6.773190095802946e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_relative_error",
           "observed": 3.61960972004132e-11,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "dimensionless",
@@ -585,19 +679,22 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "primal_relative_error",
           "observed": 1.8058841370913617e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "analytic_derivative_relative_error",
           "observed": 6.773190095802946e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_relative_error",
           "observed": 3.619592787066082e-11,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "dimensionless",
@@ -643,19 +740,22 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "primal_relative_error",
           "observed": 1.3970739975089753e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "analytic_derivative_relative_error",
           "observed": 2.230341066060445e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_relative_error",
           "observed": 3.552084650016551e-11,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "dimensionless",
@@ -689,19 +789,22 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "primal_relative_error",
           "observed": 3.6117682741827235e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "analytic_derivative_relative_error",
           "observed": 1.6932975239507364e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_relative_error",
           "observed": 1.9262613972587742e-11,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "dimensionless",
@@ -741,19 +844,22 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "primal_relative_error",
           "observed": 3.6117682741827235e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "analytic_derivative_relative_error",
           "observed": 1.6932975239507364e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_relative_error",
           "observed": 1.9262444642835353e-11,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "dimensionless",
@@ -799,19 +905,22 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "primal_relative_error",
           "observed": 2.3873210934404835e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "analytic_derivative_relative_error",
           "observed": 5.60366257664641e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_relative_error",
           "observed": 3.834801474770949e-11,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "dimensionless",
@@ -845,19 +954,22 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "primal_relative_error",
           "observed": 1.8058841370913617e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "analytic_derivative_relative_error",
           "observed": 1.6932975239507364e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_relative_error",
           "observed": 2.772910159194357e-11,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "dimensionless",
@@ -897,19 +1009,22 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "primal_relative_error",
           "observed": 1.8058841370913617e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "analytic_derivative_relative_error",
           "observed": 1.6932975239507364e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_relative_error",
           "observed": 2.7728932262191185e-11,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "dimensionless",
@@ -955,19 +1070,22 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "primal_relative_error",
           "observed": 2.7941479950179504e-17,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "analytic_derivative_relative_error",
           "observed": 6.691023198181335e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_relative_error",
           "observed": 3.314584765628068e-11,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "dimensionless",
@@ -1001,19 +1119,22 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "primal_absolute_error",
           "observed": 1.1102230246251565e-16,
           "passed": true,
-          "threshold": 2e-09
+          "threshold": 2e-09,
+          "unit": "dimensionless"
         },
         {
           "name": "analytic_derivative_absolute_error",
           "observed": 0.0,
           "passed": true,
-          "threshold": 2e-09
+          "threshold": 2e-09,
+          "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_absolute_error",
           "observed": 3.5754732508053166e-12,
           "passed": true,
-          "threshold": 2e-08
+          "threshold": 2e-08,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "coordinate^2",
@@ -1041,19 +1162,22 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "primal_absolute_error",
           "observed": 1.1102230246251565e-16,
           "passed": true,
-          "threshold": 2e-09
+          "threshold": 2e-09,
+          "unit": "dimensionless"
         },
         {
           "name": "analytic_derivative_absolute_error",
           "observed": 0.0,
           "passed": true,
-          "threshold": 2e-09
+          "threshold": 2e-09,
+          "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_absolute_error",
           "observed": 2.187694470023871e-12,
           "passed": true,
-          "threshold": 2e-08
+          "threshold": 2e-08,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "coordinate^2",
@@ -1081,19 +1205,22 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "primal_absolute_error",
           "observed": 0.0,
           "passed": true,
-          "threshold": 2e-09
+          "threshold": 2e-09,
+          "unit": "dimensionless"
         },
         {
           "name": "analytic_derivative_absolute_error",
           "observed": 0.0,
           "passed": true,
-          "threshold": 2e-09
+          "threshold": 2e-09,
+          "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_absolute_error",
           "observed": 3.9995784462121264e-13,
           "passed": true,
-          "threshold": 2e-08
+          "threshold": 2e-08,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "coordinate^2",
@@ -1121,19 +1248,22 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "primal_relative_error",
           "observed": 1.4432899320127036e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "analytic_derivative_relative_error",
           "observed": 0.0,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_relative_error",
           "observed": 2.3356420347882404e-10,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "dimensionless",
@@ -1161,19 +1291,22 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "primal_relative_error",
           "observed": 5.747414766332781e-09,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "analytic_derivative_relative_error",
           "observed": 5.747414988377386e-09,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_relative_error",
           "observed": 2.5403013172514397e-12,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "dimensionless",
@@ -1201,19 +1334,22 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "primal_relative_error",
           "observed": 1.6653345369377346e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "analytic_derivative_relative_error",
           "observed": 0.0,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_relative_error",
           "observed": 1.555022777208561e-12,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "dimensionless",
@@ -1241,25 +1377,29 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "primal_relative_error",
           "observed": 0.0,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "analytic_derivative_relative_error",
           "observed": 3.386595047901473e-16,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_relative_error",
           "observed": 3.619575854090842e-11,
           "passed": true,
-          "threshold": 1e-08
+          "threshold": 1e-08,
+          "unit": "dimensionless"
         },
         {
           "name": "expected_exhaustion_status_mismatch",
           "observed": 0.0,
           "passed": true,
-          "threshold": 0.0
+          "threshold": 0.0,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "dimensionless",
@@ -1271,6 +1411,182 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
       "replay_ad_derivative": 0.6556573838452363,
       "reported_primal_error": 1.3650877585016103e-14,
       "status": 1
+    },
+    {
+      "accepted_level": 0,
+      "accepted_regions": 3,
+      "adaptive_rerun_fd": -0.818730753132657,
+      "analytic_derivative": -0.8187307530779818,
+      "analytic_value": 0.8187307530779818,
+      "derivative_unit": "integrand",
+      "dtype": "float64",
+      "family": "semi_infinite_bound",
+      "frozen_formula_fd": -0.818730753132657,
+      "gates": [
+        {
+          "name": "primal_absolute_error",
+          "observed": 1.1102230246251565e-16,
+          "passed": true,
+          "threshold": 2e-09,
+          "unit": "dimensionless"
+        },
+        {
+          "name": "analytic_derivative_absolute_error",
+          "observed": 0.0,
+          "passed": true,
+          "threshold": 2e-09,
+          "unit": "dimensionless"
+        },
+        {
+          "name": "frozen_formula_absolute_error",
+          "observed": 5.4675153293715084e-11,
+          "passed": true,
+          "threshold": 2e-08,
+          "unit": "dimensionless"
+        }
+      ],
+      "integral_unit": "coordinate times integrand",
+      "method": "adaptive_tanh_sinh",
+      "name": "adaptive_tanh_sinh.semi_infinite_bound.right",
+      "observed_primal_error": 1.1102230246251565e-16,
+      "parameter_unit": "coordinate",
+      "primal_value": 0.8187307530779817,
+      "replay_ad_derivative": -0.8187307530779818,
+      "reported_primal_error": 1.8605701986428846e-11,
+      "status": 0,
+      "variant": "right"
+    },
+    {
+      "accepted_level": 0,
+      "accepted_regions": 3,
+      "adaptive_rerun_fd": 1.2214027582446718,
+      "analytic_derivative": 1.2214027581601699,
+      "analytic_value": 1.2214027581601699,
+      "derivative_unit": "integrand",
+      "dtype": "float64",
+      "family": "semi_infinite_bound",
+      "frozen_formula_fd": 1.2214027582446718,
+      "gates": [
+        {
+          "name": "primal_absolute_error",
+          "observed": 0.0,
+          "passed": true,
+          "threshold": 2e-09,
+          "unit": "dimensionless"
+        },
+        {
+          "name": "analytic_derivative_absolute_error",
+          "observed": 2.220446049250313e-16,
+          "passed": true,
+          "threshold": 2e-09,
+          "unit": "dimensionless"
+        },
+        {
+          "name": "frozen_formula_absolute_error",
+          "observed": 8.450218302868961e-11,
+          "passed": true,
+          "threshold": 2e-08,
+          "unit": "dimensionless"
+        }
+      ],
+      "integral_unit": "coordinate times integrand",
+      "method": "adaptive_tanh_sinh",
+      "name": "adaptive_tanh_sinh.semi_infinite_bound.left",
+      "observed_primal_error": 0.0,
+      "parameter_unit": "coordinate",
+      "primal_value": 1.2214027581601699,
+      "replay_ad_derivative": 1.2214027581601696,
+      "reported_primal_error": 2.775660435363415e-11,
+      "status": 0,
+      "variant": "left"
+    },
+    {
+      "accepted_level": 6,
+      "accepted_regions": 1,
+      "adaptive_rerun_fd": -0.818730753132657,
+      "analytic_derivative": -0.8187307530779818,
+      "analytic_value": 0.8187307530779818,
+      "derivative_unit": "integrand",
+      "dtype": "float64",
+      "family": "semi_infinite_bound",
+      "frozen_formula_fd": -0.818730753132657,
+      "gates": [
+        {
+          "name": "primal_absolute_error",
+          "observed": 1.1102230246251565e-16,
+          "passed": true,
+          "threshold": 2e-09,
+          "unit": "dimensionless"
+        },
+        {
+          "name": "analytic_derivative_absolute_error",
+          "observed": 4.440892098500626e-16,
+          "passed": true,
+          "threshold": 2e-09,
+          "unit": "dimensionless"
+        },
+        {
+          "name": "frozen_formula_absolute_error",
+          "observed": 5.4674709204505234e-11,
+          "passed": true,
+          "threshold": 2e-08,
+          "unit": "dimensionless"
+        }
+      ],
+      "integral_unit": "coordinate times integrand",
+      "method": "romberg_tanh_sinh",
+      "name": "romberg_tanh_sinh.semi_infinite_bound.right",
+      "observed_primal_error": 1.1102230246251565e-16,
+      "parameter_unit": "coordinate",
+      "primal_value": 0.8187307530779817,
+      "replay_ad_derivative": -0.8187307530779823,
+      "reported_primal_error": 6.335506683453906e-14,
+      "status": 0,
+      "variant": "right"
+    },
+    {
+      "accepted_level": 6,
+      "accepted_regions": 1,
+      "adaptive_rerun_fd": 1.221402758250223,
+      "analytic_derivative": 1.2214027581601699,
+      "analytic_value": 1.2214027581601699,
+      "derivative_unit": "integrand",
+      "dtype": "float64",
+      "family": "semi_infinite_bound",
+      "frozen_formula_fd": 1.221402758250223,
+      "gates": [
+        {
+          "name": "primal_absolute_error",
+          "observed": 0.0,
+          "passed": true,
+          "threshold": 2e-09,
+          "unit": "dimensionless"
+        },
+        {
+          "name": "analytic_derivative_absolute_error",
+          "observed": 0.0,
+          "passed": true,
+          "threshold": 2e-09,
+          "unit": "dimensionless"
+        },
+        {
+          "name": "frozen_formula_absolute_error",
+          "observed": 9.005307610721047e-11,
+          "passed": true,
+          "threshold": 2e-08,
+          "unit": "dimensionless"
+        }
+      ],
+      "integral_unit": "coordinate times integrand",
+      "method": "romberg_tanh_sinh",
+      "name": "romberg_tanh_sinh.semi_infinite_bound.left",
+      "observed_primal_error": 0.0,
+      "parameter_unit": "coordinate",
+      "primal_value": 1.2214027581601699,
+      "replay_ad_derivative": 1.2214027581601699,
+      "reported_primal_error": 9.416691920596359e-14,
+      "status": 0,
+      "variant": "left"
     },
     {
       "accepted_level": 0,
@@ -1290,13 +1606,15 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "physical_value_absolute_error_cm2",
           "observed": 7.275957614183426e-12,
           "passed": true,
-          "threshold": 2e-08
+          "threshold": 2e-08,
+          "unit": "cm^2"
         },
         {
           "name": "physical_derivative_absolute_error_cm2_per_cm",
           "observed": 2.842170943040401e-14,
           "passed": true,
-          "threshold": 2e-08
+          "threshold": 2e-08,
+          "unit": "cm^2/cm"
         }
       ],
       "integral_unit": "cm^2",
@@ -1330,13 +1648,15 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "status_mismatch",
           "observed": 0.0,
           "passed": true,
-          "threshold": 0.0
+          "threshold": 0.0,
+          "unit": "dimensionless"
         },
         {
           "name": "finite_primal_flag",
           "observed": 0.0,
           "passed": true,
-          "threshold": 0.0
+          "threshold": 0.0,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "not_applicable",
@@ -1364,13 +1684,15 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "status_mismatch",
           "observed": 0.0,
           "passed": true,
-          "threshold": 0.0
+          "threshold": 0.0,
+          "unit": "dimensionless"
         },
         {
           "name": "finite_primal_flag",
           "observed": 0.0,
           "passed": true,
-          "threshold": 0.0
+          "threshold": 0.0,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "not_applicable",
@@ -1398,13 +1720,15 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "status_mismatch",
           "observed": 0.0,
           "passed": true,
-          "threshold": 0.0
+          "threshold": 0.0,
+          "unit": "dimensionless"
         },
         {
           "name": "finite_primal_flag",
           "observed": 0.0,
           "passed": true,
-          "threshold": 0.0
+          "threshold": 0.0,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "not_applicable",
@@ -1432,13 +1756,15 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "status_mismatch",
           "observed": 0.0,
           "passed": true,
-          "threshold": 0.0
+          "threshold": 0.0,
+          "unit": "dimensionless"
         },
         {
           "name": "finite_primal_flag",
           "observed": 0.0,
           "passed": true,
-          "threshold": 0.0
+          "threshold": 0.0,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "not_applicable",
@@ -1466,13 +1792,15 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "status_mismatch",
           "observed": 0.0,
           "passed": true,
-          "threshold": 0.0
+          "threshold": 0.0,
+          "unit": "dimensionless"
         },
         {
           "name": "finite_primal_flag",
           "observed": 0.0,
           "passed": true,
-          "threshold": 0.0
+          "threshold": 0.0,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "not_applicable",
@@ -1500,13 +1828,15 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "status_mismatch",
           "observed": 0.0,
           "passed": true,
-          "threshold": 0.0
+          "threshold": 0.0,
+          "unit": "dimensionless"
         },
         {
           "name": "finite_primal_flag",
           "observed": 0.0,
           "passed": true,
-          "threshold": 0.0
+          "threshold": 0.0,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "not_applicable",
@@ -1534,13 +1864,15 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "status_mismatch",
           "observed": 0.0,
           "passed": true,
-          "threshold": 0.0
+          "threshold": 0.0,
+          "unit": "dimensionless"
         },
         {
           "name": "finite_primal_flag",
           "observed": 0.0,
           "passed": true,
-          "threshold": 0.0
+          "threshold": 0.0,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "not_applicable",
@@ -1568,13 +1900,15 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "status_mismatch",
           "observed": 0.0,
           "passed": true,
-          "threshold": 0.0
+          "threshold": 0.0,
+          "unit": "dimensionless"
         },
         {
           "name": "finite_primal_flag",
           "observed": 0.0,
           "passed": true,
-          "threshold": 0.0
+          "threshold": 0.0,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "not_applicable",
@@ -1602,13 +1936,15 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "status_mismatch",
           "observed": 0.0,
           "passed": true,
-          "threshold": 0.0
+          "threshold": 0.0,
+          "unit": "dimensionless"
         },
         {
           "name": "finite_primal_flag",
           "observed": 0.0,
           "passed": true,
-          "threshold": 0.0
+          "threshold": 0.0,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "not_applicable",
@@ -1636,13 +1972,15 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
           "name": "status_mismatch",
           "observed": 0.0,
           "passed": true,
-          "threshold": 0.0
+          "threshold": 0.0,
+          "unit": "dimensionless"
         },
         {
           "name": "finite_primal_flag",
           "observed": 0.0,
           "passed": true,
-          "threshold": 0.0
+          "threshold": 0.0,
+          "unit": "dimensionless"
         }
       ],
       "integral_unit": "not_applicable",
@@ -1663,6 +2001,7 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
     "precision": "float64",
     "relative_gate": 1e-08
   },
+  "report_mode": "progressive",
   "stability_ladders": [
     {
       "capacities": [
@@ -1977,3 +2316,8 @@ Environment fields are emission snapshots; freshness gates deterministic algorit
   ]
 }
 ```
+:::
+
+## Environment policy
+
+Environment fields are emission snapshots; freshness gates deterministic algorithmic measurements.
