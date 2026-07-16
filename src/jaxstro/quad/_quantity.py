@@ -122,10 +122,17 @@ def _require_quantity_output(output, *, context: str) -> Quantity:
 def _infer_output_unit(fun, args, coordinate_unit: Unit) -> Unit:
     has_args = has_explicit_args(args)
     node = Quantity(jax.ShapeDtypeStruct((1,), jnp.float64), coordinate_unit)
-    output = jax.eval_shape(
-        lambda value: call_integrand(fun, value, args, has_args),
-        node,
-    )
+    if has_args:
+        output = jax.eval_shape(
+            lambda value, live_args: call_integrand(fun, value, live_args, has_args),
+            node,
+            args,
+        )
+    else:
+        output = jax.eval_shape(
+            lambda value: call_integrand(fun, value, (), has_args),
+            node,
+        )
     return _require_quantity_output(output, context="integrand").unit
 
 
@@ -157,7 +164,11 @@ def _wrap_measure(measure, args, coordinate_unit: Unit):
     if not isinstance(measure, WeightedMeasure):
         raise TypeError("adaptive quantity quadrature requires a supported measure")
     node = Quantity(jax.ShapeDtypeStruct((1,), jnp.float64), coordinate_unit)
-    abstract = jax.eval_shape(lambda value: measure.density(value, args), node)
+    abstract = jax.eval_shape(
+        lambda value, live_args: measure.density(value, live_args),
+        node,
+        args,
+    )
     density = _require_quantity_output(abstract, context="weighted density")
     if not density.unit.is_compatible_with(measure.density_unit):
         raise DimensionError(
