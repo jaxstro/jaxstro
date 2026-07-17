@@ -66,6 +66,23 @@ def test_active_workflows_use_node24_action_releases() -> None:
             )
 
 
+def test_exhaustive_test_gates_install_benchmark_only_dependencies() -> None:
+    """Fresh exhaustive gates must collect benchmark tests without runtime deps."""
+    local_gate = (REPO_ROOT / "scripts" / "check.sh").read_text(encoding="utf-8")
+    workflow = (
+        REPO_ROOT / ".github" / "workflows" / "full-gate.yml"
+    ).read_text(encoding="utf-8")
+    test_matrix = workflow.split("  test-matrix:", maxsplit=1)[1].split(
+        "  full-validation:", maxsplit=1
+    )[0]
+
+    sync = "uv sync --locked --extra dev --group benchmark"
+    assert sync in local_gate
+    assert local_gate.index(sync) < local_gate.index('pytest -m "not slow"')
+    assert sync in test_matrix
+    assert test_matrix.index(sync) < test_matrix.index('pytest -m "not slow"')
+
+
 def test_release_checklist_preserves_irreversible_stop_gates() -> None:
     checklist_path = REPO_ROOT / "docs" / "70-project" / "release" / "checklist.md"
     assert checklist_path.is_file()

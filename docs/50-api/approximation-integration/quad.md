@@ -85,6 +85,14 @@ Supported adaptive declarations are `GaussKronrod`,
 `RombergTanhSinh`. `integrate` returns a `QuadResult` containing the primal
 value, `QuadError`, effective tolerance, `QuadStatus`, and `QuadWork`.
 
+:::{important} Classical `Romberg` stopping contract
+Classical `Romberg` has a fixed level-$4$ alias-protection floor. It cannot
+report `CONVERGED` before $2^4+1=17$ logical evaluations, regardless of an
+earlier Richardson estimate. Set `max_evaluations` to at least $17$ when
+convergence is required; smaller valid capacities can terminate with
+`MAX_EVALUATIONS`. This floor does not apply to `RombergTanhSinh`.
+:::
+
 ## Capability status map
 
 The status belongs to a capability, not to the package as a whole.

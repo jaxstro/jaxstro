@@ -51,7 +51,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           enable-cache: true
           cache-dependency-glob: uv.lock
-      - run: uv sync --locked --extra dev
+      - run: uv sync --locked --extra dev --group benchmark
       - run: uv run --no-sync pytest -m "not slow" -q
 
   full-validation:

@@ -188,6 +188,15 @@ def test_report_exposes_mode_specific_warrants_and_honest_choice_label() -> None
     assert "Independent practical choice" not in report
 
 
+def test_accepted_report_separates_authorization_from_residual_triggers() -> None:
+    artifact = artifact_from_dict(
+        json.loads(benchmark_quad.OUTPUT.read_text(encoding="utf-8"))
+    )
+    report = benchmark_quad.render_report(artifact)
+    assert "Reviewed baseline authorization: `vmap_128`" in report
+    assert "Post-optimization residual triggers: `ad_jvp`" in report
+
+
 def test_optimized_merge_preserves_baseline_byte_for_byte() -> None:
     baseline = benchmark_quad.run_deterministic_suite()
     baseline_bytes = json.dumps(baseline, sort_keys=True, allow_nan=False)

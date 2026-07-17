@@ -151,3 +151,6 @@ def test_quadrature_comparison_claims_are_routed_and_calibrated() -> None:
         "Jaxstro is universally SOTA",
     ):
         assert unsupported_claim not in combined_public_text
+    assert "alias-protection floor" in adaptive_text
+    assert "17 logical evaluations" in adaptive_text
+    assert "alias-protection floor" in api_text

@@ -8,6 +8,9 @@ RUN="env -u VIRTUAL_ENV uv run --no-sync"
 echo "== lock-check =="
 env -u VIRTUAL_ENV uv lock --check
 
+echo "== sync: development and benchmark gates =="
+env -u VIRTUAL_ENV uv sync --locked --extra dev --group benchmark
+
 echo "== lint: ruff check =="
 $RUN ruff check src/ tests/
 echo "== lint: ruff format --check =="

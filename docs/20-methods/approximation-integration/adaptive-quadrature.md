@@ -218,6 +218,17 @@ R_{k,j}=R_{k,j-1}
 +\frac{R_{k,j-1}-R_{k-1,j-1}}{4^j-1}.
 ```
 
+:::{important} Classical Romberg's alias-protection floor
+The implementation does not accept convergence before level $k=4$, even when
+the Richardson estimate satisfies the requested tolerance at a coarser level.
+This fixed alias-protection floor requires 17 logical evaluations
+($2^4+1=17$) on a finite interval. It protects against accidental agreement on
+very coarse dyadic grids, especially for oscillatory integrands. Therefore
+`max_evaluations` must be at least $17$ for a successful classical Romberg
+result; a smaller valid budget can return `MAX_EVALUATIONS` for an otherwise
+exactly integrated low-degree polynomial.
+:::
+
 `RombergTanhSinh` instead compares nested global tanh-sinh levels without using
 the polynomial-error assumption behind Richardson extrapolation. Its reported
 error retains the adjacent-level, summation, and terminal-tail terms:

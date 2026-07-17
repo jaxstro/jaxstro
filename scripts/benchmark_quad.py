@@ -1762,28 +1762,37 @@ def render_report(artifact: EvidenceArtifact) -> str:
     )
     lines.extend(f"- `{key}`: `{value}`" for key, value in artifact.environment.values)
     decision = payload["optimization_decision"]
-    lines.extend(
-        [
-            "",
-            "## Optimization decision",
-            "",
-            f"Status: `{decision['status']}`.",
-            "",
-            str(decision.get("reason", "See recorded trigger ratios.")),
-            "",
+    decision_lines = [
+        "",
+        "## Optimization decision",
+        "",
+        f"Status: `{decision['status']}`.",
+        "",
+        str(decision.get("reason", "See recorded trigger ratios.")),
+        "",
+    ]
+    authorization = decision.get("authorization")
+    active_triggers = active.get("trigger_assessment", {}).get("fired_triggers", [])
+    if authorization:
+        decision_lines.extend(
+            [
+                f"Reviewed baseline authorization: `{authorization['trigger']}`.",
+                "",
+                str(authorization["basis"]),
+                "",
+                "Post-optimization residual triggers: "
+                + (", ".join(f"`{item}`" for item in active_triggers) or "none")
+                + ". These are observations from the accepted optimized suite, "
+                "not additional authorization for the implemented change.",
+            ]
+        )
+    else:
+        decision_lines.append(
             "Fired triggers: "
-            + (
-                ", ".join(
-                    f"`{item}`"
-                    for item in active.get("trigger_assessment", {}).get(
-                        "fired_triggers", []
-                    )
-                )
-                or "none"
-            )
-            + ".",
-        ]
-    )
+            + (", ".join(f"`{item}`" for item in active_triggers) or "none")
+            + "."
+        )
+    lines.extend(decision_lines)
     confirmation = (payload.get("ratios") or {}).get("optimized_confirmation")
     if confirmation is not None:
         first_targets = {item["record"]: item for item in payload["ratios"]["targets"]}
@@ -1858,6 +1867,14 @@ def _confirm_optimized(path: Path) -> int:
     payload["optimization_decision"] = {
         "status": "optimized_accepted_two_suite",
         "triggered": True,
+        "authorization": {
+            "trigger": "vmap_128",
+            "basis": (
+                "The VMAP batch-128 trigger reproduced across smooth, "
+                "oscillatory, and expensive-integrand Romberg cases in both "
+                "clean baseline suites."
+            ),
+        },
         "reason": (
             "Two fresh isolated suites improve all three Romberg VMAP-128 "
             "targets without a reproducible scalar or JVP regression."

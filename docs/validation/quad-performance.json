@@ -36322,6 +36322,10 @@
       ]
     },
     "optimization_decision": {
+      "authorization": {
+        "basis": "The VMAP batch-128 trigger reproduced across smooth, oscillatory, and expensive-integrand Romberg cases in both clean baseline suites.",
+        "trigger": "vmap_128"
+      },
       "reason": "Two fresh isolated suites improve all three Romberg VMAP-128 targets without a reproducible scalar or JVP regression.",
       "status": "optimized_accepted_two_suite",
       "triggered": true

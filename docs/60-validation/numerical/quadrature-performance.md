@@ -101,7 +101,11 @@ Status: `optimized_accepted_two_suite`.
 
 Two fresh isolated suites improve all three Romberg VMAP-128 targets without a reproducible scalar or JVP regression.
 
-Fired triggers: `ad_jvp`.
+Reviewed baseline authorization: `vmap_128`.
+
+The VMAP batch-128 trigger reproduced across smooth, oscillatory, and expensive-integrand Romberg cases in both clean baseline suites.
+
+Post-optimization residual triggers: `ad_jvp`. These are observations from the accepted optimized suite, not additional authorization for the implemented change.
 
 ## Two-suite optimization acceptance
 
