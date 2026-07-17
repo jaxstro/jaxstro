@@ -143,6 +143,15 @@ def test_adaptive_tanh_sinh_integrates_every_improper_domain_family() -> None:
     assert jnp.allclose(full.value, jnp.sqrt(jnp.pi), rtol=3e-9)
 
 
+def test_improper_scale_participates_in_adaptive_dtype_selection() -> None:
+    result = integrate(
+        lambda x: jnp.exp(-x),
+        RightInfinite(jnp.float32(0.0), scale=jnp.float64(2.0)),
+        **_options(epsabs=jnp.float32(1e-6), epsrel=jnp.float32(1e-6)),
+    )
+    assert result.value.dtype == jnp.float64
+
+
 def test_adaptive_tanh_sinh_supports_weighted_vector_payloads() -> None:
     measure = WeightedMeasure(
         lambda x, args: args * (1.0 + x),

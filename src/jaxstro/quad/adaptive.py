@@ -33,7 +33,13 @@ from ._romberg import (
     romberg_tanh_sinh_refine,
     validate_global_capacities,
 )
-from .domains import Infinite, Interval, LeftInfinite, RightInfinite
+from .domains import (
+    Infinite,
+    Interval,
+    LeftInfinite,
+    RightInfinite,
+    improper_scale_value,
+)
 from .measures import LebesgueMeasure, WeightedMeasure
 from .methods import (
     AdaptiveClenshawCurtis,
@@ -136,10 +142,12 @@ def _solve_raw(
             RombergTanhSinh,
         ),
     ):
-        raise TypeError(f"{type(method).__name__} is not implemented in Phase A2")
+        raise TypeError(f"unsupported adaptive method: {type(method).__name__}")
     improper_method = isinstance(method, (AdaptiveTanhSinh, RombergTanhSinh))
     if not isinstance(domain, Interval) and not improper_method:
         raise TypeError(f"{type(method).__name__} requires a finite Interval")
+    if not isinstance(domain, Interval):
+        improper_scale_value(domain)
     if (
         isinstance(method, (Romberg, RombergTanhSinh))
         and isinstance(domain, Interval)
@@ -178,11 +186,15 @@ def _solve_raw(
     if isinstance(domain, Interval):
         domain_scalars = (domain.lower, domain.upper, *domain.breakpoints)
     elif isinstance(domain, RightInfinite):
-        domain_scalars = (domain.lower,)
+        domain_scalars = (domain.lower,) + (
+            () if domain.scale is None else (domain.scale,)
+        )
     elif isinstance(domain, LeftInfinite):
-        domain_scalars = (domain.upper,)
+        domain_scalars = (domain.upper,) + (
+            () if domain.scale is None else (domain.scale,)
+        )
     else:
-        domain_scalars = ()
+        domain_scalars = () if domain.scale is None else (domain.scale,)
     dtype = jnp.result_type(
         *domain_scalars, absolute_tolerance, relative_tolerance, 0.0
     )

@@ -34,11 +34,11 @@ def domain_coordinates(domain) -> tuple[Any, ...]:
     if isinstance(domain, Interval):
         return (domain.lower, domain.upper, *domain.breakpoints)
     if isinstance(domain, RightInfinite):
-        return (domain.lower,)
+        return (domain.lower,) + (() if domain.scale is None else (domain.scale,))
     if isinstance(domain, LeftInfinite):
-        return (domain.upper,)
+        return (domain.upper,) + (() if domain.scale is None else (domain.scale,))
     if isinstance(domain, Infinite):
-        return ()
+        return () if domain.scale is None else (domain.scale,)
     raise TypeError(f"unsupported quadrature domain: {type(domain).__name__}")
 
 
@@ -60,6 +60,16 @@ def quantity_mode(domain, epsabs) -> bool:
 def _coordinate_unit(domain, epsabs) -> Unit:
     coordinates = domain_coordinates(domain)
     quantities = [value for value in coordinates if isinstance(value, Quantity)]
+    if isinstance(domain, Infinite) and domain.unit is not None:
+        for coordinate in quantities:
+            if not coordinate.unit.is_compatible_with(domain.unit):
+                raise DimensionError(
+                    "Infinite-domain scale must match the declared coordinate unit.",
+                    operation="quad-coordinate-normalization",
+                    expected=domain.unit.dimensions,
+                    actual=coordinate.unit.dimensions,
+                )
+        return domain.unit
     if quantities:
         if len(quantities) != len(coordinates):
             raise DimensionError(
@@ -69,6 +79,16 @@ def _coordinate_unit(domain, epsabs) -> Unit:
         unit = quantities[0].unit
         for coordinate in quantities[1:]:
             if not coordinate.unit.is_compatible_with(unit):
+                if (
+                    isinstance(domain, (RightInfinite, LeftInfinite, Infinite))
+                    and coordinate is domain.scale
+                ):
+                    raise DimensionError(
+                        "Improper-domain scale must match the coordinate unit.",
+                        operation="quad-coordinate-normalization",
+                        expected=unit.dimensions,
+                        actual=coordinate.unit.dimensions,
+                    )
                 raise DimensionError(
                     "Quadrature coordinates must have compatible dimensions.",
                     operation="quad-coordinate-normalization",
@@ -76,8 +96,6 @@ def _coordinate_unit(domain, epsabs) -> Unit:
                     actual=coordinate.unit.dimensions,
                 )
         return unit
-    if isinstance(domain, Infinite) and domain.unit is not None:
-        return domain.unit
     if isinstance(epsabs, Quantity):
         return q_units.dimensionless
     raise TypeError("quantity mode requires a quantity coordinate or quantity epsabs")
@@ -105,11 +123,25 @@ def _normalize_domain(domain, unit: Unit):
             ),
         )
     if isinstance(domain, RightInfinite):
-        return RightInfinite(_coordinate_value(domain.lower, unit))
+        return RightInfinite(
+            _coordinate_value(domain.lower, unit),
+            scale=(
+                None if domain.scale is None else _coordinate_value(domain.scale, unit)
+            ),
+        )
     if isinstance(domain, LeftInfinite):
-        return LeftInfinite(_coordinate_value(domain.upper, unit))
+        return LeftInfinite(
+            _coordinate_value(domain.upper, unit),
+            scale=(
+                None if domain.scale is None else _coordinate_value(domain.scale, unit)
+            ),
+        )
     if isinstance(domain, Infinite):
-        return Infinite()
+        return Infinite(
+            scale=(
+                None if domain.scale is None else _coordinate_value(domain.scale, unit)
+            )
+        )
     raise TypeError(f"unsupported quadrature domain: {type(domain).__name__}")
 
 
@@ -197,6 +229,14 @@ def _wrap_measure(measure, args, coordinate_unit: Unit):
 
 def normalize_call(fun, domain, args, measure, epsabs, epsrel) -> NormalizedCall:
     coordinate_unit = _coordinate_unit(domain, epsabs)
+    if (
+        isinstance(domain, (RightInfinite, LeftInfinite, Infinite))
+        and not coordinate_unit.is_dimensionless
+        and not isinstance(domain.scale, Quantity)
+    ):
+        raise TypeError(
+            "dimensional improper quadrature requires an explicit Quantity scale"
+        )
     normalized_domain = _normalize_domain(domain, coordinate_unit)
     integrand_unit = _infer_output_unit(fun, args, coordinate_unit)
     normalized_measure, density_unit = _wrap_measure(measure, args, coordinate_unit)

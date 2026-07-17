@@ -935,13 +935,13 @@
               "target": "docs/validation/quad-adaptive-envelope.json"
             },
             {
-              "claim": "The alpha quantity adapter preserves physical values, derivative scaling, density units, and JIT and VMAP composition.",
+              "claim": "The alpha quantity adapter preserves physical values, derivative scaling, density units, improper-map scale representation, and JIT and VMAP composition.",
               "id": "quad-adaptive-quantity",
               "kind": "integration_test",
               "target": "tests/integration/test_quad_quantity_transforms.py"
             },
             {
-              "claim": "All five methods have analytic, frozen-formula, adaptive-rerun, stability-ladder, failure-status, and quantity-rescaling evidence.",
+              "claim": "All five methods have analytic, frozen-formula, adaptive-rerun, stability-ladder, and failure-status evidence; representative Gauss-Kronrod quantity-rescaling evidence covers the alpha adapter.",
               "id": "quad-adaptive-replay",
               "kind": "validation_test",
               "target": "tests/validation/test_quad_replay_derivatives.py"
@@ -972,6 +972,7 @@
             "Related rules can miss the same unresolved narrow feature.",
             "Replay is the default first-order derivative of the accepted fixed formula; gradient=stop remains explicit.",
             "Quantity-aware adaptive integration is alpha and opt-in.",
+            "Dimensional improper domains require an explicit positive physical scale.",
             "Direct Quantity-PyTree quotient-unit Jacobians and higher derivatives are not claimed.",
             "Multidimensional integration is not implemented.",
             "No performance-superiority claim is established."
@@ -1183,7 +1184,7 @@
   ],
   "package_version": "0.1.0",
   "schema_version": "1",
-  "source_revision": "sha256:34169cac7ba55b3ac617ba8440061240934c056990daa776376fd32cb070d4a0",
+  "source_revision": "sha256:1acf02c3ba0cb0c62d9736d3a56bf91b05b5603de43c4f3200a72e20651dc1d9",
   "unclassified_callables": [
     "jaxstro.atmospheres.acquisition_rows_to_markdown",
     "jaxstro.atmospheres.build_bosz_index",

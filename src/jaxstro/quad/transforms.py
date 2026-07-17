@@ -11,6 +11,8 @@ from .domains import (
     Interval,
     LeftInfinite,
     RightInfinite,
+    improper_scale_is_valid,
+    improper_scale_value,
     interval_is_valid,
     interval_orientation,
 )
@@ -76,30 +78,51 @@ def map_domain(
     if isinstance(domain, RightInfinite):
         lower = jnp.asarray(domain.lower)
         ratio = (1.0 + reference) / (1.0 - reference)
+        if domain.scale is None:
+            x = lower + ratio
+            jacobian = 2.0 / (1.0 - reference) ** 2
+        else:
+            scale = improper_scale_value(domain)
+            x = lower + scale * ratio
+            jacobian = 2.0 * scale / (1.0 - reference) ** 2
         return DomainMapResult(
-            x=lower + ratio,
-            jacobian=2.0 / (1.0 - reference) ** 2,
+            x=x,
+            jacobian=jacobian,
             orientation=jnp.asarray(1.0),
-            valid=jnp.isfinite(lower),
+            valid=jnp.isfinite(lower) & improper_scale_is_valid(domain),
         )
     if isinstance(domain, LeftInfinite):
         upper = jnp.asarray(domain.upper)
         ratio = (1.0 - reference) / (1.0 + reference)
+        if domain.scale is None:
+            x = upper - ratio
+            jacobian = 2.0 / (1.0 + reference) ** 2
+        else:
+            scale = improper_scale_value(domain)
+            x = upper - scale * ratio
+            jacobian = 2.0 * scale / (1.0 + reference) ** 2
         return DomainMapResult(
-            x=upper - ratio,
-            jacobian=2.0 / (1.0 + reference) ** 2,
+            x=x,
+            jacobian=jacobian,
             orientation=jnp.asarray(1.0),
-            valid=jnp.isfinite(upper),
+            valid=jnp.isfinite(upper) & improper_scale_is_valid(domain),
         )
     if isinstance(domain, Infinite):
         denominator = 1.0 - reference**2
+        if domain.scale is None:
+            x = reference / denominator
+            jacobian = (1.0 + reference**2) / denominator**2
+        else:
+            scale = improper_scale_value(domain)
+            x = scale * reference / denominator
+            jacobian = scale * (1.0 + reference**2) / denominator**2
         return DomainMapResult(
-            x=reference / denominator,
-            jacobian=(1.0 + reference**2) / denominator**2,
+            x=x,
+            jacobian=jacobian,
             orientation=jnp.asarray(1.0),
-            valid=jnp.asarray(True),
+            valid=improper_scale_is_valid(domain),
         )
-    raise TypeError("unsupported Phase A integration domain")
+    raise TypeError(f"unsupported quadrature domain: {type(domain).__name__}")
 
 
 def map_domain_replay(

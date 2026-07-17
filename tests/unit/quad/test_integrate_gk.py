@@ -248,7 +248,7 @@ def test_invalid_and_nonfinite_solves_return_nonfinite_values(
 def test_integrate_rejects_unsupported_structure_and_gradient_policy() -> None:
     with pytest.raises(TypeError, match="finite Interval"):
         integrate(lambda x: x, Infinite(), **_options())
-    with pytest.raises(TypeError, match="not implemented in Phase A2"):
+    with pytest.raises(TypeError, match="unsupported adaptive method"):
         integrate(
             lambda x: x,
             Interval(-1.0, 1.0),

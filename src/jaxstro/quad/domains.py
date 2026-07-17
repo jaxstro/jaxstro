@@ -33,12 +33,17 @@ class Interval:
 @dataclass(frozen=True)
 class RightInfinite:
     lower: Any
+    scale: Any | None = field(default=None, kw_only=True)
 
     def tree_flatten(self):
+        if self.scale is not None:
+            return (self.lower, self.scale), True
         return (self.lower,), None
 
     @classmethod
-    def tree_unflatten(cls, _aux, children):
+    def tree_unflatten(cls, has_scale, children):
+        if has_scale:
+            return cls(children[0], scale=children[1])
         return cls(children[0])
 
 
@@ -46,12 +51,17 @@ class RightInfinite:
 @dataclass(frozen=True)
 class LeftInfinite:
     upper: Any
+    scale: Any | None = field(default=None, kw_only=True)
 
     def tree_flatten(self):
+        if self.scale is not None:
+            return (self.upper, self.scale), True
         return (self.upper,), None
 
     @classmethod
-    def tree_unflatten(cls, _aux, children):
+    def tree_unflatten(cls, has_scale, children):
+        if has_scale:
+            return cls(children[0], scale=children[1])
         return cls(children[0])
 
 
@@ -59,13 +69,39 @@ class LeftInfinite:
 @dataclass(frozen=True)
 class Infinite:
     unit: Unit | None = None
+    scale: Any | None = field(default=None, kw_only=True)
 
     def tree_flatten(self):
+        if self.scale is not None:
+            return (self.scale,), (self.unit, True)
         return (), self.unit
 
     @classmethod
-    def tree_unflatten(cls, unit, _children):
+    def tree_unflatten(cls, auxiliary, children):
+        if isinstance(auxiliary, tuple):
+            unit, has_scale = auxiliary
+            if has_scale:
+                return cls(unit=unit, scale=children[0])
+        unit = auxiliary
         return cls(unit=unit)
+
+
+def improper_scale_value(domain: RightInfinite | LeftInfinite | Infinite):
+    """Return the stopped scalar map scale, defaulting to the legacy value."""
+    raw_scale = 1.0 if domain.scale is None else domain.scale
+    scale = jnp.asarray(raw_scale)
+    if scale.ndim != 0:
+        raise ValueError("improper-domain scale must be scalar")
+    if jnp.issubdtype(scale.dtype, jnp.bool_) or jnp.issubdtype(
+        scale.dtype, jnp.complexfloating
+    ):
+        raise TypeError("improper-domain scale must be real")
+    return jax.lax.stop_gradient(scale)
+
+
+def improper_scale_is_valid(domain: RightInfinite | LeftInfinite | Infinite) -> Array:
+    scale = improper_scale_value(domain)
+    return jnp.isfinite(scale) & (scale > 0.0)
 
 
 def interval_orientation(domain: Interval) -> Array:

@@ -365,7 +365,7 @@ and quantity coordinates fail eagerly.
 The fully infinite domain gains optional static metadata:
 
 ```python
-Infinite(unit=units.cm)
+Infinite(unit=units.cm, scale=100.0 * units.cm)
 ```
 
 `Infinite()` remains the raw, dimensionless-compatible form. A fully infinite
@@ -669,3 +669,20 @@ Phase A3 is complete only when A3.1 through A3.7 are implemented, all promotion
 gates pass without weakened tests, the evidence artifact and researcher-facing
 documentation are current, and the repository status records the next bounded
 quadrature slice.
+
+## Post-review amendment: explicit improper-domain scale
+
+The pre-merge numerical review found that stripping a dimensional coordinate
+unit before applying a scale-one improper map made conditioning depend on the
+chosen display unit. The corrected contract adds keyword-only `scale` metadata
+to `RightInfinite`, `LeftInfinite`, and `Infinite`.
+
+Raw omitted-scale calls preserve the exact legacy scale-one behavior.
+Dimensional quantity-mode improper calls require a compatible positive finite
+quantity scale, which is converted into the selected coordinate representation
+before the sole raw engine runs. The scale is a dynamic PyTree leaf for JIT and
+VMAP, but replay stops its tangent because it is algorithmic map provenance,
+not a scientific differentiand. Metre-versus-centimetre parity tests cover
+right-infinite, left-infinite, and full-line integrals. Canonical CGS
+normalization is rejected because one implicit base unit can be catastrophically
+poor conditioning for astronomical coordinates.

@@ -308,6 +308,7 @@ limitations.
 | `RombergTanhSinh` | Replays the accepted global double-exponential level |
 | Moving finite bounds | Differentiable through the signed affine map |
 | Supported semi-infinite bounds | The finite boundary value is differentiable through the improper map |
+| Improper characteristic scale | Positive numerical configuration; stopped for differentiation |
 | Physical breakpoints | Stopped |
 | `INVALID_INPUT` | Nonfinite primal value; derivative undefined |
 | `NONFINITE_INTEGRAND` | Nonfinite primal value; derivative undefined |
@@ -316,6 +317,12 @@ limitations.
 Complex outputs follow JAX's realified differentiation conventions. Use a
 realified Jacobian for complex-to-complex maps unless holomorphic behavior is
 both mathematically justified and explicitly requested.
+
+For a dimensional improper domain, provide the physical characteristic scale
+explicitly. Replay differentiates the integrand and supported finite boundary
+while holding this numerical map choice fixed. Expressing the same physical
+scale in another compatible unit therefore changes only the raw
+representation, not the replay formula in physical coordinates.
 
 ## Where to go next
 

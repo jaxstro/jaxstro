@@ -65,7 +65,7 @@ def test_fully_infinite_quantity_domain_runs_through_adaptive_boundary():
     scale = 2.0 * q.cm
     result = quad.integrate(
         lambda x, args: q.math.exp(-1.0 * (x / args) ** 2),
-        quad.Infinite(unit=q.cm),
+        quad.Infinite(unit=q.cm, scale=2.0 * q.cm),
         args=scale,
         method=quad.AdaptiveTanhSinh(3),
         epsabs=5e-4 * q.cm,

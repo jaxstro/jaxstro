@@ -22,6 +22,7 @@ from .domains import (
     Interval,
     LeftInfinite,
     RightInfinite,
+    improper_scale_is_valid,
     interval_is_valid,
     sorted_breakpoints,
 )
@@ -364,21 +365,26 @@ def reference_partition(domain: Domain) -> ReferencePartition:
             valid=interval_is_valid(domain),
         )
 
+    scale = () if domain.scale is None else (domain.scale,)
     dtype = (
-        jnp.result_type(domain.lower, 0.0)
+        jnp.result_type(domain.lower, *scale, 0.0)
         if isinstance(domain, RightInfinite)
-        else jnp.result_type(domain.upper, 0.0)
+        else jnp.result_type(domain.upper, *scale, 0.0)
         if isinstance(domain, LeftInfinite)
-        else jnp.asarray(0.0).dtype
+        else jnp.result_type(*scale, 0.0)
     )
     if isinstance(domain, RightInfinite):
-        valid = jnp.isfinite(jnp.asarray(domain.lower))
+        valid = jnp.isfinite(jnp.asarray(domain.lower)) & improper_scale_is_valid(
+            domain
+        )
     elif isinstance(domain, LeftInfinite):
-        valid = jnp.isfinite(jnp.asarray(domain.upper))
+        valid = jnp.isfinite(jnp.asarray(domain.upper)) & improper_scale_is_valid(
+            domain
+        )
     elif isinstance(domain, Infinite):
-        valid = jnp.asarray(True)
+        valid = improper_scale_is_valid(domain)
     else:
-        raise TypeError("unsupported Phase A integration domain")
+        raise TypeError(f"unsupported quadrature domain: {type(domain).__name__}")
     return ReferencePartition(
         lower=jnp.asarray([-1.0], dtype=dtype),
         upper=jnp.asarray([1.0], dtype=dtype),

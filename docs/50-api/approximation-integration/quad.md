@@ -46,6 +46,20 @@ The integrand receives a node array with shape `(n,)` and returns `(n,)` or
 rule order or level, breakpoint count, and payload shape are static under JIT.
 Bounds, breakpoint values, and explicit `args` leaves may be dynamic.
 
+Improper domains accept a keyword-only characteristic scale:
+
+```python
+quad.RightInfinite(lower, scale=scale)
+quad.LeftInfinite(upper, scale=scale)
+quad.Infinite(unit=unit, scale=scale)
+```
+
+Raw calls may omit `scale` and retain the legacy numerical value `1`. A
+dimensional quantity-mode improper domain must provide a compatible, scalar,
+real, positive, finite quantity scale. Scale is stopped algorithmic provenance:
+it controls the map and conditioning, but is not a differentiable scientific
+parameter.
+
 For replay differentiation, smooth finite bounds, the finite boundary of a
 supported semi-infinite domain, and explicit floating or complex `args` leaves
 are differentiable. Breakpoint motion, method and measure configuration,
@@ -168,7 +182,8 @@ Status, work, error kind, and confidence level remain unitless.
 | Input condition | Mode and requirement |
 | --- | --- |
 | Any quantity-valued bound or breakpoint | Quantity mode; all dimensional coordinates must be compatible quantities |
-| `Infinite(unit=unit)` | Quantity mode with the declared coordinate unit |
+| `Infinite(unit=unit, scale=scale)` | Quantity mode with the declared coordinate unit and required compatible physical scale |
+| Dimensional `RightInfinite` or `LeftInfinite` | Quantity mode; requires a compatible physical `scale` |
 | Quantity `epsabs` with a raw domain | Quantity mode with dimensionless coordinates |
 | Quantity integrand output without a quantity trigger | Eager error explaining that quantity `epsabs` activates a dimensionless quantity domain |
 | Quantity mode integrand | Must return a `Quantity` with one stable output unit |
@@ -178,6 +193,12 @@ Status, work, error kind, and confidence level remain unitless.
 
 `quad.fixed`, `map_domain`, and `map_interval` reject quantity-valued domains,
 including `Infinite(unit=...)`. The raw `Infinite()` form is unchanged.
+
+For improper maps, `scale` must be scalar, real, finite, and strictly positive.
+Invalid traced scales fail closed with `QuadStatus.INVALID_INPUT`. Equivalent physical scales
+expressed in different compatible units produce the same normalized map.
+Different physical scales may change convergence, error estimates, and work,
+so scale selection belongs in the numerical-method record.
 
 ## Failure behavior
 

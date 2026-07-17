@@ -105,6 +105,9 @@ def test_quad_contract_registers_adaptive_integration() -> None:
         "validation_test",
         "artifact",
     }
+    replay = {item.id: item for item in adaptive.evidence}["quad-adaptive-replay"]
+    assert "All five methods" in replay.claim
+    assert "representative Gauss-Kronrod quantity-rescaling evidence" in replay.claim
 
 
 def test_contract_resolution_prefers_public_callable_over_same_named_module() -> None:

@@ -155,6 +155,39 @@ e_i = \lvert Q_{h/2}-Q_h\rvert
 This open rule avoids evaluating finite endpoints directly. Domain maps and
 their Jacobians extend the same logic to half-infinite and infinite domains.
 
+### Characteristic scales for improper domains
+
+An improper map needs a physical scale $s>0$, not merely a display unit.
+Jaxstro uses
+
+```{math}
+:label: eq-adaptive-improper-scales
+
+\begin{aligned}
+x_{+}(t) &= a+s\frac{1+t}{1-t},
+&\frac{\mathrm{d}x_{+}}{\mathrm{d}t}
+  &= \frac{2s}{(1-t)^2}, \\
+x_{-}(t) &= b-s\frac{1-t}{1+t},
+&\frac{\mathrm{d}x_{-}}{\mathrm{d}t}
+  &= \frac{2s}{(1+t)^2}, \\
+x_{\infty}(t) &= s\frac{t}{1-t^2},
+&\frac{\mathrm{d}x_{\infty}}{\mathrm{d}t}
+  &= s\frac{1+t^2}{(1-t^2)^2}.
+\end{aligned}
+```
+
+The same physical $s$ must define the same map whether it is written in
+metres, centimetres, or another compatible unit. Raw domains retain the legacy
+default $s=1$. Dimensional quantity domains require an explicit quantity
+scale so a presentation unit cannot silently become a convergence parameter.
+
+:::{tip}
+Choose $s$ near the physical width over which the integrand changes
+substantially. Record it with tolerances and capacities: changing $s$ should
+not change the exact integral, but it can change numerical work and error
+evidence.
+:::
+
 ### Romberg families
 
 Classical Romberg starts from nested trapezoid estimates and applies Richardson
@@ -289,10 +322,12 @@ The same call shape selects each family. Use `quad.Infinite()`,
 [](../../50-api/approximation-integration/quad.md).
 
 Quantity mode is activated by quantity-valued coordinates,
-`Infinite(unit=...)`, or a quantity `epsabs`. A raw domain activated by
+`Infinite(unit=..., scale=...)`, or a quantity `epsabs`. A raw domain activated by
 quantity `epsabs` is dimensionless. Quantity mode requires a
 quantity-returning integrand and a quantity `epsabs` compatible with the
-integral unit. Lower-level `quad.fixed` and mapping helpers remain raw-only.
+integral unit. Dimensional improper domains also require a compatible physical
+`scale`, for example `quad.Infinite(unit=q.cm, scale=100.0 * q.cm)`.
+Lower-level `quad.fixed` and mapping helpers remain raw-only.
 
 ## How to audit the result
 

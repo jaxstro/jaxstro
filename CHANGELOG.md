@@ -65,6 +65,11 @@ Phase B consolidation/hardening arc and the `jaxstro.params` selective-gradient 
   `gradient="replay"`; the previous complete-result zero derivative remains
   available explicitly with `gradient="stop"` for compatibility during sibling
   migrations.
+- **Explicit improper-domain scale** — `RightInfinite`, `LeftInfinite`, and
+  `Infinite` accept a keyword-only characteristic `scale`. Raw omitted-scale
+  calls preserve the legacy scale-one maps; dimensional quantity-mode calls
+  require a compatible positive physical scale so coordinate display units do
+  not silently determine conditioning.
 - **`cumulative_trapz` uniform path → dx-outside** — the uniform-grid branch now factors
   the constant `dx` out of the running sum, for byte-parity with the progenax
   implementation it consolidates.
@@ -72,6 +77,13 @@ Phase B consolidation/hardening arc and the `jaxstro.params` selective-gradient 
   (matching `numpy.linalg.cond`) instead of a misleading `0.0`.
 
 ### Fixed
+
+- **Quantity improper-map representation dependence** — equivalent physical
+  semi-infinite and infinite integrals now share the same normalized map when
+  their explicit characteristic scale is expressed in compatible units.
+- **Quadrature evidence wording** — the adaptive contract now distinguishes
+  all-method replay evidence from the representative Gauss–Kronrod quantity
+  rescaling case.
 
 - **Duplicate bibliography anchor** — removed the authored `References` heading that
   collided with MyST's generated bibliography heading in rendered HTML.

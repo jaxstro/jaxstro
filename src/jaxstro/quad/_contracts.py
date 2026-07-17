@@ -126,7 +126,8 @@ _ADAPTIVE_REPLAY_EVIDENCE = EvidenceReference(
     target="tests/validation/test_quad_replay_derivatives.py",
     claim=(
         "All five methods have analytic, frozen-formula, adaptive-rerun, "
-        "stability-ladder, failure-status, and quantity-rescaling evidence."
+        "stability-ladder, and failure-status evidence; representative "
+        "Gauss-Kronrod quantity-rescaling evidence covers the alpha adapter."
     ),
 )
 
@@ -146,7 +147,8 @@ _ADAPTIVE_QUANTITY_EVIDENCE = EvidenceReference(
     target="tests/integration/test_quad_quantity_transforms.py",
     claim=(
         "The alpha quantity adapter preserves physical values, derivative "
-        "scaling, density units, and JIT and VMAP composition."
+        "scaling, density units, improper-map scale representation, and JIT "
+        "and VMAP composition."
     ),
 )
 
@@ -240,6 +242,7 @@ _ADAPTIVE_CONTRACT = CallableContract(
         "Related rules can miss the same unresolved narrow feature.",
         "Replay is the default first-order derivative of the accepted fixed formula; gradient=stop remains explicit.",
         "Quantity-aware adaptive integration is alpha and opt-in.",
+        "Dimensional improper domains require an explicit positive physical scale.",
         "Direct Quantity-PyTree quotient-unit Jacobians and higher derivatives are not claimed.",
         "Multidimensional integration is not implemented.",
         "No performance-superiority claim is established.",

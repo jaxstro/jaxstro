@@ -150,6 +150,16 @@ def test_transformed_integrand_supports_every_improper_domain(domain, fun) -> No
     assert jnp.all(result.jacobian > 0.0)
 
 
+def test_improper_scale_participates_in_adaptive_dtype_selection() -> None:
+    result = transformed_integrand(
+        lambda x: jnp.exp(-x),
+        RightInfinite(jnp.float32(0.0), scale=jnp.float64(2.0)),
+        jnp.asarray([-0.5, 0.0, 0.5], dtype=jnp.float64),
+    )
+    assert result.x.dtype == jnp.float64
+    assert result.values.dtype == jnp.float64
+
+
 def test_transformed_integrand_reports_nonfinite_contributions() -> None:
     result = transformed_integrand(
         lambda x: jnp.where(x > 0.0, jnp.nan, x),

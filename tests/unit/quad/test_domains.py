@@ -2,6 +2,7 @@ import inspect
 
 import jax
 import jax.numpy as jnp
+import pytest
 
 from jaxstro import quad
 
@@ -69,3 +70,113 @@ def test_dynamic_endpoints_work_under_jit() -> None:
         )
     )
     assert jnp.array_equal(evaluate(1.0, 5.0), jnp.array([1.0, 3.0, 5.0]))
+
+
+def test_improper_scale_is_keyword_only_and_preserves_default_pytree_layout() -> None:
+    assert (
+        inspect.signature(quad.RightInfinite).parameters["scale"].kind
+        is inspect.Parameter.KEYWORD_ONLY
+    )
+    assert (
+        inspect.signature(quad.LeftInfinite).parameters["scale"].kind
+        is inspect.Parameter.KEYWORD_ONLY
+    )
+    assert (
+        inspect.signature(quad.Infinite).parameters["scale"].kind
+        is inspect.Parameter.KEYWORD_ONLY
+    )
+
+    assert jax.tree.flatten(quad.RightInfinite(0.0))[0] == [0.0]
+    assert jax.tree.flatten(quad.LeftInfinite(0.0))[0] == [0.0]
+    assert jax.tree.flatten(quad.Infinite())[0] == []
+
+
+def test_explicit_improper_scale_is_a_dynamic_pytree_leaf() -> None:
+    domains = (
+        quad.RightInfinite(0.0, scale=2.0),
+        quad.LeftInfinite(0.0, scale=2.0),
+        quad.Infinite(scale=2.0),
+    )
+    for domain in domains:
+        leaves, treedef = jax.tree.flatten(domain)
+        assert leaves[-1] == 2.0
+        assert jax.tree.unflatten(treedef, leaves) == domain
+
+
+def test_explicit_scale_rescales_every_improper_map() -> None:
+    reference = jnp.asarray([0.0])
+    right = quad.map_domain(quad.RightInfinite(2.0, scale=3.0), reference)
+    left = quad.map_domain(quad.LeftInfinite(2.0, scale=3.0), reference)
+    full = quad.map_domain(quad.Infinite(scale=3.0), reference)
+
+    assert right.x[0] == 5.0
+    assert right.jacobian[0] == 6.0
+    assert left.x[0] == -1.0
+    assert left.jacobian[0] == 6.0
+    assert full.x[0] == 0.0
+    assert full.jacobian[0] == 3.0
+
+
+def test_omitted_improper_scale_matches_explicit_legacy_unit_scale() -> None:
+    reference = jnp.asarray([-0.5, 0.0, 0.5])
+    pairs = (
+        (quad.RightInfinite(2.0), quad.RightInfinite(2.0, scale=1.0)),
+        (quad.LeftInfinite(2.0), quad.LeftInfinite(2.0, scale=1.0)),
+        (quad.Infinite(), quad.Infinite(scale=1.0)),
+    )
+    for legacy, explicit in pairs:
+        legacy_map = quad.map_domain(legacy, reference)
+        explicit_map = quad.map_domain(explicit, reference)
+        assert jnp.array_equal(legacy_map.x, explicit_map.x)
+        assert jnp.array_equal(legacy_map.jacobian, explicit_map.jacobian)
+        assert legacy_map.valid == explicit_map.valid
+
+
+def test_invalid_improper_scales_fail_closed_under_jit() -> None:
+    validity = jax.jit(
+        lambda scale: (
+            quad.map_domain(
+                quad.Infinite(scale=scale),
+                jnp.asarray([0.0]),
+            ).valid
+        )
+    )
+    assert validity(1.0)
+    assert not validity(0.0)
+    assert not validity(-1.0)
+    assert not validity(jnp.inf)
+    assert not validity(jnp.nan)
+
+
+def test_array_valued_improper_scale_fails_with_scalar_contract() -> None:
+    with pytest.raises(ValueError, match="improper-domain scale must be scalar"):
+        quad.map_domain(
+            quad.Infinite(scale=jnp.asarray([1.0, 2.0])),
+            jnp.asarray([0.0]),
+        )
+
+
+def test_complex_improper_scale_fails_with_real_contract() -> None:
+    with pytest.raises(TypeError, match="improper-domain scale must be real"):
+        quad.map_domain(
+            quad.Infinite(scale=1.0 + 1.0j),
+            jnp.asarray([0.0]),
+        )
+
+
+def test_boolean_improper_scale_fails_with_real_contract() -> None:
+    with pytest.raises(TypeError, match="improper-domain scale must be real"):
+        quad.map_domain(
+            quad.Infinite(scale=True),
+            jnp.asarray([0.0]),
+        )
+
+
+def test_improper_scale_is_stopped_algorithmic_provenance() -> None:
+    derivative = jax.grad(
+        lambda scale: quad.map_domain(
+            quad.RightInfinite(0.0, scale=scale),
+            jnp.asarray([0.0]),
+        ).x[0]
+    )(2.0)
+    assert derivative == 0.0
