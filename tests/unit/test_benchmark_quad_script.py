@@ -83,9 +83,21 @@ def test_correctness_precedes_performance_interpretation() -> None:
     }
     assert structurally_expected <= derivative_failures
     assert all(
-        not record["warranted"]["performance_interpretable"]
+        not record["warranted"]["jvp_performance_interpretable"]
         for record in payload["records"]
         if not record["warranted"]["derivatives_passed"]
+    )
+    assert any(
+        record["warranted"]["primal_performance_interpretable"]
+        and not record["warranted"]["jvp_performance_interpretable"]
+        for record in payload["records"]
+        if not record["warranted"]["derivatives_passed"]
+    )
+    assert all(
+        not record["warranted"]["jvp_performance_interpretable"]
+        and not record["warranted"]["reverse_performance_interpretable"]
+        for record in payload["records"]
+        if not record["derivatives"]["available"]
     )
     conservative = next(
         record
@@ -98,6 +110,23 @@ def test_correctness_precedes_performance_interpretation() -> None:
     assert conservative["jaxstro"]["semantic_status"] == "roundoff_limited"
     assert conservative["warranted"]["jaxstro"]["passed"]
     assert not conservative["warranted"]["jaxstro"]["performance_interpretable"]
+
+
+def test_timing_record_subprocess_is_fresh_and_complete() -> None:
+    record = benchmark_quad._timing_record_subprocess("float32", 0)
+    assert record["precision"] == "float32"
+    assert record["process_isolation"] == "fresh_process_per_record"
+    assert all(
+        len(record[mode][library]["warm_seconds"]) == benchmark_quad.TIMING_REPEATS
+        for mode in ("scalar", "jvp")
+        for library in ("jaxstro", "quadax")
+    )
+    assert all(
+        len(record["vmap"][str(batch)][library]["warm_seconds"])
+        == benchmark_quad.TIMING_REPEATS
+        for batch in benchmark_quad.VMAP_BATCHES
+        for library in ("jaxstro", "quadax")
+    )
 
 
 def test_derivative_gate_rejects_a_wrong_finite_derivative() -> None:
@@ -148,6 +177,15 @@ def test_nonfinite_failure_evidence_round_trips_without_json_nan() -> None:
         "finite": False,
         "classification": "nan",
     }
+
+
+def test_report_exposes_mode_specific_warrants_and_honest_choice_label() -> None:
+    artifact = benchmark_quad.build_artifact(benchmark_quad.run_deterministic_suite())
+    report = benchmark_quad.render_report(artifact)
+    assert "warrant primal timing interpretation" in report
+    assert "warrant JVP timing" in report
+    assert "Predeclared practical choice" in report
+    assert "Independent practical choice" not in report
 
 
 def test_optimized_merge_preserves_baseline_byte_for_byte() -> None:

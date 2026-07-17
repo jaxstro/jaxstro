@@ -1,0 +1,53 @@
+# Phase A4 baseline fairness review
+
+**Reviewed baseline revision:** `7c3a61243d4d9a2d1f19ce8b43b19adbba2371c8`
+
+**Verdict:** Diagnostic evidence only. The numerical comparison design is strong and the baseline identifies a credible Romberg batching and forward-mode differentiation target, but the baseline is not yet suitable for a final optimization decision or public performance claim.
+
+## Critical finding
+
+The initial timing suite measured all method-case records sequentially in one Python process. Quadax uses cached compiled entry points, and some family and practical-choice records intentionally reuse configurations. Consequently, later compilation measurements could inherit cached internal compilation. A second whole-suite run repeated the same within-process contamination. Compilation evidence must use a fresh process for every method-case record.
+
+## Important findings
+
+1. Quadax status `2` is family-dependent. It means exhausted regional capacity for adaptive regional methods, but tolerance not met for Romberg methods.
+2. Primal, JVP, and reverse-mode performance require separate warrants. A derivative failure must not invalidate an otherwise correct primal timing, and missing derivative truth must make AD timing ineligible.
+3. The practical lane is a predeclared practical choice. It is not an independently selected winner for each library.
+4. The public report must expose eligible-record counts, ratios, dispersion, derivative failures, and timing stability instead of only a single aggregate count.
+5. CPU provenance needs an actual hardware model where the operating system makes one available.
+6. Timing noise is substantial in some records. Aggregate trigger decisions must retain the approved ratio threshold, minimum-case rule, and separation by more than twice the larger median absolute deviation.
+
+## Verified strengths
+
+- Gauss-Kronrod rule and order controls are genuinely matched.
+- Clenshaw-Curtis work is normalized to actual node calls.
+- Romberg evaluation capacity is matched at 1025 evaluations.
+- Analytic truths and independent NumPy Gauss-Legendre reference ladders are sound.
+- Both precision lanes contain actual requested dtypes.
+- Timed output trees are synchronized before clocks stop.
+- Nonfinite values use portable JSON classifications.
+- The initial report makes no unsupported winner claim.
+
+## Diagnostic trigger readout
+
+Under the approved primary float64, family-matched, representative-case policy, with both primals accurate and converged and each ratio separated by more than twice the larger timing dispersion:
+
+| Mode | Significant eligible cases | Required | Diagnostic result |
+| --- | ---: | ---: | --- |
+| Warm scalar | 1 | 3 | Does not trigger |
+| Normalized work | 1 | 3 | Does not trigger |
+| VMAP, batch 16 | 2 | 3 | Does not trigger |
+| VMAP, batch 128 | 3 | 3 | Triggers |
+| JVP | 3 | 3 | Triggers |
+| Compile | Not classifiable | 2 | Invalid until process isolation is fixed |
+
+The three float64 VMAP-128 and JVP cases are smooth, oscillatory, and expensive-integrand Romberg comparisons. Their derivative truths pass. This is enough to justify profiling Romberg batching and JVP execution after the evidence corrections, but not enough to skip the corrected baseline rerun.
+
+## Green conditions
+
+- Fresh-process isolation for every timing record.
+- Family-aware Quadax status normalization.
+- Separate primal, JVP, and reverse-mode warrants.
+- AD ineligibility when derivative truth is absent.
+- Auditable researcher-facing report with stability and eligibility summaries.
+- Independent post-fix review of the re-emitted clean baseline.

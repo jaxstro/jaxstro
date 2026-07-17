@@ -118,10 +118,24 @@ def _tree_is_clean() -> bool:
     return not _git("status", "--porcelain")
 
 
+def _cpu_model() -> str:
+    for key in ("machdep.cpu.brand_string", "hw.model"):
+        completed = subprocess.run(
+            ("sysctl", "-n", key),
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if completed.returncode == 0 and completed.stdout.strip():
+            return completed.stdout.strip()
+    return platform.processor() or platform.uname().processor or "unreported"
+
+
 def _environment() -> dict[str, str]:
     device = jax.devices()[0]
     return {
         "backend": jax.default_backend(),
+        "cpu_model": _cpu_model(),
         "device": str(device),
         "device_kind": getattr(device, "device_kind", "unknown"),
         "jax_version": jax.__version__,
@@ -144,7 +158,9 @@ def _controls_payload() -> dict[str, Any]:
         "timing_repeats": TIMING_REPEATS,
         "vmap_batches": list(VMAP_BATCHES),
         "error_norm": "infinity_norm",
-        "timing_policy": "lower_compile_warm_synchronized_interleaved",
+        "timing_policy": (
+            "fresh_process_per_record_lower_compile_warm_synchronized_interleaved"
+        ),
         "float32_context": (
             "scoped_x64_disabled_for_quadax_default_width_probe_compatibility"
         ),
@@ -472,8 +488,26 @@ def _evaluate_spec_enabled(spec: dict[str, Any], precision: str) -> dict[str, An
         theirs_raw,
         family,
     )
-    derivatives_passed = not derivatives["available"] or all(
-        item["passed"] for item in derivatives["jvp"].values()
+    derivatives_passed = bool(
+        derivatives["available"]
+        and all(item["passed"] for item in derivatives["jvp"].values())
+    )
+    primal_performance_interpretable = bool(
+        ours_gate["performance_interpretable"]
+        and theirs_gate["performance_interpretable"]
+    )
+    jvp_performance_interpretable = bool(
+        primal_performance_interpretable and derivatives_passed
+    )
+    reverse = derivatives.get("reverse", {})
+    reverse_performance_interpretable = bool(
+        primal_performance_interpretable
+        and derivatives["available"]
+        and reverse
+        and all(
+            item.get("supported", False) and item.get("passed", False)
+            for item in reverse.values()
+        )
     )
     return {
         "lane": spec["lane"],
@@ -492,11 +526,9 @@ def _evaluate_spec_enabled(spec: dict[str, Any], precision: str) -> dict[str, An
             "jaxstro": ours_gate,
             "quadax": theirs_gate,
             "derivatives_passed": derivatives_passed,
-            "performance_interpretable": bool(
-                ours_gate["performance_interpretable"]
-                and theirs_gate["performance_interpretable"]
-                and derivatives_passed
-            ),
+            "primal_performance_interpretable": (primal_performance_interpretable),
+            "jvp_performance_interpretable": jvp_performance_interpretable,
+            "reverse_performance_interpretable": (reverse_performance_interpretable),
         },
     }
 
@@ -680,16 +712,46 @@ def _timing_spec(spec: dict[str, Any], precision: str) -> dict[str, Any]:
         return _timing_spec_enabled(spec, precision)
 
 
+def _timing_record(precision: str, index: int) -> dict[str, Any]:
+    if precision not in PRECISIONS:
+        raise ValueError(f"unknown precision lane: {precision}")
+    specs = list(_record_specs(precision))
+    if not 0 <= index < len(specs):
+        raise IndexError(f"timing record index {index} is out of range")
+    return {
+        **_timing_spec(specs[index], precision),
+        "process_isolation": "fresh_process_per_record",
+    }
+
+
+def _timing_record_subprocess(precision: str, index: int) -> dict[str, Any]:
+    completed = subprocess.run(
+        (
+            sys.executable,
+            str(Path(__file__).resolve()),
+            "--timing-record",
+            precision,
+            str(index),
+        ),
+        cwd=REPO_ROOT,
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    return json.loads(completed.stdout)
+
+
 def run_timing_suite() -> dict[str, Any]:
-    """Run informational synchronized timings for every deterministic record."""
+    """Measure every record in a fresh process to isolate compilation caches."""
     return {
         "schema_version": 1,
         "source_revision": _source_revision(),
         "environment": _environment(),
+        "process_isolation": "fresh_process_per_record",
         "records": [
-            _timing_spec(spec, precision)
+            _timing_record_subprocess(precision, index)
             for precision in PRECISIONS
-            for spec in _record_specs(precision)
+            for index, _ in enumerate(_record_specs(precision))
         ],
     }
 
@@ -887,13 +949,93 @@ def algorithmic_metrics_match(stored: dict[str, Any], current: dict[str, Any]) -
     return _portable_close(stored_view, current_view)
 
 
+def _record_identity(record: dict[str, Any]) -> tuple[str, str, str, str, str]:
+    return (
+        record["lane"],
+        record["case"],
+        record["family"],
+        record["pair_variant"],
+        record["precision"],
+    )
+
+
+def _timing_measurements(record: dict[str, Any]):
+    for mode in ("scalar", "jvp"):
+        for library, measurement in record[mode].items():
+            yield mode, library, measurement
+    for batch, pair in record["vmap"].items():
+        for library, measurement in pair.items():
+            yield f"vmap_{batch}", library, measurement
+    for library, measurement in record["reverse"].items():
+        if measurement.get("supported", False):
+            yield "reverse", library, measurement
+
+
+def _timing_ratio_cell(
+    pair: dict[str, dict[str, Any]],
+    *,
+    warranted: bool,
+    compile_time: bool = False,
+) -> str:
+    if not warranted:
+        return "not warranted"
+    ours = pair["jaxstro"]
+    theirs = pair["quadax"]
+    field = "compile_seconds" if compile_time else "median_warm_seconds"
+    denominator = float(theirs[field])
+    if denominator <= 0.0:
+        return "not measurable"
+    ratio = float(ours[field]) / denominator
+    if compile_time:
+        return f"{ratio:.2f}"
+    separated = float(ours[field]) - denominator > 2.0 * max(
+        float(ours["mad_warm_seconds"]),
+        float(theirs["mad_warm_seconds"]),
+    )
+    suffix = "separated" if separated else "not separated"
+    return f"{ratio:.2f} ({suffix})"
+
+
+def _work_ratio_cell(record: dict[str, Any]) -> str:
+    if not record["warranted"]["primal_performance_interpretable"]:
+        return "not warranted"
+    denominator = int(record["quadax"]["normalized_evaluations"])
+    if denominator <= 0:
+        return "not comparable"
+    return f"{int(record['jaxstro']['normalized_evaluations']) / denominator:.2f}"
+
+
 def render_report(artifact: EvidenceArtifact) -> str:
     """Render the authored researcher-facing MyST benchmark report."""
     payload = artifact.method_payload
     active = payload["optimized"] or payload["baseline"]
     records = active["records"]
-    warranted = sum(
-        bool(record["warranted"]["performance_interpretable"]) for record in records
+    primal_warranted = sum(
+        bool(record["warranted"]["primal_performance_interpretable"])
+        for record in records
+    )
+    jvp_warranted = sum(
+        bool(record["warranted"]["jvp_performance_interpretable"]) for record in records
+    )
+    reverse_warranted = sum(
+        bool(record["warranted"]["reverse_performance_interpretable"])
+        for record in records
+    )
+    derivative_failures = sum(
+        record["derivatives"]["available"]
+        and not record["warranted"]["derivatives_passed"]
+        for record in records
+    )
+    timings = {_record_identity(record): record for record in active.get("timings", [])}
+    timing_measurements = [
+        measurement
+        for timing in timings.values()
+        for _, _, measurement in _timing_measurements(timing)
+    ]
+    stable_measurements = sum(
+        measurement["median_warm_seconds"] > 0.0
+        and measurement["mad_warm_seconds"] / measurement["median_warm_seconds"] <= 0.10
+        for measurement in timing_measurements
     )
     labels = {
         label.value: sum(
@@ -931,7 +1073,7 @@ def render_report(artifact: EvidenceArtifact) -> str:
     )
     lines.extend(
         [
-            "| `best_method` | Independent practical choice for each library. | "
+            "| `best_method` | Predeclared practical choice using the frozen library-specific adapter settings. | "
             + str(
                 sum(record["comparison_label"] == "best_method" for record in records)
             )
@@ -947,7 +1089,9 @@ def render_report(artifact: EvidenceArtifact) -> str:
             "",
             "## Accuracy and calibration",
             "",
-            f"{warranted} of {len(records)} records warrant direct performance interpretation. Reported-error ratios are calibration diagnostics, not automatic bound claims.",
+            f"{primal_warranted} of {len(records)} records warrant primal timing interpretation. {jvp_warranted} warrant JVP timing, and {reverse_warranted} warrant a direct two-library reverse-mode comparison.",
+            "",
+            f"There are {derivative_failures} records with available derivative truth that fail at least one JVP gate. Records without declared derivative truth are explicitly ineligible for AD comparisons. Reported-error ratios are calibration diagnostics, not automatic bound claims.",
             "",
             "## Work",
             "",
@@ -955,7 +1099,9 @@ def render_report(artifact: EvidenceArtifact) -> str:
             "",
             "## Compile, warm, VMAP, and AD timing",
             "",
-            "Lowering, compilation, warm scalar execution, VMAP batches of 16 and 128, JVP, and supported reverse mode are measured separately with synchronized outputs and interleaved library order.",
+            "Lowering, compilation, warm scalar execution, VMAP batches of 16 and 128, JVP, and supported reverse mode are measured separately with synchronized outputs and interleaved library order. Every method-case record is measured in a fresh Python process so internal compilation caches cannot leak between records.",
+            "",
+            f"Using a descriptive stability threshold of $\\operatorname{{MAD}}/\\operatorname{{median}} \\le 0.10$, {stable_measurements} of {len(timing_measurements)} supported timed library-mode measurements are stable. Automatic regression decisions use the stricter predeclared ratio, minimum-case, and two-MAD separation rules.",
             "",
             "```{admonition} Timing scope",
             ":class: note",
@@ -965,7 +1111,76 @@ def render_report(artifact: EvidenceArtifact) -> str:
             "## Failure semantics",
             "",
             "Jaxstro fails closed on nonfinite integrand samples. Quadax 0.2.13 masks nonfinite samples to zero, so that case is recorded as a semantic difference and excluded from performance claims.",
-            "",
+        ]
+    )
+    eligible_labels = {
+        ComparisonLabel.EXACT.value,
+        ComparisonLabel.STRONG_MATCH.value,
+        ComparisonLabel.NODE_MATCHED.value,
+    }
+    representative = {
+        "smooth_exponential",
+        "localized_gaussian",
+        "breakpoint_kink",
+        "endpoint_sqrt",
+        "semi_infinite_exponential",
+        "oscillatory_cosine",
+        "expensive_identity",
+    }
+    primary = [
+        record
+        for record in records
+        if record["precision"] == "float64"
+        and record["lane"] == "family_matched"
+        and record["case"] in representative
+        and record["comparison_label"] in eligible_labels
+    ]
+    if timings:
+        lines.extend(
+            [
+                "## Primary matched timing ratios",
+                "",
+                "Each timing ratio is $t_{\\mathrm{jaxstro}}/t_{\\mathrm{quadax}}$; each work ratio is $N_{\\mathrm{jaxstro}}/N_{\\mathrm{quadax}}$. Values above one therefore favor Quadax for that metric. The parenthetical timing label states whether the Jaxstro slowdown exceeds twice the larger MAD; it is not a winner declaration.",
+                "",
+                "| Case | Family | Compile | Warm | VMAP 128 | JVP | Work |",
+                "| --- | --- | ---: | ---: | ---: | ---: | ---: |",
+            ]
+        )
+        for record in primary:
+            timing = timings[_record_identity(record)]
+            primal = record["warranted"]["primal_performance_interpretable"]
+            jvp = record["warranted"]["jvp_performance_interpretable"]
+            lines.append(
+                "| "
+                + " | ".join(
+                    (
+                        f"`{record['case']}`",
+                        f"`{record['family']}`",
+                        _timing_ratio_cell(
+                            timing["scalar"],
+                            warranted=primal,
+                            compile_time=True,
+                        ),
+                        _timing_ratio_cell(timing["scalar"], warranted=primal),
+                        _timing_ratio_cell(timing["vmap"]["128"], warranted=primal),
+                        _timing_ratio_cell(timing["jvp"], warranted=jvp),
+                        _work_ratio_cell(record),
+                    )
+                )
+                + " |"
+            )
+        lines.extend(
+            [
+                "",
+                "```{admonition} Scope of this table",
+                ":class: note",
+                "The table is restricted to the predeclared primary float64, family-matched, representative, ratio-eligible lane. Capability-only and practical-choice records remain in the machine-readable artifact but cannot drive matched-method superiority claims.",
+                "```",
+                "",
+            ]
+        )
+    lines.extend(
+        [
             "## Environment",
             "",
             f"Source revision: `{artifact.source_revision}`",
@@ -1058,7 +1273,23 @@ def main() -> int:
     mode.add_argument("--emit", action="store_true")
     mode.add_argument("--check", action="store_true")
     mode.add_argument("--timing-only", type=Path, metavar="PATH")
+    mode.add_argument(
+        "--timing-record",
+        nargs=2,
+        metavar=("PRECISION", "INDEX"),
+        help=argparse.SUPPRESS,
+    )
     args = parser.parse_args()
+    if args.timing_record is not None:
+        precision, index = args.timing_record
+        print(
+            json.dumps(
+                _portable_tree(_timing_record(precision, int(index))),
+                sort_keys=True,
+                allow_nan=False,
+            )
+        )
+        return 0
     if args.check:
         return _check_mode()
     if args.timing_only is not None:

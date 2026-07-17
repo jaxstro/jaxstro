@@ -269,7 +269,11 @@ def raw_quadax(
     return run
 
 
-def _semantic_status(library: str, raw_status: int) -> str:
+def _semantic_status(
+    library: str,
+    raw_status: int,
+    family: LibraryMethod,
+) -> str:
     if library == "jaxstro":
         try:
             return quad.QuadStatus(raw_status).name.lower()
@@ -280,7 +284,13 @@ def _semantic_status(library: str, raw_status: int) -> str:
     if raw_status == 0:
         return "converged"
     if raw_status == 2:
-        return "max_regions"
+        if family in {
+            LibraryMethod.GAUSS_KRONROD,
+            LibraryMethod.CLENSHAW_CURTIS,
+            LibraryMethod.TANH_SINH,
+        }:
+            return "max_regions"
+        return "tolerance_not_met"
     return f"quadax_status_{raw_status}"
 
 
@@ -291,10 +301,9 @@ def normalize_result(
     family: LibraryMethod,
 ) -> NormalizedResult:
     """Synchronize a raw result and create the host-only semantic record."""
-    del family
     ready = jax.block_until_ready(result)
     raw_status = int(np.asarray(ready.status))
-    semantic_status = _semantic_status(library, raw_status)
+    semantic_status = _semantic_status(library, raw_status, family)
     return NormalizedResult(
         value=np.asarray(ready.value),
         error=np.asarray(ready.error),

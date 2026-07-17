@@ -129,6 +129,34 @@ def test_quadax_unknown_status_is_not_given_jaxstro_semantics() -> None:
     assert normalized.semantic_status == "quadax_status_16"
 
 
+def test_quadax_status_two_is_family_specific() -> None:
+    case = _case("smooth_exponential")
+    controls = RunControls(epsabs=1.0e-10, epsrel=1.0e-10, max_regions=1)
+    regional = raw_quadax(case, LibraryMethod.GAUSS_KRONROD, controls)(
+        jnp.asarray(1.0)
+    )._replace(status=jnp.asarray(2))
+    extrapolation = raw_quadax(case, LibraryMethod.ROMBERG, controls)(
+        jnp.asarray(1.0)
+    )._replace(status=jnp.asarray(2))
+
+    assert (
+        normalize_result(
+            regional,
+            library="quadax",
+            family=LibraryMethod.GAUSS_KRONROD,
+        ).semantic_status
+        == "max_regions"
+    )
+    assert (
+        normalize_result(
+            extrapolation,
+            library="quadax",
+            family=LibraryMethod.ROMBERG,
+        ).semantic_status
+        == "tolerance_not_met"
+    )
+
+
 def test_romberg_pair_accepts_evaluation_capacity_as_adapter_control() -> None:
     case = _case("smooth_exponential")
     raw = raw_jaxstro(
