@@ -743,16 +743,29 @@ def _timing_record_subprocess(precision: str, index: int) -> dict[str, Any]:
 
 def run_timing_suite() -> dict[str, Any]:
     """Measure every record in a fresh process to isolate compilation caches."""
+    indexed_specs = [
+        (precision, index, spec)
+        for precision in PRECISIONS
+        for index, spec in enumerate(_record_specs(precision))
+    ]
+    records = []
+    for sequence, (precision, index, spec) in enumerate(indexed_specs, start=1):
+        if os.environ.get("JAXSTRO_BENCHMARK_PROGRESS") == "1":
+            print(
+                "timing",
+                f"{sequence}/{len(indexed_specs)}",
+                precision,
+                spec["case"].name,
+                spec["family"].value,
+                flush=True,
+            )
+        records.append(_timing_record_subprocess(precision, index))
     return {
         "schema_version": 1,
         "source_revision": _source_revision(),
         "environment": _environment(),
         "process_isolation": "fresh_process_per_record",
-        "records": [
-            _timing_record_subprocess(precision, index)
-            for precision in PRECISIONS
-            for index, _ in enumerate(_record_specs(precision))
-        ],
+        "records": records,
     }
 
 
