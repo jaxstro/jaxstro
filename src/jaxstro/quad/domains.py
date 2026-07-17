@@ -7,6 +7,7 @@ import jax
 import jax.numpy as jnp
 from jaxtyping import Array
 
+from jaxstro.numerics.checks import try_concrete_bool
 from jaxstro.quantity import Unit
 
 
@@ -86,6 +87,42 @@ class Infinite:
         return cls(unit=unit)
 
 
+@jax.tree_util.register_pytree_node_class
+@dataclass(frozen=True)
+class Hyperrectangle:
+    lower: Any
+    upper: Any
+
+    def __post_init__(self) -> None:
+        lower_shape = jnp.shape(self.lower)
+        upper_shape = jnp.shape(self.upper)
+        if len(lower_shape) != 1 or len(upper_shape) != 1:
+            raise ValueError("Hyperrectangle bounds must be one-dimensional")
+        if lower_shape != upper_shape:
+            raise ValueError("Hyperrectangle bounds must have matching shapes")
+        if lower_shape[0] == 0:
+            raise ValueError("Hyperrectangle must have positive dimension")
+        finite = try_concrete_bool(
+            jnp.all(jnp.isfinite(self.lower)) & jnp.all(jnp.isfinite(self.upper))
+        )
+        if finite is False:
+            raise ValueError("Hyperrectangle bounds must be finite")
+
+    @property
+    def dimension(self) -> int:
+        return jnp.shape(self.lower)[0]
+
+    def tree_flatten(self):
+        return (self.lower, self.upper), self.dimension
+
+    @classmethod
+    def tree_unflatten(cls, dimension: int, children):
+        domain = cls(*children)
+        if domain.dimension != dimension:
+            raise ValueError("invalid Hyperrectangle PyTree dimension")
+        return domain
+
+
 def improper_scale_value(domain: RightInfinite | LeftInfinite | Infinite):
     """Return the stopped scalar map scale, defaulting to the legacy value."""
     raw_scale = 1.0 if domain.scale is None else domain.scale
@@ -130,3 +167,13 @@ def interval_is_valid(domain: Interval) -> Array:
     interior = jnp.all((points > lo) & (points < hi))
     unique = jnp.all(jnp.diff(ascending) > 0.0)
     return finite & interior & unique
+
+
+def hyperrectangle_is_valid(domain: Hyperrectangle) -> Array:
+    lower = jnp.asarray(domain.lower)
+    upper = jnp.asarray(domain.upper)
+    return jnp.all(jnp.isfinite(lower) & jnp.isfinite(upper))
+
+
+def hyperrectangle_orientation(domain: Hyperrectangle) -> Array:
+    return jnp.prod(jnp.sign(jnp.asarray(domain.upper) - domain.lower))

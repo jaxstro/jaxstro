@@ -2,6 +2,7 @@ import jax
 import jax.numpy as jnp
 
 from jaxstro import quad
+from jaxstro.quad.result import QuadStatus
 
 
 def _result(value):
@@ -73,3 +74,8 @@ def test_status_and_error_codes_are_stable() -> None:
     assert int(quad.ErrorKind.REPLICATE_STANDARD_ERROR) == 3
     assert int(quad.ErrorKind.CONFIDENCE_INTERVAL_HALF_WIDTH) == 4
     assert int(quad.ErrorKind.UNAVAILABLE) == 5
+
+
+def test_max_indices_appends_without_renumbering_statuses():
+    assert QuadStatus.ERROR_ESTIMATE_UNAVAILABLE == 7
+    assert QuadStatus.MAX_INDICES == 8

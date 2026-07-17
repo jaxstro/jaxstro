@@ -10,10 +10,13 @@ from ._chebyshev import clenshaw_curtis_nodes
 from ._recurrence import gauss_laguerre_nodes, gauss_legendre_nodes
 from .adaptive import integrate
 from .domains import (
+    Hyperrectangle,
     Infinite,
     Interval,
     LeftInfinite,
     RightInfinite,
+    hyperrectangle_is_valid,
+    hyperrectangle_orientation,
     interval_is_valid,
     interval_orientation,
     sorted_breakpoints,
@@ -67,6 +70,9 @@ __all__ = [
     "FejerIRule",
     "FejerIIRule",
     "fixed",
+    "Hyperrectangle",
+    "hyperrectangle_is_valid",
+    "hyperrectangle_orientation",
     "Infinite",
     "integrate",
     "Interval",

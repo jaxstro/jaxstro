@@ -15,6 +15,7 @@ class QuadStatus(IntEnum):
     DIVERGENCE_SUSPECTED = 5
     INVALID_INPUT = 6
     ERROR_ESTIMATE_UNAVAILABLE = 7
+    MAX_INDICES = 8
 
 
 class ErrorKind(IntEnum):
