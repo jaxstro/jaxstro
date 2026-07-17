@@ -127,3 +127,19 @@ def test_quadax_unknown_status_is_not_given_jaxstro_semantics() -> None:
         family=LibraryMethod.GAUSS_KRONROD,
     )
     assert normalized.semantic_status == "quadax_status_16"
+
+
+def test_romberg_pair_accepts_evaluation_capacity_as_adapter_control() -> None:
+    case = _case("smooth_exponential")
+    raw = raw_jaxstro(
+        case,
+        LibraryMethod.ROMBERG,
+        RunControls(epsabs=1.0e-8, epsrel=1.0e-8, max_regions=64),
+        (("initial_level", 1), ("max_evaluations", 1025)),
+    )(jnp.asarray(case.theta))
+    normalized = normalize_result(
+        raw,
+        library="jaxstro",
+        family=LibraryMethod.ROMBERG,
+    )
+    assert normalized.converged

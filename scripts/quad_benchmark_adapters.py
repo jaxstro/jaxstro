@@ -151,6 +151,7 @@ def raw_jaxstro(
 ) -> Callable[[jax.Array], RawBenchmarkResult]:
     """Build a device-only Jaxstro benchmark callable."""
     options = _config_dict("jaxstro", family, config)
+    evaluation_override = options.pop("max_evaluations", None)
     method = _jaxstro_method(family, options)
     capacities = matched_capacities(
         case,
@@ -167,7 +168,11 @@ def raw_jaxstro(
             method=method,
             epsabs=jnp.asarray(controls.epsabs),
             epsrel=jnp.asarray(controls.epsrel),
-            max_evaluations=capacities.jaxstro_max_evaluations,
+            max_evaluations=(
+                capacities.jaxstro_max_evaluations
+                if evaluation_override is None
+                else int(evaluation_override)
+            ),
             max_regions=capacities.jaxstro_max_regions,
             error_norm=quad.MaxNorm(),
             gradient="replay",

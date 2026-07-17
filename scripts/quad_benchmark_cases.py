@@ -389,7 +389,7 @@ CASES = (
         Interval(0.0, 1.0),
         None,
         None,
-        _analytic(r"\mathrm{NaN}\;\mathrm{for}\;|x-0.5|<0.05"),
+        _analytic(r"\operatorname{nan}\;\mathrm{for}\;|x-0.5|<0.05"),
         1.0,
         "fail_closed",
         (LibraryMethod.GAUSS_KRONROD,),
