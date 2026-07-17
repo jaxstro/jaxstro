@@ -52,3 +52,7 @@ def test_a2_method_configurations_are_canonical_public_exports() -> None:
         assert getattr(jaxstro.quad, name).__module__ == "jaxstro.quad.methods"
         assert not hasattr(integration, name)
         assert not hasattr(quadrature, name)
+
+
+def test_integrate_is_owned_by_the_family_dispatch_facade() -> None:
+    assert jaxstro.quad.integrate.__module__ == "jaxstro.quad.integrate"
