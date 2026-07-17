@@ -49,17 +49,15 @@ def test_romberg_richardson_exactness_and_zero_based_work_semantics() -> None:
     assert result.status == QuadStatus.CONVERGED
     assert jnp.allclose(result.value, 2.0 / 3.0, atol=2e-13)
     assert result.error.kind == ErrorKind.REFINEMENT_DIFFERENCE
-    assert result.work.evaluations == 5
-    assert result.work.levels == 3
-    assert result.work.refinements == 2
+    assert result.work.evaluations == 17
+    assert result.work.levels == 5
+    assert result.work.refinements == 4
     assert result.work.active_regions == 1
 
 
-@pytest.mark.parametrize(
-    ("degree", "evaluations", "level"), [(2, 5, 2), (4, 9, 3), (6, 17, 4)]
-)
+@pytest.mark.parametrize("degree", [2, 4, 6])
 def test_romberg_exact_work_advances_one_complete_grid_at_a_time(
-    degree, evaluations, level
+    degree,
 ) -> None:
     result = integrate(
         lambda x: x**degree,
@@ -67,9 +65,9 @@ def test_romberg_exact_work_advances_one_complete_grid_at_a_time(
         **_options(Romberg(initial_level=1)),
     )
     assert result.status == QuadStatus.CONVERGED
-    assert result.work.evaluations == evaluations == 2**level + 1
-    assert result.work.refinements == level
-    assert result.work.levels == level + 1
+    assert result.work.evaluations == 17 == 2**4 + 1
+    assert result.work.refinements == 4
+    assert result.work.levels == 5
 
 
 def test_romberg_supports_vector_and_complex_payloads() -> None:
@@ -245,6 +243,27 @@ def test_romberg_propagated_floor_prevents_cancellation_false_success() -> None:
     )
     assert result.status != QuadStatus.CONVERGED
     assert result.error.norm > result.tolerance
+
+
+def test_romberg_requires_enough_levels_to_break_dyadic_oscillation_aliasing() -> None:
+    with jax.enable_x64(False):
+        result = integrate(
+            lambda x: jnp.cos(jnp.asarray(50.0, dtype=jnp.float32) * x),
+            Interval(
+                jnp.asarray(0.0, dtype=jnp.float32), jnp.asarray(1.0, dtype=jnp.float32)
+            ),
+            **_options(
+                Romberg(initial_level=1),
+                epsabs=1e-5,
+                epsrel=1e-5,
+                max_evaluations=1025,
+            ),
+        )
+        truth = jnp.sin(jnp.asarray(50.0, dtype=jnp.float32)) / 50.0
+        assert result.status == QuadStatus.MAX_EVALUATIONS
+        assert jnp.abs(result.value - truth) <= result.tolerance
+        assert result.error.norm > result.tolerance
+        assert result.work.levels >= 5
 
 
 def test_romberg_tanh_sinh_exhaustion_and_error_decomposition() -> None:

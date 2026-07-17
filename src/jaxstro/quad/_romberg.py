@@ -14,6 +14,11 @@ from .result import QuadStatus
 from .tolerance import ErrorNorm
 from .tolerance import error_norm as reduce_error_norm
 
+# A Richardson diagonal can agree accidentally on very coarse dyadic grids.
+# Requiring 16 panels before accepting convergence exposes common oscillatory
+# aliases while retaining a small fixed safety floor.
+_MINIMUM_CONVERGENCE_LEVEL = 4
+
 
 class GlobalRefinementResult(NamedTuple):
     value: Array
@@ -303,7 +308,9 @@ def romberg_refine(
         | ~jnp.all(jnp.isfinite(value))
         | ~jnp.all(jnp.isfinite(error))
     )
-    converged = reduce_error_norm(error, error_norm) <= tolerance
+    converged = (reduce_error_norm(error, error_norm) <= tolerance) & (
+        initial_level >= _MINIMUM_CONVERGENCE_LEVEL
+    )
     running = jnp.asarray(-1, dtype=jnp.int32)
     status = jnp.where(
         invalid_input,
@@ -374,7 +381,9 @@ def romberg_refine(
             | ~jnp.all(jnp.isfinite(new_value))
             | ~jnp.all(jnp.isfinite(new_error))
         )
-        new_converged = reduce_error_norm(new_error, error_norm) <= new_tolerance
+        new_converged = (reduce_error_norm(new_error, error_norm) <= new_tolerance) & (
+            level >= _MINIMUM_CONVERGENCE_LEVEL
+        )
         new_status = jnp.where(
             new_nonfinite,
             jnp.asarray(QuadStatus.NONFINITE_INTEGRAND, dtype=jnp.int32),
