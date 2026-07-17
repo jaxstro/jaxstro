@@ -82,6 +82,24 @@ FLOAT32_CASES = (
 PRECISIONS = ("float32", "float64")
 VMAP_BATCHES = (16, 128)
 TIMING_REPEATS = 21
+REPRESENTATIVE_CASES = (
+    "smooth_exponential",
+    "localized_gaussian",
+    "breakpoint_kink",
+    "endpoint_sqrt",
+    "semi_infinite_exponential",
+    "oscillatory_cosine",
+    "expensive_identity",
+)
+RATIO_ELIGIBLE_LABELS = ("exact", "strong_match", "node_matched")
+WARM_RATIO_TRIGGER = 1.25
+COMPILE_RATIO_TRIGGER = 2.0
+WORK_RATIO_TRIGGER = 1.50
+VMAP_RATIO_TRIGGER = 1.50
+AD_RATIO_TRIGGER = 1.50
+MIN_WARM_CASES = 3
+MIN_COMPILE_CASES = 2
+MIN_OTHER_CASES = 3
 
 _CONTROL_VALUES = {
     "float32": RunControls(1.0e-5, 1.0e-5, 64, 16384),
@@ -119,6 +137,7 @@ def _tree_is_clean() -> bool:
 
 
 def _cpu_model() -> str:
+    identifiers = []
     for key in ("machdep.cpu.brand_string", "hw.model"):
         completed = subprocess.run(
             ("sysctl", "-n", key),
@@ -127,7 +146,9 @@ def _cpu_model() -> str:
             check=False,
         )
         if completed.returncode == 0 and completed.stdout.strip():
-            return completed.stdout.strip()
+            identifiers.append(completed.stdout.strip())
+    if identifiers:
+        return " / ".join(identifiers)
     return platform.processor() or platform.uname().processor or "unreported"
 
 
@@ -763,6 +784,7 @@ def run_timing_suite() -> dict[str, Any]:
     return {
         "schema_version": 1,
         "source_revision": _source_revision(),
+        "controls": _controls_payload(),
         "environment": _environment(),
         "process_isolation": "fresh_process_per_record",
         "records": records,
@@ -791,18 +813,208 @@ def merge_optimized(
     }
 
 
+def _trigger_identity(record: dict[str, Any]) -> str:
+    return ".".join(
+        (
+            record["case"],
+            record["family"],
+            record["pair_variant"],
+            record["precision"],
+        )
+    )
+
+
+def _ratio_regression(
+    pair: dict[str, dict[str, Any]],
+    threshold: float,
+) -> dict[str, Any]:
+    ours = pair["jaxstro"]
+    theirs = pair["quadax"]
+    denominator = float(theirs["median_warm_seconds"])
+    ratio = (
+        float(ours["median_warm_seconds"]) / denominator
+        if denominator > 0.0
+        else math.inf
+    )
+    separated = float(ours["median_warm_seconds"]) - denominator > 2.0 * max(
+        float(ours["mad_warm_seconds"]),
+        float(theirs["mad_warm_seconds"]),
+    )
+    return {
+        "ratio": ratio,
+        "threshold": threshold,
+        "two_mad_separated": separated,
+        "trigger_case": bool(ratio > threshold and separated),
+    }
+
+
+def evaluate_optimization_triggers(
+    baseline: dict[str, Any],
+    *,
+    compile_confirmation: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Apply the frozen primary-lane optimization policy mechanically."""
+    timing_by_key = {_record_identity(record): record for record in baseline["timings"]}
+    eligible = [
+        record
+        for record in baseline["records"]
+        if record["precision"] == "float64"
+        and record["lane"] == "family_matched"
+        and record["case"] in REPRESENTATIVE_CASES
+        and record["comparison_label"] in RATIO_ELIGIBLE_LABELS
+        and record["warranted"]["primal_performance_interpretable"]
+    ]
+    warm: list[dict[str, Any]] = []
+    compile_candidates: list[dict[str, Any]] = []
+    work: list[dict[str, Any]] = []
+    vmap = {str(batch): [] for batch in VMAP_BATCHES}
+    ad = {"jvp": [], "reverse": []}
+    for record in eligible:
+        timing = timing_by_key[_record_identity(record)]
+        identity = _trigger_identity(record)
+        warm_result = _ratio_regression(timing["scalar"], WARM_RATIO_TRIGGER)
+        if warm_result["trigger_case"]:
+            warm.append({"record": identity, **warm_result})
+
+        ours_compile = float(timing["scalar"]["jaxstro"]["compile_seconds"])
+        theirs_compile = float(timing["scalar"]["quadax"]["compile_seconds"])
+        compile_ratio = (
+            ours_compile / theirs_compile if theirs_compile > 0.0 else math.inf
+        )
+        if compile_ratio > COMPILE_RATIO_TRIGGER:
+            compile_candidates.append(
+                {
+                    "record": identity,
+                    "ratio": compile_ratio,
+                    "threshold": COMPILE_RATIO_TRIGGER,
+                }
+            )
+
+        theirs_work = int(record["quadax"]["normalized_evaluations"])
+        if theirs_work > 0:
+            work_ratio = int(record["jaxstro"]["normalized_evaluations"]) / theirs_work
+            if work_ratio > WORK_RATIO_TRIGGER:
+                work.append(
+                    {
+                        "record": identity,
+                        "ratio": work_ratio,
+                        "threshold": WORK_RATIO_TRIGGER,
+                    }
+                )
+
+        for batch in VMAP_BATCHES:
+            result = _ratio_regression(timing["vmap"][str(batch)], VMAP_RATIO_TRIGGER)
+            if result["trigger_case"]:
+                vmap[str(batch)].append({"record": identity, **result})
+
+        if record["warranted"]["jvp_performance_interpretable"]:
+            result = _ratio_regression(timing["jvp"], AD_RATIO_TRIGGER)
+            if result["trigger_case"]:
+                ad["jvp"].append({"record": identity, **result})
+        if record["warranted"]["reverse_performance_interpretable"]:
+            result = _ratio_regression(timing["reverse"], AD_RATIO_TRIGGER)
+            if result["trigger_case"]:
+                ad["reverse"].append({"record": identity, **result})
+
+    confirmed_compile: list[dict[str, Any]] = []
+    confirmation_compatible = False
+    if compile_confirmation is not None:
+        confirmation_compatible = bool(
+            compile_confirmation.get("source_revision")
+            == baseline.get("source_revision")
+            and compile_confirmation.get("process_isolation")
+            == "fresh_process_per_record"
+            and compile_confirmation.get("controls") == baseline.get("controls")
+            and compile_confirmation.get("environment")
+            == baseline.get("timing_environment")
+        )
+        if confirmation_compatible:
+            confirmation_timings = {
+                _record_identity(record): record
+                for record in compile_confirmation["records"]
+            }
+            for candidate in compile_candidates:
+                source = next(
+                    record
+                    for record in eligible
+                    if _trigger_identity(record) == candidate["record"]
+                )
+                pair = confirmation_timings[_record_identity(source)]["scalar"]
+                denominator = float(pair["quadax"]["compile_seconds"])
+                ratio = (
+                    float(pair["jaxstro"]["compile_seconds"]) / denominator
+                    if denominator > 0.0
+                    else math.inf
+                )
+                if ratio > COMPILE_RATIO_TRIGGER:
+                    confirmed_compile.append(
+                        {
+                            **candidate,
+                            "confirmation_ratio": ratio,
+                        }
+                    )
+
+    fired = []
+    if len(warm) >= MIN_WARM_CASES:
+        fired.append("warm")
+    if len(work) >= MIN_OTHER_CASES:
+        fired.append("work")
+    fired.extend(
+        f"vmap_{batch}"
+        for batch, cases in vmap.items()
+        if len(cases) >= MIN_OTHER_CASES
+    )
+    fired.extend(
+        f"ad_{mode}" for mode, cases in ad.items() if len(cases) >= MIN_OTHER_CASES
+    )
+    if len(confirmed_compile) >= MIN_COMPILE_CASES:
+        fired.append("compile")
+    compile_review_required = bool(
+        len(compile_candidates) >= MIN_COMPILE_CASES
+        and len(confirmed_compile) < MIN_COMPILE_CASES
+    )
+    status = "optimization_required" if fired else "no_optimization_required"
+    if compile_review_required and not fired:
+        status = "review_required"
+    return _portable_tree(
+        {
+            "policy": "primary_float64_family_matched_representative",
+            "eligible_records": len(eligible),
+            "warm_regression_cases_over_25_percent": warm,
+            "compile_or_memory_cases_over_2x": compile_candidates,
+            "compile_confirmation_compatible": confirmation_compatible,
+            "confirmed_compile_cases_over_2x": confirmed_compile,
+            "work_inefficiency_cases": work,
+            "vmap_regression_cases": vmap,
+            "ad_regression_cases": ad,
+            "fired_triggers": fired,
+            "decision": status,
+        }
+    )
+
+
 def _baseline_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    if payload.get("timings"):
+        assessment = evaluate_optimization_triggers(payload)
+    else:
+        assessment = {
+            "fired_triggers": [],
+            "decision": "baseline_pending_timings",
+        }
     return {
         "schema_version": 1,
         "controls": copy.deepcopy(payload["controls"]),
-        "baseline": copy.deepcopy(payload),
+        "baseline": {**copy.deepcopy(payload), "trigger_assessment": assessment},
         "optimized": None,
         "ratios": None,
         "contract_parity": None,
         "optimization_decision": {
-            "status": "baseline_pending_independent_review",
-            "triggered": None,
-            "reason": "Approved optimization gates are evaluated after fairness review.",
+            "status": assessment["decision"],
+            "triggered": bool(assessment["fired_triggers"]),
+            "reason": (
+                "The frozen primary-lane trigger assessment is recorded in the "
+                "baseline payload. Profile before changing runtime code."
+            ),
         },
     }
 
@@ -1124,6 +1336,7 @@ def render_report(artifact: EvidenceArtifact) -> str:
             "## Failure semantics",
             "",
             "Jaxstro fails closed on nonfinite integrand samples. Quadax 0.2.13 masks nonfinite samples to zero, so that case is recorded as a semantic difference and excluded from performance claims.",
+            "",
         ]
     )
     eligible_labels = {
@@ -1210,6 +1423,18 @@ def render_report(artifact: EvidenceArtifact) -> str:
             f"Status: `{decision['status']}`.",
             "",
             str(decision.get("reason", "See recorded trigger ratios.")),
+            "",
+            "Fired triggers: "
+            + (
+                ", ".join(
+                    f"`{item}`"
+                    for item in active.get("trigger_assessment", {}).get(
+                        "fired_triggers", []
+                    )
+                )
+                or "none"
+            )
+            + ".",
             "",
             "## Warranted limitations",
             "",
@@ -1311,6 +1536,8 @@ def main() -> int:
     baseline = copy.deepcopy(run_deterministic_suite())
     timing = run_timing_suite()
     baseline["timings"] = timing["records"]
+    baseline["timing_environment"] = timing["environment"]
+    baseline["timing_process_isolation"] = timing["process_isolation"]
     artifact = build_artifact(baseline)
     _write_artifact(artifact)
     print(f"wrote {OUTPUT.relative_to(REPO_ROOT)} and {REPORT.relative_to(REPO_ROOT)}")

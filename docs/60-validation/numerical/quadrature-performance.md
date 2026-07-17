@@ -18,7 +18,7 @@ A faster result is not a better result unless its value, status, work accounting
 | `node_matched` | Same local node count with different estimators. | 10 |
 | `family_matched` | Same broad method family; algorithms differ. | 26 |
 | `capability` | Related capability only; no algorithmic equivalence claim. | 9 |
-| `best_method` | Independent practical choice for each library. | 16 |
+| `best_method` | Predeclared practical choice using the frozen library-specific adapter settings. | 16 |
 
 ## Cases and truth
 
@@ -30,7 +30,9 @@ The catalog includes smooth, vector-valued, localized, nonsmooth, endpoint-singu
 
 ## Accuracy and calibration
 
-45 of 78 records warrant direct performance interpretation. Reported-error ratios are calibration diagnostics, not automatic bound claims.
+49 of 78 records warrant primal timing interpretation. 30 warrant JVP timing, and 18 warrant a direct two-library reverse-mode comparison.
+
+There are 15 records with available derivative truth that fail at least one JVP gate. Records without declared derivative truth are explicitly ineligible for AD comparisons. Reported-error ratios are calibration diagnostics, not automatic bound claims.
 
 ## Work
 
@@ -38,7 +40,9 @@ Reported and normalized evaluations are retained separately. In particular, Quad
 
 ## Compile, warm, VMAP, and AD timing
 
-Lowering, compilation, warm scalar execution, VMAP batches of 16 and 128, JVP, and supported reverse mode are measured separately with synchronized outputs and interleaved library order.
+Lowering, compilation, warm scalar execution, VMAP batches of 16 and 128, JVP, and supported reverse mode are measured separately with synchronized outputs and interleaved library order. Every method-case record is measured in a fresh Python process so internal compilation caches cannot leak between records.
+
+Using a descriptive stability threshold of $\operatorname{MAD}/\operatorname{median} \le 0.10$, 198 of 752 supported timed library-mode measurements are stable. Automatic regression decisions use the stricter predeclared ratio, minimum-case, and two-MAD separation rules.
 
 ```{admonition} Timing scope
 :class: note
@@ -48,12 +52,37 @@ Wall time is informational for this recorded CPU environment and is never used a
 ## Failure semantics
 
 Jaxstro fails closed on nonfinite integrand samples. Quadax 0.2.13 masks nonfinite samples to zero, so that case is recorded as a semantic difference and excluded from performance claims.
+## Primary matched timing ratios
+
+Each timing ratio is $t_{\mathrm{jaxstro}}/t_{\mathrm{quadax}}$; each work ratio is $N_{\mathrm{jaxstro}}/N_{\mathrm{quadax}}$. Values above one therefore favor Quadax for that metric. The parenthetical timing label states whether the Jaxstro slowdown exceeds twice the larger MAD; it is not a winner declaration.
+
+| Case | Family | Compile | Warm | VMAP 128 | JVP | Work |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| `smooth_exponential` | `gauss_kronrod` | not warranted | not warranted | not warranted | not warranted | not warranted |
+| `smooth_exponential` | `clenshaw_curtis` | 1.15 | 0.87 (not separated) | 0.02 (not separated) | 0.68 (not separated) | 1.00 |
+| `smooth_exponential` | `romberg` | 1.69 | 1.84 (not separated) | 2.78 (separated) | 2.91 (separated) | 1.00 |
+| `localized_gaussian` | `gauss_kronrod` | not warranted | not warranted | not warranted | not warranted | not warranted |
+| `localized_gaussian` | `clenshaw_curtis` | 1.30 | 1.32 (not separated) | 0.24 (not separated) | not warranted | 1.22 |
+| `breakpoint_kink` | `gauss_kronrod` | not warranted | not warranted | not warranted | not warranted | not warranted |
+| `breakpoint_kink` | `clenshaw_curtis` | 1.48 | 0.71 (not separated) | 0.03 (not separated) | not warranted | 1.00 |
+| `oscillatory_cosine` | `gauss_kronrod` | not warranted | not warranted | not warranted | not warranted | not warranted |
+| `oscillatory_cosine` | `clenshaw_curtis` | 0.61 | 0.68 (not separated) | 0.61 (not separated) | 1.35 (not separated) | 1.85 |
+| `oscillatory_cosine` | `romberg` | 0.80 | 1.99 (separated) | 1.63 (separated) | 1.83 (not separated) | 1.00 |
+| `expensive_identity` | `gauss_kronrod` | not warranted | not warranted | not warranted | not warranted | not warranted |
+| `expensive_identity` | `clenshaw_curtis` | 0.93 | 0.76 (not separated) | 0.01 (not separated) | 0.90 (not separated) | 1.00 |
+| `expensive_identity` | `romberg` | 1.48 | 1.84 (separated) | 6.74 (separated) | 1.86 (separated) | 1.00 |
+
+```{admonition} Scope of this table
+:class: note
+The table is restricted to the predeclared primary float64, family-matched, representative, ratio-eligible lane. Capability-only and practical-choice records remain in the machine-readable artifact but cannot drive matched-method superiority claims.
+```
 
 ## Environment
 
-Source revision: `7c3a61243d4d9a2d1f19ce8b43b19adbba2371c8`
+Source revision: `20e8796afb4d8fb5af2d19ddd7fb03c462862674`
 
 - `backend`: `cpu`
+- `cpu_model`: `arm`
 - `device`: `cpu:0`
 - `device_kind`: `cpu`
 - `jax_version`: `0.10.1`

@@ -51,3 +51,23 @@ The three float64 VMAP-128 and JVP cases are smooth, oscillatory, and expensive-
 - AD ineligibility when derivative truth is absent.
 - Auditable researcher-facing report with stability and eligibility summaries.
 - Independent post-fix review of the re-emitted clean baseline.
+
+## Post-fix independent review
+
+The clean baseline emitted from revision `20e8796afb4d8fb5af2d19ddd7fb03c462862674` is green for optimization profiling. All 78 deterministic identities have one matching fresh-process timing record with 21 repetitions. The reviewer found no remaining Critical fairness defects and verified that the status, mode-specific warrant, derivative-truth, wording, noise-disclosure, and report-auditability corrections are effective.
+
+The independent mechanical recomputation found:
+
+| Gate | Eligible cases | Required | Result |
+| --- | ---: | ---: | --- |
+| Warm, ratio above 1.25 | 2 | 3 | Does not trigger |
+| Compile, ratio above 2.0 | 0 | 2 | Does not trigger |
+| Work, ratio above 1.50 | 1 | 3 | Does not trigger |
+| VMAP 16, ratio above 1.50 | 2 | 3 | Does not trigger |
+| VMAP 128, ratio above 1.50 | 3 | 3 | Triggers |
+| JVP, ratio above 1.50 | 2 | 3 | Does not trigger |
+| Reverse mode, ratio above 1.50 | 0 | 3 | Does not trigger |
+
+The qualifying VMAP-128 records are smooth Romberg at 2.78, oscillatory Romberg at 1.63, and expensive-integrand Romberg at 6.74. Each passes the correctness, comparison-label, representative-case, ratio, and two-MAD separation gates.
+
+One Important provenance correction remains before final public performance evidence: the sandboxed run recorded `cpu_model=arm`. This does not invalidate paired within-machine ratios or the profiling trigger, but the final clean emission must capture the actual Apple chip and hardware model.

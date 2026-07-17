@@ -217,6 +217,17 @@ def test_freshness_ignores_timings_but_rejects_accuracy_drift() -> None:
     assert not benchmark_quad.algorithmic_metrics_match(stored, current)
 
 
+def test_emitted_baseline_mechanically_triggers_romberg_vmap_128() -> None:
+    artifact = artifact_from_dict(
+        json.loads(benchmark_quad.OUTPUT.read_text(encoding="utf-8"))
+    )
+    baseline = artifact.method_payload["baseline"]
+    assessment = benchmark_quad.evaluate_optimization_triggers(baseline)
+    assert assessment["decision"] == "optimization_required"
+    assert "vmap_128" in assessment["fired_triggers"]
+    assert len(assessment["vmap_regression_cases"]["128"]) >= 3
+
+
 def test_check_mode_requires_the_emitted_artifact() -> None:
     completed = subprocess.run(
         [sys.executable, ROOT / "scripts" / "benchmark_quad.py", "--check"],
