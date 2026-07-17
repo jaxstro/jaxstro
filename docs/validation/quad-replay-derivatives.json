@@ -1141,7 +1141,7 @@
       ],
       [
         "git_revision",
-        "88192affca0b0191da2d5371f295fde66223d106"
+        "251d997723114c5a92d388cc87aadc0e68fd0799"
       ],
       [
         "jax_backend",
@@ -1153,7 +1153,7 @@
       ],
       [
         "measured_at_utc",
-        "2026-07-16T13:16:20.317934+00:00"
+        "2026-07-17T07:04:54.021102+00:00"
       ],
       [
         "platform",
@@ -3153,26 +3153,26 @@
         "method": "romberg",
         "tolerances": [
           {
-            "accepted_level": 4,
+            "accepted_level": 5,
             "accepted_regions": 1,
-            "derivative_relative_error": 5.05923434206001e-12,
+            "derivative_relative_error": 1.6932975239507364e-16,
             "epsabs": 1e-06,
             "epsrel": 1e-06,
             "max_evaluations": 257,
             "max_regions": 1,
             "passed": true,
-            "primal_relative_error": 1.3182954200766942e-13
+            "primal_relative_error": 3.6117682741827235e-16
           },
           {
-            "accepted_level": 4,
+            "accepted_level": 5,
             "accepted_regions": 1,
-            "derivative_relative_error": 5.05923434206001e-12,
+            "derivative_relative_error": 1.6932975239507364e-16,
             "epsabs": 1e-08,
             "epsrel": 1e-08,
             "max_evaluations": 257,
             "max_regions": 1,
             "passed": true,
-            "primal_relative_error": 1.3182954200766942e-13
+            "primal_relative_error": 3.6117682741827235e-16
           },
           {
             "accepted_level": 5,
@@ -4064,5 +4064,5 @@
   "package_version": "0.1.0",
   "precision": "float64",
   "schema_version": "1",
-  "source_revision": "88192affca0b0191da2d5371f295fde66223d106"
+  "source_revision": "251d997723114c5a92d388cc87aadc0e68fd0799"
 }

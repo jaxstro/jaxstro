@@ -41,7 +41,7 @@
       "target": "docs/validation/quad-performance.json"
     },
     {
-      "content_digest": "sha256:039d60413f749f305383d97de9b61b5940098bb922555572b3d3735559cf72c5",
+      "content_digest": "sha256:03bb4c92aaf9c93368235adb7dd76276c5340d7205fc7b9957b2cdee6fba3e3d",
       "evidence_class": "computational",
       "id": "quad.replay-derivatives",
       "limitations": [
@@ -52,7 +52,7 @@
       ],
       "optional_data_policy": "No external data required.",
       "schema_version": "1",
-      "source_revision": "88192affca0b0191da2d5371f295fde66223d106",
+      "source_revision": "251d997723114c5a92d388cc87aadc0e68fd0799",
       "target": "docs/validation/quad-replay-derivatives.json"
     },
     {

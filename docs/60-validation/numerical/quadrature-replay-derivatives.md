@@ -2254,26 +2254,26 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "method": "romberg",
       "tolerances": [
         {
-          "accepted_level": 4,
+          "accepted_level": 5,
           "accepted_regions": 1,
-          "derivative_relative_error": 5.05923434206001e-12,
+          "derivative_relative_error": 1.6932975239507364e-16,
           "epsabs": 1e-06,
           "epsrel": 1e-06,
           "max_evaluations": 257,
           "max_regions": 1,
           "passed": true,
-          "primal_relative_error": 1.3182954200766942e-13
+          "primal_relative_error": 3.6117682741827235e-16
         },
         {
-          "accepted_level": 4,
+          "accepted_level": 5,
           "accepted_regions": 1,
-          "derivative_relative_error": 5.05923434206001e-12,
+          "derivative_relative_error": 1.6932975239507364e-16,
           "epsabs": 1e-08,
           "epsrel": 1e-08,
           "max_evaluations": 257,
           "max_regions": 1,
           "passed": true,
-          "primal_relative_error": 1.3182954200766942e-13
+          "primal_relative_error": 3.6117682741827235e-16
         },
         {
           "accepted_level": 5,
