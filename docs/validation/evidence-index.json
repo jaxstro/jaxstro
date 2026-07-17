@@ -25,7 +25,7 @@
       "target": "docs/50-api/research-infrastructure/source-provenance/source-provenance.md"
     },
     {
-      "content_digest": "sha256:9c2e2f3368873affa7539b0c3175b76b4b8564346125a0da2c146ebcc9bc1c10",
+      "content_digest": "sha256:f180998ce250ad422397faf3f0dc4ebda870c1a998c845e416034d1a59b16f38",
       "evidence_class": "computational",
       "id": "quad.performance",
       "limitations": [
