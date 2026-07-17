@@ -1,4 +1,4 @@
-"""One-dimensional integration domains."""
+"""Integration domains."""
 
 from dataclasses import dataclass, field
 from typing import Any
@@ -94,6 +94,8 @@ class Hyperrectangle:
     upper: Any
 
     def __post_init__(self) -> None:
+        object.__setattr__(self, "lower", jnp.asarray(self.lower))
+        object.__setattr__(self, "upper", jnp.asarray(self.upper))
         lower_shape = jnp.shape(self.lower)
         upper_shape = jnp.shape(self.upper)
         if len(lower_shape) != 1 or len(upper_shape) != 1:
