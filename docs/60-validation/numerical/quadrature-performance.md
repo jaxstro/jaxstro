@@ -42,7 +42,7 @@ Reported and normalized evaluations are retained separately. In particular, Quad
 
 Lowering, compilation, warm scalar execution, VMAP batches of 16 and 128, JVP, and supported reverse mode are measured separately with synchronized outputs and interleaved library order. Every method-case record is measured in a fresh Python process so internal compilation caches cannot leak between records.
 
-Using a descriptive stability threshold of $\operatorname{MAD}/\operatorname{median} \le 0.10$, 559 of 752 supported timed library-mode measurements are stable. Automatic regression decisions use the stricter predeclared ratio, minimum-case, and two-MAD separation rules.
+Using a descriptive stability threshold of $\operatorname{MAD}/\operatorname{median} \le 0.10$, 403 of 752 supported timed library-mode measurements are stable. Automatic regression decisions use the stricter predeclared ratio, minimum-case, and two-MAD separation rules.
 
 ```{admonition} Timing scope
 :class: note
@@ -60,18 +60,18 @@ Each timing ratio is $t_{\mathrm{jaxstro}}/t_{\mathrm{quadax}}$; each work ratio
 | Case | Family | Compile | Warm | VMAP 128 | JVP | Work |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
 | `smooth_exponential` | `gauss_kronrod` | not warranted | not warranted | not warranted | not warranted | not warranted |
-| `smooth_exponential` | `clenshaw_curtis` | 1.07 | 0.71 (not separated) | 0.02 (not separated) | 0.77 (not separated) | 1.00 |
-| `smooth_exponential` | `romberg` | 1.66 | 1.63 (separated) | 2.69 (separated) | 1.67 (separated) | 1.00 |
+| `smooth_exponential` | `clenshaw_curtis` | 0.78 | 0.76 (not separated) | 0.02 (not separated) | 0.73 (not separated) | 1.00 |
+| `smooth_exponential` | `romberg` | 1.46 | 0.63 (not separated) | 1.04 (not separated) | 1.51 (separated) | 1.00 |
 | `localized_gaussian` | `gauss_kronrod` | not warranted | not warranted | not warranted | not warranted | not warranted |
-| `localized_gaussian` | `clenshaw_curtis` | 1.20 | 0.85 (not separated) | 0.23 (not separated) | not warranted | 1.22 |
+| `localized_gaussian` | `clenshaw_curtis` | 1.09 | 0.82 (not separated) | 0.24 (not separated) | not warranted | 1.22 |
 | `breakpoint_kink` | `gauss_kronrod` | not warranted | not warranted | not warranted | not warranted | not warranted |
-| `breakpoint_kink` | `clenshaw_curtis` | 1.26 | 0.81 (not separated) | 0.02 (not separated) | not warranted | 1.00 |
+| `breakpoint_kink` | `clenshaw_curtis` | 1.33 | 0.75 (not separated) | 0.02 (not separated) | not warranted | 1.00 |
 | `oscillatory_cosine` | `gauss_kronrod` | not warranted | not warranted | not warranted | not warranted | not warranted |
-| `oscillatory_cosine` | `clenshaw_curtis` | 1.20 | 1.38 (separated) | 0.60 (not separated) | 1.21 (separated) | 1.85 |
-| `oscillatory_cosine` | `romberg` | 1.61 | 2.14 (separated) | 1.56 (separated) | 2.30 (separated) | 1.00 |
+| `oscillatory_cosine` | `clenshaw_curtis` | 1.06 | 1.25 (separated) | 0.59 (not separated) | 1.24 (not separated) | 1.85 |
+| `oscillatory_cosine` | `romberg` | 1.18 | 0.91 (not separated) | 0.67 (not separated) | 1.69 (separated) | 1.00 |
 | `expensive_identity` | `gauss_kronrod` | not warranted | not warranted | not warranted | not warranted | not warranted |
-| `expensive_identity` | `clenshaw_curtis` | 1.06 | 0.73 (not separated) | 0.01 (not separated) | 0.79 (not separated) | 1.00 |
-| `expensive_identity` | `romberg` | 1.77 | 1.74 (separated) | 6.32 (separated) | 2.03 (separated) | 1.00 |
+| `expensive_identity` | `clenshaw_curtis` | 1.20 | 0.81 (not separated) | 0.01 (not separated) | 0.73 (not separated) | 1.00 |
+| `expensive_identity` | `romberg` | 0.63 | 1.01 (not separated) | 0.54 (not separated) | 1.32 (not separated) | 1.00 |
 
 ```{admonition} Scope of this table
 :class: note
@@ -80,7 +80,7 @@ The table is restricted to the predeclared primary float64, family-matched, repr
 
 ## Environment
 
-Source revision: `2378e4d19d0e63bd13e17f8dbf6b499128f1ae02`
+Source revision: `692df91cf727bd66442ad97172fdab6854201e49`
 
 - `backend`: `cpu`
 - `cpu_model`: `Apple M2 Max / Mac14,5`
@@ -97,11 +97,11 @@ Source revision: `2378e4d19d0e63bd13e17f8dbf6b499128f1ae02`
 
 ## Optimization decision
 
-Status: `optimization_required`.
+Status: `optimized_result_recorded`.
 
-The frozen primary-lane trigger assessment is recorded in the baseline payload. Profile before changing runtime code.
+Optimized evidence preserves the reviewed baseline and passes the scientific contract-parity gate.
 
-Fired triggers: `warm`, `vmap_128`, `ad_jvp`.
+Fired triggers: none.
 
 ## Warranted limitations
 
