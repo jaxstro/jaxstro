@@ -105,12 +105,12 @@
     },
     {
       "active_regions": 1,
-      "evaluations": 9,
-      "levels": 4,
+      "evaluations": 17,
+      "levels": 5,
       "method": "romberg-1",
-      "observed_absolute_error": 1.0674648986963575e-07,
-      "refinements": 3,
-      "reported_indicator_norm": 6.840953530417188e-05,
+      "observed_absolute_error": 4.2089887131169235e-11,
+      "refinements": 4,
+      "reported_indicator_norm": 1.0670443802493604e-07,
       "requested_tolerance": 0.0001,
       "status": 0
     },
