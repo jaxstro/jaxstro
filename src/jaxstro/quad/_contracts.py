@@ -152,6 +152,17 @@ _ADAPTIVE_QUANTITY_EVIDENCE = EvidenceReference(
     ),
 )
 
+_ADAPTIVE_PERFORMANCE_EVIDENCE = EvidenceReference(
+    id="quad-performance",
+    kind=EvidenceKind.ARTIFACT,
+    target="docs/validation/quad-performance.json",
+    claim=(
+        "Matched Jaxstro and Quadax correctness, work, transformation, and "
+        "timing evidence supports only the labeled records and recorded "
+        "hardware envelope, not universal superiority."
+    ),
+)
+
 _ADAPTIVE_CONTRACT = CallableContract(
     id="quad-integrate",
     import_path="jaxstro.quad.integrate",
@@ -236,6 +247,7 @@ _ADAPTIVE_CONTRACT = CallableContract(
         _ADAPTIVE_REPLAY_EVIDENCE,
         _ADAPTIVE_REPLAY_ARTIFACT,
         _ADAPTIVE_QUANTITY_EVIDENCE,
+        _ADAPTIVE_PERFORMANCE_EVIDENCE,
     ),
     limitations=(
         "Estimator convergence is not a universal bound on true error.",

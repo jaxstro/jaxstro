@@ -25,6 +25,22 @@
       "target": "docs/50-api/research-infrastructure/source-provenance/source-provenance.md"
     },
     {
+      "content_digest": "sha256:9c2e2f3368873affa7539b0c3175b76b4b8564346125a0da2c146ebcc9bc1c10",
+      "evidence_class": "computational",
+      "id": "quad.performance",
+      "limitations": [
+        "CPU wall time is hardware- and load-dependent and is not a CI gate.",
+        "Family-matched labels do not imply identical algorithms or failure semantics.",
+        "Jaxstro replay derivatives and Quadax adaptive-loop derivatives have different policies.",
+        "No backend-portable peak device-memory metric is claimed.",
+        "The nonfinite case intentionally exposes Quadax zero-substitution behavior."
+      ],
+      "optional_data_policy": "No external data required; timings are bounded to the recorded machine.",
+      "schema_version": "1",
+      "source_revision": "35736fcc0fdaa7932b3bc67780567e24cf94638a",
+      "target": "docs/validation/quad-performance.json"
+    },
+    {
       "content_digest": "sha256:039d60413f749f305383d97de9b61b5940098bb922555572b3d3735559cf72c5",
       "evidence_class": "computational",
       "id": "quad.replay-derivatives",

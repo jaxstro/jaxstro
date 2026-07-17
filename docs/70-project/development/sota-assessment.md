@@ -24,7 +24,7 @@ feature list.
 | Dimensional safety | implemented | `jaxstro.units` is canonical; `jaxstro.quantity` is implemented, and adaptive quadrature has an alpha opt-in adapter without claiming ecosystem adoption. |
 | API cohesion | validated | Grouped owner pages, export checks, typed results, and focused tests expose stable contracts. |
 | Serialization | implemented | Quantity and provenance records have explicit round trips, but no public root-result replay serializer is validated. |
-| Performance and compilation evidence | implemented | Rootfinding and spectra use units-explicit evidence records; compile, graph, runtime, and memory coverage is not uniform. |
+| Performance and compilation evidence | validated | Rootfinding and spectra use units-explicit evidence records. Quadrature adds truth-gated matched-library labels, normalized work, isolated compile/scalar/VMAP/AD timings, compiler-cost profiling, and two-suite optimization acceptance; coverage is still not uniform across the package. |
 | Evidence freshness | validated | Computational artifacts, scientific policy, and source-backed provenance remain distinct and freshness checked. |
 | Provenance | validated | Runtime manifests and source-backed cards answer different questions while sharing deterministic identity and digest mechanics. |
 | Research workflow coverage | implemented | Three executable investigations connect public APIs to contracts, indexed evidence, limitations, and warranted claims. |
@@ -49,15 +49,14 @@ Future runtime ownership follows this exact order:
 The active exception is to complete the approved `jaxstro.quad` program before this queue.
 Its fixed and adaptive methods, first-order accepted-formula replay derivatives,
 moving-bound contracts, alpha quantity adapter, derivations, and deterministic
-evidence are implemented. Matched external performance comparisons,
-later-dimensional methods, and downstream adoption remain open gates.
+evidence and the Phase A matched external comparison are implemented.
+Later-dimensional methods and downstream adoption remain open gates.
 
 1. `jaxstro.ml`
-2. `jaxstro.numerics.qmc`
-3. `jaxstro.uncertainty`
-4. `jaxstro.signal`
-5. consumer-driven ecosystem adapters
-6. fields only after two consumers
+2. `jaxstro.uncertainty`
+3. `jaxstro.signal`
+4. consumer-driven ecosystem adapters
+5. fields only after two consumers
 
 Lineax owns general iterative linear solving, Optimistix owns general nonlinear
 systems, and Diffrax owns adaptive differential equations.
@@ -102,21 +101,23 @@ last-verified revisions.
 
 ## Next
 
-### 1. Build the minimal `jaxstro.ml` evidence-complete slice
+### 1. Approve the next `jaxstro.quad` capability family
+
+**Impact.** Phase B can extend the same typed evidence model to
+multidimensional integration without prematurely coupling adaptive cubature,
+sparse grids, and randomized quasi-Monte Carlo.
+
+**Evidence gate.** A reviewed design freezes domains, estimators, work,
+statistical semantics where applicable, JAX transformations, comparison
+protocols, and the smallest independently useful implementation slice.
+
+### 2. Build the minimal `jaxstro.ml` evidence-complete slice
 
 **Impact.** Shared preprocessing, data plans, and fixed-step training become
 auditable without duplicating Equinox or Optax.
 
 **Evidence gate.** Deterministic restart, leakage, mask, key, and manifest checks
 pass on a bounded reference workflow.
-
-### 2. Add `jaxstro.numerics.qmc`
-
-**Impact.** Population and nested-expectation workflows gain reproducible
-low-discrepancy construction.
-
-**Evidence gate.** Reference sequences, scrambles, discrepancy, and convergence
-checks pass with explicit key ownership.
 
 ### 3. Add `jaxstro.uncertainty`
 

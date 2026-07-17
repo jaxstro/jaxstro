@@ -96,7 +96,58 @@ def test_committed_route_manifest_matches_authored_navigation_routes() -> None:
     assert manifest["60-validation/numerical/quadrature-replay-derivatives.md"] == (
         "/quadrature-replay-derivatives"
     )
+    assert manifest["60-validation/numerical/quadrature-performance.md"] == (
+        "/quadrature-performance"
+    )
     assert manifest["60-validation/data/spectra-performance.md"] == (
         "/spectra-performance"
     )
     assert len(manifest.values()) == len(set(manifest.values()))
+
+
+def test_quadrature_comparison_claims_are_routed_and_calibrated() -> None:
+    performance_payload = json.loads(
+        (REPO_ROOT / "docs/validation/quad-performance.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    api_text = (REPO_ROOT / "docs/50-api/approximation-integration/quad.md").read_text(
+        encoding="utf-8"
+    )
+    adaptive_text = (
+        REPO_ROOT / "docs/20-methods/approximation-integration/adaptive-quadrature.md"
+    ).read_text(encoding="utf-8")
+    validation_text = (REPO_ROOT / "docs/60-validation/validation.md").read_text(
+        encoding="utf-8"
+    )
+    combined_public_text = "\n".join((api_text, adaptive_text, validation_text))
+
+    first = performance_payload["method_payload"]["baseline"]["records"][0]
+    assert "comparison_label" in first
+    normalized_api_text = api_text.casefold()
+    for phrase in (
+        "exact",
+        "strong-match",
+        "node-matched",
+        "family-matched",
+        "capability comparison",
+        "shipped and validated",
+        "benchmarking",
+        "alpha",
+        "approved but planned",
+        "intentionally unsupported",
+        "Migrating to `jaxstro.quad`",
+        "jaxstro.numerics.integration",
+    ):
+        assert phrase.casefold() in normalized_api_text
+    assert (
+        "[quadrature performance and comparison]"
+        "(../../60-validation/numerical/quadrature-performance.md)" in adaptive_text
+    )
+    assert "quad.performance" in validation_text
+    for unsupported_claim in (
+        "Jaxstro is universally fastest",
+        "Jaxstro is universally best",
+        "Jaxstro is universally SOTA",
+    ):
+        assert unsupported_claim not in combined_public_text

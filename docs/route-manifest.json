@@ -135,6 +135,7 @@
   "60-validation/evidence-index.md": "/evidence-index",
   "60-validation/methods/validation-methods.md": "/validation-methods",
   "60-validation/numerical/implicit-root-gradients.md": "/implicit-root-gradients",
+  "60-validation/numerical/quadrature-performance.md": "/quadrature-performance",
   "60-validation/numerical/quadrature-replay-derivatives.md": "/quadrature-replay-derivatives",
   "60-validation/numerical/rootfinding-performance.md": "/rootfinding-performance",
   "60-validation/validation.md": "/validation",

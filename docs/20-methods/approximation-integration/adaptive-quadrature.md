@@ -17,6 +17,22 @@ The reported error is evidence from a named estimator, not an exact error
 certificate. Two related rules can miss the same unresolved feature.
 :::
 
+:::{important} What the matched benchmark currently supports
+On the recorded Apple M2 Max CPU envelope, two fresh-process suites measured
+classical Romberg VMAP-128 speedups of $2.85\times$ and $2.76\times$ for a
+smooth exponential, $2.53\times$ and $2.48\times$ for an oscillatory cosine,
+and $12.45\times$ and $12.37\times$ for an expensive integrand relative to the
+reviewed pre-optimization Jaxstro baseline. The same suites found no
+reproducible scalar or JVP regression across contract-warranted Romberg
+records.
+
+The external Jaxstro-versus-Quadax ratios use explicit exact, strong-match,
+node-matched, family-matched, capability, or predeclared best-method labels.
+They are evidence for those records on that machine, not a claim that one
+library is universally superior. See [quadrature performance and comparison](../../60-validation/numerical/quadrature-performance.md)
+for the complete truth gates, controls, work normalization, and limitations.
+:::
+
 ## Before computation: what should be true?
 
 Write the integral, domain, measure, and expected difficult structure before

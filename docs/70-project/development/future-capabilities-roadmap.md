@@ -53,8 +53,14 @@ or the public owner of Jaxstro's integration contract.
   controllers with typed failure evidence.
 - [x] Add replay derivatives, moving-bound evidence, and the alpha quantity
   boundary for all five adaptive methods.
-- [ ] Complete the matched external comparison, migration guidance, and the
-  Phase A release gate.
+- [x] Complete the matched external comparison, migration guidance, and the
+  Phase A release gate with immutable truth-gated evidence on the recorded
+  Apple M2 Max CPU envelope.
+- [ ] Design and approve Phase B hyperrectangle integration, adaptive cubature,
+  sparse grids, and randomized quasi-Monte Carlo before implementing any one
+  family.
+- [ ] Design Phase C native scientific geometries and specialized integral
+  families only after the Phase B evidence boundary is established.
 
 The priority order is fixed. Later items do not leapfrog earlier items merely
 because a prototype exists.
@@ -74,17 +80,7 @@ Equinox owns callable PyTrees and neural modules. Optax owns optimizer
 transformations. Jaxstro does not need a model zoo, optimizer zoo, or second
 provenance system.
 
-### Priority 2: `jaxstro.numerics.qmc`
-
-Own sequence construction and evidence for fixed-shape quasi-Monte Carlo
-workflows.
-
-- [ ] Add reference-checked Sobol construction and replicated scrambles.
-- [ ] Add Latin-hypercube construction with explicit key ownership.
-- [ ] Add discrepancy diagnostics and replicated convergence evidence.
-- [ ] Record sequence, scramble, dimension, sample count, and seed provenance.
-
-### Priority 3: `jaxstro.uncertainty`
+### Priority 2: `jaxstro.uncertainty`
 
 Own mathematical propagation through an already specified scientific map.
 
@@ -96,7 +92,7 @@ Own mathematical propagation through an already specified scientific map.
 This module would propagate uncertainty; it would not construct posteriors or
 duplicate NumPyro, BlackJAX, or Informax.
 
-### Priority 4: `jaxstro.signal`
+### Priority 3: `jaxstro.signal`
 
 Own scientific conventions around sampled axes and spectral interpretation.
 
@@ -108,7 +104,7 @@ Own scientific conventions around sampled axes and spectral interpretation.
 JAX owns FFT and convolution mechanics. Jaxstro adds a function only when it
 adds a scientific contract rather than another spelling of `jax.numpy`.
 
-### Priority 5: consumer-driven ecosystem adapters
+### Priority 4: consumer-driven ecosystem adapters
 
 General solvers remain delegated. A small adapter is justified only when a
 consumer needs units, shape policy, telemetry, provenance, or evidence absent
@@ -116,14 +112,14 @@ from the underlying owner.
 
 - [ ] Use Lineax and JAX for iterative linear systems; add no Jaxstro solver clone.
 - [ ] Use Optimistix for nonlinear systems, fixed points, and minimization.
-- [ ] Use Quadax as an independent adaptive-quadrature validation and benchmark
+- [x] Use Quadax as an independent adaptive-quadrature validation and benchmark
   comparator without adding it as a runtime dependency.
 - [ ] Use Diffrax for adaptive ODE, SDE, and CDE solving.
 - [ ] Require a concrete consumer and an adapter-specific evidence gap before
   proposing any wrapper.
 - [ ] Keep adapter status, dependency cost, and upstream behavior explicit.
 
-### Priority 6: fields only after two consumers
+### Priority 5: fields only after two consumers
 
 Multidimensional fields remain a deferred abstraction until at least two
 consumers establish a shared topology and conservation boundary.
@@ -149,12 +145,13 @@ consumers establish a shared topology and conservation boundary.
 ## Build checklist
 
 - [ ] Generate callable-level transform and maturity coverage.
-- [ ] Complete the remaining `jaxstro.quad` matched-comparison, migration, and
-  release gates; replay, quantity normalization, derivations, and deterministic
-  first-order evidence are complete.
+- [x] Complete the `jaxstro.quad` Phase A matched-comparison, migration, and
+  release gates; replay, quantity normalization, derivations, deterministic
+  first-order evidence, and two-suite performance acceptance are complete.
+- [ ] Brainstorm and approve the next `jaxstro.quad` capability family before
+  implementing Phase B or Phase C.
 - [ ] Decide quantity adoption from downstream parity and migration evidence.
 - [ ] Deliver the smallest evidence-complete `jaxstro.ml` vertical slice.
-- [ ] Deliver reference-sequence and convergence gates for `jaxstro.numerics.qmc`.
 - [ ] Deliver analytic and nonlinear-boundary evidence for `jaxstro.uncertainty`.
 - [ ] Deliver convention and normalization evidence for `jaxstro.signal`.
 - [ ] Admit ecosystem adapters only from documented consumer gaps.

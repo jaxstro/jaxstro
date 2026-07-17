@@ -13,6 +13,14 @@ Phase B consolidation/hardening arc and the `jaxstro.params` selective-gradient 
 
 ### Added
 
+- **Canonical `jaxstro.quad` Phase A capability** — sampled-data integration,
+  fixed Gaussian, cosine, and tanh-sinh rules, five adaptive one-dimensional
+  families, typed domains and measures, explicit error and work evidence, and
+  compatibility-preserving legacy imports now share one public owner. A
+  truth-gated Jaxstro-versus-Quadax comparison records compile, scalar, VMAP,
+  and AD timing separately. Two isolated post-optimization suites reproduce
+  the accepted classical Romberg VMAP-128 gains on the recorded Apple M2 Max
+  CPU envelope without a reproducible warranted scalar or JVP regression.
 - **Replay-differentiable adaptive quadrature** — all five one-dimensional
   adaptive families (`GaussKronrod`, `AdaptiveClenshawCurtis`,
   `AdaptiveTanhSinh`, `Romberg`, and `RombergTanhSinh`) now differentiate the

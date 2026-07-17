@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[2]
 def test_evidence_index_preserves_distinct_evidence_classes() -> None:
     index = build_evidence_index(ROOT)
     entries = {item.id: item for item in index.entries}
+    assert entries["quad.performance"].evidence_class is EvidenceClass.COMPUTATIONAL
     assert (
         entries["rootfinding.performance"].evidence_class is EvidenceClass.COMPUTATIONAL
     )

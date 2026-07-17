@@ -55,6 +55,12 @@ _TARGETS = (
         "No external data required.",
     ),
     (
+        "quad.performance",
+        EvidenceClass.COMPUTATIONAL,
+        "docs/validation/quad-performance.json",
+        "No external data required; timings are bounded to the recorded machine.",
+    ),
+    (
         "spectra.performance",
         EvidenceClass.COMPUTATIONAL,
         "docs/validation/spectra-performance.json",

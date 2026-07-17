@@ -85,6 +85,36 @@ Supported adaptive declarations are `GaussKronrod`,
 `RombergTanhSinh`. `integrate` returns a `QuadResult` containing the primal
 value, `QuadError`, effective tolerance, `QuadStatus`, and `QuadWork`.
 
+## Capability status map
+
+The status belongs to a capability, not to the package as a whole.
+
+| Status | Current quadrature scope |
+| --- | --- |
+| shipped and validated | Sampled-data integration, fixed one-dimensional rules, five adaptive one-dimensional families, typed failure and work evidence, and first-order accepted-formula replay |
+| benchmarking | The Apple M2 Max CPU comparison is accepted; additional backends, precisions, batch regimes, and method families remain future benchmarking coverage |
+| alpha | Opt-in quantity normalization through `quad.integrate`; downstream ecosystem adoption is not implied |
+| approved but planned | Multidimensional hyperrectangles, adaptive cubature, sparse grids, randomized QMC, and later scientific geometries; none is importable yet |
+| intentionally unsupported | Posterior inference, experimental-design policy, general Monte Carlo inference, and domain-specific scientific acceptance |
+
+### Reading comparison labels
+
+Performance ratios are interpreted only after both results pass their declared
+truth and derivative gates. The first lane asks a family-matched research
+question. **Exact** means the same embedded rule family and order under matched
+domain, tolerance, norm, and capacity controls where those controls apply.
+**Strong-match** means closely matched global-refinement capacity.
+**Node-matched** means the same local node count with potentially different
+estimators. **Family-matched** means the same broad method family while
+acknowledging algorithmic differences. A **capability comparison** asks whether
+related public capabilities solve the same research task without implying
+algorithmic equivalence.
+
+The second lane asks a practical choice question. Its `best_method` label uses
+predeclared library-specific settings intended to represent a reasonable
+public method in each library. It is not an algorithm-equivalence label and is
+not mixed into family-matched superiority claims.
+
 ### Complete public inventory
 
 Sampled values:
@@ -290,7 +320,10 @@ envelopes,
 [`quad-replay-derivatives.json`](../../validation/quad-replay-derivatives.json)
 records replay evidence, and
 [`quad-adaptive-envelope.json`](../../validation/quad-adaptive-envelope.json)
-records the generated tolerance sweeps.
+records the generated tolerance sweeps. The
+[quadrature performance and comparison](../../60-validation/numerical/quadrature-performance.md)
+page explains the matched comparison labels, recorded hardware, accepted
+Romberg optimization, and warranted non-claims.
 
 ## Canonical import example
 
@@ -344,3 +377,29 @@ miss the same unresolved narrow feature even when the returned status is
 paths. Their existing public names remain exact aliases and emit
 no deprecation warning. The legacy probabilists' Hermite helper retains its
 byte-compatible NumPy construction until a declared breaking release.
+
+## Migrating to `jaxstro.quad`
+
+The canonical owner is available now, but compatibility paths remain while
+sibling packages are audited one repository at a time. Switching imports does
+not change behavior: each row resolves to the same implementation or preserves
+the explicitly documented legacy alias.
+
+| Compatibility import | Canonical owner |
+| --- | --- |
+| `jaxstro.numerics.integration.trapezoid` | `jaxstro.quad.trapezoid` |
+| `jaxstro.numerics.integration.trapz` | `jaxstro.quad.trapezoid` |
+| `jaxstro.numerics.integration.cumulative_trapezoid` | `jaxstro.quad.cumulative_trapezoid` |
+| `jaxstro.numerics.integration.cumulative_trapz` | `jaxstro.quad.cumulative_trapezoid` |
+| `jaxstro.numerics.integration.simpson` | `jaxstro.quad.simpson` |
+| `jaxstro.numerics.integration.cumulative_simpson` | `jaxstro.quad.cumulative_simpson` |
+| `jaxstro.numerics.quadrature.gauss_legendre_nodes` | `jaxstro.quad.gauss_legendre_nodes` |
+| `jaxstro.numerics.quadrature.gauss_laguerre_nodes` | `jaxstro.quad.gauss_laguerre_nodes` |
+| `jaxstro.numerics.quadrature.gauss_hermite_nodes` | `jaxstro.quad.gauss_hermite_nodes` |
+| `jaxstro.numerics.quadrature.clenshaw_curtis_nodes` | `jaxstro.quad.clenshaw_curtis_nodes` |
+| `jaxstro.numerics.quadrature.hermite_e_basis` | `jaxstro.quad.hermite_e_basis` |
+| `jaxstro.numerics.quadrature.hermite_coefficients` | `jaxstro.quad.hermite_coefficients` |
+
+No compatibility path will be removed until downstream audits and migrations
+are complete. The current aliases emit no deprecation warning, and this Phase
+A closeout does not modify any sibling package.

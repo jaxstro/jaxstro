@@ -80,12 +80,12 @@ def test_sota_assessment_uses_the_approved_future_runtime_priority() -> None:
     text = PAGE.read_text(encoding="utf-8")
     priorities = (
         "1. `jaxstro.ml`",
-        "2. `jaxstro.numerics.qmc`",
-        "3. `jaxstro.uncertainty`",
-        "4. `jaxstro.signal`",
-        "5. consumer-driven ecosystem adapters",
-        "6. fields only after two consumers",
+        "2. `jaxstro.uncertainty`",
+        "3. `jaxstro.signal`",
+        "4. consumer-driven ecosystem adapters",
+        "5. fields only after two consumers",
     )
     positions = [text.index(priority) for priority in priorities]
     assert positions == sorted(positions)
     assert "complete the approved `jaxstro.quad` program before this queue" in text
+    assert "Approve the next `jaxstro.quad` capability family" in text

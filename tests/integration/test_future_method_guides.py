@@ -332,8 +332,15 @@ def test_planned_pages_do_not_claim_unimplemented_runtime_modules() -> None:
     )
     for relative in planned:
         text = _read(relative)
-        assert "does not exist" in text, relative
+        compact = " ".join(text.split())
+        assert "does not exist" in compact, relative
         assert not any(phrase in text for phrase in forbidden), relative
+
+    qmc = _read("probability-sampling/quasi-monte-carlo.md")
+    compact_qmc = " ".join(qmc.split())
+    assert "planned for `jaxstro.quad`" in compact_qmc
+    assert "general-purpose sampling" in compact_qmc
+    assert "`jaxstro.numerics.qmc`" not in qmc
 
 
 def test_new_sources_are_ascii_and_use_latex_for_math() -> None:

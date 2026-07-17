@@ -10,8 +10,9 @@ space filling and you need to separate deterministic approximation from
 randomized uncertainty estimation.
 
 :::{important} Planned Jaxstro capability
-The proposed `jaxstro.numerics.qmc` module does not exist. This page defines
-background and evidence gates, not an importable API or implementation result.
+The randomized QMC integration capability planned for `jaxstro.quad` does not exist.
+This page defines background and evidence gates, not an importable API or
+implementation result.
 :::
 
 ## The scientific question
@@ -79,11 +80,12 @@ select an implementation source or claim ecosystem performance.
 
 ## What Jaxstro may add
 
-The proposed `jaxstro.numerics.qmc` boundary may eventually own fixed-shape
-Sobol and Latin-hypercube construction, explicit scramble keys, replicated
-plans, discrepancy diagnostics, metadata, and provenance. The module would own
-scientific conventions around those outputs, not a general probability or
-inference framework.
+The planned `jaxstro.quad` boundary may eventually own fixed-shape Sobol point
+construction for integration, explicit scramble keys, replicated integration
+plans, discrepancy diagnostics, metadata, and provenance. It would own the
+scientific integration contract around those outputs, not general-purpose
+sampling, Monte Carlo inference, posterior computation, or experimental-design
+policy.
 
 Any API sketch remains deferred until a separate design chooses supported
 sequence limits, dimension behavior, scrambling rules, dtypes, and failure

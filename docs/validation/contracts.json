@@ -959,6 +959,12 @@
               "target": "tests/validation/test_quad_adaptive_reference.py"
             },
             {
+              "claim": "Matched Jaxstro and Quadax correctness, work, transformation, and timing evidence supports only the labeled records and recorded hardware envelope, not universal superiority.",
+              "id": "quad-performance",
+              "kind": "artifact",
+              "target": "docs/validation/quad-performance.json"
+            },
+            {
               "claim": "Deterministic first-order replay measurements, units, gates, accepted regions or levels, and limitations are freshness checked.",
               "id": "quad-replay-derivatives",
               "kind": "artifact",
@@ -1184,7 +1190,7 @@
   ],
   "package_version": "0.1.0",
   "schema_version": "1",
-  "source_revision": "sha256:1acf02c3ba0cb0c62d9736d3a56bf91b05b5603de43c4f3200a72e20651dc1d9",
+  "source_revision": "sha256:2966a9c5cf2b3112981c0181177722bb14f3ed73dd2e02ddd537773e85d9a203",
   "unclassified_callables": [
     "jaxstro.atmospheres.acquisition_rows_to_markdown",
     "jaxstro.atmospheres.build_bosz_index",

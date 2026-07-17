@@ -13,7 +13,7 @@ PAGE = ROOT / "docs" / "70-project/development" / "future-capabilities-roadmap.m
 NUMERICAL_ROADMAP = (
     ROOT / "docs" / "70-project/development" / "numerical-methods-roadmap.md"
 )
-QMC_PRIORITY_HEADING = "### Priority 2: `jaxstro.numerics.qmc`"
+QMC_PROGRAM_HEADING = "### Active program: `jaxstro.quad`"
 QMC_CLAIMS = re.compile(
     r"\b(?:QMC|Sobol|Halton|Latin[- ]hypercube|low[- ]discrepancy|"
     r"quasi[- ](?:random|Monte[- ]Carlo))\b",
@@ -43,9 +43,11 @@ def _checked_items(text: str) -> tuple[str, ...]:
 
 
 def _qmc_scope_errors(future: str, numerical: str) -> tuple[str, ...]:
-    qmc_priority = _section(future, QMC_PRIORITY_HEADING)
+    qmc_program = _section(future, QMC_PROGRAM_HEADING)
     errors = [
-        f"completed Priority 2 item: {item}" for item in _checked_items(qmc_priority)
+        f"completed quad QMC item: {item}"
+        for item in _checked_items(qmc_program)
+        if QMC_CLAIMS.search(item)
     ]
     errors.extend(
         f"completed numerical-roadmap QMC claim: {item}"
@@ -63,12 +65,12 @@ def test_future_capabilities_roadmap_preserves_scope_and_build_advice() -> None:
         "## Existing methods and features",
         "## What Jaxstro should become",
         "## Recommended additions",
+        "### Active program: `jaxstro.quad`",
         "### Priority 1: `jaxstro.ml`",
-        "### Priority 2: `jaxstro.numerics.qmc`",
-        "### Priority 3: `jaxstro.uncertainty`",
-        "### Priority 4: `jaxstro.signal`",
-        "### Priority 5: consumer-driven ecosystem adapters",
-        "### Priority 6: fields only after two consumers",
+        "### Priority 2: `jaxstro.uncertainty`",
+        "### Priority 3: `jaxstro.signal`",
+        "### Priority 4: consumer-driven ecosystem adapters",
+        "### Priority 5: fields only after two consumers",
         "## What not to add",
         "## Build checklist",
         "predict -> compute -> audit -> state the warranted claim",
@@ -107,11 +109,10 @@ def test_development_log_links_future_capabilities_roadmap() -> None:
 def test_completed_numerical_items_do_not_claim_deferred_qmc_scope() -> None:
     future = PAGE.read_text(encoding="utf-8")
     numerical = NUMERICAL_ROADMAP.read_text(encoding="utf-8")
-    qmc_priority = _section(future, QMC_PRIORITY_HEADING)
+    qmc_program = _section(future, QMC_PROGRAM_HEADING)
 
-    assert "- [ ] Add reference-checked Sobol construction" in qmc_priority
-    assert "- [ ] Add Latin-hypercube construction" in qmc_priority
-    assert _checked_items(qmc_priority) == ()
+    assert "randomized quasi-Monte Carlo" in qmc_program
+    assert not any(QMC_CLAIMS.search(item) for item in _checked_items(qmc_program))
     assert _qmc_scope_errors(future, numerical) == ()
 
 
@@ -119,8 +120,8 @@ def test_qmc_priority_rejects_uppercase_completed_checkbox_mutation() -> None:
     future = PAGE.read_text(encoding="utf-8")
     numerical = NUMERICAL_ROADMAP.read_text(encoding="utf-8")
     mutated = future.replace(
-        "- [ ] Add reference-checked Sobol construction",
-        "- [X] Add reference-checked Sobol construction",
+        "- [ ] Design and approve Phase B hyperrectangle integration, adaptive cubature,",
+        "- [X] Design and approve Phase B hyperrectangle integration, adaptive cubature,",
         1,
     )
 
@@ -131,8 +132,8 @@ def test_entire_qmc_priority_rejects_any_completed_item_mutation() -> None:
     future = PAGE.read_text(encoding="utf-8")
     numerical = NUMERICAL_ROADMAP.read_text(encoding="utf-8")
     mutated = future.replace(
-        "- [ ] Record sequence, scramble, dimension, sample count, and seed provenance.",
-        "- [x] Record sequence, scramble, dimension, sample count, and seed provenance.",
+        "- [ ] Design and approve Phase B",
+        "- [x] Design and approve Phase B",
         1,
     )
 

@@ -246,6 +246,7 @@ project:
         - file: 60-validation/numerical/rootfinding-performance.md
         - file: 60-validation/numerical/implicit-root-gradients.md
         - file: 60-validation/numerical/quadrature-replay-derivatives.md
+        - file: 60-validation/numerical/quadrature-performance.md
         - file: 60-validation/data/spectra-performance.md
         - file: 60-validation/methods/validation-methods.md
     - title: Project
