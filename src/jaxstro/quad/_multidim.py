@@ -79,6 +79,7 @@ def evaluate_multidim(
     args: Any,
     measure,
 ) -> PointEvaluation:
+    reference = jnp.asarray(reference)
     mapped = map_hyperrectangle(domain, reference)
     values = jnp.asarray(call_integrand(fun, mapped.x, args, has_explicit_args(args)))
     if values.ndim == 0 or values.shape[0] != reference.shape[0]:

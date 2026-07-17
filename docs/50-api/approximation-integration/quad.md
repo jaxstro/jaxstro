@@ -227,11 +227,13 @@ $$
 $$
 
 Both bounds are one-dimensional arrays with the same positive, static length
-$d$. Their values are dynamic PyTree leaves. Concrete nonfinite bounds raise
-eagerly; traced nonfinite bounds make `hyperrectangle_is_valid(domain)` return
-false. Reversed and zero-width axes are represented explicitly rather than
-reordered. The signed orientation is the product of the per-axis signs, while
-the map Jacobian is nonnegative.
+$d$. Array-like bounds are normalized to two dynamic PyTree leaves with one
+common real floating dtype before any coordinate difference is formed. Boolean
+and complex bounds are rejected. Concrete nonfinite bounds raise eagerly;
+traced nonfinite bounds make `hyperrectangle_is_valid(domain)` return false.
+Reversed and zero-width axes are represented explicitly rather than reordered.
+The signed orientation is the product of the per-axis signs, while the map
+Jacobian is nonnegative.
 
 ```python
 import jax.numpy as jnp

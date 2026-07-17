@@ -94,18 +94,29 @@ class Hyperrectangle:
     upper: Any
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "lower", jnp.asarray(self.lower))
-        object.__setattr__(self, "upper", jnp.asarray(self.upper))
-        lower_shape = jnp.shape(self.lower)
-        upper_shape = jnp.shape(self.upper)
+        lower = jnp.asarray(self.lower)
+        upper = jnp.asarray(self.upper)
+        lower_shape = jnp.shape(lower)
+        upper_shape = jnp.shape(upper)
         if len(lower_shape) != 1 or len(upper_shape) != 1:
             raise ValueError("Hyperrectangle bounds must be one-dimensional")
         if lower_shape != upper_shape:
             raise ValueError("Hyperrectangle bounds must have matching shapes")
         if lower_shape[0] == 0:
             raise ValueError("Hyperrectangle must have positive dimension")
+        if not all(
+            jnp.issubdtype(bound.dtype, jnp.integer)
+            or jnp.issubdtype(bound.dtype, jnp.floating)
+            for bound in (lower, upper)
+        ):
+            raise TypeError("Hyperrectangle bounds must be real numeric arrays")
+        dtype = jnp.result_type(lower, upper, 0.0)
+        lower = jnp.asarray(lower, dtype=dtype)
+        upper = jnp.asarray(upper, dtype=dtype)
+        object.__setattr__(self, "lower", lower)
+        object.__setattr__(self, "upper", upper)
         finite = try_concrete_bool(
-            jnp.all(jnp.isfinite(self.lower)) & jnp.all(jnp.isfinite(self.upper))
+            jnp.all(jnp.isfinite(lower)) & jnp.all(jnp.isfinite(upper))
         )
         if finite is False:
             raise ValueError("Hyperrectangle bounds must be finite")
