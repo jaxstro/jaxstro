@@ -677,6 +677,7 @@ consume those functions but do not move into the facade.
 
 **Files:**
 - Create: `tests/integration/test_quad_multidim_transforms.py`
+- Modify: `tests/unit/quad/test_integrate_dispatch.py`
 - Modify: `docs/50-api/approximation-integration/quad.md`
 - Modify: `STATUS.md`
 
@@ -721,24 +722,25 @@ consume those functions but do not move into the facade.
       assert not valid(jnp.array([1.0, jnp.inf]))
   ```
 
-  In `test_integrate_dispatch.py`, add a B0 private fail-closed dispatch probe
-  whose only result status is:
+  In `test_integrate_dispatch.py`, strengthen one-dimensional facade parity
+  over every `QuadResult` PyTree leaf:
 
   ```python
-  @jax.jit
-  def traced_status(upper):
-      domain = quad.Hyperrectangle(jnp.zeros(2), upper)
-      return _b0_invalid_domain_probe(domain).status
-
-
-  def test_traced_nonfinite_bounds_return_invalid_input():
-      status = traced_status(jnp.array([1.0, jnp.inf]))
-      assert status == quad.QuadStatus.INVALID_INPUT
+  facade_result = quad.integrate(...)
+  owner_result = integrate_1d(...)
+  assert jax.tree.structure(facade_result) == jax.tree.structure(owner_result)
+  for facade_leaf, owner_leaf in zip(
+      jax.tree.leaves(facade_result),
+      jax.tree.leaves(owner_result),
+      strict=True,
+  ):
+      assert jnp.array_equal(facade_leaf, owner_leaf, equal_nan=True)
   ```
 
-  `_b0_invalid_domain_probe` performs no numerical method work: it maps
-  `hyperrectangle_is_valid(domain)` through `jax.lax.cond` to a fixed-shape
-  `INVALID_INPUT` result. B1 replaces this probe with real family dispatch.
+  B0 intentionally has no multidimensional numerical result path, so it does
+  not add a test-only `_b0_invalid_domain_probe`. The direct JIT validity test
+  above owns the B0 traced-input contract. B1 tests `INVALID_INPUT` through
+  real tensor and cubature integrations.
 
 - [ ] **Step 2: Run the focused transform gate**
 
@@ -807,7 +809,10 @@ consume those functions but do not move into the facade.
 
   ```bash
   git add tests/integration/test_quad_multidim_transforms.py \
-    docs/50-api/approximation-integration/quad.md STATUS.md
+    tests/unit/quad/test_integrate_dispatch.py \
+    docs/50-api/approximation-integration/quad.md \
+    docs/superpowers/plans/2026-07-17-jaxstro-quad-phase-b0-contracts.md \
+    STATUS.md
   git commit -m "docs(quad): certify Phase B0 contracts"
   ```
 

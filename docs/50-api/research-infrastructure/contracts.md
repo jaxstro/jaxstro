@@ -88,7 +88,7 @@ from jaxstro.contracts import get_callable_contract
 
 ## Unclassified callable surfaces
 
-The runtime export audit found **225** public callables without callable-level records:
+The runtime export audit found **227** public callables without callable-level records:
 
 - `jaxstro.atmospheres.acquisition_rows_to_markdown`
 - `jaxstro.atmospheres.build_bosz_index`
@@ -253,6 +253,8 @@ The runtime export audit found **225** public callables without callable-level r
 - `jaxstro.quad.gauss_legendre_nodes`
 - `jaxstro.quad.hermite_coefficients`
 - `jaxstro.quad.hermite_e_basis`
+- `jaxstro.quad.hyperrectangle_is_valid`
+- `jaxstro.quad.hyperrectangle_orientation`
 - `jaxstro.quad.interval_is_valid`
 - `jaxstro.quad.interval_orientation`
 - `jaxstro.quad.map_domain`
@@ -421,6 +423,7 @@ These immutable record or type constructors inherit their module-level contract:
 - `jaxstro.quad.FejerIRule`
 - `jaxstro.quad.GaussKronrod`
 - `jaxstro.quad.GaussianRule`
+- `jaxstro.quad.Hyperrectangle`
 - `jaxstro.quad.Infinite`
 - `jaxstro.quad.Interval`
 - `jaxstro.quad.JacobiMeasure`

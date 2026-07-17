@@ -1,6 +1,6 @@
 ---
 title: Jaxstro quadrature
-description: Canonical sampled-data, fixed, and adaptive one-dimensional quadrature API.
+description: Canonical one-dimensional quadrature API and Phase B multidimensional structural contracts.
 ---
 
 # Jaxstro quadrature
@@ -13,7 +13,8 @@ description: Canonical sampled-data, fixed, and adaptive one-dimensional quadrat
 
 This is the canonical integration namespace. It provides sampled-data
 integration, fixed rules, five adaptive method families, domains, measures,
-typed error and work evidence, and deterministic stopping statuses.
+typed error and work evidence, deterministic stopping statuses, and the
+structural foundation for finite multidimensional integration.
 
 ```python
 from jaxstro import quad
@@ -35,7 +36,11 @@ quad.integrate(
     epsabs,
     epsrel,
     max_evaluations,
-    max_regions,
+    max_regions=None,
+    max_indices=None,
+    max_frontier=None,
+    max_nodes=None,
+    key=None,
     error_norm=quad.MaxNorm(),
     gradient="replay",
 )
@@ -99,10 +104,10 @@ The status belongs to a capability, not to the package as a whole.
 
 | Status | Current quadrature scope |
 | --- | --- |
-| shipped and validated | Sampled-data integration, fixed one-dimensional rules, five adaptive one-dimensional families, typed failure and work evidence, and first-order accepted-formula replay |
+| shipped and validated | Sampled-data integration, fixed one-dimensional rules, five adaptive one-dimensional families, typed failure and work evidence, first-order accepted-formula replay, and the Phase B finite-hyperrectangle structural substrate |
 | benchmarking | The Apple M2 Max CPU comparison is accepted; additional backends, precisions, batch regimes, and method families remain future benchmarking coverage |
 | alpha | Opt-in quantity normalization through `quad.integrate`; downstream ecosystem adoption is not implied |
-| approved but planned | Multidimensional hyperrectangles, adaptive cubature, sparse grids, randomized QMC, and later scientific geometries; none is importable yet |
+| approved but planned | Numerical integration over multidimensional hyperrectangles, adaptive cubature, sparse grids, randomized QMC, and later scientific geometries; no multidimensional numerical method is available yet |
 | intentionally unsupported | Posterior inference, experimental-design policy, general Monte Carlo inference, and domain-specific scientific acceptance |
 
 ### Reading comparison labels
@@ -165,9 +170,12 @@ Domains and transformations:
 - `RightInfinite`
 - `LeftInfinite`
 - `Infinite`
+- `Hyperrectangle`
 - `interval_orientation`
 - `sorted_breakpoints`
 - `interval_is_valid`
+- `hyperrectangle_orientation`
+- `hyperrectangle_is_valid`
 - `AffineMapResult`
 - `DomainMapResult`
 - `map_interval`
@@ -209,6 +217,51 @@ scalar, complex, vector, or higher-rank trailing payloads. In raw mode,
 `epsabs` and `epsrel` are scalar real values. Method type and configuration,
 `max_evaluations`, `max_regions`, breakpoint count, and payload shape remain
 static under JIT.
+
+## Multidimensional domain contract
+
+`Hyperrectangle(lower, upper)` represents the finite Cartesian product
+
+$$
+\prod_{j=1}^{d} [a_j,b_j].
+$$
+
+Both bounds are one-dimensional arrays with the same positive, static length
+$d$. Their values are dynamic PyTree leaves. Concrete nonfinite bounds raise
+eagerly; traced nonfinite bounds make `hyperrectangle_is_valid(domain)` return
+false. Reversed and zero-width axes are represented explicitly rather than
+reordered. The signed orientation is the product of the per-axis signs, while
+the map Jacobian is nonnegative.
+
+```python
+import jax.numpy as jnp
+
+from jaxstro import quad
+
+domain = quad.Hyperrectangle(
+    jnp.array([0.0, 0.0]),
+    jnp.array([1.0, 2.0]),
+)
+# x passed to a Phase B integrand has shape (point_count, dimension).
+```
+
+This domain is $[0,1]\times[0,2]$. Phase B multidimensional integrands use a
+coordinate-last point array with shape `(point_count, dimension)` and return an
+array whose leading axis is `point_count`.
+
+## Phase B dispatcher boundary
+
+`quad.integrate` is the sole public family dispatcher. One-dimensional domains
+continue to delegate to the existing adaptive owner with complete
+`QuadResult` PyTree parity. The names `max_indices`, `max_frontier`,
+`max_nodes`, and `key` reserve explicit capacity and random-state boundaries
+for later multidimensional families; one-dimensional calls reject them.
+
+:::{warning}
+`Hyperrectangle` and the thin dispatcher are structural B0 contracts. A
+multidimensional numerical method is not available until its family passes the
+B1, B2, or B3 validation gate.
+:::
 
 ### Quantity activation
 

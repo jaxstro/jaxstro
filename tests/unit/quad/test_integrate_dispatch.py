@@ -1,5 +1,6 @@
 import inspect
 
+import jax
 import jax.numpy as jnp
 import pytest
 
@@ -19,11 +20,17 @@ def _one_dimensional_kwargs():
 
 def test_facade_preserves_one_dimensional_result_bitwise():
     domain = quad.Interval(0.0, 1.0)
-    direct = adaptive.integrate(lambda x: x**2, domain, **_one_dimensional_kwargs())
-    facade = quad.integrate(lambda x: x**2, domain, **_one_dimensional_kwargs())
-    assert jnp.array_equal(facade.value, direct.value)
-    assert jnp.array_equal(facade.status, direct.status)
-    assert facade.work == direct.work
+    owner_result = adaptive.integrate(
+        lambda x: x**2, domain, **_one_dimensional_kwargs()
+    )
+    facade_result = quad.integrate(lambda x: x**2, domain, **_one_dimensional_kwargs())
+    assert jax.tree.structure(facade_result) == jax.tree.structure(owner_result)
+    for facade_leaf, owner_leaf in zip(
+        jax.tree.leaves(facade_result),
+        jax.tree.leaves(owner_result),
+        strict=True,
+    ):
+        assert jnp.array_equal(facade_leaf, owner_leaf, equal_nan=True)
 
 
 def test_facade_requires_one_dimensional_region_capacity():
