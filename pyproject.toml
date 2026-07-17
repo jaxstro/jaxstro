@@ -87,6 +87,9 @@ exclude = [
 # Dev tooling declared via PEP 735 dependency groups (uv installs the `dev`
 # group by default). Mirrors the [project.optional-dependencies] dev extra.
 [dependency-groups]
+benchmark = [
+    "quadax==0.2.13",
+]
 dev = [
   "pytest",
   "ruff",
