@@ -46,6 +46,7 @@ from .rules import (
     TanhSinhRule,
 )
 from .sampled import cumulative_simpson, cumulative_trapezoid, simpson, trapezoid
+from .tensor import TensorProduct
 from .tolerance import (
     ErrorNorm,
     L1Norm,
@@ -100,6 +101,7 @@ __all__ = [
     "RombergTanhSinh",
     "StandardNormalMeasure",
     "TanhSinhRule",
+    "TensorProduct",
     "WeightedMeasure",
     "error_norm",
     "interval_is_valid",
