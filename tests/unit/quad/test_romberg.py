@@ -22,6 +22,7 @@ from jaxstro.quad import (
 from jaxstro.quad._romberg import (
     _gamma,
     _richardson_error,
+    _romberg_advance_level,
     _tanh_sinh_tables,
 )
 from jaxstro.quad._tanh_sinh import _tanh_sinh_lattice_data
@@ -108,6 +109,41 @@ def test_romberg_capacity_nonfinite_and_structure_statuses() -> None:
         )
     with pytest.raises(TypeError, match="finite Interval"):
         integrate(lambda x: x, Infinite(), **_options(Romberg()))
+
+
+@pytest.mark.parametrize("compiled", [False, True])
+def test_romberg_reduces_nonfinite_flags_from_later_level_nodes(compiled) -> None:
+    def solve():
+        return integrate(
+            lambda x: jnp.stack((x, jnp.where(jnp.abs(x) == 0.5, jnp.nan, x)), axis=-1),
+            Interval(-1.0, 1.0),
+            **_options(Romberg(initial_level=1)),
+        )
+
+    result = jax.jit(solve)() if compiled else solve()
+    assert result.status == QuadStatus.NONFINITE_INTEGRAND
+    assert result.work.evaluations == 5
+    assert result.work.refinements == 2
+
+
+def test_romberg_reduces_roundoff_flags_from_later_level_nodes() -> None:
+    table = jnp.zeros((4, 4), dtype=jnp.float64)
+    floors = jnp.zeros_like(table)
+
+    def evaluate_one(node):
+        return node, jnp.asarray(False), node < 0.0
+
+    _, _, nonfinite, roundoff = _romberg_advance_level(
+        evaluate_one,
+        jnp.asarray(0.0),
+        table,
+        floors,
+        jnp.asarray(2, dtype=jnp.int32),
+        max_level=3,
+        dtype=jnp.float64,
+    )
+    assert not nonfinite
+    assert roundoff
 
 
 @pytest.mark.parametrize("method", [Romberg(), RombergTanhSinh()])
@@ -364,12 +400,44 @@ def test_romberg_jaxpr_loop_structure_is_budget_invariant() -> None:
     for method in (Romberg(), RombergTanhSinh()):
         small = trace(method, 65)
         large = trace(method, 1025)
-        expected_scans = 5 if isinstance(method, Romberg) else 2
-        expected_conds = 5 if isinstance(method, Romberg) else 3
-        assert small.count("while[") == large.count("while[") == 1
+        expected_whiles = 2 if isinstance(method, Romberg) else 1
+        expected_scans = 4 if isinstance(method, Romberg) else 2
+        expected_conds = 3
+        expected_powers = 2 if isinstance(method, Romberg) else 1
+        assert small.count("while[") == large.count("while[") == expected_whiles
         assert small.count("scan[") == large.count("scan[") == expected_scans
         assert small.count("cond[") == large.count("cond[") == expected_conds
-        assert small.count("integer_pow") == large.count("integer_pow") == 1
+        assert (
+            small.count("integer_pow") == large.count("integer_pow") == expected_powers
+        )
+
+
+def test_romberg_compiled_work_tracks_accepted_not_maximum_capacity() -> None:
+    def compile_cost(max_evaluations):
+        solve = jax.jit(
+            lambda: integrate(
+                lambda x: jnp.exp(x),
+                Interval(0.0, 1.0),
+                **_options(
+                    Romberg(initial_level=1),
+                    epsabs=1e-12,
+                    epsrel=1e-12,
+                    max_evaluations=max_evaluations,
+                ),
+            )
+        )
+        compiled = solve.lower().compile()
+        result = compiled()
+        analysis = compiled.cost_analysis()
+        if "flops" not in analysis or "bytes accessed" not in analysis:
+            pytest.skip("active XLA backend does not expose cost analysis")
+        assert result.work.evaluations == 33
+        return analysis
+
+    small = compile_cost(65)
+    large = compile_cost(1025)
+    assert large["flops"] <= 3.0 * small["flops"]
+    assert large["bytes accessed"] <= 3.0 * small["bytes accessed"]
 
 
 def test_romberg_tanh_sinh_rejects_breakpoints() -> None:

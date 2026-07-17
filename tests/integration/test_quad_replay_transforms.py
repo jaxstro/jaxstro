@@ -315,6 +315,33 @@ def test_global_replay_parameter_derivative(method, max_evaluations, rtol) -> No
     )
 
 
+def test_romberg_replay_supports_compiled_heterogeneous_batched_reverse_mode():
+    def integral(theta):
+        return quad.integrate(
+            lambda x, args: jnp.exp(args * x),
+            quad.Interval(-0.5, 1.0),
+            args=theta,
+            method=quad.Romberg(2),
+            epsabs=1e-10,
+            epsrel=1e-10,
+            max_evaluations=1025,
+            max_regions=1,
+            gradient="replay",
+        )
+
+    thetas = jnp.asarray([0.1, 0.8, 2.0, 4.0, 8.0])
+    actual = jax.jit(jax.vmap(jax.grad(lambda theta: integral(theta).value)))(thetas)
+    expected = jax.vmap(
+        jax.grad(lambda theta: (jnp.exp(theta) - jnp.exp(-0.5 * theta)) / theta)
+    )(thetas)
+    refinements = jax.jit(jax.vmap(lambda theta: integral(theta).work.refinements))(
+        thetas
+    )
+
+    assert tuple(int(level) for level in refinements) == (4, 5, 6, 7, 8)
+    assert jnp.allclose(actual, expected, rtol=2e-12, atol=2e-12)
+
+
 def _assert_zero_or_float0(primal, tangent):
     for primal_leaf, tangent_leaf in zip(
         jax.tree.leaves(primal), jax.tree.leaves(tangent), strict=True

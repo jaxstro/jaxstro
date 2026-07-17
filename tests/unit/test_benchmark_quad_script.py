@@ -208,6 +208,49 @@ def test_optimized_merge_preserves_baseline_byte_for_byte() -> None:
     assert payload["contract_parity"] is True
 
 
+def test_contract_parity_allows_calibration_drift_but_not_status_drift() -> None:
+    reviewed = artifact_from_dict(
+        json.loads(benchmark_quad.OUTPUT.read_text(encoding="utf-8"))
+    )
+    baseline = benchmark_quad._thaw(reviewed.method_payload["baseline"])
+    optimized = copy.deepcopy(baseline)
+    optimized["records"][0]["jaxstro"]["reported_error_calibration"]["ratio"] *= 2.0
+    assert benchmark_quad.deterministic_contracts_match(baseline, optimized)
+
+    optimized["records"][0]["jaxstro"]["semantic_status"] = "max_evaluations"
+    assert not benchmark_quad.deterministic_contracts_match(baseline, optimized)
+
+    optimized = copy.deepcopy(baseline)
+    derivative_record = next(
+        record for record in optimized["records"] if record["derivatives"]["available"]
+    )
+    derivative_record["derivatives"]["jaxstro_policy"] = "changed-policy"
+    assert not benchmark_quad.deterministic_contracts_match(baseline, optimized)
+
+    optimized = copy.deepcopy(baseline)
+    optimized["records"][0]["warranted"]["jaxstro"]["threshold"] *= 2.0
+    assert not benchmark_quad.deterministic_contracts_match(baseline, optimized)
+
+
+def test_optimized_artifact_preserves_reviewed_baseline_subtree() -> None:
+    reviewed = artifact_from_dict(
+        json.loads(benchmark_quad.OUTPUT.read_text(encoding="utf-8"))
+    )
+    baseline = benchmark_quad._thaw(reviewed.method_payload["baseline"])
+    optimized = copy.deepcopy(baseline)
+    optimized["source_revision"] = "optimized-test-revision"
+
+    artifact = benchmark_quad.build_optimized_artifact(optimized, reviewed)
+    assert json.dumps(
+        benchmark_quad._thaw(artifact.method_payload["baseline"]),
+        sort_keys=True,
+    ) == json.dumps(baseline, sort_keys=True)
+    assert artifact.method_payload["contract_parity"] is True
+    assert artifact.method_payload["optimized"]["source_revision"] == (
+        "optimized-test-revision"
+    )
+
+
 def test_freshness_ignores_timings_but_rejects_accuracy_drift() -> None:
     current = benchmark_quad.run_deterministic_suite()
     stored = copy.deepcopy(current)

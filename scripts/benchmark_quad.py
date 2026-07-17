@@ -809,7 +809,70 @@ def merge_optimized(
         "optimization_decision": {
             "status": "optimized_result_recorded",
             "triggered": True,
+            "reason": (
+                "Optimized evidence preserves the reviewed baseline and passes "
+                "the scientific contract-parity gate."
+            ),
         },
+    }
+
+
+def _optimization_ratio_summary(
+    baseline: dict[str, Any],
+    optimized: dict[str, Any],
+) -> dict[str, Any]:
+    baseline_timings = {
+        _record_identity(record): record for record in baseline["timings"]
+    }
+    optimized_timings = {
+        _record_identity(record): record for record in optimized["timings"]
+    }
+    targets = []
+    for record in baseline["records"]:
+        if not (
+            record["precision"] == "float64"
+            and record["lane"] == "family_matched"
+            and record["family"] == "romberg"
+            and record["case"]
+            in {"smooth_exponential", "oscillatory_cosine", "expensive_identity"}
+        ):
+            continue
+        key = _record_identity(record)
+        before = baseline_timings[key]
+        after = optimized_timings[key]
+        modes = {
+            "scalar": (before["scalar"], after["scalar"]),
+            "vmap_16": (before["vmap"]["16"], after["vmap"]["16"]),
+            "vmap_128": (before["vmap"]["128"], after["vmap"]["128"]),
+            "jvp": (before["jvp"], after["jvp"]),
+        }
+        targets.append(
+            {
+                "record": _trigger_identity(record),
+                "modes": {
+                    mode: {
+                        "baseline_jaxstro_seconds": pair_before["jaxstro"][
+                            "median_warm_seconds"
+                        ],
+                        "optimized_jaxstro_seconds": pair_after["jaxstro"][
+                            "median_warm_seconds"
+                        ],
+                        "jaxstro_speedup": pair_before["jaxstro"]["median_warm_seconds"]
+                        / pair_after["jaxstro"]["median_warm_seconds"],
+                        "optimized_jaxstro_to_quadax_ratio": pair_after["jaxstro"][
+                            "median_warm_seconds"
+                        ]
+                        / pair_after["quadax"]["median_warm_seconds"],
+                    }
+                    for mode, (pair_before, pair_after) in modes.items()
+                },
+            }
+        )
+    return {
+        "policy": "reviewed_baseline_over_optimized_same_host",
+        "targets": targets,
+        "baseline_trigger_assessment": baseline.get("trigger_assessment"),
+        "optimized_trigger_assessment": optimized.get("trigger_assessment"),
     }
 
 
@@ -1122,6 +1185,32 @@ def build_artifact(payload: dict[str, Any]) -> EvidenceArtifact:
     )
 
 
+def build_optimized_artifact(
+    payload: dict[str, Any],
+    reviewed: EvidenceArtifact,
+) -> EvidenceArtifact:
+    """Attach a clean optimized run while retaining the reviewed baseline."""
+    current = build_artifact(payload)
+    reviewed_payload = _thaw(reviewed.method_payload)
+    baseline = reviewed_payload["baseline"]
+    optimized = {
+        **copy.deepcopy(payload),
+        "trigger_assessment": evaluate_optimization_triggers(payload),
+    }
+    contract_parity = deterministic_contracts_match(baseline, optimized)
+    if not contract_parity:
+        raise RuntimeError(
+            "optimized quadrature evidence changes a reviewed scientific contract"
+        )
+    method_payload = merge_optimized(
+        baseline=baseline,
+        optimized=optimized,
+        ratios=_optimization_ratio_summary(baseline, optimized),
+        contract_parity=contract_parity,
+    )
+    return replace(current, method_payload=method_payload)
+
+
 def _thaw(value: Any) -> Any:
     if isinstance(value, dict) or hasattr(value, "items"):
         return {str(key): _thaw(item) for key, item in value.items()}
@@ -1172,6 +1261,111 @@ def algorithmic_metrics_match(stored: dict[str, Any], current: dict[str, Any]) -
     except (KeyError, TypeError):
         return False
     return _portable_close(stored_view, current_view)
+
+
+def _derivative_contract(derivatives: dict[str, Any]) -> dict[str, Any]:
+    if not derivatives["available"]:
+        return {
+            "available": False,
+            "reason": derivatives["reason"],
+        }
+    return {
+        "available": True,
+        "jaxstro_policy": derivatives["jaxstro_policy"],
+        "quadax_policy": derivatives["quadax_policy"],
+        "jvp": {
+            library: {
+                "passed": result["passed"],
+                "truth": result["truth"],
+                "threshold": result["threshold"],
+            }
+            for library, result in derivatives["jvp"].items()
+        },
+        "reverse": {
+            library: {
+                "supported": result["supported"],
+                "passed": result.get("passed"),
+                "reason": result.get("reason"),
+                "truth": result.get("truth"),
+                "threshold": result.get("threshold"),
+            }
+            for library, result in derivatives["reverse"].items()
+        },
+    }
+
+
+def _record_contract(record: dict[str, Any]) -> dict[str, Any]:
+    exact_result_keys = (
+        "dtype",
+        "converged",
+        "raw_status",
+        "semantic_status",
+        "value_finite",
+        "reported_evaluations",
+        "normalized_evaluations",
+        "refinements",
+        "active_regions",
+        "levels",
+    )
+    return {
+        "identity": _record_identity(record),
+        "comparison_label": record["comparison_label"],
+        "truth": record["truth"],
+        "truth_provenance": record["truth_provenance"],
+        "results": {
+            library: {key: record[library][key] for key in exact_result_keys}
+            for library in ("jaxstro", "quadax")
+        },
+        "warrants": {
+            library: {
+                key: record["warranted"][library][key]
+                for key in (
+                    "passed",
+                    "performance_interpretable",
+                    "classification",
+                    "criterion",
+                    "threshold",
+                )
+                if key in record["warranted"][library]
+            }
+            for library in ("jaxstro", "quadax")
+        }
+        | {
+            key: record["warranted"][key]
+            for key in (
+                "derivatives_passed",
+                "primal_performance_interpretable",
+                "jvp_performance_interpretable",
+                "reverse_performance_interpretable",
+            )
+        },
+        "derivatives": _derivative_contract(record["derivatives"]),
+    }
+
+
+def deterministic_contracts_match(
+    baseline: dict[str, Any],
+    optimized: dict[str, Any],
+) -> bool:
+    """Compare scientific contracts while allowing truth-gated roundoff drift."""
+    baseline = _thaw(baseline)
+    optimized = _thaw(optimized)
+    if baseline.get("schema_version") != optimized.get("schema_version"):
+        return False
+    if baseline.get("controls") != optimized.get("controls"):
+        return False
+    baseline_records = baseline.get("records", [])
+    optimized_records = optimized.get("records", [])
+    if len(baseline_records) != len(optimized_records):
+        return False
+    return all(
+        _record_contract(before) == _record_contract(after)
+        for before, after in zip(
+            baseline_records,
+            optimized_records,
+            strict=True,
+        )
+    )
 
 
 def _record_identity(record: dict[str, Any]) -> tuple[str, str, str, str, str]:
@@ -1538,7 +1732,17 @@ def main() -> int:
     baseline["timings"] = timing["records"]
     baseline["timing_environment"] = timing["environment"]
     baseline["timing_process_isolation"] = timing["process_isolation"]
-    artifact = build_artifact(baseline)
+    reviewed = None
+    if OUTPUT.exists():
+        reviewed = artifact_from_dict(json.loads(OUTPUT.read_text(encoding="utf-8")))
+    reviewed_payload = _thaw(reviewed.method_payload) if reviewed is not None else {}
+    if (
+        reviewed_payload.get("baseline")
+        and reviewed_payload.get("optimization_decision", {}).get("triggered") is True
+    ):
+        artifact = build_optimized_artifact(baseline, reviewed)
+    else:
+        artifact = build_artifact(baseline)
     _write_artifact(artifact)
     print(f"wrote {OUTPUT.relative_to(REPO_ROOT)} and {REPORT.relative_to(REPO_ROOT)}")
     return 0

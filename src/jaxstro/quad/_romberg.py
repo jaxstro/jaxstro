@@ -143,16 +143,16 @@ def _richardson_row(table, floors, level, base, base_floor, max_level):
     return jax.lax.fori_loop(1, max_level + 1, column, (table, floors))
 
 
-def _romberg_initialize(
-    evaluate_one,
+def _romberg_initial_tables(
+    initial_values,
+    initial_active,
     zero,
     *,
     initial_level: int,
     max_level: int,
-    lane_count: int,
     dtype,
 ):
-    """Build the shared nested initial grid and Richardson rows."""
+    """Build initial Richardson rows from an already sampled nested grid."""
     payload_shape = zero.shape
     real_dtype = jnp.real(zero).dtype
     table = jnp.zeros(
@@ -164,15 +164,7 @@ def _romberg_initialize(
         dtype=real_dtype,
     )
     fine_count = 2**initial_level + 1
-    lane = jnp.arange(max(lane_count, fine_count), dtype=jnp.int32)
-    initial_active = lane < fine_count
-    initial_nodes = -1.0 + 2.0 * lane.astype(dtype) / (fine_count - 1)
-    initial_values, initial_nonfinite, initial_roundoff = _masked_evaluate(
-        evaluate_one,
-        initial_nodes,
-        initial_active,
-        zero,
-    )
+    lane = jnp.arange(initial_values.shape[0], dtype=jnp.int32)
 
     def initialize(level, state):
         current_table, current_floors = state
@@ -210,10 +202,145 @@ def _romberg_initialize(
         initialize,
         (table, floors),
     )
-    return table, floors, initial_nonfinite, initial_roundoff
+    return table, floors
+
+
+def _romberg_initialize(
+    evaluate_one,
+    zero,
+    *,
+    initial_level: int,
+    max_level: int,
+    dtype,
+):
+    """Sample only the exact static initial grid for the primal solve."""
+    fine_count = 2**initial_level + 1
+    lane = jnp.arange(fine_count, dtype=jnp.int32)
+    nodes = -1.0 + 2.0 * lane.astype(dtype) / (fine_count - 1)
+    values, nonfinite, roundoff = jax.lax.map(evaluate_one, nodes)
+    table, floors = _romberg_initial_tables(
+        values,
+        jnp.ones((fine_count,), dtype=jnp.bool_),
+        zero,
+        initial_level=initial_level,
+        max_level=max_level,
+        dtype=dtype,
+    )
+    return table, floors, nonfinite, roundoff
+
+
+def _romberg_initialize_padded(
+    evaluate_one,
+    zero,
+    *,
+    initial_level: int,
+    max_level: int,
+    lane_count: int,
+    dtype,
+):
+    """Retain the static padded initial grid required by reverse-safe replay."""
+    fine_count = 2**initial_level + 1
+    lane = jnp.arange(max(lane_count, fine_count), dtype=jnp.int32)
+    active = lane < fine_count
+    nodes = -1.0 + 2.0 * lane.astype(dtype) / (fine_count - 1)
+    values, nonfinite, roundoff = _masked_evaluate(
+        evaluate_one,
+        nodes,
+        active,
+        zero,
+    )
+    table, floors = _romberg_initial_tables(
+        values,
+        active,
+        zero,
+        initial_level=initial_level,
+        max_level=max_level,
+        dtype=dtype,
+    )
+    return table, floors, nonfinite, roundoff
+
+
+def _romberg_update_from_sums(
+    table,
+    floors,
+    level,
+    value_sum,
+    absolute_sum,
+    *,
+    max_level: int,
+    dtype,
+):
+    """Apply the shared trapezoid, floor, and Richardson recurrence."""
+    real_dtype = jnp.real(value_sum).dtype
+    step = jnp.asarray(2.0, dtype=dtype) / (2**level)
+    base = 0.5 * table[level - 1, 0] + step * value_sum
+    previous_resabs = floors[level - 1, 0] / _gamma(
+        2 ** (level - 1) + 1,
+        real_dtype,
+    )
+    resabs = 0.5 * previous_resabs + step * absolute_sum
+    base_floor = _gamma(2**level + 1, real_dtype) * resabs
+    return _richardson_row(
+        table,
+        floors,
+        level,
+        base,
+        base_floor,
+        max_level,
+    )
 
 
 def _romberg_advance_level(
+    evaluate_one,
+    zero,
+    table,
+    floors,
+    level,
+    *,
+    max_level: int,
+    dtype,
+):
+    """Advance the primal recurrence with exactly the active new nodes."""
+    real_dtype = jnp.real(zero).dtype
+    new_count = 2 ** (level - 1)
+    initial = (
+        zero,
+        jnp.zeros(zero.shape, dtype=real_dtype),
+        jnp.asarray(False),
+        jnp.asarray(False),
+    )
+
+    def accumulate(lane, state):
+        value_sum, absolute_sum, nonfinite, roundoff = state
+        odd = 2 * lane + 1
+        node = -1.0 + 2.0 * odd.astype(dtype) / (2**level)
+        value, lane_nonfinite, lane_roundoff = evaluate_one(node)
+        return (
+            value_sum + value,
+            absolute_sum + jnp.abs(value),
+            nonfinite | lane_nonfinite,
+            roundoff | lane_roundoff,
+        )
+
+    value_sum, absolute_sum, nonfinite, roundoff = jax.lax.fori_loop(
+        0,
+        new_count,
+        accumulate,
+        initial,
+    )
+    new_table, new_floors = _romberg_update_from_sums(
+        table,
+        floors,
+        level,
+        value_sum,
+        absolute_sum,
+        max_level=max_level,
+        dtype=dtype,
+    )
+    return new_table, new_floors, nonfinite, roundoff
+
+
+def _romberg_advance_level_padded(
     evaluate_one,
     zero,
     table,
@@ -224,42 +351,30 @@ def _romberg_advance_level(
     max_level: int,
     dtype,
 ):
-    """Advance the shared nested trapezoid and Richardson recurrence once."""
+    """Retain static padded sampling so replay remains reverse-transposable."""
     payload_shape = zero.shape
-    real_dtype = jnp.real(zero).dtype
     lane = jnp.arange(lane_count, dtype=jnp.int32)
-    new_count = 2 ** (level - 1)
-    new_active = lane < new_count
+    active = lane < 2 ** (level - 1)
     odd = 2 * lane + 1
     nodes = -1.0 + 2.0 * odd.astype(dtype) / (2**level)
-    values, lane_nonfinite, lane_roundoff = _masked_evaluate(
+    values, nonfinite, roundoff = _masked_evaluate(
         evaluate_one,
         nodes,
-        new_active,
+        active,
         zero,
     )
-    shape = new_active.shape + (1,) * len(payload_shape)
-    selected_values = jnp.where(jnp.reshape(new_active, shape), values, 0.0)
-    step = jnp.asarray(2.0, dtype=dtype) / (2**level)
-    base = 0.5 * table[level - 1, 0] + step * jnp.sum(selected_values, axis=0)
-    previous_resabs = floors[level - 1, 0] / _gamma(
-        2 ** (level - 1) + 1,
-        real_dtype,
-    )
-    resabs = 0.5 * previous_resabs + step * jnp.sum(
-        jnp.abs(selected_values),
-        axis=0,
-    )
-    base_floor = _gamma(2**level + 1, real_dtype) * resabs
-    new_table, new_floors = _richardson_row(
+    shape = active.shape + (1,) * len(payload_shape)
+    selected = jnp.where(jnp.reshape(active, shape), values, 0.0)
+    new_table, new_floors = _romberg_update_from_sums(
         table,
         floors,
         level,
-        base,
-        base_floor,
-        max_level,
+        jnp.sum(selected, axis=0),
+        jnp.sum(jnp.abs(selected), axis=0),
+        max_level=max_level,
+        dtype=dtype,
     )
-    return new_table, new_floors, lane_nonfinite, lane_roundoff
+    return new_table, new_floors, nonfinite, roundoff
 
 
 def romberg_refine(
@@ -284,13 +399,11 @@ def romberg_refine(
         dtype=dtype,
     )
     max_level = (max_evaluations - 1).bit_length() - 1
-    lane_count = 2 ** max(max_level - 1, 0)
     table, floors, initial_nonfinite, initial_roundoff = _romberg_initialize(
         evaluate_one,
         zero,
         initial_level=initial_level,
         max_level=max_level,
-        lane_count=lane_count,
         dtype=dtype,
     )
     value = table[initial_level, initial_level]
@@ -364,7 +477,6 @@ def romberg_refine(
             current.table,
             current.floors,
             level,
-            lane_count=lane_count,
             max_level=max_level,
             dtype=dtype,
         )
@@ -437,7 +549,7 @@ def romberg_replay_value(
     max_level = (max_evaluations - 1).bit_length() - 1
     accepted_level = jax.lax.stop_gradient(jnp.asarray(accepted_level, dtype=jnp.int32))
     lane_count = 2 ** max(max_level - 1, 0)
-    table, floors, _, _ = _romberg_initialize(
+    table, floors, _, _ = _romberg_initialize_padded(
         evaluate_one,
         zero,
         initial_level=initial_level,
@@ -449,7 +561,7 @@ def romberg_replay_value(
     def maybe_advance(level, state):
         def advance(current):
             current_table, current_floors = current
-            new_table, new_floors, _, _ = _romberg_advance_level(
+            new_table, new_floors, _, _ = _romberg_advance_level_padded(
                 evaluate_one,
                 zero,
                 current_table,
