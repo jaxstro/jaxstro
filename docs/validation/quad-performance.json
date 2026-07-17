@@ -36322,8 +36322,8 @@
       ]
     },
     "optimization_decision": {
-      "reason": "Optimized evidence preserves the reviewed baseline and passes the scientific contract-parity gate.",
-      "status": "optimized_result_recorded",
+      "reason": "Two fresh isolated suites improve all three Romberg VMAP-128 targets without a reproducible scalar or JVP regression.",
+      "status": "optimized_accepted_two_suite",
       "triggered": true
     },
     "optimized": {
@@ -70858,6 +70858,110 @@
             "threshold": 1.5
           }
         ]
+      },
+      "optimized_confirmation": {
+        "accepted": true,
+        "controls_match": true,
+        "environment_match": true,
+        "identity_set_exact": true,
+        "measurement_owner_equivalent": true,
+        "process_isolation": "fresh_process_per_record",
+        "regression_scope": "all_contract_warranted_romberg_scalar_and_jvp_records",
+        "reproducible_scalar_or_jvp_regressions": [],
+        "run_id": "6c57df0b-68d0-44fb-8162-e29eb4a91112",
+        "source_revision": "37191caaf619e595b7f91402bb56c9c529d3b0e5",
+        "source_revision_distinct": true,
+        "suite_run_ids_distinct": true,
+        "targets": [
+          {
+            "modes": {
+              "jvp": {
+                "baseline_jaxstro_seconds": 0.00013083312660455704,
+                "jaxstro_speedup": 1.554449036498531,
+                "optimized_jaxstro_seconds": 8.416688069701195e-05,
+                "optimized_jaxstro_to_quadax_ratio": 1.3194174757281554
+              },
+              "scalar": {
+                "baseline_jaxstro_seconds": 8.929194882512093e-05,
+                "jaxstro_speedup": 2.426945956208075,
+                "optimized_jaxstro_seconds": 3.679189831018448e-05,
+                "optimized_jaxstro_to_quadax_ratio": 0.7267492664440703
+              },
+              "vmap_128": {
+                "baseline_jaxstro_seconds": 0.00269333366304636,
+                "jaxstro_speedup": 2.762863994191379,
+                "optimized_jaxstro_seconds": 0.0009748339653015137,
+                "optimized_jaxstro_to_quadax_ratio": 1.015893227944634
+              },
+              "vmap_16": {
+                "baseline_jaxstro_seconds": 0.0005531669594347477,
+                "jaxstro_speedup": 4.030362147233852,
+                "optimized_jaxstro_seconds": 0.00013724993914365768,
+                "optimized_jaxstro_to_quadax_ratio": 0.6995082543027749
+              }
+            },
+            "record": "smooth_exponential.romberg.divmax10.float64"
+          },
+          {
+            "modes": {
+              "jvp": {
+                "baseline_jaxstro_seconds": 0.00018512504175305367,
+                "jaxstro_speedup": 1.5205350039777248,
+                "optimized_jaxstro_seconds": 0.00012174993753433228,
+                "optimized_jaxstro_to_quadax_ratio": 1.487768654295908
+              },
+              "scalar": {
+                "baseline_jaxstro_seconds": 0.00013975007459521294,
+                "jaxstro_speedup": 2.404292478149059,
+                "optimized_jaxstro_seconds": 5.812523886561394e-05,
+                "optimized_jaxstro_to_quadax_ratio": 0.9879692582889436
+              },
+              "vmap_128": {
+                "baseline_jaxstro_seconds": 0.00790316704660654,
+                "jaxstro_speedup": 2.4754448222096785,
+                "optimized_jaxstro_seconds": 0.003192625008523464,
+                "optimized_jaxstro_to_quadax_ratio": 0.6551213259305302
+              },
+              "vmap_16": {
+                "baseline_jaxstro_seconds": 0.001036458183079958,
+                "jaxstro_speedup": 1.9954304904714475,
+                "optimized_jaxstro_seconds": 0.0005194158293306828,
+                "optimized_jaxstro_to_quadax_ratio": 0.6353710024334005
+              }
+            },
+            "record": "oscillatory_cosine.romberg.divmax10.float64"
+          },
+          {
+            "modes": {
+              "jvp": {
+                "baseline_jaxstro_seconds": 0.00012341607362031937,
+                "jaxstro_speedup": 1.4172183305705577,
+                "optimized_jaxstro_seconds": 8.708331733942032e-05,
+                "optimized_jaxstro_to_quadax_ratio": 1.6626953784874727
+              },
+              "scalar": {
+                "baseline_jaxstro_seconds": 9.487476199865341e-05,
+                "jaxstro_speedup": 1.5945372725494031,
+                "optimized_jaxstro_seconds": 5.9499870985746384e-05,
+                "optimized_jaxstro_to_quadax_ratio": 1.212229021393672
+              },
+              "vmap_128": {
+                "baseline_jaxstro_seconds": 0.01389149995520711,
+                "jaxstro_speedup": 12.372746815025755,
+                "optimized_jaxstro_seconds": 0.0011227498762309551,
+                "optimized_jaxstro_to_quadax_ratio": 0.5523419622482966
+              },
+              "vmap_16": {
+                "baseline_jaxstro_seconds": 0.00209666695445776,
+                "jaxstro_speedup": 12.366641123461571,
+                "optimized_jaxstro_seconds": 0.00016954215243458748,
+                "optimized_jaxstro_to_quadax_ratio": 0.4775275888390784
+              }
+            },
+            "record": "expensive_identity.romberg.divmax10.float64"
+          }
+        ],
+        "vmap_128_improves_all_targets_in_both_suites": true
       },
       "optimized_trigger_assessment": {
         "ad_regression_cases": {

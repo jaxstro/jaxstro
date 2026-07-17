@@ -97,11 +97,26 @@ Source revision: `35736fcc0fdaa7932b3bc67780567e24cf94638a`
 
 ## Optimization decision
 
-Status: `optimized_result_recorded`.
+Status: `optimized_accepted_two_suite`.
 
-Optimized evidence preserves the reviewed baseline and passes the scientific contract-parity gate.
+Two fresh isolated suites improve all three Romberg VMAP-128 targets without a reproducible scalar or JVP regression.
 
 Fired triggers: `ad_jvp`.
+
+## Two-suite optimization acceptance
+
+The reviewed baseline is preserved unchanged. The two optimized suites have distinct generated run identifiers and distinct source revisions, with the exact same unique record set, unchanged runtime and measurement owners, matching controls and hardware, and per-record process isolation.
+
+| Romberg case | Suite 1 VMAP-128 speedup | Suite 2 VMAP-128 speedup |
+| --- | ---: | ---: |
+| `smooth_exponential` | 2.85 | 2.76 |
+| `oscillatory_cosine` | 2.53 | 2.48 |
+| `expensive_identity` | 12.45 | 12.37 |
+
+```{admonition} Acceptance rule
+:class: important
+All three VMAP-128 targets improve in both suites. No scalar or JVP slowdown above 25 percent and separated by more than twice the larger MAD reproduces in both suites.
+```
 
 ## Warranted limitations
 
