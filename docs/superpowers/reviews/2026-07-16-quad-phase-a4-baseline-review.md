@@ -71,3 +71,11 @@ The independent mechanical recomputation found:
 The qualifying VMAP-128 records are smooth Romberg at 2.78, oscillatory Romberg at 1.63, and expensive-integrand Romberg at 6.74. Each passes the correctness, comparison-label, representative-case, ratio, and two-MAD separation gates.
 
 One Important provenance correction remains before final public performance evidence: the sandboxed run recorded `cpu_model=arm`. This does not invalidate paired within-machine ratios or the profiling trigger, but the final clean emission must capture the actual Apple chip and hardware model.
+
+## Final provenance-corrected review
+
+The final clean artifact from revision `2378e4d19d0e63bd13e17f8dbf6b499128f1ae02` records `Apple M2 Max / Mac14,5`, retains all 78 fresh-process records, and passes deterministic freshness. An independent recomputation exactly reproduces the stored mechanical decision: warm scalar, VMAP 128, and JVP fire in this run; VMAP 16, compile, work, and reverse mode do not.
+
+Across the two clean isolated runs, VMAP 128 is the reproducible trigger: smooth, oscillatory, and expensive-integrand Romberg exceed the threshold in both runs. Warm and JVP repeatedly suggest shared Romberg execution overhead, but their minimum-count and two-MAD classification changed between runs. The final oscillatory Clenshaw-Curtis warm result also reversed direction and is treated as timing noise.
+
+The optimization addendum is therefore authorized to profile Romberg VMAP 128 as the primary target, with scalar and JVP as secondary views of shared overhead. It must not expand to Clenshaw-Curtis, change numerical controllers, alter tolerances, or change work accounting. Acceptance requires two fresh post-change suites, improvement across all three Romberg VMAP-128 cases in both suites, unchanged correctness contracts, and no material scalar or JVP regression.
