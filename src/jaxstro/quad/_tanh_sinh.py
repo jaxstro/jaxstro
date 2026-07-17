@@ -3,6 +3,7 @@
 from bisect import bisect_left
 from dataclasses import dataclass
 from functools import lru_cache
+from itertools import pairwise
 from typing import NamedTuple
 
 import jax.numpy as jnp
@@ -74,6 +75,64 @@ def _raw_candidate_cap(level: int, dtype: np.dtype) -> int:
     pi = scalar(np.pi)
     parameter_cap = np.arcsinh((scalar(2.0) / pi) * np.arctanh(endpoint))
     return int(np.ceil(parameter_cap / scalar(2.0**-level))) + 1
+
+
+def _positive_candidate(index: int, level: int, dtype: np.dtype):
+    """Evaluate one host candidate without constructing a candidate array."""
+    scalar = dtype.type
+    step = scalar(2.0**-level)
+    parameter = scalar(index) * step
+    pi = scalar(np.pi)
+    transformed = scalar(0.5) * pi * np.sinh(parameter)
+    node = scalar(np.tanh(transformed))
+    density = scalar(
+        scalar(0.5) * pi * np.cosh(parameter) / np.cosh(transformed) ** scalar(2)
+    )
+    return node, density
+
+
+@lru_cache(maxsize=None)
+def _retained_positive_indices(level: int, dtype_name: str) -> tuple[int, ...]:
+    """Return representable positive indices without materializing rule arrays."""
+    dtype = np.dtype(dtype_name)
+    scalar = dtype.type
+    previous = _retained_positive_indices(level - 1, dtype_name) if level > 0 else None
+    raw_cap = _raw_candidate_cap(level, dtype)
+    cap = raw_cap if previous is None else max(raw_cap, 2 * previous[-1])
+
+    if previous is None:
+        retained = [0]
+        reserved = {0}
+    else:
+        reserved = {2 * index for index in previous}
+        retained = sorted(reserved)
+    retained_nodes = {
+        index: _positive_candidate(index, level, dtype)[0] for index in retained
+    }
+
+    for index in range(1, cap + 1):
+        if index in reserved:
+            continue
+        node, density = _positive_candidate(index, level, dtype)
+        valid = (
+            np.isfinite(node)
+            and node >= scalar(0.0)
+            and node < scalar(1.0)
+            and np.isfinite(density)
+            and density > scalar(0.0)
+        )
+        if not bool(valid):
+            continue
+        position = bisect_left(retained, index)
+        if position > 0 and not bool(node > retained_nodes[retained[position - 1]]):
+            continue
+        if position < len(retained) and not bool(
+            node < retained_nodes[retained[position]]
+        ):
+            continue
+        retained.insert(position, index)
+        retained_nodes[index] = node
+    return tuple(retained)
 
 
 @lru_cache(maxsize=None)
@@ -175,11 +234,42 @@ def _host_lattice(level: int, dtype_name: str) -> _HostLattice:
     )
 
 
-def _tanh_sinh_lattice_data(level: int, *, dtype=None) -> TanhSinhLatticeData:
-    """Return static lattice data for a level and real precision policy."""
+def _selected_dtype(dtype):
     selected_dtype = jnp.asarray(0.0).dtype if dtype is None else jnp.dtype(dtype)
     if selected_dtype not in (jnp.dtype(jnp.float32), jnp.dtype(jnp.float64)):
         raise TypeError("tanh-sinh lattice dtype must be float32 or float64")
+    return selected_dtype
+
+
+def _open_unit_interval_trim(host: _HostLattice, dtype: np.dtype) -> int:
+    """Count symmetric outer pairs lost under the affine unit-interval map."""
+    scalar = dtype.type
+    half = scalar(0.5)
+    zero = scalar(0.0)
+    one = scalar(1.0)
+    mapped = tuple(half * (scalar(node) + one) for node in host.compact_nodes)
+    pair_count = (len(mapped) - 1) // 2
+    trim = 0
+    while trim < pair_count and not (
+        mapped[trim] > zero
+        and mapped[-1 - trim] < one
+        and mapped[trim] < mapped[trim + 1]
+        and mapped[-2 - trim] < mapped[-1 - trim]
+    ):
+        trim += 1
+    retained = mapped[trim : len(mapped) - trim if trim else None]
+    if not all(zero < point < one for point in retained) or not all(
+        left < right for left, right in pairwise(retained)
+    ):
+        raise RuntimeError(
+            "tanh-sinh unit-interval nodes are not strictly representable"
+        )
+    return trim
+
+
+def _tanh_sinh_lattice_data(level: int, *, dtype=None) -> TanhSinhLatticeData:
+    """Return static lattice data for a level and real precision policy."""
+    selected_dtype = _selected_dtype(dtype)
     host = _host_lattice(level, np.dtype(selected_dtype).name)
     return TanhSinhLatticeData(
         candidate_indices=jnp.asarray(host.candidate_indices, dtype=jnp.int32),
@@ -205,15 +295,57 @@ def _tanh_sinh_lattice_data(level: int, *, dtype=None) -> TanhSinhLatticeData:
     )
 
 
-def tanh_sinh_rule_data(rule: TanhSinhRule) -> FixedRuleData:
+def tanh_sinh_rule_point_count(
+    rule: TanhSinhRule,
+    *,
+    dtype=None,
+    open_unit_interval: bool = False,
+) -> int:
+    """Return a compact rule count without constructing JAX rule arrays."""
+    selected_dtype = _selected_dtype(dtype)
+    host_dtype = np.dtype(selected_dtype)
+    retained = _retained_positive_indices(rule.level, host_dtype.name)
+    if not open_unit_interval:
+        return 2 * len(retained) - 1
+
+    scalar = host_dtype.type
+    half = scalar(0.5)
+    zero = scalar(0.0)
+    one = scalar(1.0)
+    point_count = 1
+    for index in retained[1:]:
+        node, _density = _positive_candidate(index, rule.level, host_dtype)
+        left = half * (-node + one)
+        right = half * (node + one)
+        if zero < left < right < one:
+            point_count += 2
+    return point_count
+
+
+def tanh_sinh_rule_data(
+    rule: TanhSinhRule,
+    *,
+    dtype=None,
+    open_unit_interval: bool = False,
+) -> FixedRuleData:
     """Construct a compact nested double-exponential formula on ``(-1, 1)``."""
-    lattice = _tanh_sinh_lattice_data(rule.level)
+    selected_dtype = _selected_dtype(dtype)
+    lattice = _tanh_sinh_lattice_data(rule.level, dtype=selected_dtype)
+    if open_unit_interval:
+        host = _host_lattice(rule.level, np.dtype(selected_dtype).name)
+        trim = _open_unit_interval_trim(host, np.dtype(selected_dtype))
+        retained = slice(trim, -trim if trim else None)
+        nodes = lattice.compact_nodes[retained]
+        weights = lattice.compact_weights[retained]
+    else:
+        nodes = lattice.compact_nodes
+        weights = lattice.compact_weights
     return FixedRuleData(
-        nodes=lattice.compact_nodes,
-        weights=lattice.compact_weights,
+        nodes=nodes,
+        weights=weights,
         degree=-1,
         nested=True,
     )
 
 
-__all__ = ["tanh_sinh_rule_data"]
+__all__ = ["tanh_sinh_rule_data", "tanh_sinh_rule_point_count"]
