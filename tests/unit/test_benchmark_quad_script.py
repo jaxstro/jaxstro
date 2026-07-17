@@ -251,6 +251,126 @@ def test_optimized_artifact_preserves_reviewed_baseline_subtree() -> None:
     )
 
 
+def _synthetic_distinct_confirmation(payload):
+    optimized = payload["optimized"]
+    optimized["timing_run_id"] = "suite-one"
+    records = copy.deepcopy(payload["baseline"]["timings"])
+    optimized_by_key = {
+        benchmark_quad._record_identity(record): record
+        for record in optimized["timings"]
+    }
+    required_cases = {
+        "smooth_exponential",
+        "oscillatory_cosine",
+        "expensive_identity",
+    }
+    for record in records:
+        if (
+            record["precision"] == "float64"
+            and record["family"] == "romberg"
+            and record["case"] in required_cases
+        ):
+            key = benchmark_quad._record_identity(record)
+            record["vmap"]["128"] = copy.deepcopy(optimized_by_key[key]["vmap"]["128"])
+    return {
+        "run_id": "suite-two",
+        "started_utc": "2026-07-16T00:00:00+00:00",
+        "source_revision": "distinct-measurement-equivalent-revision",
+        "controls": optimized["controls"],
+        "environment": optimized["timing_environment"],
+        "process_isolation": "fresh_process_per_record",
+        "records": records,
+    }
+
+
+def test_optimized_confirmation_requires_all_three_reproducible_gains(
+    monkeypatch,
+) -> None:
+    artifact = artifact_from_dict(
+        json.loads(benchmark_quad.OUTPUT.read_text(encoding="utf-8"))
+    )
+    payload = benchmark_quad._thaw(artifact.method_payload)
+    optimized = payload["optimized"]
+    confirmation = _synthetic_distinct_confirmation(payload)
+    monkeypatch.setattr(
+        benchmark_quad, "_measurement_owner_equivalent", lambda *_: True
+    )
+    summary = benchmark_quad._optimized_confirmation_summary(payload, confirmation)
+    assert summary["source_revision_distinct"]
+    assert summary["suite_run_ids_distinct"]
+    assert summary["identity_set_exact"]
+    assert summary["measurement_owner_equivalent"]
+    assert summary["vmap_128_improves_all_targets_in_both_suites"]
+    assert not summary["reproducible_scalar_or_jvp_regressions"]
+    assert summary["accepted"]
+
+    copied = copy.deepcopy(confirmation)
+    copied["records"] = copy.deepcopy(optimized["timings"])
+    copied["run_id"] = optimized["timing_run_id"]
+    assert not benchmark_quad._optimized_confirmation_summary(payload, copied)[
+        "accepted"
+    ]
+
+    duplicate = copy.deepcopy(confirmation)
+    duplicate["records"].append(copy.deepcopy(duplicate["records"][0]))
+    duplicate_summary = benchmark_quad._optimized_confirmation_summary(
+        payload, duplicate
+    )
+    assert not duplicate_summary["identity_set_exact"]
+    assert not duplicate_summary["accepted"]
+
+    target = next(
+        record
+        for record in confirmation["records"]
+        if record["precision"] == "float64"
+        and record["lane"] == "family_matched"
+        and record["case"] == "smooth_exponential"
+        and record["family"] == "romberg"
+    )
+    target["vmap"]["128"]["jaxstro"]["median_warm_seconds"] *= 10.0
+    assert not benchmark_quad._optimized_confirmation_summary(payload, confirmation)[
+        "accepted"
+    ]
+
+
+def test_optimized_confirmation_scans_all_warranted_romberg_records(
+    monkeypatch,
+) -> None:
+    artifact = artifact_from_dict(
+        json.loads(benchmark_quad.OUTPUT.read_text(encoding="utf-8"))
+    )
+    payload = benchmark_quad._thaw(artifact.method_payload)
+    optimized = payload["optimized"]
+    confirmation = _synthetic_distinct_confirmation(payload)
+    monkeypatch.setattr(
+        benchmark_quad, "_measurement_owner_equivalent", lambda *_: True
+    )
+    first = next(
+        record
+        for record in optimized["timings"]
+        if record["precision"] == "float32"
+        and record["family"] == "romberg"
+        and record["case"] == "smooth_exponential"
+    )
+    second = next(
+        record
+        for record in confirmation["records"]
+        if record["precision"] == "float32"
+        and record["family"] == "romberg"
+        and record["case"] == "smooth_exponential"
+    )
+    for record in (first, second):
+        record["scalar"]["jaxstro"]["median_warm_seconds"] *= 10.0
+    summary = benchmark_quad._optimized_confirmation_summary(payload, confirmation)
+    assert summary["reproducible_scalar_or_jvp_regressions"] == [
+        {
+            "record": "smooth_exponential.romberg.divmax10.float32",
+            "mode": "scalar",
+        }
+    ]
+    assert not summary["accepted"]
+
+
 def test_freshness_ignores_timings_but_rejects_accuracy_drift() -> None:
     current = benchmark_quad.run_deterministic_suite()
     stored = copy.deepcopy(current)

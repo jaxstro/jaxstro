@@ -13,9 +13,11 @@ import sys
 import warnings
 from contextlib import nullcontext
 from dataclasses import asdict, replace
+from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 from jaxstro.jaxconfig import enable_high_precision
 
@@ -70,6 +72,9 @@ REPO_ROOT = _IMPORT_ROOT
 OUTPUT = REPO_ROOT / "docs" / "validation" / "quad-performance.json"
 REPORT = (
     REPO_ROOT / "docs" / "60-validation" / "numerical" / "quadrature-performance.md"
+)
+CONFIRMATION_OUTPUT = (
+    REPO_ROOT / "docs" / "validation" / "quad-performance-confirmation.json"
 )
 GENERATION_COMMAND = "uv run --group benchmark python scripts/benchmark_quad.py --emit"
 FLOAT32_CASES = (
@@ -764,6 +769,8 @@ def _timing_record_subprocess(precision: str, index: int) -> dict[str, Any]:
 
 def run_timing_suite() -> dict[str, Any]:
     """Measure every record in a fresh process to isolate compilation caches."""
+    run_id = str(uuid4())
+    started_utc = datetime.now(timezone.utc).isoformat()
     indexed_specs = [
         (precision, index, spec)
         for precision in PRECISIONS
@@ -783,6 +790,8 @@ def run_timing_suite() -> dict[str, Any]:
         records.append(_timing_record_subprocess(precision, index))
     return {
         "schema_version": 1,
+        "run_id": run_id,
+        "started_utc": started_utc,
         "source_revision": _source_revision(),
         "controls": _controls_payload(),
         "environment": _environment(),
@@ -873,6 +882,150 @@ def _optimization_ratio_summary(
         "targets": targets,
         "baseline_trigger_assessment": baseline.get("trigger_assessment"),
         "optimized_trigger_assessment": optimized.get("trigger_assessment"),
+    }
+
+
+def _measurement_owner_equivalent(before: str, after: str) -> bool:
+    completed = subprocess.run(
+        (
+            "git",
+            "diff",
+            "--quiet",
+            before,
+            after,
+            "--",
+            "src/jaxstro/quad",
+            "scripts/benchmark_quad.py",
+            "scripts/quad_benchmark_adapters.py",
+            "scripts/quad_benchmark_cases.py",
+            "scripts/quad_benchmark_timing.py",
+            "pyproject.toml",
+            "uv.lock",
+        ),
+        cwd=REPO_ROOT,
+        check=False,
+    )
+    return completed.returncode == 0
+
+
+def _timing_materially_slower(
+    baseline: dict[str, Any],
+    candidate: dict[str, Any],
+) -> bool:
+    before = float(baseline["median_warm_seconds"])
+    after = float(candidate["median_warm_seconds"])
+    return bool(
+        after > 1.25 * before
+        and after - before
+        > 2.0
+        * max(
+            float(baseline["mad_warm_seconds"]),
+            float(candidate["mad_warm_seconds"]),
+        )
+    )
+
+
+def _optimized_confirmation_summary(
+    payload: dict[str, Any],
+    confirmation: dict[str, Any],
+) -> dict[str, Any]:
+    baseline = payload["baseline"]
+    optimized = payload["optimized"]
+    confirmation_suite = {
+        "timings": confirmation["records"],
+        "trigger_assessment": None,
+    }
+    second_ratios = _optimization_ratio_summary(baseline, confirmation_suite)
+    first_by_record = {item["record"]: item for item in payload["ratios"]["targets"]}
+    second_by_record = {item["record"]: item for item in second_ratios["targets"]}
+    required = {
+        "smooth_exponential.romberg.divmax10.float64",
+        "oscillatory_cosine.romberg.divmax10.float64",
+        "expensive_identity.romberg.divmax10.float64",
+    }
+    vmap_improves_both = all(
+        first_by_record[record]["modes"]["vmap_128"]["jaxstro_speedup"] > 1.0
+        and second_by_record[record]["modes"]["vmap_128"]["jaxstro_speedup"] > 1.0
+        for record in required
+    )
+
+    def timing_map(suite, timing_key="timings"):
+        return {_record_identity(record): record for record in suite[timing_key]}
+
+    baseline_timings = timing_map(baseline)
+    first_timings = timing_map(optimized)
+    second_timings = timing_map(confirmation, "records")
+    reproducible_regressions = []
+    for contract in baseline["records"]:
+        if contract["family"] != "romberg":
+            continue
+        key = _record_identity(contract)
+        for mode in ("scalar", "jvp"):
+            warrant_key = (
+                "primal_performance_interpretable"
+                if mode == "scalar"
+                else "jvp_performance_interpretable"
+            )
+            if not contract["warranted"][warrant_key]:
+                continue
+            before = baseline_timings[key][mode]["jaxstro"]
+            first = first_timings[key][mode]["jaxstro"]
+            second = second_timings[key][mode]["jaxstro"]
+            if _timing_materially_slower(before, first) and _timing_materially_slower(
+                before, second
+            ):
+                reproducible_regressions.append(
+                    {"record": _trigger_identity(contract), "mode": mode}
+                )
+    source_revision_distinct = (
+        confirmation["source_revision"] != optimized["source_revision"]
+    )
+    suite_run_ids_distinct = bool(
+        optimized["timing_run_id"]
+        and confirmation["run_id"]
+        and optimized["timing_run_id"] != confirmation["run_id"]
+    )
+    expected_identities = [_record_identity(record) for record in optimized["timings"]]
+    confirmation_identities = [
+        _record_identity(record) for record in confirmation["records"]
+    ]
+    identity_set_exact = bool(
+        len(confirmation_identities) == len(expected_identities)
+        and len(set(confirmation_identities)) == len(confirmation_identities)
+        and set(confirmation_identities) == set(expected_identities)
+    )
+    measurement_owner_equivalent = _measurement_owner_equivalent(
+        optimized["source_revision"], confirmation["source_revision"]
+    )
+    controls_match = confirmation["controls"] == optimized["controls"]
+    environment_match = confirmation["environment"] == optimized["timing_environment"]
+    process_isolation = confirmation["process_isolation"]
+    accepted = bool(
+        vmap_improves_both
+        and not reproducible_regressions
+        and source_revision_distinct
+        and suite_run_ids_distinct
+        and identity_set_exact
+        and measurement_owner_equivalent
+        and controls_match
+        and environment_match
+        and process_isolation == "fresh_process_per_record"
+    )
+    return {
+        "source_revision": confirmation["source_revision"],
+        "run_id": confirmation["run_id"],
+        "source_revision_distinct": source_revision_distinct,
+        "suite_run_ids_distinct": suite_run_ids_distinct,
+        "identity_set_exact": identity_set_exact,
+        "measurement_owner_equivalent": measurement_owner_equivalent,
+        "controls_match": controls_match,
+        "environment_match": environment_match,
+        "process_isolation": process_isolation,
+        "targets": second_ratios["targets"],
+        "vmap_128_improves_all_targets_in_both_suites": vmap_improves_both,
+        "regression_scope": "all_contract_warranted_romberg_scalar_and_jvp_records",
+        "reproducible_scalar_or_jvp_regressions": reproducible_regressions,
+        "accepted": accepted,
     }
 
 
@@ -1629,11 +1782,38 @@ def render_report(artifact: EvidenceArtifact) -> str:
                 or "none"
             )
             + ".",
-            "",
-            "## Warranted limitations",
-            "",
         ]
     )
+    confirmation = (payload.get("ratios") or {}).get("optimized_confirmation")
+    if confirmation is not None:
+        first_targets = {item["record"]: item for item in payload["ratios"]["targets"]}
+        lines.extend(
+            [
+                "",
+                "## Two-suite optimization acceptance",
+                "",
+                "The reviewed baseline is preserved unchanged. The two optimized suites have distinct generated run identifiers and distinct source revisions, with the exact same unique record set, unchanged runtime and measurement owners, matching controls and hardware, and per-record process isolation.",
+                "",
+                "| Romberg case | Suite 1 VMAP-128 speedup | Suite 2 VMAP-128 speedup |",
+                "| --- | ---: | ---: |",
+            ]
+        )
+        for item in confirmation["targets"]:
+            record = item["record"]
+            case = record.split(".", maxsplit=1)[0]
+            first = first_targets[record]["modes"]["vmap_128"]["jaxstro_speedup"]
+            second = item["modes"]["vmap_128"]["jaxstro_speedup"]
+            lines.append(f"| `{case}` | {first:.2f} | {second:.2f} |")
+        lines.extend(
+            [
+                "",
+                "```{admonition} Acceptance rule",
+                ":class: important",
+                "All three VMAP-128 targets improve in both suites. No scalar or JVP slowdown above 25 percent and separated by more than twice the larger MAD reproduces in both suites.",
+                "```",
+            ]
+        )
+    lines.extend(["", "## Warranted limitations", ""])
     lines.extend(f"- {item}" for item in artifact.limitations)
     lines.append("")
     return "\n".join(lines)
@@ -1651,6 +1831,51 @@ def _write_artifact(artifact: EvidenceArtifact) -> None:
     REPORT.write_text(render_report(artifact), encoding="utf-8")
 
 
+def _confirm_optimized(path: Path) -> int:
+    _require_clean_tree()
+    if not OUTPUT.exists():
+        raise RuntimeError("optimized quadrature evidence does not exist")
+    artifact = artifact_from_dict(json.loads(OUTPUT.read_text(encoding="utf-8")))
+    payload = _thaw(artifact.method_payload)
+    if payload.get("optimized") is None or not payload.get("contract_parity"):
+        raise RuntimeError("optimized quadrature evidence is not contract-warranted")
+    confirmation = json.loads(path.expanduser().resolve().read_text(encoding="utf-8"))
+    summary = _optimized_confirmation_summary(payload, confirmation)
+    if not all(
+        (
+            summary["source_revision_distinct"],
+            summary["suite_run_ids_distinct"],
+            summary["identity_set_exact"],
+            summary["measurement_owner_equivalent"],
+            summary["controls_match"],
+            summary["environment_match"],
+            summary["process_isolation"] == "fresh_process_per_record",
+            summary["accepted"],
+        )
+    ):
+        raise RuntimeError("optimized quadrature confirmation failed acceptance")
+    payload["ratios"]["optimized_confirmation"] = summary
+    payload["optimization_decision"] = {
+        "status": "optimized_accepted_two_suite",
+        "triggered": True,
+        "reason": (
+            "Two fresh isolated suites improve all three Romberg VMAP-128 "
+            "targets without a reproducible scalar or JVP regression."
+        ),
+    }
+    confirmed = replace(artifact, method_payload=payload)
+    CONFIRMATION_OUTPUT.write_text(
+        json.dumps(confirmation, indent=2, sort_keys=True, allow_nan=False) + "\n",
+        encoding="utf-8",
+    )
+    _write_artifact(confirmed)
+    print(
+        "accepted optimized quadrature evidence and wrote "
+        f"{CONFIRMATION_OUTPUT.relative_to(REPO_ROOT)}"
+    )
+    return 0
+
+
 def _check_mode() -> int:
     if not OUTPUT.exists() or not REPORT.exists():
         print("quadrature performance evidence is missing or stale")
@@ -1662,6 +1887,18 @@ def _check_mode() -> int:
         healthy = healthy and REPORT.read_text(encoding="utf-8") == render_report(
             stored
         )
+        payload = _thaw(stored.method_payload)
+        if payload.get("optimization_decision", {}).get("status") == (
+            "optimized_accepted_two_suite"
+        ):
+            healthy = healthy and CONFIRMATION_OUTPUT.exists()
+            if healthy:
+                confirmation = json.loads(
+                    CONFIRMATION_OUTPUT.read_text(encoding="utf-8")
+                )
+                healthy = payload["ratios"]["optimized_confirmation"] == (
+                    _optimized_confirmation_summary(payload, confirmation)
+                )
     except (KeyError, TypeError, ValueError, json.JSONDecodeError):
         healthy = False
     if not healthy:
@@ -1705,6 +1942,7 @@ def main() -> int:
     mode.add_argument("--emit", action="store_true")
     mode.add_argument("--check", action="store_true")
     mode.add_argument("--timing-only", type=Path, metavar="PATH")
+    mode.add_argument("--confirm-optimized", type=Path, metavar="PATH")
     mode.add_argument(
         "--timing-record",
         nargs=2,
@@ -1724,12 +1962,16 @@ def main() -> int:
         return 0
     if args.check:
         return _check_mode()
+    if args.confirm_optimized is not None:
+        return _confirm_optimized(args.confirm_optimized)
     if args.timing_only is not None:
         return _timing_only(args.timing_only)
     _require_clean_tree()
     baseline = copy.deepcopy(run_deterministic_suite())
     timing = run_timing_suite()
     baseline["timings"] = timing["records"]
+    baseline["timing_run_id"] = timing["run_id"]
+    baseline["timing_started_utc"] = timing["started_utc"]
     baseline["timing_environment"] = timing["environment"]
     baseline["timing_process_isolation"] = timing["process_isolation"]
     reviewed = None
