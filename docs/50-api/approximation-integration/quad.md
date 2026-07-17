@@ -263,7 +263,7 @@ multidimensional numerical method is not available until its family passes the
 B1, B2, or B3 validation gate.
 :::
 
-### Quantity activation
+## Quantity activation
 
 Quantity handling belongs only to `quad.integrate` and is alpha. The adapter
 validates and unwraps units before calling the same raw engine, then restores

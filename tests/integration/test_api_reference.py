@@ -101,6 +101,16 @@ def test_interpolation_reference_does_not_duplicate_symbol_descriptions() -> Non
     assert text.count("`monotone_cubic_interp(...)`") == 1
 
 
+def test_quad_quantity_activation_is_not_nested_under_phase_b_dispatcher() -> None:
+    text = _page("approximation-integration/quad.md")
+    headings = text.splitlines()
+
+    assert "## Quantity activation" in headings
+    assert text.index("## Phase B dispatcher boundary") < text.index(
+        "## Quantity activation"
+    )
+
+
 def test_safeguarded_rootfinding_surface_is_documented_from_its_owner() -> None:
     symbols = (
         "PROPOSAL_NONE",
