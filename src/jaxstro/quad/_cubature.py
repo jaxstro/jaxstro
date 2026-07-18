@@ -116,18 +116,39 @@ def _target_scalar(value: float | int, dtype: np.dtype) -> float:
     return cast(float, dtype.type(value))
 
 
+def _target_radius(
+    numerator: int,
+    denominator: int,
+    dtype: np.dtype,
+) -> float:
+    ratio = _target_scalar(numerator, dtype) / _target_scalar(denominator, dtype)
+    return cast(float, np.sqrt(ratio, dtype=dtype))
+
+
+def _map_reference_coordinate(
+    sign: int,
+    radius: float,
+    dtype: np.dtype,
+) -> float:
+    center = _target_scalar(0.5, dtype)
+    half = _target_scalar(0.5, dtype)
+    return cast(
+        float,
+        center + half * _target_scalar(sign, dtype) * radius,
+    )
+
+
 def _axis_orbit(
     dimension: int,
     radius: float,
     dtype: np.dtype,
 ) -> list[np.ndarray]:
     center = _target_scalar(0.5, dtype)
-    half = _target_scalar(0.5, dtype)
     orbit = []
     for axis in range(dimension):
         for sign in (-1, 1):
             point = np.full(dimension, center, dtype=dtype)
-            point[axis] = center + half * _target_scalar(sign, dtype) * radius
+            point[axis] = _map_reference_coordinate(sign, radius, dtype)
             orbit.append(point)
     return orbit
 
@@ -138,13 +159,12 @@ def _pair_orbit(
     dtype: np.dtype,
 ) -> list[np.ndarray]:
     center = _target_scalar(0.5, dtype)
-    half = _target_scalar(0.5, dtype)
     orbit = []
     for first, second in itertools.combinations(range(dimension), 2):
         for first_sign, second_sign in itertools.product((-1, 1), repeat=2):
             point = np.full(dimension, center, dtype=dtype)
-            point[first] = center + half * _target_scalar(first_sign, dtype) * radius
-            point[second] = center + half * _target_scalar(second_sign, dtype) * radius
+            point[first] = _map_reference_coordinate(first_sign, radius, dtype)
+            point[second] = _map_reference_coordinate(second_sign, radius, dtype)
             orbit.append(point)
     return orbit
 
@@ -157,7 +177,10 @@ def _corner_orbit(
     center = _target_scalar(0.5, dtype)
     half = _target_scalar(0.5, dtype)
     return [
-        center + half * radius * np.asarray(signs, dtype=dtype)
+        np.asarray(
+            center + half * radius * np.asarray(signs, dtype=dtype),
+            dtype=dtype,
+        )
         for signs in itertools.product((-1, 1), repeat=dimension)
     ]
 
@@ -179,9 +202,9 @@ def _genz_malik_data_cached(dimension: int, dtype_name: str) -> GenzMalikData:
 
     dimension_value = scalar(dimension)
 
-    lambda2 = np.sqrt(scalar(9) / scalar(70))
-    lambda4 = np.sqrt(scalar(9) / scalar(10))
-    lambda5 = np.sqrt(scalar(9) / scalar(19))
+    lambda2 = _target_radius(9, 70, dtype)
+    lambda4 = _target_radius(9, 10, dtype)
+    lambda5 = _target_radius(9, 19, dtype)
 
     center_points = [np.full(dimension, scalar(0.5), dtype=dtype)]
     lambda2_axis_points = _axis_orbit(dimension, lambda2, dtype)
@@ -318,11 +341,20 @@ def genz_malik_estimate(
     values = jnp.asarray(values)
     high = _weighted_payload_sum(values, data.high_weights)
     low = _weighted_payload_sum(values, data.low_weights)
+    error = jnp.abs(high - low)
+    axis_difference = _axis_fourth_differences(values, data, error_norm)
+    all_finite = (
+        jnp.all(jnp.isfinite(values))
+        & jnp.all(jnp.isfinite(high))
+        & jnp.all(jnp.isfinite(low))
+        & jnp.all(jnp.isfinite(error))
+        & jnp.all(jnp.isfinite(axis_difference))
+    )
     return LocalCubatureEstimate(
         value=high,
-        error=jnp.abs(high - low),
-        axis_difference=_axis_fourth_differences(values, data, error_norm),
-        nonfinite=~jnp.all(jnp.isfinite(values)),
+        error=error,
+        axis_difference=axis_difference,
+        nonfinite=~all_finite,
     )
 
 

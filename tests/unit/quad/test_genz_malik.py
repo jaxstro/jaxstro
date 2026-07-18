@@ -6,6 +6,7 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
+import jaxstro.quad._cubature as cubature_module
 from jaxstro.quad._cubature import (
     genz_malik_data,
     genz_malik_estimate,
@@ -13,6 +14,46 @@ from jaxstro.quad._cubature import (
 )
 from jaxstro.quad.cubature import GenzMalik
 from jaxstro.quad.tolerance import L1Norm, MaxNorm
+
+_TARGET_DTYPE_ORACLE = {
+    np.dtype(np.float32): {
+        (9, 70): (0x3EB7964D, 0x3EA434DA, 0x3F2DE593),
+        (9, 10): (0x3F72DCE8, 0x3CD23180, 0x3F796E74),
+        (9, 19): (0x3F3030F8, 0x3E1F9E10, 0x3F58187C),
+    },
+    np.dtype(np.float64): {
+        (9, 70): (
+            0x3FD6F2C9A420071D,
+            0x3FD4869B2DEFFC72,
+            0x3FE5BCB2690801C7,
+        ),
+        (9, 10): (
+            0x3FEE5B9D136C6D96,
+            0x3F9A462EC93926A0,
+            0x3FEF2DCE89B636CB,
+        ),
+        (9, 19): (
+            0x3FE6061EFECF8AE9,
+            0x3FC3F3C20260EA2E,
+            0x3FEB030F7F67C574,
+        ),
+    },
+}
+
+_FLOAT32_MOMENT_TOLERANCES = {
+    2: (7.0e-8, 2.5e-7),
+    3: (1.3e-7, 1.3e-7),
+    4: (1.5e-7, 5.0e-7),
+    5: (1.4e-6, 5.0e-7),
+    6: (1.2e-6, 1.3e-6),
+    7: (1.3e-6, 1.8e-6),
+    8: (6.3e-6, 1.4e-6),
+}
+
+
+def _floating_bits(value, dtype: np.dtype) -> int:
+    unsigned_dtype = np.uint32 if dtype == np.dtype(np.float32) else np.uint64
+    return int(np.asarray(value, dtype=dtype).view(unsigned_dtype))
 
 
 def _total_degree_exponents(dimension: int, degree: int) -> np.ndarray:
@@ -56,6 +97,37 @@ def _embedded_monomial_moments(data, degree: int) -> tuple[np.ndarray, np.ndarra
     observed = np.concatenate(observed_chunks)
     expected = np.prod(1.0 / (exponents + 1.0), axis=-1)
     return observed, expected
+
+
+@pytest.mark.parametrize("dtype", [np.dtype(np.float32), np.dtype(np.float64)])
+@pytest.mark.parametrize(
+    ("ratio", "orbit_name"),
+    [
+        ((9, 70), "lambda2_axis_indices"),
+        ((9, 10), "lambda4_axis_indices"),
+        ((9, 19), "lambda5_corner_slice"),
+    ],
+)
+def test_radii_and_mapped_coordinates_match_target_dtype_bit_oracle(
+    dtype,
+    ratio,
+    orbit_name,
+):
+    data = genz_malik_data(2, dtype)
+    radius_bits, negative_bits, positive_bits = _TARGET_DTYPE_ORACLE[dtype][ratio]
+
+    radius = cubature_module._target_radius(*ratio, dtype)
+    if orbit_name == "lambda5_corner_slice":
+        negative = data.points[data.lambda5_corner_slice.start, 0]
+        positive = data.points[data.lambda5_corner_slice.stop - 1, 0]
+    else:
+        indices = getattr(data, orbit_name)
+        negative = data.points[indices[0, 0], 0]
+        positive = data.points[indices[0, 1], 0]
+
+    assert abs(_floating_bits(radius, dtype) - radius_bits) == 0
+    assert abs(_floating_bits(negative, dtype) - negative_bits) == 0
+    assert abs(_floating_bits(positive, dtype) - positive_bits) == 0
 
 
 @pytest.mark.parametrize("dimension", range(2, 9))
@@ -251,6 +323,19 @@ def test_embedded_rule_matches_complete_degree_five_moment_matrix(dimension):
     assert np.allclose(observed, expected, rtol=0.0, atol=3e-13)
 
 
+@pytest.mark.parametrize("dimension", range(2, 9))
+def test_float32_rules_match_complete_dimension_aware_moment_matrices(dimension):
+    data = genz_malik_data(dimension, jnp.float32)
+    high_observed, high_expected = _monomial_moments(data, degree=7)
+    low_observed, low_expected = _embedded_monomial_moments(data, degree=5)
+    high_tolerance, low_tolerance = _FLOAT32_MOMENT_TOLERANCES[dimension]
+
+    assert high_observed.shape == (math.comb(dimension + 7, 7),)
+    assert low_observed.shape == (math.comb(dimension + 5, 5),)
+    assert np.max(np.abs(high_observed - high_expected)) <= high_tolerance
+    assert np.max(np.abs(low_observed - low_expected)) <= low_tolerance
+
+
 @pytest.mark.parametrize(
     ("payload", "expected_shape"),
     [
@@ -316,6 +401,63 @@ def test_local_estimate_reports_nonfinite_payloads_without_sanitizing(bad_value)
     assert estimate.nonfinite
     assert not jnp.all(jnp.isfinite(estimate.value))
     assert not jnp.all(jnp.isfinite(estimate.error))
+
+
+@pytest.mark.parametrize(
+    ("dtype", "complex_dtype"),
+    [(jnp.float32, jnp.complex64), (jnp.float64, jnp.complex128)],
+)
+@pytest.mark.parametrize("payload_kind", ["scalar", "vector", "complex"])
+def test_local_estimate_flags_finite_payload_reduction_overflow(
+    dtype,
+    complex_dtype,
+    payload_kind,
+):
+    data = genz_malik_data(8, dtype)
+    scale = jnp.asarray(0.6 * np.finfo(np.dtype(dtype)).max, dtype=dtype)
+    if payload_kind == "scalar":
+        values = jnp.full((data.point_count,), scale, dtype=dtype)
+    elif payload_kind == "vector":
+        values = jnp.stack(
+            (
+                jnp.full((data.point_count,), scale, dtype=dtype),
+                jnp.ones((data.point_count,), dtype=dtype),
+            ),
+            axis=-1,
+        )
+    else:
+        complex_scale = jnp.asarray(scale + 1.0j * scale, dtype=complex_dtype)
+        values = jnp.full(
+            (data.point_count,),
+            complex_scale,
+            dtype=complex_dtype,
+        )
+
+    assert jnp.all(jnp.isfinite(values))
+
+    eager = genz_malik_estimate(values, data)
+    compiled = jax.jit(genz_malik_estimate)(values, data)
+    batched_values = jnp.stack((values, jnp.ones_like(values)), axis=0)
+    batched = jax.jit(jax.vmap(genz_malik_estimate, in_axes=(0, None)))(
+        batched_values,
+        data,
+    )
+
+    for estimate in (eager, compiled):
+        assert estimate.nonfinite
+        assert not jnp.all(jnp.isfinite(estimate.value))
+        assert not jnp.all(jnp.isfinite(estimate.error))
+        assert not jnp.all(jnp.isfinite(estimate.axis_difference))
+    assert jnp.array_equal(
+        batched.nonfinite,
+        jnp.asarray([True, False]),
+    )
+    assert not jnp.all(jnp.isfinite(batched.value[0]))
+    assert not jnp.all(jnp.isfinite(batched.error[0]))
+    assert not jnp.all(jnp.isfinite(batched.axis_difference[0]))
+    assert jnp.all(jnp.isfinite(batched.value[1]))
+    assert jnp.all(jnp.isfinite(batched.error[1]))
+    assert jnp.all(jnp.isfinite(batched.axis_difference[1]))
 
 
 def test_axis_fourth_differences_match_the_five_point_formula():
