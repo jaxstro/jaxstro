@@ -5,12 +5,31 @@ import jax
 
 from .adaptive import integrate as integrate_1d
 from .domains import Hyperrectangle
-from .tensor import TensorProduct, integrate_tensor
+from .tensor import (
+    AdaptiveTensorClenshawCurtis,
+    TensorProduct,
+    integrate_adaptive_tensor,
+    integrate_tensor,
+)
 from .tolerance import ErrorNorm, MaxNorm
 
 
 def _integrate_hyperrectangle(*args, **kwargs):
     method = kwargs["method"]
+    if isinstance(method, AdaptiveTensorClenshawCurtis):
+        if kwargs["gradient"] != "stop":
+            raise ValueError('AdaptiveTensorClenshawCurtis requires gradient="stop"')
+        result = integrate_adaptive_tensor(
+            *args,
+            args=kwargs["args"],
+            method=method,
+            measure=kwargs["measure"],
+            epsabs=kwargs["epsabs"],
+            epsrel=kwargs["epsrel"],
+            max_evaluations=kwargs["max_evaluations"],
+            error_norm=kwargs["error_norm"],
+        )
+        return jax.tree.map(jax.lax.stop_gradient, result)
     if isinstance(method, TensorProduct):
         if kwargs["gradient"] != "stop":
             raise ValueError('TensorProduct requires gradient="stop"')

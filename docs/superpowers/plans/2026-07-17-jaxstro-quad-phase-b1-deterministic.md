@@ -442,10 +442,21 @@ controller. `integrate.py` only dispatches concrete method declarations to
       from jaxstro.quad._tensor import choose_tensor_axis
 
       axis, evidence = choose_tensor_axis(
-          jnp.array([3.0, 1.0]),
+          jnp.array([3.0, 2.0]),
           jnp.array([3, 1]),
       )
       assert axis == 1
+      assert evidence == 5.0
+
+
+  def test_frontier_profit_ties_choose_the_lowest_axis():
+      from jaxstro.quad._tensor import choose_tensor_axis
+
+      axis, evidence = choose_tensor_axis(
+          jnp.array([3.0, 1.0]),
+          jnp.array([3, 1]),
+      )
+      assert axis == 0
       assert evidence == 4.0
 
 
