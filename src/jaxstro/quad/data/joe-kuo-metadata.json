@@ -1,0 +1,22 @@
+{
+  "citation": {
+    "authors": [
+      "Stephen Joe",
+      "Frances Y. Kuo"
+    ],
+    "doi": "10.1137/070709359",
+    "title": "Constructing Sobol sequences with better two-dimensional projections",
+    "year": 2008
+  },
+  "criterion": 6,
+  "dimension": 21201,
+  "license": {
+    "sha256": "9d10226b50eeb34be0ab06bfa3392c7bd1f04bf602f9af4343295d1fd003d0e3",
+    "url": "https://web.maths.unsw.edu.au/~fkuo/sobol/licence"
+  },
+  "source": {
+    "sha256": "68eedd2a4e3b659b9695e7aff0f8ac68718bcf620730fc3d3a8c65df2a067441",
+    "updated": "2010-09-16",
+    "url": "https://web.maths.unsw.edu.au/~fkuo/sobol/new-joe-kuo-6.21201"
+  }
+}

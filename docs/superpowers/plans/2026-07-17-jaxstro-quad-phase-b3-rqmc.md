@@ -878,6 +878,8 @@ generation, pytest, Ruff, MyPy, JSON evidence.
               raise ValueError("schedule must be monotone with strict progress")
           if replicates[-1] <= replicates[0]:
               raise ValueError("schedule must include replicate growth")
+          if levels[-1] <= levels[0]:
+              raise ValueError("schedule must include point-level growth")
           if (self.estimate_bounds is None) == (self.integrand_bounds is None):
               raise ValueError(
                   "provide exactly one of estimate_bounds or integrand_bounds"
@@ -938,8 +940,11 @@ generation, pytest, Ruff, MyPy, JSON evidence.
   shift or shape construction.
 
   The method declaration validates increasing levels/replicates, at least eight
-  replicates, at least one strict change per pair, final replicate growth, finite
-  ordered bounds, and total final work within `max_evaluations`.
+  replicates, at least one strict change per pair, final replicate growth, final
+  point-level growth, finite ordered bounds, and total final work within
+  `max_evaluations`. Add a mutation-resistant declaration test that holds the
+  point level constant while increasing replicates and requires the
+  `point-level growth` failure.
 
 - [ ] **Step 4: Implement prefix and replicate reuse**
 
