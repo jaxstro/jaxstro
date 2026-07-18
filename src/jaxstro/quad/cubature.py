@@ -41,7 +41,14 @@ class GenzMalik:
 @jax.tree_util.register_pytree_node_class
 @dataclass(frozen=True)
 class AdaptiveCubature:
-    """Fixed-capacity h-adaptive cubature using the Genz-Malik pair."""
+    """Fixed-capacity h-adaptive cubature using the Genz-Malik pair.
+
+    Scalar eager and JIT solves physically skip child evaluation after a
+    terminal status. ``jax.vmap`` preserves result semantics and per-lane
+    logical work, but select-style batching does not guarantee physical
+    per-lane skipping. Cost-sensitive heterogeneous batches should apply
+    ``jax.lax.map`` around scalar :func:`jaxstro.quad.integrate` calls.
+    """
 
     rule: GenzMalik = field(default_factory=GenzMalik)
 

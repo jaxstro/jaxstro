@@ -18,7 +18,6 @@ from .tolerance import ErrorNorm, MaxNorm, tolerance_threshold
 from .tolerance import error_norm as reduce_error_norm
 
 RUNNING = -1
-MAX_CUBATURE_REGIONS = 100_000
 
 
 @jax.tree_util.register_pytree_node_class
@@ -100,6 +99,23 @@ class GenzMalikData:
             lambda4_pair_slice=slice(lambda4_pair_start, lambda4_pair_stop),
             lambda5_corner_slice=slice(lambda5_start, lambda5_stop),
         )
+
+
+class _GenzMalikHostData(NamedTuple):
+    """Cached host arrays and static orbit metadata with no JAX tracers."""
+
+    points: np.ndarray
+    high_weights: np.ndarray
+    low_weights: np.ndarray
+    lambda2_axis_indices: np.ndarray
+    lambda4_axis_indices: np.ndarray
+    dimension: int
+    point_count: int
+    center_slice: slice
+    lambda2_axis_slice: slice
+    lambda4_axis_slice: slice
+    lambda4_pair_slice: slice
+    lambda5_corner_slice: slice
 
 
 class LocalCubatureEstimate(NamedTuple):
@@ -265,7 +281,10 @@ def _repeat_weight(
 
 
 @lru_cache(maxsize=None)
-def _genz_malik_data_cached(dimension: int, dtype_name: str) -> GenzMalikData:
+def _genz_malik_data_cached(
+    dimension: int,
+    dtype_name: str,
+) -> _GenzMalikHostData:
     dtype = np.dtype(dtype_name)
 
     def scalar(value: float | int) -> float:
@@ -348,19 +367,19 @@ def _genz_malik_data_cached(dimension: int, dtype_name: str) -> GenzMalikData:
         )
     )
 
-    return GenzMalikData(
-        points=jnp.asarray(points),
-        high_weights=jnp.asarray(high_weights),
-        low_weights=jnp.asarray(low_weights),
-        lambda2_axis_indices=jnp.arange(
+    return _GenzMalikHostData(
+        points=points,
+        high_weights=high_weights,
+        low_weights=low_weights,
+        lambda2_axis_indices=np.arange(
             lambda2_axis_slice.start,
             lambda2_axis_slice.stop,
-            dtype=jnp.int32,
+            dtype=np.int32,
         ).reshape(dimension, 2),
-        lambda4_axis_indices=jnp.arange(
+        lambda4_axis_indices=np.arange(
             lambda4_axis_slice.start,
             lambda4_axis_slice.stop,
-            dtype=jnp.int32,
+            dtype=np.int32,
         ).reshape(dimension, 2),
         dimension=dimension,
         point_count=point_count,
@@ -376,7 +395,21 @@ def genz_malik_data(dimension: int, dtype) -> GenzMalikData:
     """Construct the normalized degree-7 and embedded degree-5 rule data."""
     validate_b1_dimension(dimension)
     target_dtype = _real_floating_dtype(dtype)
-    return _genz_malik_data_cached(dimension, target_dtype.name)
+    host = _genz_malik_data_cached(dimension, target_dtype.name)
+    return GenzMalikData(
+        points=jnp.asarray(host.points),
+        high_weights=jnp.asarray(host.high_weights),
+        low_weights=jnp.asarray(host.low_weights),
+        lambda2_axis_indices=jnp.asarray(host.lambda2_axis_indices),
+        lambda4_axis_indices=jnp.asarray(host.lambda4_axis_indices),
+        dimension=host.dimension,
+        point_count=host.point_count,
+        center_slice=host.center_slice,
+        lambda2_axis_slice=host.lambda2_axis_slice,
+        lambda4_axis_slice=host.lambda4_axis_slice,
+        lambda4_pair_slice=host.lambda4_pair_slice,
+        lambda5_corner_slice=host.lambda5_corner_slice,
+    )
 
 
 def _weighted_payload_sum(values: Array, weights: Array) -> Array:
@@ -475,11 +508,13 @@ def validate_cubature_capacity(
     region_refinements = max_regions - 1
     max_refinements = min(evaluation_refinements, region_refinements)
     store_capacity = max_refinements + 1
-    if store_capacity > MAX_CUBATURE_REGIONS:
+    reachable_evaluations = point_count * (1 + 2 * max_refinements)
+    max_int32 = np.iinfo(np.int32).max
+    if store_capacity > max_int32 or reachable_evaluations > max_int32:
         raise ValueError(
-            "cubature region store capacity "
-            f"{store_capacity} exceeds the supported guard "
-            f"{MAX_CUBATURE_REGIONS}"
+            "reachable cubature work exceeds JAX int32 indexing: "
+            f"store_capacity={store_capacity}, "
+            f"evaluations={reachable_evaluations}"
         )
 
     # Limits are clipped just above the reachable scan so even enormous
@@ -548,6 +583,19 @@ def cubature_termination_status(
 def _payload_factors(values: Array, factors: Array) -> Array:
     shape = (factors.shape[0],) + (1,) * (values.ndim - 1)
     return values * factors.reshape(shape)
+
+
+def _active_leaf_sum(values: Array, active: Array) -> Array:
+    """Reduce only active leaf rows in the store's deterministic row order."""
+    values = jnp.asarray(values)
+    active = jnp.asarray(active)
+    mask_shape = (active.shape[0],) + (1,) * (values.ndim - 1)
+    masked = jnp.where(
+        active.reshape(mask_shape),
+        values,
+        jnp.zeros_like(values),
+    )
+    return jnp.sum(masked, axis=0)
 
 
 def evaluate_cubature_regions(
@@ -776,18 +824,21 @@ def cubature_controller(
             data=data,
         )
         append_index = operand.active_regions
-        new_value = (
-            operand.value
-            - operand.local_value[region]
-            + children.value[0]
-            + children.value[1]
+        new_local_value = (
+            operand.local_value.at[region]
+            .set(children.value[0])
+            .at[append_index]
+            .set(children.value[1])
         )
-        new_error = (
-            operand.error
-            - operand.local_error[region]
-            + children.error[0]
-            + children.error[1]
+        new_local_error = (
+            operand.local_error.at[region]
+            .set(children.error[0])
+            .at[append_index]
+            .set(children.error[1])
         )
+        new_active = operand.active.at[append_index].set(True)
+        new_value = _active_leaf_sum(new_local_value, new_active)
+        new_error = _active_leaf_sum(new_local_error, new_active)
         new_error_norm = reduce_error_norm(new_error, error_norm)
         new_tolerance = tolerance_threshold(
             new_value,
@@ -805,14 +856,8 @@ def cubature_controller(
             .set(child_upper[0])
             .at[append_index]
             .set(child_upper[1]),
-            local_value=operand.local_value.at[region]
-            .set(children.value[0])
-            .at[append_index]
-            .set(children.value[1]),
-            local_error=operand.local_error.at[region]
-            .set(children.error[0])
-            .at[append_index]
-            .set(children.error[1]),
+            local_value=new_local_value,
+            local_error=new_local_error,
             local_error_norm=operand.local_error_norm.at[region]
             .set(children.error_norm[0])
             .at[append_index]
@@ -821,7 +866,7 @@ def cubature_controller(
             .set(children.split_axis[0])
             .at[append_index]
             .set(children.split_axis[1]),
-            active=operand.active.at[append_index].set(True),
+            active=new_active,
             depth=operand.depth.at[region]
             .set(child_depth)
             .at[append_index]
@@ -889,7 +934,6 @@ __all__ = [
     "CubatureRegionEstimate",
     "GenzMalikData",
     "LocalCubatureEstimate",
-    "MAX_CUBATURE_REGIONS",
     "RUNNING",
     "cubature_controller",
     "cubature_termination_status",

@@ -33,6 +33,11 @@ controller. `integrate.py` only dispatches concrete method declarations to
 - Adaptive tensor returns `REFINEMENT_DIFFERENCE`; cubature returns
   `EMBEDDED_RULE`.
 - Count logical point evaluations, not Python calls or padded storage.
+- For adaptive cubature, scalar eager and JIT execution physically skips child
+  work after termination. Ordinary `jax.vmap` preserves values, statuses, and
+  per-lane logical work but may lower scalar conditionals to select-style
+  execution. Cost-sensitive heterogeneous batches must apply `jax.lax.map`
+  around scalar `quad.integrate` calls to retain physical per-lane masking.
 - Use static capacities and deterministic lowest-axis/lexicographic tie breaks.
 - Implement no multidimensional replay or quantity mode in B1; the dispatcher
   accepts only `gradient="stop"` for B1 until B4.
@@ -692,6 +697,11 @@ controller. `integrate.py` only dispatches concrete method declarations to
   with the same point array. Test every orbit multiplicity and the degree-7
   moment matrix; if a constant-to-orbit association disagrees with the cited
   1980 equations, stop and correct the association before controller work.
+  Any memoized rule construction caches only NumPy arrays and static orbit
+  metadata. Materialize fresh JAX constants on every public call so a cold
+  cache filled during one JIT trace cannot leak tracers into a later JIT or
+  VMAP trace. Add a cold-cache JIT-then-JIT-of-VMAP regression that preserves
+  the target-dtype bit and orbit contracts.
 
 - [ ] **Step 4: Add local value, error, and split evidence**
 
@@ -857,8 +867,15 @@ controller. `integrate.py` only dispatches concrete method declarations to
   precedence `NONFINITE_INTEGRAND`, `CONVERGED`, `MAX_EVALUATIONS`,
   `MAX_REGIONS`.
   Otherwise replace the parent with the left child, append the right child at
-  the first inactive index, and update global value/error by subtracting the
-  parent and adding both children. Ties are lexicographic because `jnp.argmax`
+  the first inactive index. After the local store and active mask are updated,
+  recompute the global value and componentwise nonnegative embedded error by
+  masked reduction over every active leaf in deterministic row order; then
+  recompute the error norm and tolerance from those authoritative reductions.
+  Do not use a signed subtract-parent/add-children recurrence and do not repair
+  it by clamping at zero. Add an adversarial five-leaf float32 regression where
+  the signed recurrence produces a negative embedded error and false
+  `CONVERGED`, while the active-leaf reduction remains positive and terminates
+  on the declared region capacity. Ties are lexicographic because `jnp.argmax`
   returns the first index.
 
 - [ ] **Step 4: Assemble, dispatch, and run GREEN**
@@ -867,10 +884,22 @@ controller. `integrate.py` only dispatches concrete method declarations to
   initial-rule evaluation capacity before tracing. It returns
   `QuadWork(evaluations, refinements, active_regions, deepest_depth, 0)` and
   stores normalized leaf bounds in `CubatureReplayEvidence`. It uses the shared
-  zero-volume `jax.lax.cond` shortcut before initializing the region store.
+  zero-volume `jax.lax.cond` shortcut before initializing the region store. The
+  fixed store uses the exact user-visible `max_regions` declaration clipped
+  only by evaluation reachability and derived JAX integer/shape limits. It has
+  no undocumented numeric row ceiling. Payload shape, dimension, dtype,
+  reachable store capacity, and process/device memory estimates remain explicit
+  B4 benchmark and documentation obligations; B1 makes no universal memory
+  safety claim.
   Add separate tests where only evaluation capacity and only region capacity
-  are exhausted, proving that neither path evaluates a child; add a third test
-  proving `MAX_EVALUATIONS` precedes `MAX_REGIONS` when both are exhausted.
+  are exhausted, proving in scalar eager/JIT execution that neither path
+  evaluates a child; add a third test proving `MAX_EVALUATIONS` precedes
+  `MAX_REGIONS` when both are exhausted. Add a heterogeneous VMAP regression
+  that matches stacked scalar result semantics and per-lane logical work, plus
+  a caller-owned `jax.lax.map` callback regression proving physical child
+  skipping for a converged lane beside a refining lane. Document this cost
+  contract on `AdaptiveCubature` and `quad.integrate` without adding another
+  public batching API.
 
   Run:
 

@@ -51,6 +51,21 @@ def test_adaptive_cubature_and_rule_are_public_but_replay_evidence_is_private():
     assert "CubatureReplayEvidence" not in _cubature.__all__
 
 
+def test_adaptive_cubature_documents_scalar_vmap_and_lax_map_cost_contracts():
+    documentation = " ".join(
+        (
+            inspect.getdoc(quad.AdaptiveCubature) or "",
+            inspect.getdoc(quad.integrate) or "",
+        )
+    ).lower()
+
+    assert "scalar" in documentation
+    assert "vmap" in documentation
+    assert "logical work" in documentation
+    assert "physical" in documentation
+    assert "lax.map" in documentation
+
+
 @pytest.mark.parametrize("dimension", range(2, 9))
 def test_cubature_initial_rule_count_and_dimension_envelope(dimension):
     count = 2**dimension + 2 * dimension**2 + 2 * dimension + 1
@@ -124,29 +139,31 @@ def test_max_regions_is_validated_eagerly(max_regions):
         )
 
 
-def test_oversized_reachable_region_store_is_rejected_before_allocation(
-    monkeypatch,
-):
+def test_reachable_region_store_has_no_arbitrary_private_row_ceiling():
     point_count = _cubature.genz_malik_point_count(2)
+    requested_regions = 100_001
+    capacity = _cubature.validate_cubature_capacity(
+        dimension=2,
+        max_evaluations=point_count * (1 + 2 * (requested_regions - 1)),
+        max_regions=requested_regions,
+    )
 
-    def fail_rule(*_args, **_kwargs):
-        raise AssertionError("oversized capacity must precede rule materialization")
+    assert capacity.store_capacity == requested_regions
+    assert capacity.max_refinements == requested_regions - 1
 
-    def fail_payload(*_args, **_kwargs):
-        raise AssertionError("oversized capacity must precede payload inference")
 
-    monkeypatch.setattr(cubature, "genz_malik_data", fail_rule)
-    monkeypatch.setattr(cubature, "infer_multidim_payload_zero", fail_payload)
-    oversized = _cubature.MAX_CUBATURE_REGIONS + 1
+def test_reachable_region_store_rejects_only_derived_int32_shape_overflow():
+    point_count = _cubature.genz_malik_point_count(2)
+    max_int32 = 2**31 - 1
 
-    with pytest.raises(ValueError, match="cubature region store capacity"):
-        quad.integrate(
-            lambda x: jnp.ones(x.shape[0]),
-            quad.Hyperrectangle(jnp.zeros(2), jnp.ones(2)),
-            **_options(
-                max_evaluations=point_count * (1 + 2 * (oversized - 1)),
-                max_regions=oversized,
-            ),
+    with pytest.raises(
+        ValueError,
+        match="reachable cubature work exceeds JAX int32 indexing",
+    ):
+        _cubature.validate_cubature_capacity(
+            dimension=2,
+            max_evaluations=point_count * (1 + 2 * max_int32),
+            max_regions=max_int32 + 1,
         )
 
 
@@ -160,6 +177,8 @@ def test_huge_declared_regions_do_not_allocate_when_evaluation_budget_is_small()
 
     assert capacity.store_capacity == 1
     assert capacity.max_refinements == 0
+    assert capacity.evaluation_refinement_limit == 0
+    assert capacity.region_refinement_limit == 1
 
 
 def test_cubature_integrates_array_payload_and_counts_points():
@@ -341,6 +360,104 @@ def test_global_value_and_error_equal_the_final_active_leaf_sum():
     )
 
 
+def test_float32_five_leaf_reduction_cannot_false_converge(monkeypatch):
+    """A signed parent delta goes negative while five leaf errors stay positive."""
+    point_count = _cubature.genz_malik_point_count(2)
+    capacity = _cubature.validate_cubature_capacity(
+        dimension=2,
+        max_evaluations=point_count * 11,
+        max_regions=5,
+    )
+    data = _cubature.genz_malik_data(2, jnp.float32)
+    half_ulp_at_one = jnp.asarray(2.0**-24, dtype=jnp.float32)
+
+    def scripted_regions(
+        _fun,
+        _domain,
+        lower,
+        upper,
+        *,
+        args,
+        measure,
+        error_norm,
+        data,
+    ):
+        del args, measure, error_norm, data
+        lower = jnp.asarray(lower, dtype=jnp.float32)
+        upper = jnp.asarray(upper, dtype=jnp.float32)
+        start = lower[:, 0]
+        width = upper[:, 0] - start
+        one = jnp.asarray(1.0, dtype=jnp.float32)
+        large = (start == 0.0) & ((width == 1.0) | (width == 0.5) | (width == 0.25))
+        tiny = ((start == 0.5) & (width == 0.5)) | ((start == 0.25) & (width == 0.25))
+        quarter_tiny = ((start == 0.0) | (start == 0.125)) & (width == 0.125)
+        eighth_tiny = ((start == 0.5) | (start == 0.75)) & (width == 0.25)
+        local = jnp.where(
+            large,
+            one,
+            jnp.where(
+                tiny,
+                half_ulp_at_one,
+                jnp.where(
+                    quarter_tiny,
+                    half_ulp_at_one / 4.0,
+                    jnp.where(eighth_tiny, half_ulp_at_one / 8.0, 0.0),
+                ),
+            ),
+        )
+        return _cubature.CubatureRegionEstimate(
+            value=local,
+            error=local,
+            error_norm=local,
+            split_axis=jnp.zeros(local.shape, dtype=jnp.int32),
+            nonfinite=jnp.zeros(local.shape, dtype=jnp.bool_),
+        )
+
+    monkeypatch.setattr(
+        _cubature,
+        "evaluate_cubature_regions",
+        scripted_regions,
+    )
+    controller = _cubature.cubature_controller(
+        lambda x: jnp.zeros(x.shape[0], dtype=jnp.float32),
+        quad.Hyperrectangle(
+            jnp.zeros(2, dtype=jnp.float32),
+            jnp.ones(2, dtype=jnp.float32),
+        ),
+        args=(),
+        measure=quad.LebesgueMeasure(),
+        epsabs=half_ulp_at_one / 4.0,
+        epsrel=0.0,
+        max_evaluations=point_count * 11,
+        max_regions=5,
+        error_norm=quad.MaxNorm(),
+        zero=jnp.asarray(0.0, dtype=jnp.float32),
+        data=data,
+        capacity=capacity,
+    )
+    leaves = scripted_regions(
+        None,
+        None,
+        controller.evidence.lower,
+        controller.evidence.upper,
+        args=(),
+        measure=None,
+        error_norm=quad.MaxNorm(),
+        data=data,
+    )
+    active_error = jnp.sum(jnp.where(controller.evidence.active, leaves.error, 0.0))
+    active_value = jnp.sum(jnp.where(controller.evidence.active, leaves.value, 0.0))
+
+    assert controller.active_regions == 5
+    assert controller.status == quad.QuadStatus.MAX_REGIONS
+    assert active_error == 1.75 * half_ulp_at_one
+    assert controller.error == active_error
+    assert controller.error >= 0.0
+    assert controller.error_norm == active_error
+    assert controller.error_norm > controller.tolerance
+    assert controller.value == active_value
+
+
 def test_exact_work_active_regions_and_deepest_depth_after_two_splits():
     point_count = _cubature.genz_malik_point_count(2)
     result = quad.integrate(
@@ -419,6 +536,97 @@ def test_region_capacity_exhaustion_evaluates_no_child(monkeypatch):
     assert result.work.evaluations == point_count
     assert result.work.refinements == 0
     assert batches == [1]
+
+
+def test_jit_convergence_physically_evaluates_no_child(monkeypatch):
+    point_count = _cubature.genz_malik_point_count(2)
+    batches = _record_region_batch_sizes(monkeypatch)
+
+    @jax.jit
+    def solve():
+        return quad.integrate(
+            lambda x: jnp.ones(x.shape[0]),
+            quad.Hyperrectangle(jnp.zeros(2), jnp.ones(2)),
+            **_options(
+                max_evaluations=3 * point_count,
+                max_regions=2,
+                epsabs=1e-10,
+                epsrel=0.0,
+            ),
+        )
+
+    result = solve()
+    jax.block_until_ready(result.value)
+
+    assert result.status == quad.QuadStatus.CONVERGED
+    assert result.work.evaluations == point_count
+    assert batches == [1]
+
+
+def _heterogeneous_cubature_solve(kind):
+    point_count = _cubature.genz_malik_point_count(2)
+    return quad.integrate(
+        lambda x, selected: jnp.where(
+            selected == 0,
+            jnp.ones(x.shape[0]),
+            jnp.exp(20.0 * jnp.sum(x, axis=-1)),
+        ),
+        quad.Hyperrectangle(jnp.zeros(2), jnp.ones(2)),
+        args=kind,
+        **_options(
+            max_evaluations=5 * point_count,
+            max_regions=2,
+            epsabs=1e-10,
+            epsrel=0.0,
+        ),
+    )
+
+
+def test_heterogeneous_vmap_preserves_result_semantics_and_logical_work():
+    kinds = jnp.asarray([0, 1], dtype=jnp.int32)
+    mapped = jax.jit(jax.vmap(_heterogeneous_cubature_solve))(kinds)
+    scalar = jax.tree.map(
+        lambda *leaves: jnp.stack(leaves),
+        *[_heterogeneous_cubature_solve(kind) for kind in kinds],
+    )
+    equal = jax.tree.map(
+        lambda actual, expected: jnp.array_equal(
+            actual,
+            expected,
+            equal_nan=True,
+        ),
+        mapped,
+        scalar,
+    )
+    point_count = _cubature.genz_malik_point_count(2)
+
+    assert all(bool(value) for value in jax.tree.leaves(equal))
+    assert jnp.array_equal(
+        mapped.status,
+        jnp.asarray(
+            [quad.QuadStatus.CONVERGED, quad.QuadStatus.MAX_REGIONS],
+            dtype=jnp.int32,
+        ),
+    )
+    assert jnp.array_equal(
+        mapped.work.evaluations,
+        jnp.asarray([point_count, 3 * point_count], dtype=jnp.int32),
+    )
+
+
+def test_lax_map_heterogeneous_batch_physically_skips_converged_child(
+    monkeypatch,
+):
+    batches = _record_region_batch_sizes(monkeypatch)
+    kinds = jnp.asarray([0, 1], dtype=jnp.int32)
+
+    mapped = jax.lax.map(_heterogeneous_cubature_solve, kinds)
+    jax.block_until_ready(mapped.value)
+
+    assert mapped.status[0] == quad.QuadStatus.CONVERGED
+    assert mapped.status[1] == quad.QuadStatus.MAX_REGIONS
+    assert batches.count(1) == 2
+    assert batches.count(2) == 1
 
 
 def test_max_evaluations_precedes_max_regions_when_both_are_exhausted():

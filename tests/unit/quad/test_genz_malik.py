@@ -51,6 +51,29 @@ _FLOAT32_MOMENT_TOLERANCES = {
 }
 
 
+def test_rule_cache_is_tracer_safe_across_cold_jit_and_vmap_traces():
+    cubature_module._genz_malik_data_cached.cache_clear()
+
+    def checksum(scale):
+        data = genz_malik_data(2, jnp.float64)
+        total = (
+            jnp.sum(data.points)
+            + jnp.sum(data.high_weights)
+            + jnp.sum(data.low_weights)
+        )
+        return scale * total
+
+    try:
+        cold_jit = jax.jit(checksum)(jnp.asarray(1.0))
+        second_trace = jax.jit(jax.vmap(checksum))(jnp.asarray([1.0, 2.0]))
+        eager = jnp.stack((checksum(1.0), checksum(2.0)))
+
+        assert jnp.array_equal(second_trace, eager)
+        assert second_trace[0] == cold_jit
+    finally:
+        cubature_module._genz_malik_data_cached.cache_clear()
+
+
 def _floating_bits(value, dtype: np.dtype) -> int:
     unsigned_dtype = np.uint32 if dtype == np.dtype(np.float32) else np.uint64
     return int(np.asarray(value, dtype=dtype).view(unsigned_dtype))

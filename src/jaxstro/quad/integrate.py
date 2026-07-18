@@ -81,6 +81,15 @@ def integrate(
     error_norm: ErrorNorm = MaxNorm(),
     gradient: str = "replay",
 ):
+    """Integrate one domain with the selected static method.
+
+    For :class:`AdaptiveCubature`, scalar eager and JIT execution physically
+    skips child evaluation after termination. ``jax.vmap`` preserves result
+    semantics and logical work only; its select-style batching may still
+    evaluate inactive child branches. Apply ``jax.lax.map`` around scalar
+    ``integrate`` calls when physical per-lane masking matters for an expensive
+    heterogeneous batch.
+    """
     if isinstance(domain, Hyperrectangle):
         return _integrate_hyperrectangle(
             fun,
