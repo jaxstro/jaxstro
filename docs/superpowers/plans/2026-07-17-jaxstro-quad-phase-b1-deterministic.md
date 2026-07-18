@@ -1000,7 +1000,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
                   "discontinuous",
               ),
               "method": "AdaptiveTensorClenshawCurtis(initial_level=2)",
-              "max_evaluations": 250_000,
+              "max_evaluations": 32_768,
               "epsabs": 1.0e-8,
               "epsrel": 1.0e-8,
           },
@@ -1081,6 +1081,19 @@ controller. `integrate.py` only dispatches concrete method declarations to
               ),
           },
       },
+      "stress_records": {
+          "adaptive_tensor_250000": {
+              "dimensions": (2, 4),
+              "max_evaluations": 250_000,
+              "status": "incomplete_non_default_stress",
+              "fresh_d2_peak_rss_bytes": 12_413_124_608,
+              "fresh_d4_peak_rss_bytes": 842_678_272,
+              "combined_peak_rss_bytes": 16_738_811_904,
+              "combined_elapsed_seconds": 684.01,
+              "completed_cases": 11,
+              "threshold_misses": 0,
+          },
+      },
       "threshold_by_family": {
           "fixed_tensor": {
               "oscillatory": 2.0e-8,
@@ -1109,7 +1122,8 @@ controller. `integrate.py` only dispatches concrete method declarations to
   ```
 
   The adaptive-tensor runtime truth matrix is deliberately restricted to
-  dimensions 2 and 4 under the frozen `max_evaluations=250_000` control.
+  dimensions 2 and 4 under the frozen practical
+  `max_evaluations=32_768` control.
   Certified Task 2 evidence distinguishes structural acceptance through
   dimension 8 from practical CPU execution and carries method-filtered
   dimensions 5 through 8 runtime, dtype, payload, capacity, and memory
@@ -1137,6 +1151,20 @@ controller. `integrate.py` only dispatches concrete method declarations to
   boundary that one global Gaussian-12 tensor formula has no high-accuracy
   claim for unresolved kinks or jumps. Adaptive methods retain the non-smooth
   truth families.
+
+  The original `250_000` control is retained only as a non-default incomplete
+  stress record. In genuinely fresh processes, the dimension-2 oscillatory
+  case passed in 10.35 s at 12,413,124,608-byte peak RSS and dimension 4
+  passed in 10.72 s at 842,678,272-byte peak RSS. A combined cache-bounded run
+  completed 11 cases with no threshold miss before it was stopped at 684.01 s
+  and 16,738,811,904-byte peak RSS. Therefore 250,000 is not a release-ready
+  default scientific gate.
+
+  The reviewed practical power-of-two budget is 32,768. It remains above the
+  exact initial-frontier minima 65 (dimension 2) and 2,625 (dimension 4). In
+  x64 preflight it yields `(max_level, max_refinements)=(12, 10)` in dimension
+  2 and `(8, 6)` in dimension 4. These are resource controls, not accuracy
+  tuning; every truth threshold remains unchanged.
 
   The validation harness clears JAX compilation caches and the Task 2/Task 4
   host metadata caches after each runtime case, then runs Python garbage
