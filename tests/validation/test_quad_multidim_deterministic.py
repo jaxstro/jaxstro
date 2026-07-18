@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import gc
 import hashlib
 import importlib.util
@@ -26,6 +27,18 @@ ROOT = Path(__file__).parents[2]
 REFERENCE_PATH = ROOT / "tests/validation/data/quad-b1-genz-reference.json"
 GENERATOR_PATH = ROOT / "scripts/generate_quad_b1_reference.py"
 FORMULA_SET_ID = "genz-unit-hypercube-six-family-v1"
+REFERENCE_FORMULA_ID_BY_FAMILY = MappingProxyType(
+    {
+        "oscillatory": "genz-unit-hypercube-six-family-v1:oscillatory",
+        "product_peak": "genz-unit-hypercube-six-family-v1:product-peak",
+        "corner_peak": "genz-unit-hypercube-six-family-v1:corner-peak",
+        "gaussian": "genz-unit-hypercube-six-family-v1:gaussian",
+        "continuous": "genz-unit-hypercube-six-family-v1:continuous",
+        "discontinuous": (
+            "genz-unit-hypercube-six-family-v1:discontinuous-first-two-axes"
+        ),
+    }
+)
 
 GENZ_FAMILIES = (
     "oscillatory",
@@ -472,6 +485,19 @@ def _load_reference() -> dict:
     return artifact
 
 
+def _assert_reference_formula_ids(records: list[dict]) -> None:
+    mismatches = [
+        (
+            record["family"],
+            record["formula_id"],
+            REFERENCE_FORMULA_ID_BY_FAMILY.get(record["family"]),
+        )
+        for record in records
+        if record["formula_id"] != REFERENCE_FORMULA_ID_BY_FAMILY.get(record["family"])
+    ]
+    assert not mismatches, f"formula ID mismatch: {mismatches}"
+
+
 def _runtime_cases():
     return tuple(
         (method_name, dimension)
@@ -642,15 +668,43 @@ def test_reference_artifact_is_fresh_complete_and_formula_identified():
     }
     records = artifact["records"]
     assert {(record["family"], record["dimension"]) for record in records} == expected
-    assert all(
-        record["formula_id"].startswith(f"{FORMULA_SET_ID}:") for record in records
-    )
+    assert tuple(REFERENCE_FORMULA_ID_BY_FAMILY) == GENZ_FAMILIES
+    _assert_reference_formula_ids(records)
     assert artifact["b4_carry_forward"]["adaptive_tensor"]["dimensions"] == [
         5,
         6,
         7,
         8,
     ]
+
+
+@pytest.mark.parametrize(
+    ("family", "replacement_formula_id"),
+    (
+        (
+            "oscillatory",
+            "genz-unit-hypercube-six-family-v1:oscillatory-v0",
+        ),
+        (
+            "product_peak",
+            "genz-unit-hypercube-six-family-v1:unrelated",
+        ),
+        (
+            "corner_peak",
+            "genz-unit-hypercube-six-family-v1:gaussian",
+        ),
+    ),
+)
+def test_reference_formula_ids_reject_stale_wrong_and_swapped_family_identity(
+    family: str,
+    replacement_formula_id: str,
+):
+    records = copy.deepcopy(_load_reference()["records"])
+    record = next(item for item in records if item["family"] == family)
+    record["formula_id"] = replacement_formula_id
+
+    with pytest.raises(AssertionError, match="formula ID"):
+        _assert_reference_formula_ids(records)
 
 
 @pytest.mark.parametrize("family", GENZ_FAMILIES)
