@@ -109,15 +109,23 @@ def scipy_cubature_record() -> ComparisonRecord:
 
 def scipy_sobol_record(dimension: int, *, level: int = 8) -> ComparisonRecord:
     """Run the exact unscrambled Sobol point set used by Jaxstro."""
-    started = time.perf_counter()
-    points = qmc.Sobol(
-        dimension,
-        scramble=False,
-        bits=53,
-    ).random_base2(level)
-    values = np.exp(-np.sum(points, axis=-1))
-    value = float(np.mean(values))
-    elapsed = time.perf_counter() - started
+
+    def solve():
+        points = qmc.Sobol(
+            dimension,
+            scramble=False,
+            bits=53,
+        ).random_base2(level)
+        return float(np.mean(np.exp(-np.sum(points, axis=-1))))
+
+    solve()
+    samples = []
+    value = 0.0
+    for _ in range(5):
+        started = time.perf_counter()
+        value = solve()
+        samples.append(time.perf_counter() - started)
+    elapsed = float(np.median(samples))
     truth = math.expm1(-1.0) ** dimension
     record: ComparisonRecord = {
         "library": "scipy",
@@ -129,6 +137,7 @@ def scipy_sobol_record(dimension: int, *, level: int = 8) -> ComparisonRecord:
             "level": level,
             "scramble": False,
             "bits": 53,
+            "warm_repeats": 5,
             "matched_control_description": (
                 "Bit-exact 53-bit unscrambled Sobol nodes, equal-weight mean, "
                 "same ordering, domain, and separable exponential integrand."

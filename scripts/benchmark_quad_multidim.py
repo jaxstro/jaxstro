@@ -114,6 +114,16 @@ def _measure(call: Callable[[], Any], repeats: int = WARM_REPEATS):
     return output, samples
 
 
+def _measure_parameter_batch(kernel, parameters, *, repeats: int = WARM_REPEATS):
+    per_call_samples = []
+    for _ in range(repeats):
+        started = time.perf_counter()
+        for parameter in parameters:
+            _ready(kernel(parameter))
+        per_call_samples.append((time.perf_counter() - started) / len(parameters))
+    return per_call_samples
+
+
 def _compile_and_warm(call: Callable[[], Any]):
     started = time.perf_counter()
     output = _ready(call())
@@ -179,13 +189,10 @@ def _benchmark_record(dimension: int) -> dict[str, Any]:
         _values, timing = _compile_and_warm(lambda: kernel(parameters))
         vmap_timings[str(batch)] = timing
 
-    _, same_samples = _measure(lambda: scalar(amplitude), repeats=16)
-    changing = jnp.linspace(0.8, 1.2, 16, dtype=jnp.float64)
-    changing_samples = []
-    for parameter in changing:
-        started = time.perf_counter()
-        _ready(scalar(parameter))
-        changing_samples.append(time.perf_counter() - started)
+    same_parameters = jnp.ones(64, dtype=jnp.float64)
+    changing = jnp.linspace(0.8, 1.2, 64, dtype=jnp.float64)
+    same_samples = _measure_parameter_batch(scalar, same_parameters)
+    changing_samples = _measure_parameter_batch(scalar, changing)
     same_median = statistics.median(same_samples)
     changing_median = statistics.median(changing_samples)
     repeated_scaling_excess = max(0.0, changing_median / same_median - 1.0)
