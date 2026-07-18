@@ -73,11 +73,12 @@ controller. `integrate.py` only dispatches concrete method declarations to
   exactness.
 - `tests/unit/quad/test_cubature.py`: region selection, split, work, statuses,
   and array payloads.
-- `tests/validation/test_quad_multidim_deterministic.py`: analytic and Genz
-  truth families over dimensions 2 through 8.
+- `tests/validation/test_quad_multidim_deterministic.py`: method-filtered
+  analytic and Genz truth families plus separate structural/preflight evidence
+  over dimensions 2 through 8.
 - `tests/integration/test_quad_multidim_deterministic_transforms.py`:
   eager/JIT/VMAP/float/complex stop-mode matrix.
-- `STATUS.md`: B1 completion evidence and B2 next action.
+- `STATUS.md`: Task 5 evidence and whole-rung B1 review next action.
 
 ---
 
@@ -983,7 +984,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
               "max_evaluations": "12 ** dimension",
           },
           "adaptive_tensor": {
-              "dimensions": (2, 4, 6, 8),
+              "dimensions": (2, 4),
               "method": "AdaptiveTensorClenshawCurtis(initial_level=2)",
               "max_evaluations": 250_000,
               "epsabs": 1.0e-8,
@@ -996,6 +997,66 @@ controller. `integrate.py` only dispatches concrete method declarations to
               "max_regions": 4_096,
               "epsabs": 1.0e-8,
               "epsrel": 1.0e-8,
+          },
+      },
+      "structural_preflight": {
+          "dimensions": (2, 3, 4, 5, 6, 7, 8),
+          "adaptive_tensor_initial_evaluations": {
+              2: 65,
+              3: 425,
+              4: 2_625,
+              5: 15_625,
+              6: 90_625,
+              7: 515_625,
+              8: 2_890_625,
+          },
+          "adaptive_tensor_exact_capacity_status": "accepted",
+          "adaptive_tensor_under_capacity_status": "ValueError",
+          "adaptive_cubature_initial_evaluations": {
+              2: 17,
+              3: 33,
+              4: 57,
+              5: 93,
+              6: 149,
+              7: 241,
+              8: 401,
+          },
+          "adaptive_cubature_exact_capacity_status": "accepted",
+          "adaptive_cubature_under_capacity_status": "ValueError",
+      },
+      "b4_carry_forward": {
+          "adaptive_tensor": {
+              "dimensions": (5, 6, 7, 8),
+              "required_metrics": (
+                  "compile_time",
+                  "warm_runtime",
+                  "process_memory",
+                  "device_memory",
+                  "dtype",
+                  "payload",
+                  "capacity",
+              ),
+              "claim_boundary": (
+                  "structural acceptance is not practical runtime certification; "
+                  "disclose intrinsic tensor frontier and fixed-capacity O(C d) "
+                  "storage growth"
+              ),
+          },
+          "adaptive_cubature": {
+              "dimensions": (2, 4, 6, 8),
+              "required_metrics": (
+                  "compile_time",
+                  "warm_runtime",
+                  "process_memory",
+                  "device_memory",
+                  "dtype",
+                  "payload_shape",
+                  "reachable_store_capacity",
+              ),
+              "claim_boundary": (
+                  "B1 certifies bounded declared cases, not universal "
+                  "payload/dtype/store memory safety"
+              ),
           },
       },
       "threshold_by_family": {
@@ -1027,6 +1088,23 @@ controller. `integrate.py` only dispatches concrete method declarations to
   }
   ```
 
+  The adaptive-tensor runtime truth matrix is deliberately restricted to
+  dimensions 2 and 4 under the frozen `max_evaluations=250_000` control.
+  Certified Task 2 evidence distinguishes structural acceptance through
+  dimension 8 from practical CPU execution and carries method-filtered
+  dimensions 5 through 8 runtime, dtype, payload, capacity, and memory
+  certification to B4. Do not instantiate adaptive-tensor analytic or Genz
+  runtime cases in dimensions 6 or 8 in this campaign. The separate
+  `structural_preflight` matrix must prove every exact initial count and
+  exact-capacity acceptance/one-under-capacity rejection from dimensions 2
+  through 8 without materializing a runtime payload.
+
+  Adaptive cubature retains dimensions 2, 4, 6, and 8 only if every
+  predeclared capacity executes in the bounded campaign. Do not skip, xfail,
+  shrink, or tune an expensive dimension after seeing results. If one cannot
+  execute, stop the campaign, preserve the failure evidence, and amend this
+  reviewed manifest before further evaluation.
+
   Implement the six standard integrands and their published analytic
   hypercube integrals directly in the test module. Generate
   `quad-b1-genz-reference.json` only as an independent redundant check from
@@ -1049,7 +1127,10 @@ controller. `integrate.py` only dispatches concrete method declarations to
 
   In the integration test, assert eager, `jit`, `vmap`, float32, float64,
   scalar payload, array payload, real payload, and documented complex payload.
-  Assert `gradient="replay"` raises the B1 message directing users to B4.
+  Assert exact work/status identities for each lane and assert
+  `gradient="replay"` raises the B1 capability message directing users to B4.
+  Add mutation-sensitive tests that reject any artifact whose generator source
+  hash or formula ID is stale and any replay mode other than exact `stop`.
 
 - [ ] **Step 3: Run the B1 scientific gate**
 
@@ -1086,8 +1167,9 @@ controller. `integrate.py` only dispatches concrete method declarations to
   ```
 
   Expected: all commands exit zero. Update `STATUS.md` with exact counts,
-  dimensional envelope, known claim boundaries, and
-  `next: Execute the reviewed Phase B2 sparse-grid plan.`
+  dimensional envelope, known claim boundaries, the B4 carry-forward records,
+  and
+  `next: Run the independent whole-rung B1 review; begin B2 only if it is GREEN.`
 
 - [ ] **Step 5: Commit and request checkpoint review**
 
@@ -1095,7 +1177,8 @@ controller. `integrate.py` only dispatches concrete method declarations to
   git add tests/validation/test_quad_multidim_deterministic.py \
     tests/integration/test_quad_multidim_deterministic_transforms.py \
     tests/validation/data/quad-b1-genz-reference.json \
-    scripts/generate_quad_b1_reference.py pyproject.toml uv.lock STATUS.md
+    scripts/generate_quad_b1_reference.py pyproject.toml uv.lock STATUS.md \
+    .superpowers/sdd/b1-task-5-report.md
   git commit -m "test(quad): certify Phase B1 deterministic methods"
   ```
 
