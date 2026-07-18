@@ -46,10 +46,13 @@ quad.integrate(
 )
 ```
 
-The integrand receives a node array with shape `(n,)` and returns `(n,)` or
-`(n, ...)`. The result has the trailing payload shape. Rule and measure types,
-rule order or level, breakpoint count, and payload shape are static under JIT.
-Bounds, breakpoint values, and explicit `args` leaves may be dynamic.
+For a one-dimensional domain, the integrand receives a node array with shape
+`(n,)`. For `Hyperrectangle`, it receives coordinate-last points with shape
+`(n, dimension)`. In either case it returns `(n,)` or `(n, ...)`, and the
+result has the trailing payload shape. Rule and measure types, rule order or
+level, breakpoint count, dimension, capacities, and payload shape are static
+under JIT. Bounds, breakpoint values, and explicit `args` leaves may be
+dynamic.
 
 Improper domains accept a keyword-only characteristic scale:
 
@@ -90,6 +93,16 @@ Supported adaptive declarations are `GaussKronrod`,
 `RombergTanhSinh`. `integrate` returns a `QuadResult` containing the primal
 value, `QuadError`, effective tolerance, `QuadStatus`, and `QuadWork`.
 
+Supported finite-hyperrectangle declarations are:
+
+- `TensorProduct`
+- `AdaptiveTensorClenshawCurtis`
+- `AdaptiveCubature(rule=GenzMalik())`
+- `Smolyak`
+- `AdaptiveSmolyak`
+
+These Phase B methods currently require `gradient="stop"`.
+
 :::{important} Classical `Romberg` stopping contract
 Classical `Romberg` has a fixed level-$4$ alias-protection floor. It cannot
 report `CONVERGED` before $2^4+1=17$ logical evaluations, regardless of an
@@ -104,10 +117,10 @@ The status belongs to a capability, not to the package as a whole.
 
 | Status | Current quadrature scope |
 | --- | --- |
-| shipped and validated | Sampled-data integration, fixed one-dimensional rules, five adaptive one-dimensional families, typed failure and work evidence, first-order accepted-formula replay, and the Phase B finite-hyperrectangle structural substrate |
+| shipped and validated | Sampled-data integration; fixed and adaptive one-dimensional rules; typed failure and work evidence; one-dimensional accepted-formula replay; finite-hyperrectangle tensor products, adaptive tensor refinement, Genz-Malik cubature, and fixed or dimension-adaptive Smolyak sparse grids |
 | benchmarking | The Apple M2 Max CPU comparison is accepted; additional backends, precisions, batch regimes, and method families remain future benchmarking coverage |
 | alpha | Opt-in quantity normalization through `quad.integrate`; downstream ecosystem adoption is not implied |
-| approved but planned | Numerical integration over multidimensional hyperrectangles, adaptive cubature, sparse grids, randomized QMC, and later scientific geometries; no multidimensional numerical method is available yet |
+| approved but planned | Sobol and randomized QMC, Phase B4 replay and quantity hardening for multidimensional methods, compact sparse-grid memory ownership, and later scientific geometries |
 | intentionally unsupported | Posterior inference, experimental-design policy, general Monte Carlo inference, and domain-specific scientific acceptance |
 
 ### Reading comparison labels
@@ -154,6 +167,15 @@ Adaptive evaluation and methods:
 - `AdaptiveTanhSinh`
 - `Romberg`
 - `RombergTanhSinh`
+
+Finite-hyperrectangle methods:
+
+- `TensorProduct`
+- `AdaptiveTensorClenshawCurtis`
+- `AdaptiveCubature`
+- `GenzMalik`
+- `Smolyak`
+- `AdaptiveSmolyak`
 
 Compatibility and expansion helpers:
 
@@ -206,11 +228,12 @@ Results, statuses, work, and tolerances:
 
 ## Shape and dtype expectations
 
-The node input has shape `(n,)`; the integrand returns `(n,)` or `(n, ...)`;
-and `fixed` removes the leading node axis. Sampled methods reduce or retain the
-selected array axis according to their individual contracts. Bounds and
-breakpoint values follow the active JAX dtype policy. Reference validation uses
-float64.
+The one-dimensional node input has shape `(n,)`; the multidimensional point
+input has shape `(n, dimension)`. The integrand returns `(n,)` or `(n, ...)`,
+and the integration method removes the leading node axis. Sampled methods
+reduce or retain the selected array axis according to their individual
+contracts. Bounds and breakpoint values follow the active JAX dtype policy.
+Reference validation uses float64.
 
 Adaptive integrands follow the same leading-node convention and may return
 scalar, complex, vector, or higher-rank trailing payloads. In raw mode,
@@ -259,11 +282,9 @@ continue to delegate to the existing adaptive owner with complete
 `max_nodes`, and `key` reserve explicit capacity and random-state boundaries
 for later multidimensional families; one-dimensional calls reject them.
 
-:::{warning}
-`Hyperrectangle` and the thin dispatcher are structural B0 contracts. A
-multidimensional numerical method is not available until its family passes the
-B1, B2, or B3 validation gate.
-:::
+The B1 deterministic families and B2 sparse-grid families have passed their
+family validation gates. B3 randomized QMC remains unavailable until its own
+gate passes.
 
 ## Quantity activation
 
@@ -271,6 +292,12 @@ Quantity handling belongs only to `quad.integrate` and is alpha. The adapter
 validates and unwraps units before calling the same raw engine, then restores
 the integral unit on `value`, `error.estimate`, `error.norm`, and `tolerance`.
 Status, work, error kind, and confidence level remain unitless.
+
+:::{important}
+The current quantity adapter is one-dimensional. Phase B finite-hyperrectangle
+methods require raw numeric bounds and payloads until multidimensional quantity
+certification in Phase B4.
+:::
 
 | Input condition | Mode and requirement |
 | --- | --- |
@@ -328,6 +355,21 @@ for the masses and normalization equations.
 | `Romberg` | finite `Interval` | no | `LebesgueMeasure`, `WeightedMeasure` | `REFINEMENT_DIFFERENCE` |
 | `RombergTanhSinh` | any current domain | no | `LebesgueMeasure`, `WeightedMeasure` | `REFINEMENT_DIFFERENCE` |
 
+### Supported finite-hyperrectangle pairings
+
+| Method | Measure | Current error kind | Gradient mode |
+| --- | --- | --- | --- |
+| `TensorProduct` | `LebesgueMeasure`, `WeightedMeasure` | `UNAVAILABLE` | `stop` |
+| `AdaptiveTensorClenshawCurtis` | `LebesgueMeasure`, `WeightedMeasure` | `REFINEMENT_DIFFERENCE` | `stop` |
+| `AdaptiveCubature(GenzMalik())` | `LebesgueMeasure`, `WeightedMeasure` | `EMBEDDED_RULE` | `stop` |
+| `Smolyak` | `LebesgueMeasure`, `WeightedMeasure` | `SPARSE_GRID_SURPLUS` | `stop` |
+| `AdaptiveSmolyak` | `LebesgueMeasure`, `WeightedMeasure` | `SPARSE_GRID_SURPLUS` | `stop` |
+
+The sparse-grid surplus is hierarchical convergence evidence, not a universal
+absolute error bound. Review the
+[sparse-grid derivation](../../20-methods/approximation-integration/sparse-grid-quadrature.md)
+before using it as a scientific acceptance criterion.
+
 Structural incompatibilities raise before tracing. Dynamic invalid inputs,
 nonfinite integrands, roundoff limits, and capacity exhaustion return a typed
 result. The current status precedence for completed estimates resolves invalid
@@ -356,6 +398,10 @@ that derivative; diagnostic tangents are exact zero or JAX `float0`.
 `gradient="stop"` passes the complete result tree through
 `jax.lax.stop_gradient`. VMAP runs one bounded adaptive controller per batch
 member.
+
+The finite-hyperrectangle methods listed above currently support only
+`gradient="stop"`. They fail closed with a Phase B4 boundary message for replay
+or any other gradient mode.
 
 Replay supports JVP, selected VJP projections, value-only `jacfwd` and
 `jacrev`, JIT, VMAP, real-to-complex realified Jacobians, complex-to-real JAX

@@ -85,6 +85,7 @@ project:
             - file: 20-methods/approximation-integration/cumulative-trapz.md
             - file: 20-methods/approximation-integration/quadrature.md
             - file: 20-methods/approximation-integration/adaptive-quadrature.md
+            - file: 20-methods/approximation-integration/sparse-grid-quadrature.md
             - file: 20-methods/approximation-integration/differentiating-an-integral.md
         - title: Linear structure and reusable operators
           children:

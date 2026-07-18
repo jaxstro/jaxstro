@@ -413,7 +413,10 @@ These immutable record or type constructors inherit their module-level contract:
 - `jaxstro.provenance.EnvironmentSnapshot`
 - `jaxstro.provenance.MethodManifest`
 - `jaxstro.quad.AdaptiveClenshawCurtis`
+- `jaxstro.quad.AdaptiveCubature`
+- `jaxstro.quad.AdaptiveSmolyak`
 - `jaxstro.quad.AdaptiveTanhSinh`
+- `jaxstro.quad.AdaptiveTensorClenshawCurtis`
 - `jaxstro.quad.AffineMapResult`
 - `jaxstro.quad.ClenshawCurtisRule`
 - `jaxstro.quad.DomainMapResult`
@@ -423,6 +426,7 @@ These immutable record or type constructors inherit their module-level contract:
 - `jaxstro.quad.FejerIRule`
 - `jaxstro.quad.GaussKronrod`
 - `jaxstro.quad.GaussianRule`
+- `jaxstro.quad.GenzMalik`
 - `jaxstro.quad.Hyperrectangle`
 - `jaxstro.quad.Infinite`
 - `jaxstro.quad.Interval`
@@ -441,8 +445,10 @@ These immutable record or type constructors inherit their module-level contract:
 - `jaxstro.quad.RightInfinite`
 - `jaxstro.quad.Romberg`
 - `jaxstro.quad.RombergTanhSinh`
+- `jaxstro.quad.Smolyak`
 - `jaxstro.quad.StandardNormalMeasure`
 - `jaxstro.quad.TanhSinhRule`
+- `jaxstro.quad.TensorProduct`
 - `jaxstro.quad.WeightedMeasure`
 - `jaxstro.quantity.Dimension`
 - `jaxstro.quantity.DimensionError`

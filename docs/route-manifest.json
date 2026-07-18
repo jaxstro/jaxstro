@@ -21,6 +21,7 @@
   "20-methods/approximation-integration/interpolation.md": "/interpolation",
   "20-methods/approximation-integration/quadrature.md": "/quadrature",
   "20-methods/approximation-integration/regular-grid.md": "/regular-grid",
+  "20-methods/approximation-integration/sparse-grid-quadrature.md": "/sparse-grid-quadrature",
   "20-methods/change-constraints-evolution/adaptive-differential-equations.md": "/adaptive-differential-equations",
   "20-methods/change-constraints-evolution/autodiff.md": "/autodiff",
   "20-methods/change-constraints-evolution/nonlinear-systems.md": "/nonlinear-systems",

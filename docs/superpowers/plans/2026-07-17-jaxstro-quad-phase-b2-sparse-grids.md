@@ -90,7 +90,7 @@ construction, `jax.lax.scan`, pytest, Ruff, MyPy.
 - Produces: `DyadicIdentity`, `canonical_cc_identity(level, index)`,
   `hierarchical_rule(level, dtype)`, and exact tensor identity tuples.
 
-- [ ] **Step 1: Write failing identity and difference tests**
+- [x] **Step 1: Write failing identity and difference tests**
 
   Create `tests/unit/quad/test_sparse_identities.py`:
 
@@ -122,7 +122,7 @@ construction, `jax.lax.scan`, pytest, Ruff, MyPy.
       assert len(set(rule.identities)) == len(rule.identities)
   ```
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
   Run:
 
@@ -133,7 +133,7 @@ construction, `jax.lax.scan`, pytest, Ruff, MyPy.
 
   Expected: FAIL because `_sparse.py` does not exist.
 
-- [ ] **Step 3: Implement canonical identities**
+- [x] **Step 3: Implement canonical identities**
 
   Create `_sparse.py` with:
 
@@ -162,7 +162,7 @@ construction, `jax.lax.scan`, pytest, Ruff, MyPy.
   `0.5 * (1.0 - cos(pi * numerator / 2**denominator_power))`. Keep the integer
   identity as the dictionary key and create the float only after coalescing.
 
-- [ ] **Step 4: Implement hierarchical one-dimensional rules**
+- [x] **Step 4: Implement hierarchical one-dimensional rules**
 
   Define:
 
@@ -225,7 +225,7 @@ construction, `jax.lax.scan`, pytest, Ruff, MyPy.
   Drop exact-zero host weights only after checking against zero exactly; do not
   use a floating tolerance to decide identity or reuse.
 
-- [ ] **Step 5: Run GREEN and commit**
+- [x] **Step 5: Run GREEN and commit**
 
   Run:
 
@@ -260,7 +260,7 @@ construction, `jax.lax.scan`, pytest, Ruff, MyPy.
   `fixed_index_set(method, dimension)`, `smolyak_rule_data`, and
   `integrate_sparse`.
 
-- [ ] **Step 1: Write failing fixed-grid tests**
+- [x] **Step 1: Write failing fixed-grid tests**
 
   Create `tests/unit/quad/test_smolyak.py`:
 
@@ -311,7 +311,7 @@ construction, `jax.lax.scan`, pytest, Ruff, MyPy.
       assert result.work.evaluations == data.points.shape[0]
   ```
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
   Run:
 
@@ -322,7 +322,7 @@ construction, `jax.lax.scan`, pytest, Ruff, MyPy.
 
   Expected: FAIL because `Smolyak` is absent.
 
-- [ ] **Step 3: Implement declarations and exact index sets**
+- [x] **Step 3: Implement declarations and exact index sets**
 
   In `sparse.py`:
 
@@ -368,7 +368,7 @@ construction, `jax.lax.scan`, pytest, Ruff, MyPy.
   Thus `Smolyak(level=1)` contains only the all-ones base index. Sort by
   `(sum(index), index)` for deterministic construction.
 
-- [ ] **Step 4: Coalesce the fixed sparse rule and integrate**
+- [x] **Step 4: Coalesce the fixed sparse rule and integrate**
 
   `smolyak_rule_data` loops over accepted indices, takes the Cartesian product
   of hierarchical rules, and accumulates each product weight in:
@@ -388,7 +388,7 @@ construction, `jax.lax.scan`, pytest, Ruff, MyPy.
   requested tolerance, otherwise `MAX_INDICES` because the declared fixed
   index set is exhausted.
 
-- [ ] **Step 5: Run GREEN and commit**
+- [x] **Step 5: Run GREEN and commit**
 
   Run:
 
@@ -425,7 +425,7 @@ construction, `jax.lax.scan`, pytest, Ruff, MyPy.
   `SparseReplayEvidence(indices, active, node_ids, coefficients)`, and the
   fixed-capacity adaptive controller.
 
-- [ ] **Step 1: Write failing admissibility and status tests**
+- [x] **Step 1: Write failing admissibility and status tests**
 
   Create `tests/unit/quad/test_adaptive_smolyak.py`:
 
@@ -478,7 +478,7 @@ construction, `jax.lax.scan`, pytest, Ruff, MyPy.
   Assert `AdaptiveSmolyak(initial_level=2.5)` raises before any bit shift or
   shape construction.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
   Run:
 
@@ -489,7 +489,7 @@ construction, `jax.lax.scan`, pytest, Ruff, MyPy.
 
   Expected: FAIL because adaptive sparse owners are absent.
 
-- [ ] **Step 3: Implement admissibility and deterministic profit**
+- [x] **Step 3: Implement admissibility and deterministic profit**
 
   In `sparse.py`, define:
 
@@ -536,7 +536,7 @@ construction, `jax.lax.scan`, pytest, Ruff, MyPy.
   Frontier rows are sorted lexicographically before conversion to arrays, so
   `jnp.argmax` gives the approved tie break.
 
-- [ ] **Step 4: Implement the fixed-capacity sparse scan**
+- [x] **Step 4: Implement the fixed-capacity sparse scan**
 
   Define `SparseState` with accepted-index arrays/masks, frontier arrays/masks,
   coalesced node IDs/values/masks, accepted value, frontier surplus norms,
@@ -592,7 +592,7 @@ construction, `jax.lax.scan`, pytest, Ruff, MyPy.
   hierarchical node is evaluated for a coincident axis. The outer branch tests
   invalidity first and includes a mixed coincident/nonfinite regression.
 
-- [ ] **Step 5: Run GREEN and commit**
+- [x] **Step 5: Run GREEN and commit**
 
   Run:
 
@@ -627,7 +627,7 @@ construction, `jax.lax.scan`, pytest, Ruff, MyPy.
 - Produces: analytic truth, exact work, dimensional performance boundary, and
   stop-mode JAX evidence.
 
-- [ ] **Step 1: Add predeclared sparse validation cases**
+- [x] **Step 1: Add predeclared sparse validation cases**
 
   Add this predeclared registry, then parameterize every fixed and adaptive
   sparse-grid truth test over it:
@@ -712,13 +712,13 @@ construction, `jax.lax.scan`, pytest, Ruff, MyPy.
   unique-node count, accepted-index count, downward closure, and that the
   anisotropic case refines axis zero first.
 
-- [ ] **Step 2: Add the stop-mode JAX matrix**
+- [x] **Step 2: Add the stop-mode JAX matrix**
 
   Test eager, `jit`, `vmap`, float32/float64, scalar/array/complex payloads, and
   heterogeneous accepted index sets. Assert replay is rejected with the B4
   boundary message.
 
-- [ ] **Step 3: Run the B2 scientific gate**
+- [x] **Step 3: Run the B2 scientific gate**
 
   Run:
 
@@ -733,7 +733,7 @@ construction, `jax.lax.scan`, pytest, Ruff, MyPy.
 
   Expected: all truth and exact-work assertions pass.
 
-- [ ] **Step 4: Run engineering gates and update status**
+- [x] **Step 4: Run engineering gates and update status**
 
   Run:
 
@@ -751,7 +751,7 @@ construction, `jax.lax.scan`, pytest, Ruff, MyPy.
   tested dimensions, estimator caveat, and
   `next: Execute the reviewed Phase B3 Sobol and randomized-QMC plan.`
 
-- [ ] **Step 5: Commit and request checkpoint review**
+- [x] **Step 5: Commit and request checkpoint review**
 
   ```bash
   git add tests/validation/test_quad_sparse_reference.py \

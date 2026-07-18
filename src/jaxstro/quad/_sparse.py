@@ -1156,7 +1156,7 @@ def adaptive_sparse_controller(
         jnp.where(
             state.frontier_active.reshape(error_shape),
             jnp.abs(state.frontier_surplus),
-            jnp.zeros_like(state.frontier_surplus),
+            jnp.zeros_like(jnp.abs(state.frontier_surplus)),
         ),
         axis=0,
     )

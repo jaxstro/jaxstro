@@ -24,6 +24,7 @@ FAMILIES = {
         "bsplines",
         "cumulative-trapz",
         "quadrature",
+        "sparse-grid-quadrature",
     ),
     "linear-structure": ("linear-algebra", "operators", "special-functions"),
     "probability-sampling": (
@@ -58,6 +59,7 @@ TOC_FAMILIES = {
         "cumulative-trapz",
         "quadrature",
         "adaptive-quadrature",
+        "sparse-grid-quadrature",
         "differentiating-an-integral",
     ),
     "linear-structure": (
@@ -97,6 +99,7 @@ ROUTES = {
     "approximation-integration/bsplines.md": "/bsplines",
     "approximation-integration/cumulative-trapz.md": "/cumulative-trapz",
     "approximation-integration/quadrature.md": "/quadrature",
+    "approximation-integration/sparse-grid-quadrature.md": "/sparse-grid-quadrature",
     "linear-structure/linear-algebra.md": "/linear-algebra",
     "linear-structure/operators.md": "/operators",
     "linear-structure/special-functions.md": "/special-functions",
@@ -113,7 +116,7 @@ def test_current_method_pages_exist_once_in_the_toc_with_stable_routes() -> None
     myst = (DOCS / "myst.yml").read_text(encoding="utf-8")
     manifest = json.loads((DOCS / "route-manifest.json").read_text(encoding="utf-8"))
 
-    assert sum(len(pages) for pages in FAMILIES.values()) == 18
+    assert sum(len(pages) for pages in FAMILIES.values()) == 19
     for family, pages in FAMILIES.items():
         for page in pages:
             relative = f"{family}/{page}.md"
