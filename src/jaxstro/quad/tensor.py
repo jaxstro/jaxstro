@@ -229,16 +229,17 @@ def integrate_adaptive_tensor(
     error_norm: ErrorNorm,
 ) -> QuadResult:
     """Evaluate one bounded anisotropic tensor frontier controller."""
+    dtype = jnp.result_type(domain.lower, domain.upper, 0.0)
     capacity = validate_adaptive_tensor_capacity(
         initial_level=method.initial_level,
         dimension=domain.dimension,
         max_evaluations=max_evaluations,
+        dtype=dtype,
     )
     absolute_tolerance = jnp.asarray(epsabs)
     relative_tolerance = jnp.asarray(epsrel)
     if absolute_tolerance.ndim != 0 or relative_tolerance.ndim != 0:
         raise ValueError("adaptive tensor tolerances must be scalar")
-    dtype = jnp.result_type(domain.lower, domain.upper, 0.0)
     zero = infer_multidim_payload_zero(
         fun,
         args=args,

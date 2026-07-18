@@ -61,16 +61,18 @@ class AdaptiveTensorTables(NamedTuple):
     nodes: Array
     weights: Array
     canonical_ids: Array
+    represented_ids: Array
     counts: Array
     initial_level: int
     max_level: int
 
 
 class _TensorCache(NamedTuple):
+    point_keys: Array
     canonical_ids: Array
     points: Array
     values: Array
-    active: Array
+    hash_slots: Array
     node_count: Array
     evaluations: Array
     nonfinite: Array
@@ -84,11 +86,7 @@ class TensorState(NamedTuple):
     directional_candidate_values: Array
     directional_error: Array
     directional_new_cost: Array
-    canonical_node_table: Array
-    cached_points: Array
-    cached_values: Array
-    cache_active: Array
-    cache_count: Array
+    cache: _TensorCache
     evaluations: Array
     refinements: Array
     status: Array
@@ -175,8 +173,166 @@ def count_representable_new_nodes(base_points: Array, candidate_points: Array) -
     return jnp.sum(is_new, dtype=jnp.int32)
 
 
-def _formula_point_count(levels: list[int] | tuple[int, ...]) -> int:
-    return math.prod((1 << level) + 1 for level in levels)
+class _RepresentedAxisLevel(NamedTuple):
+    nodes: np.ndarray
+    canonical_ids: np.ndarray
+    represented_ids: np.ndarray
+    formula_represented_ids: np.ndarray
+
+
+def _target_dtype_name(dtype) -> str:
+    selected = jnp.dtype(dtype)
+    if selected not in (jnp.dtype(jnp.float32), jnp.dtype(jnp.float64)):
+        raise TypeError("adaptive Clenshaw-Curtis dtype must be float32 or float64")
+    return selected.name
+
+
+def _cc_unit_nodes(level: int, dtype) -> np.ndarray:
+    order = (1 << level) + 1
+    with jax.ensure_compile_time_eval():
+        selected_dtype = jnp.dtype(dtype)
+        index = jnp.arange(order, dtype=selected_dtype)
+        half = jnp.asarray(0.5, dtype=selected_dtype)
+        one = jnp.asarray(1.0, dtype=selected_dtype)
+        nodes = half * (jnp.cos(jnp.pi * index / (order - 1)) + one)
+        return np.asarray(nodes)
+
+
+@lru_cache(maxsize=None)
+def _represented_cc_axis_metadata_cached(
+    max_level: int,
+    dtype_name: str,
+) -> tuple[_RepresentedAxisLevel, ...]:
+    dtype = np.dtype(dtype_name)
+    canonical_owner: dict[tuple[int, int], float] = {}
+    represented_owner: dict[float, int] = {}
+    levels: list[_RepresentedAxisLevel] = []
+    for level in range(max_level + 1):
+        raw_nodes = _cc_unit_nodes(level, dtype_name)
+        raw_ids = np.asarray(
+            [_reduced_dyadic(index, level) for index in range((1 << level) + 1)],
+            dtype=np.int32,
+        )
+        formula_nodes: list[float] = []
+        formula_represented_ids: list[int] = []
+        for raw_node, raw_id in zip(raw_nodes, raw_ids, strict=True):
+            canonical_id = (int(raw_id[0]), int(raw_id[1]))
+            point = canonical_owner.setdefault(canonical_id, float(raw_node))
+            if point == 0.0:
+                point = 0.0
+            represented_id = represented_owner.setdefault(
+                point,
+                len(represented_owner),
+            )
+            formula_nodes.append(point)
+            formula_represented_ids.append(represented_id)
+
+        compact_index: dict[int, int] = {}
+        compact_nodes: list[float] = []
+        compact_ids: list[np.ndarray] = []
+        compact_represented_ids: list[int] = []
+        for point, canonical_id, represented_id in zip(
+            formula_nodes,
+            raw_ids,
+            formula_represented_ids,
+            strict=True,
+        ):
+            if represented_id in compact_index:
+                continue
+            compact_index[represented_id] = len(compact_nodes)
+            compact_nodes.append(point)
+            compact_ids.append(canonical_id)
+            compact_represented_ids.append(represented_id)
+        levels.append(
+            _RepresentedAxisLevel(
+                nodes=np.asarray(compact_nodes, dtype=dtype),
+                canonical_ids=np.asarray(compact_ids, dtype=np.int32),
+                represented_ids=np.asarray(compact_represented_ids, dtype=np.int32),
+                formula_represented_ids=np.asarray(
+                    formula_represented_ids,
+                    dtype=np.int32,
+                ),
+            )
+        )
+    return tuple(levels)
+
+
+def represented_cc_axis_counts(
+    *,
+    initial_level: int,
+    max_level: int,
+    dtype,
+) -> Array:
+    """Return target-dtype distinct CC coordinate counts for a level ladder."""
+    if (
+        isinstance(initial_level, bool)
+        or not isinstance(initial_level, int)
+        or initial_level < 0
+        or isinstance(max_level, bool)
+        or not isinstance(max_level, int)
+        or max_level < initial_level
+    ):
+        raise ValueError("represented CC levels must be ordered nonnegative integers")
+    metadata = _represented_cc_axis_metadata_cached(
+        max_level,
+        _target_dtype_name(dtype),
+    )
+    return jnp.asarray(
+        [metadata[level].nodes.size for level in range(initial_level, max_level + 1)],
+        dtype=jnp.int32,
+    )
+
+
+def _represented_formula_cardinalities(
+    levels: Array,
+    *,
+    represented_counts: Array,
+    initial_level: int,
+    max_level: int,
+) -> tuple[Array, Array]:
+    """Return accepted and one-axis represented-node cardinality growth."""
+    levels = jnp.asarray(levels, dtype=jnp.int32)
+    represented_counts = jnp.asarray(represented_counts, dtype=jnp.int32)
+    level_index = levels - initial_level
+    safe_index = jnp.clip(level_index, 0, represented_counts.shape[0] - 1)
+    accepted_axis_counts = represented_counts[safe_index]
+    accepted = jnp.prod(accepted_axis_counts, dtype=jnp.int32)
+    unavailable = jnp.asarray(jnp.iinfo(jnp.int32).max, dtype=jnp.int32)
+    directional = []
+    for axis in range(levels.shape[0]):
+        next_in_range = levels[axis] < max_level
+        next_index = jnp.minimum(safe_index[axis] + 1, represented_counts.shape[0] - 1)
+        next_axis_count = represented_counts[next_index]
+        candidate_axis_counts = accepted_axis_counts.at[axis].set(next_axis_count)
+        candidate = jnp.prod(candidate_axis_counts, dtype=jnp.int32)
+        directional.append(jnp.where(next_in_range, candidate - accepted, unavailable))
+    return accepted, jnp.stack(directional)
+
+
+def _represented_frontier_cardinality(
+    levels: Array,
+    *,
+    represented_counts: Array,
+    initial_level: int,
+    max_level: int,
+) -> Array:
+    """Count the accepted grid plus disjoint one-axis represented-node slabs."""
+    accepted, directional = _represented_formula_cardinalities(
+        levels,
+        represented_counts=represented_counts,
+        initial_level=initial_level,
+        max_level=max_level,
+    )
+    unavailable = jnp.asarray(jnp.iinfo(jnp.int32).max, dtype=jnp.int32)
+    has_unavailable = jnp.any(directional == unavailable)
+    finite_directional = jnp.where(directional == unavailable, 0, directional)
+    cardinality = accepted + jnp.sum(finite_directional, dtype=jnp.int32)
+    return jnp.where(has_unavailable, unavailable, cardinality)
+
+
+def _host_represented_axis_count(level: int, dtype_name: str) -> int:
+    metadata = _represented_cc_axis_metadata_cached(level, dtype_name)
+    return int(metadata[level].nodes.size)
 
 
 @lru_cache(maxsize=None)
@@ -184,10 +340,12 @@ def _adaptive_tensor_capacity_cached(
     initial_level: int,
     dimension: int,
     max_evaluations: int,
+    dtype_name: str,
 ) -> AdaptiveTensorCapacity:
-    base_nodes = (1 << initial_level) + 1
+    base_nodes = _host_represented_axis_count(initial_level, dtype_name)
+    next_nodes = _host_represented_axis_count(initial_level + 1, dtype_name)
     base_count = base_nodes**dimension
-    one_axis_delta = (1 << initial_level) * base_nodes ** (dimension - 1)
+    one_axis_delta = (next_nodes - base_nodes) * base_nodes ** (dimension - 1)
     initial_evaluations = base_count + dimension * one_axis_delta
     if max_evaluations < initial_evaluations:
         raise ValueError(
@@ -197,21 +355,38 @@ def _adaptive_tensor_capacity_cached(
         )
 
     max_level = initial_level + 1
-    while ((1 << (max_level + 1)) + 1) * base_nodes ** (
-        dimension - 1
-    ) <= max_evaluations:
+    while True:
+        current_nodes = _host_represented_axis_count(max_level, dtype_name)
+        candidate_nodes = _host_represented_axis_count(max_level + 1, dtype_name)
+        if candidate_nodes == current_nodes:
+            max_level += 1
+            break
+        if candidate_nodes * base_nodes ** (dimension - 1) > max_evaluations:
+            break
         max_level += 1
 
     levels = [initial_level] * dimension
     max_refinements = 0
     while True:
+        current_count = math.prod(
+            _host_represented_axis_count(level, dtype_name) for level in levels
+        )
         candidates = []
         for axis in range(dimension):
             refined = levels.copy()
             refined[axis] += 1
-            candidates.append((_formula_point_count(refined), axis, refined))
+            candidates.append(
+                (
+                    math.prod(
+                        _host_represented_axis_count(level, dtype_name)
+                        for level in refined
+                    ),
+                    axis,
+                    refined,
+                )
+            )
         count, _axis, refined = min(candidates)
-        if count > max_evaluations:
+        if count > max_evaluations or count == current_count:
             break
         levels = refined
         max_refinements += 1
@@ -227,6 +402,7 @@ def validate_adaptive_tensor_capacity(
     initial_level: int,
     dimension: int,
     max_evaluations: int,
+    dtype=None,
 ) -> AdaptiveTensorCapacity:
     """Validate static workspace sizes before payload inference or tracing."""
     validate_b1_dimension(dimension)
@@ -236,10 +412,12 @@ def validate_adaptive_tensor_capacity(
         or max_evaluations <= 0
     ):
         raise ValueError("adaptive max_evaluations must be a positive integer")
+    selected_dtype = jnp.asarray(0.0).dtype if dtype is None else dtype
     return _adaptive_tensor_capacity_cached(
         initial_level,
         dimension,
         max_evaluations,
+        _target_dtype_name(selected_dtype),
     )
 
 
@@ -249,25 +427,58 @@ def adaptive_tensor_tables(
     max_level: int,
     dtype,
 ) -> AdaptiveTensorTables:
-    """Construct static padded CC ladders used by the adaptive scan."""
-    max_axis_nodes = (1 << max_level) + 1
+    """Construct compact represented-coordinate CC ladders for the controller."""
+    dtype_name = _target_dtype_name(dtype)
+    metadata = _represented_cc_axis_metadata_cached(max_level, dtype_name)
+    max_axis_nodes = max(
+        metadata[level].nodes.size for level in range(initial_level, max_level + 1)
+    )
     node_rows = []
     weight_rows = []
     id_rows = []
+    represented_id_rows = []
     counts = []
     for level in range(initial_level, max_level + 1):
-        nodes, weights = _unit_rule_data(
+        _raw_nodes, raw_weights = _unit_rule_data(
             ClenshawCurtisRule((1 << level) + 1),
             dtype,
         )
-        count = nodes.shape[0]
+        level_metadata = metadata[level]
+        represented_to_index = {
+            int(represented_id): index
+            for index, represented_id in enumerate(level_metadata.represented_ids)
+        }
+        host_weights = np.asarray(raw_weights)
+        compact_weights = np.zeros(
+            level_metadata.nodes.size, dtype=np.dtype(dtype_name)
+        )
+        for weight, represented_id in zip(
+            host_weights,
+            level_metadata.formula_represented_ids,
+            strict=True,
+        ):
+            index = represented_to_index[int(represented_id)]
+            compact_weights[index] = np.asarray(
+                compact_weights[index] + weight,
+                dtype=np.dtype(dtype_name),
+            )
+        count = int(level_metadata.nodes.size)
         pad = max_axis_nodes - count
-        node_rows.append(jnp.pad(nodes, (0, pad)))
-        weight_rows.append(jnp.pad(weights, (0, pad)))
+        node_rows.append(
+            jnp.pad(jnp.asarray(level_metadata.nodes, dtype=dtype), (0, pad))
+        )
+        weight_rows.append(jnp.pad(jnp.asarray(compact_weights, dtype=dtype), (0, pad)))
         id_rows.append(
             jnp.pad(
-                canonical_cc_axis_ids(level),
+                jnp.asarray(level_metadata.canonical_ids, dtype=jnp.int32),
                 ((0, pad), (0, 0)),
+                constant_values=-1,
+            )
+        )
+        represented_id_rows.append(
+            jnp.pad(
+                jnp.asarray(level_metadata.represented_ids, dtype=jnp.int32),
+                (0, pad),
                 constant_values=-1,
             )
         )
@@ -276,72 +487,51 @@ def adaptive_tensor_tables(
         nodes=jnp.stack(node_rows),
         weights=jnp.stack(weight_rows),
         canonical_ids=jnp.stack(id_rows),
+        represented_ids=jnp.stack(represented_id_rows),
         counts=jnp.asarray(counts, dtype=jnp.int32),
         initial_level=initial_level,
         max_level=max_level,
     )
 
 
-def _candidate_formula(
+def _formula_structure(
     levels: Array,
     tables: AdaptiveTensorTables,
-    max_evaluations: int,
-) -> tuple[Array, Array, Array, Array]:
+) -> tuple[Array, Array, Array]:
     level_index = jnp.clip(
         levels - tables.initial_level,
         0,
         tables.max_level - tables.initial_level,
     )
     counts = tables.counts[level_index]
-    point_count = jnp.prod(counts)
-    flat = jnp.arange(max_evaluations, dtype=jnp.int32)
-    active = flat < point_count
-    safe_flat = jnp.minimum(flat, jnp.maximum(point_count - 1, 0))
+    point_count = jnp.prod(counts, dtype=jnp.int32)
+    return level_index, counts, point_count
+
+
+def _formula_row(
+    flat: Array,
+    *,
+    level_index: Array,
+    counts: Array,
+    tables: AdaptiveTensorTables,
+) -> tuple[Array, Array, Array, Array]:
     point_columns = []
     weight_columns = []
     id_columns = []
-    dimension = levels.shape[0]
+    represented_key_columns = []
+    dimension = counts.shape[0]
     for axis in range(dimension):
         divisor = jnp.prod(counts[axis + 1 :], dtype=jnp.int32)
-        index = (safe_flat // divisor) % counts[axis]
+        index = (flat // divisor) % counts[axis]
         point_columns.append(tables.nodes[level_index[axis], index])
         weight_columns.append(tables.weights[level_index[axis], index])
         id_columns.append(tables.canonical_ids[level_index[axis], index])
+        represented_key_columns.append(tables.represented_ids[level_index[axis], index])
     points = jnp.stack(point_columns, axis=-1)
     weights = jnp.prod(jnp.stack(weight_columns, axis=-1), axis=-1)
     canonical_ids = jnp.concatenate(id_columns, axis=-1)
-    points = jnp.where(active[:, None], points, 0.0)
-    weights = jnp.where(active, weights, 0.0)
-    canonical_ids = jnp.where(active[:, None], canonical_ids, -1)
-    return points, weights, canonical_ids, active
-
-
-def _masked_representable_new_count(
-    base_points: Array,
-    base_active: Array,
-    candidate_points: Array,
-    candidate_active: Array,
-) -> Array:
-    matches_base = (
-        jnp.all(
-            candidate_points[:, None, :] == base_points[None, :, :],
-            axis=-1,
-        )
-        & base_active[None, :]
-    )
-    matches_candidate = jnp.all(
-        candidate_points[:, None, :] == candidate_points[None, :, :],
-        axis=-1,
-    )
-    index = jnp.arange(candidate_points.shape[0])
-    has_previous_duplicate = jnp.any(
-        matches_candidate
-        & candidate_active[None, :]
-        & (index[None, :] < index[:, None]),
-        axis=1,
-    )
-    is_new = candidate_active & ~jnp.any(matches_base, axis=1) & ~has_previous_duplicate
-    return jnp.sum(is_new, dtype=jnp.int32)
+    represented_key = jnp.stack(represented_key_columns)
+    return points, weights, canonical_ids, represented_key
 
 
 def _normalized_rules(method, dimension: int):
@@ -447,16 +637,91 @@ def tensor_rule_data(method, dimension: int, dtype) -> TensorRuleData:
     return TensorRuleData(points, weights, point_count)
 
 
-def _cache_from_state(state: TensorState) -> _TensorCache:
-    return _TensorCache(
-        canonical_ids=state.canonical_node_table,
-        points=state.cached_points,
-        values=state.cached_values,
-        active=state.cache_active,
-        node_count=state.cache_count,
-        evaluations=state.evaluations,
-        nonfinite=state.status == QuadStatus.NONFINITE_INTEGRAND,
+def _hash_capacity(max_evaluations: int) -> int:
+    return max(4, 1 << (2 * max_evaluations - 1).bit_length())
+
+
+def _hash_point_key(point_key: Array, mask: int) -> Array:
+    hashed = jnp.asarray(2166136261, dtype=jnp.uint32)
+    for coordinate in point_key:
+        hashed = (
+            hashed
+            ^ (
+                jnp.asarray(coordinate, dtype=jnp.uint32)
+                + jnp.asarray(0x9E3779B9, dtype=jnp.uint32)
+            )
+        ) * jnp.asarray(16777619, dtype=jnp.uint32)
+    return jnp.asarray(
+        hashed & jnp.asarray(mask, dtype=jnp.uint32),
+        dtype=jnp.int32,
     )
+
+
+class _CacheLookup(NamedTuple):
+    found: Array
+    value_index: Array
+    hash_slot: Array
+
+
+class _CacheProbeState(NamedTuple):
+    slot: Array
+    probes: Array
+    found: Array
+    value_index: Array
+    insertion_slot: Array
+    done: Array
+
+
+def _cache_lookup(cache: _TensorCache, point_key: Array) -> _CacheLookup:
+    """Find one represented tuple with exact open-addressed hash probing."""
+    hash_capacity = cache.hash_slots.shape[0]
+    mask = hash_capacity - 1
+    initial_slot = _hash_point_key(point_key, mask)
+    initial = _CacheProbeState(
+        slot=initial_slot,
+        probes=jnp.asarray(0, dtype=jnp.int32),
+        found=jnp.asarray(False),
+        value_index=jnp.asarray(0, dtype=jnp.int32),
+        insertion_slot=jnp.asarray(-1, dtype=jnp.int32),
+        done=jnp.asarray(False),
+    )
+
+    def probe(current: _CacheProbeState) -> _CacheProbeState:
+        cached_index = cache.hash_slots[current.slot]
+        occupied = cached_index >= 0
+        safe_index = jnp.maximum(cached_index, 0)
+        same_key = occupied & jnp.all(
+            cache.point_keys[safe_index] == point_key,
+            axis=-1,
+        )
+        empty = ~occupied
+        exhausted = current.probes + 1 >= hash_capacity
+        done = same_key | empty | exhausted
+        return _CacheProbeState(
+            slot=jnp.where(done, current.slot, (current.slot + 1) & mask),
+            probes=current.probes + 1,
+            found=same_key,
+            value_index=jnp.where(same_key, cached_index, 0),
+            insertion_slot=jnp.where(empty, current.slot, -1),
+            done=done,
+        )
+
+    result = jax.lax.while_loop(
+        lambda current: ~current.done,
+        probe,
+        initial,
+    )
+    return _CacheLookup(
+        found=result.found,
+        value_index=result.value_index,
+        hash_slot=result.insertion_slot,
+    )
+
+
+class _FormulaEvaluationState(NamedTuple):
+    cache: _TensorCache
+    value: Array
+    canonical_ids: Array
 
 
 def _evaluate_formula_with_cache(
@@ -471,121 +736,125 @@ def _evaluate_formula_with_cache(
     zero: Array,
     max_evaluations: int,
 ) -> tuple[_TensorCache, Array, Array, Array]:
-    points, weights, canonical_ids, active = _candidate_formula(
-        levels,
-        tables,
-        max_evaluations,
-    )
+    level_index, counts, point_count = _formula_structure(levels, tables)
     zero = jnp.asarray(zero)
-
-    def body(current: _TensorCache, row):
-        point, canonical_id, row_active = row
-        id_matches = current.active & jnp.all(
-            current.canonical_ids == canonical_id[None, :],
-            axis=-1,
-        )
-        point_matches = current.active & jnp.all(
-            current.points == point[None, :],
-            axis=-1,
-        )
-        matches = id_matches | point_matches
-        known = jnp.any(matches)
-        match_index = jnp.argmax(matches)
-
-        def active_row(operand: _TensorCache):
-            def reuse(existing: _TensorCache):
-                return existing, existing.values[match_index]
-
-            def evaluate_new(existing: _TensorCache):
-                available = existing.node_count < max_evaluations
-
-                def evaluate_and_store(store: _TensorCache):
-                    evaluated = evaluate_multidim(
-                        fun,
-                        domain,
-                        point[None, :],
-                        args=args,
-                        measure=measure,
-                    )
-                    contribution = evaluated.values[0] * evaluated.weights[0]
-                    nonfinite = (
-                        evaluated.nonfinite
-                        | ~evaluated.valid
-                        | ~jnp.all(jnp.isfinite(contribution))
-                    )
-                    index = store.node_count
-                    updated = _TensorCache(
-                        canonical_ids=store.canonical_ids.at[index].set(canonical_id),
-                        points=store.points.at[index].set(point),
-                        values=store.values.at[index].set(contribution),
-                        active=store.active.at[index].set(True),
-                        node_count=store.node_count + 1,
-                        evaluations=store.evaluations + 1,
-                        nonfinite=store.nonfinite | nonfinite,
-                    )
-                    return updated, contribution
-
-                def exhausted(store: _TensorCache):
-                    sentinel = jnp.full_like(zero, jnp.nan)
-                    return store._replace(nonfinite=jnp.asarray(True)), sentinel
-
-                return jax.lax.cond(
-                    available,
-                    evaluate_and_store,
-                    exhausted,
-                    existing,
-                )
-
-            return jax.lax.cond(known, reuse, evaluate_new, operand)
-
-        def inactive_row(operand: _TensorCache):
-            return operand, zero
-
-        should_process = row_active & ~current.nonfinite
-        return jax.lax.cond(
-            should_process,
-            active_row,
-            inactive_row,
-            current,
-        )
-
-    cache, row_values = jax.lax.scan(
-        body,
-        cache,
-        (points, canonical_ids, active),
+    dimension = levels.shape[0]
+    initial = _FormulaEvaluationState(
+        cache=cache,
+        value=zero,
+        canonical_ids=jnp.full(
+            (max_evaluations, 2 * dimension),
+            -1,
+            dtype=jnp.int32,
+        ),
     )
-    reshape = (max_evaluations,) + (1,) * zero.ndim
-    value = jnp.sum(row_values * weights.reshape(reshape), axis=0)
-    return cache, value, canonical_ids, active
+
+    def body(flat: Array, current: _FormulaEvaluationState):
+        point, weight, canonical_id, point_key = _formula_row(
+            flat,
+            level_index=level_index,
+            counts=counts,
+            tables=tables,
+        )
+        lookup = _cache_lookup(current.cache, point_key)
+
+        def reuse(existing: _TensorCache):
+            return existing, existing.values[lookup.value_index]
+
+        def evaluate_new(existing: _TensorCache):
+            available = (existing.node_count < max_evaluations) & (
+                lookup.hash_slot >= 0
+            )
+
+            def evaluate_and_store(store: _TensorCache):
+                evaluated = evaluate_multidim(
+                    fun,
+                    domain,
+                    point[None, :],
+                    args=args,
+                    measure=measure,
+                )
+                contribution = evaluated.values[0] * evaluated.weights[0]
+                nonfinite = (
+                    evaluated.nonfinite
+                    | ~evaluated.valid
+                    | ~jnp.all(jnp.isfinite(contribution))
+                )
+                index = store.node_count
+                updated = _TensorCache(
+                    point_keys=store.point_keys.at[index].set(point_key),
+                    canonical_ids=store.canonical_ids.at[index].set(canonical_id),
+                    points=store.points.at[index].set(point),
+                    values=store.values.at[index].set(contribution),
+                    hash_slots=store.hash_slots.at[lookup.hash_slot].set(index),
+                    node_count=store.node_count + 1,
+                    evaluations=store.evaluations + 1,
+                    nonfinite=store.nonfinite | nonfinite,
+                )
+                return updated, contribution
+
+            def exhausted(store: _TensorCache):
+                sentinel = jnp.full_like(zero, jnp.nan)
+                return store._replace(nonfinite=jnp.asarray(True)), sentinel
+
+            return jax.lax.cond(
+                available,
+                evaluate_and_store,
+                exhausted,
+                existing,
+            )
+
+        def process(active_cache: _TensorCache):
+            return jax.lax.cond(
+                lookup.found,
+                reuse,
+                evaluate_new,
+                active_cache,
+            )
+
+        def skip(nonfinite_cache: _TensorCache):
+            return nonfinite_cache, zero
+
+        updated_cache, contribution = jax.lax.cond(
+            current.cache.nonfinite,
+            skip,
+            process,
+            current.cache,
+        )
+        return _FormulaEvaluationState(
+            cache=updated_cache,
+            value=current.value + contribution * weight,
+            canonical_ids=current.canonical_ids.at[flat].set(canonical_id),
+        )
+
+    evaluated = jax.lax.fori_loop(
+        0,
+        point_count,
+        body,
+        initial,
+    )
+    active = jnp.arange(max_evaluations, dtype=jnp.int32) < point_count
+    return (
+        evaluated.cache,
+        evaluated.value,
+        evaluated.canonical_ids,
+        active,
+    )
 
 
 def _directional_data(
     value: Array,
     candidate_values: Array,
-    levels: Array,
+    directional_new_cost: Array,
     error_norm: ErrorNorm,
 ) -> tuple[Array, Array, Array, Array]:
     component_error = jnp.abs(candidate_values - value)
     directional_error = jnp.stack(
         [
             reduce_error_norm(component_error[axis], error_norm)
-            for axis in range(levels.shape[0])
+            for axis in range(candidate_values.shape[0])
         ]
     )
-    accepted_count = jnp.prod(jnp.left_shift(1, levels) + 1)
-    directional_new_cost = jnp.stack(
-        [
-            jnp.prod(
-                jnp.left_shift(
-                    1,
-                    levels + jax.nn.one_hot(axis, levels.shape[0], dtype=jnp.int32),
-                )
-                + 1
-            )
-            - accepted_count
-            for axis in range(levels.shape[0])
-        ]
-    ).astype(jnp.int32)
     error = jnp.sum(component_error, axis=0)
     frontier_error = jnp.sum(directional_error)
     return error, frontier_error, directional_error, directional_new_cost
@@ -625,8 +894,17 @@ def _refresh_frontier(
         )
         candidate_values.append(candidate_value)
     candidates = jnp.stack(candidate_values)
+    _accepted_count, directional_new_cost = _represented_formula_cardinalities(
+        levels,
+        represented_counts=tables.counts,
+        initial_level=tables.initial_level,
+        max_level=tables.max_level,
+    )
     error, frontier_error, directional_error, directional_new_cost = _directional_data(
-        value, candidates, levels, error_norm
+        value,
+        candidates,
+        directional_new_cost,
+        error_norm,
     )
     return (
         cache,
@@ -638,121 +916,60 @@ def _refresh_frontier(
     )
 
 
-def _selected_representable_new_count(
+def _formula_node_ids(
     levels: Array,
-    axis: Array,
     tables: AdaptiveTensorTables,
     max_evaluations: int,
-) -> Array:
-    base_points, _weights, _ids, base_active = _candidate_formula(
-        levels,
-        tables,
-        max_evaluations,
+) -> tuple[Array, Array]:
+    level_index, counts, point_count = _formula_structure(levels, tables)
+    ids = jnp.full(
+        (max_evaluations, 2 * levels.shape[0]),
+        -1,
+        dtype=jnp.int32,
     )
-    refined_levels = levels + jax.nn.one_hot(
-        axis,
+
+    def store_id(flat: Array, current: Array) -> Array:
+        _point, _weight, canonical_id, _point_key = _formula_row(
+            flat,
+            level_index=level_index,
+            counts=counts,
+            tables=tables,
+        )
+        return current.at[flat].set(canonical_id)
+
+    ids = jax.lax.fori_loop(0, point_count, store_id, ids)
+    active = jnp.arange(max_evaluations, dtype=jnp.int32) < point_count
+    return ids, active
+
+
+def _frontier_refresh_cost(
+    levels: Array,
+    accepted_axis: Array,
+    tables: AdaptiveTensorTables,
+) -> Array:
+    """Predict the exact new represented tuples after one accepted refinement."""
+    current = _represented_frontier_cardinality(
+        levels,
+        represented_counts=tables.counts,
+        initial_level=tables.initial_level,
+        max_level=tables.max_level,
+    )
+    accepted_levels = levels + jax.nn.one_hot(
+        accepted_axis,
         levels.shape[0],
         dtype=jnp.int32,
     )
-    candidate_points, _weights, _ids, candidate_active = _candidate_formula(
-        refined_levels,
-        tables,
-        max_evaluations,
+    refreshed = _represented_frontier_cardinality(
+        accepted_levels,
+        represented_counts=tables.counts,
+        initial_level=tables.initial_level,
+        max_level=tables.max_level,
     )
-    return _masked_representable_new_count(
-        base_points,
-        base_active,
-        candidate_points,
-        candidate_active,
-    )
-
-
-def _frontier_missing_count(
-    levels: Array,
-    tables: AdaptiveTensorTables,
-    cache: _TensorCache,
-    max_evaluations: int,
-) -> Array:
-    out_of_range = jnp.any(levels + 1 > tables.max_level)
-    dimension = levels.shape[0]
-    empty_ids = jnp.full_like(cache.canonical_ids, -1)
-    empty_points = jnp.zeros_like(cache.points)
-    empty_active = jnp.zeros_like(cache.active)
-
-    class MissingState(NamedTuple):
-        canonical_ids: Array
-        points: Array
-        active: Array
-        missing_count: Array
-
-    missing = MissingState(
-        canonical_ids=empty_ids,
-        points=empty_points,
-        active=empty_active,
-        missing_count=jnp.asarray(0, dtype=jnp.int32),
-    )
-
-    def collect_formula(current: MissingState, candidate_levels: Array):
-        points, _weights, canonical_ids, active = _candidate_formula(
-            candidate_levels,
-            tables,
-            max_evaluations,
-        )
-
-        def body(store: MissingState, row):
-            point, canonical_id, row_active = row
-            cache_match = jnp.any(
-                cache.active
-                & (
-                    jnp.all(
-                        cache.canonical_ids == canonical_id[None, :],
-                        axis=-1,
-                    )
-                    | jnp.all(cache.points == point[None, :], axis=-1)
-                )
-            )
-            missing_match = jnp.any(
-                store.active
-                & (
-                    jnp.all(
-                        store.canonical_ids == canonical_id[None, :],
-                        axis=-1,
-                    )
-                    | jnp.all(store.points == point[None, :], axis=-1)
-                )
-            )
-            add = row_active & ~cache_match & ~missing_match
-            index = jnp.minimum(store.missing_count, max_evaluations - 1)
-            updated = MissingState(
-                canonical_ids=store.canonical_ids.at[index].set(
-                    jnp.where(add, canonical_id, store.canonical_ids[index])
-                ),
-                points=store.points.at[index].set(
-                    jnp.where(add, point, store.points[index])
-                ),
-                active=store.active.at[index].set(store.active[index] | add),
-                missing_count=store.missing_count + add.astype(jnp.int32),
-            )
-            return updated, None
-
-        return jax.lax.scan(
-            body,
-            current,
-            (points, canonical_ids, active),
-        )[0]
-
-    clipped_levels = jnp.minimum(levels, tables.max_level - 1)
-    for axis in range(dimension):
-        candidate_levels = clipped_levels + jax.nn.one_hot(
-            axis,
-            dimension,
-            dtype=jnp.int32,
-        )
-        missing = collect_formula(missing, candidate_levels)
+    unavailable = jnp.asarray(jnp.iinfo(jnp.int32).max, dtype=jnp.int32)
     return jnp.where(
-        out_of_range,
-        jnp.asarray(max_evaluations + 1, dtype=jnp.int32),
-        missing.missing_count,
+        (current == unavailable) | (refreshed == unavailable),
+        unavailable,
+        jnp.maximum(refreshed - current, 0),
     )
 
 
@@ -782,6 +999,11 @@ def adaptive_tensor_controller(
     value_dtype = jnp.result_type(zero, tables.nodes)
     zero = jnp.asarray(zero, dtype=value_dtype)
     cache = _TensorCache(
+        point_keys=jnp.full(
+            (max_evaluations, dimension),
+            -1,
+            dtype=jnp.int32,
+        ),
         canonical_ids=jnp.full(
             (max_evaluations, 2 * dimension),
             -1,
@@ -789,7 +1011,11 @@ def adaptive_tensor_controller(
         ),
         points=jnp.zeros((max_evaluations, dimension), dtype=dtype),
         values=jnp.zeros((max_evaluations,) + zero.shape, dtype=value_dtype),
-        active=jnp.zeros((max_evaluations,), dtype=jnp.bool_),
+        hash_slots=jnp.full(
+            (_hash_capacity(max_evaluations),),
+            -1,
+            dtype=jnp.int32,
+        ),
         node_count=jnp.asarray(0, dtype=jnp.int32),
         evaluations=jnp.asarray(0, dtype=jnp.int32),
         nonfinite=jnp.asarray(False),
@@ -858,11 +1084,7 @@ def adaptive_tensor_controller(
         directional_candidate_values=candidates,
         directional_error=directional_error,
         directional_new_cost=directional_new_cost,
-        canonical_node_table=cache.canonical_ids,
-        cached_points=cache.points,
-        cached_values=cache.values,
-        cache_active=cache.active,
-        cache_count=cache.node_count,
+        cache=cache,
         evaluations=cache.evaluations,
         refinements=jnp.asarray(0, dtype=jnp.int32),
         status=status,
@@ -882,25 +1104,19 @@ def adaptive_tensor_controller(
             norm=error_norm,
         )
         converged_now = selected_frontier_error <= current_tolerance
-        cache_now = _cache_from_state(current)
-        representable_new = _selected_representable_new_count(
-            current.levels,
-            axis,
-            tables,
-            max_evaluations,
-        )
+        representable_new = current.directional_new_cost[axis]
         accepted_levels = current.levels + jax.nn.one_hot(
             axis,
             dimension,
             dtype=jnp.int32,
         )
-        refresh_cost = _frontier_missing_count(
-            accepted_levels,
+        refresh_cost = _frontier_refresh_cost(
+            current.levels,
+            axis,
             tables,
-            cache_now,
-            max_evaluations,
         )
-        can_accept = current.evaluations + refresh_cost <= max_evaluations
+        remaining_capacity = max_evaluations - current.evaluations
+        can_accept = refresh_cost <= remaining_capacity
 
         def stop_without_accept(operand: TensorState) -> TensorState:
             stop_status = jnp.where(
@@ -919,7 +1135,6 @@ def adaptive_tensor_controller(
             )
 
         def accept_and_refresh(operand: TensorState) -> TensorState:
-            cache_before = _cache_from_state(operand)
             accepted_value = operand.directional_candidate_values[axis]
             (
                 cache_after,
@@ -936,17 +1151,15 @@ def adaptive_tensor_controller(
                 levels=accepted_levels,
                 value=accepted_value,
                 tables=tables,
-                cache=cache_before,
+                cache=operand.cache,
                 zero=zero,
                 max_evaluations=max_evaluations,
                 error_norm=error_norm,
             )
-            _accepted_points, _accepted_weights, accepted_ids, accepted_active = (
-                _candidate_formula(
-                    accepted_levels,
-                    tables,
-                    max_evaluations,
-                )
+            accepted_ids, accepted_active = _formula_node_ids(
+                accepted_levels,
+                tables,
+                max_evaluations,
             )
             nonfinite_after = (
                 cache_after.nonfinite
@@ -968,11 +1181,7 @@ def adaptive_tensor_controller(
                 directional_candidate_values=new_candidates,
                 directional_error=new_directional_error,
                 directional_new_cost=new_directional_cost,
-                canonical_node_table=cache_after.canonical_ids,
-                cached_points=cache_after.points,
-                cached_values=cache_after.values,
-                cache_active=cache_after.active,
-                cache_count=cache_after.node_count,
+                cache=cache_after,
                 evaluations=cache_after.evaluations,
                 refinements=operand.refinements + 1,
                 status=new_status,
@@ -1020,12 +1229,7 @@ def adaptive_tensor_controller(
             norm=error_norm,
         )
         converged_now = final_frontier_error <= final_tolerance
-        representable_new = _selected_representable_new_count(
-            current.levels,
-            axis,
-            tables,
-            max_evaluations,
-        )
+        representable_new = current.directional_new_cost[axis]
         final_status = jnp.where(
             converged_now,
             jnp.asarray(QuadStatus.CONVERGED, dtype=jnp.int32),
@@ -1079,6 +1283,7 @@ __all__ = [
     "canonical_tensor_ids",
     "choose_tensor_axis",
     "count_representable_new_nodes",
+    "represented_cc_axis_counts",
     "tensor_point_count",
     "tensor_rule_data",
     "validate_adaptive_tensor_capacity",

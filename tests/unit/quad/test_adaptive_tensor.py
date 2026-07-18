@@ -1,3 +1,5 @@
+import inspect
+
 import jax
 import jax.numpy as jnp
 import pytest
@@ -84,11 +86,83 @@ def test_frontier_profit_ties_choose_the_lowest_axis():
     assert evidence == 4.0
 
 
+def test_float32_level_13_cost_uses_real_represented_cc_nodes():
+    float32_counts = _tensor.represented_cc_axis_counts(
+        initial_level=12,
+        max_level=13,
+        dtype=jnp.float32,
+    )
+    float64_counts = _tensor.represented_cc_axis_counts(
+        initial_level=12,
+        max_level=13,
+        dtype=jnp.float64,
+    )
+
+    assert jnp.array_equal(float32_counts, jnp.array([4097, 8192]))
+    assert jnp.array_equal(float64_counts, jnp.array([4097, 8193]))
+    assert float32_counts[1] - float32_counts[0] == 4095
+    assert float64_counts[1] - float64_counts[0] == 4096
+
+
+def test_one_shared_represented_cardinality_owner_drives_frontier_cost():
+    represented_counts = _tensor.represented_cc_axis_counts(
+        initial_level=12,
+        max_level=13,
+        dtype=jnp.float32,
+    )
+    levels = jnp.array([12], dtype=jnp.int32)
+
+    accepted, directional = _tensor._represented_formula_cardinalities(
+        levels,
+        represented_counts=represented_counts,
+        initial_level=12,
+        max_level=13,
+    )
+
+    assert accepted == 4097
+    assert jnp.array_equal(directional, jnp.array([4095], dtype=jnp.int32))
+    assert _tensor._represented_frontier_cardinality(
+        levels,
+        represented_counts=represented_counts,
+        initial_level=12,
+        max_level=13,
+    ) == (4097 + 4095)
+
+
+def test_formula_membership_is_active_only_and_not_capacity_scanned():
+    evaluation_source = inspect.getsource(_tensor._evaluate_formula_with_cache)
+    lookup_source = inspect.getsource(_tensor._cache_lookup)
+
+    assert "_cache_lookup" in evaluation_source
+    assert "lax.fori_loop" in evaluation_source
+    assert "lax.scan" not in evaluation_source
+    assert "canonical_ids ==" not in evaluation_source
+    assert "current.points ==" not in evaluation_source
+    assert "hash_slots" in lookup_source
+    assert "point_keys[safe_index]" in lookup_source
+    assert "lax.while_loop" in lookup_source
+    assert not hasattr(_tensor, "_masked_representable_new_count")
+    assert not hasattr(_tensor, "_frontier_missing_count")
+
+
 def test_representable_new_node_count_detects_collapsed_coordinates():
     base = jnp.array([[0.0, 0.0], [0.5, 0.5], [1.0, 1.0]])
     collapsed = jnp.array([[0.0, 0.0], [0.5, 0.5], [0.5, 0.5], [1.0, 1.0]])
 
     assert _tensor.count_representable_new_nodes(base, collapsed) == 0
+
+
+@pytest.mark.parametrize("max_evaluations", [65, 512, 2048])
+def test_declared_padding_does_not_change_initial_logical_work(max_evaluations):
+    result = quad.integrate(
+        lambda x: jnp.ones(x.shape[0]),
+        quad.Hyperrectangle(jnp.zeros(2), jnp.ones(2)),
+        **_options(max_evaluations=max_evaluations),
+    )
+
+    assert result.status == quad.QuadStatus.CONVERGED
+    assert result.work.evaluations == 65
+    assert result.work.refinements == 0
 
 
 def test_adaptive_tensor_refines_under_directional_frontier_evidence():
@@ -106,6 +180,78 @@ def test_adaptive_tensor_refines_under_directional_frontier_evidence():
     assert result.work.levels == 3
     assert result.work.active_regions == 0
     assert result.work.replicates == 0
+
+
+def test_sharp_axis_end_to_end_level_vector_is_anisotropic():
+    domain = quad.Hyperrectangle(jnp.zeros(2), jnp.ones(2))
+    capacity = _tensor.validate_adaptive_tensor_capacity(
+        initial_level=2,
+        dimension=2,
+        max_evaluations=512,
+        dtype=jnp.float64,
+    )
+    controller = _tensor.adaptive_tensor_controller(
+        lambda x: jnp.exp(8.0 * x[:, 0]) + x[:, 1],
+        domain,
+        args=(),
+        measure=quad.LebesgueMeasure(),
+        initial_level=2,
+        epsabs=1e-5,
+        epsrel=1e-5,
+        max_evaluations=512,
+        error_norm=quad.MaxNorm(),
+        zero=jnp.asarray(0.0),
+        capacity=capacity,
+    )
+
+    assert jnp.array_equal(controller.levels, jnp.array([3, 2]))
+    assert controller.refinements == 1
+    assert controller.evaluations == 121
+
+
+def _run_unequal_cost_controller():
+    domain = quad.Hyperrectangle(jnp.zeros(2), jnp.ones(2))
+    capacity = _tensor.validate_adaptive_tensor_capacity(
+        initial_level=2,
+        dimension=2,
+        max_evaluations=230,
+        dtype=jnp.float64,
+    )
+    return _tensor.adaptive_tensor_controller(
+        lambda x: jnp.exp(12.0 * x[:, 0]) + 0.15 * jnp.exp(8.0 * x[:, 1]),
+        domain,
+        args=(),
+        measure=quad.LebesgueMeasure(),
+        initial_level=2,
+        epsabs=0.0,
+        epsrel=0.0,
+        max_evaluations=230,
+        error_norm=quad.MaxNorm(),
+        zero=jnp.asarray(0.0),
+        capacity=capacity,
+    )
+
+
+def test_controller_uses_unequal_cost_profit_not_raw_directional_error(monkeypatch):
+    profit_selected = _run_unequal_cost_controller()
+
+    assert jnp.array_equal(profit_selected.levels, jnp.array([3, 3]))
+    assert profit_selected.refinements == 2
+    assert profit_selected.evaluations == 225
+
+    monkeypatch.setattr(
+        _tensor,
+        "choose_tensor_axis",
+        lambda directional_error, _new_cost: (
+            jnp.argmax(directional_error),
+            jnp.sum(directional_error),
+        ),
+    )
+    raw_error_selected = _run_unequal_cost_controller()
+
+    assert jnp.array_equal(raw_error_selected.levels, jnp.array([3, 2]))
+    assert raw_error_selected.refinements == 1
+    assert raw_error_selected.evaluations == 121
 
 
 def test_initial_frontier_reuses_every_shared_coordinate_tuple():
@@ -174,10 +320,23 @@ def test_capacity_status_follows_nonconverged_initial_frontier():
 
 
 def test_roundoff_precedes_capacity_when_selected_refinement_collapses(monkeypatch):
+    def zero_represented_growth(
+        levels,
+        *,
+        represented_counts,
+        initial_level,
+        max_level,
+    ):
+        del represented_counts, initial_level, max_level
+        return (
+            jnp.prod(jnp.left_shift(1, levels) + 1),
+            jnp.zeros_like(levels),
+        )
+
     monkeypatch.setattr(
         _tensor,
-        "_selected_representable_new_count",
-        lambda *_args, **_kwargs: jnp.asarray(0, dtype=jnp.int32),
+        "_represented_formula_cardinalities",
+        zero_represented_growth,
     )
 
     result = quad.integrate(
