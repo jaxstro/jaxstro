@@ -82,19 +82,24 @@ def test_baseline_manifest_is_frozen_before_measurement():
 
 
 def test_evidence_emission_rejects_dirty_worktree():
-    completed = subprocess.run(
-        (
-            sys.executable,
-            str(RUNNER_PATH),
-            "--suite",
-            "baseline",
-            "--emit",
-        ),
-        cwd=ROOT,
-        text=True,
-        capture_output=True,
-        check=False,
-    )
+    sentinel = ROOT / ".quad-benchmark-dirty-sentinel"
+    sentinel.write_text("test-owned dirty state\n")
+    try:
+        completed = subprocess.run(
+            (
+                sys.executable,
+                str(RUNNER_PATH),
+                "--suite",
+                "baseline",
+                "--emit",
+            ),
+            cwd=ROOT,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+    finally:
+        sentinel.unlink()
     assert completed.returncode != 0
     assert "evidence emission requires a clean worktree" in completed.stderr
 
