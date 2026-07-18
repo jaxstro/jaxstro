@@ -90,6 +90,9 @@ exclude = [
 benchmark = [
     "quadax==0.2.13",
 ]
+benchmark-multidim = [
+    "scipy==1.16.0",
+]
 dev = [
   "pytest",
   "ruff",
