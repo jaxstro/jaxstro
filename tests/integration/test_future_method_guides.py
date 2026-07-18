@@ -20,7 +20,6 @@ GUIDES = {
         "Ecosystem guide"
     ),
     "linear-structure/iterative-linear-solvers.md": "Ecosystem guide",
-    "probability-sampling/quasi-monte-carlo.md": "Planned Jaxstro capability",
     "signals/signal-axes.md": "Planned Jaxstro capability",
     "signals/windows-spectral-leakage.md": "Planned Jaxstro capability",
     "signals/spectral-estimation.md": "Planned Jaxstro capability",
@@ -74,6 +73,7 @@ CURRENT_METHOD_ROUTES = {
     "20-methods/probability-sampling/distributions.md": "/distributions",
     "20-methods/probability-sampling/random.md": "/random",
     "20-methods/probability-sampling/sampling.md": "/sampling",
+    "20-methods/probability-sampling/quasi-monte-carlo.md": "/quasi-monte-carlo",
     "20-methods/discrete-space/grids.md": "/grids",
     "20-methods/discrete-space/meshes.md": "/meshes",
     "20-methods/discrete-space/spatial.md": "/spatial",
@@ -126,7 +126,7 @@ def test_all_guides_exist_once_in_toc_and_manifest_with_native_routes() -> None:
     myst = (DOCS / "myst.yml").read_text(encoding="utf-8")
     manifest = json.loads((DOCS / "route-manifest.json").read_text(encoding="utf-8"))
 
-    assert len(GUIDES) == 8
+    assert len(GUIDES) == 7
     for relative in GUIDES:
         source = f"20-methods/{relative}"
         assert (METHODS / relative).is_file(), source
@@ -171,13 +171,15 @@ def test_delegated_guides_name_and_link_official_owners() -> None:
 def test_qmc_distinguishes_three_point_constructions_and_error_claims() -> None:
     text = _read("probability-sampling/quasi-monte-carlo.md").lower()
     for phrase in (
-        "deterministic low-discrepancy points",
-        "independent random samples",
-        "replicated randomized scrambles",
-        "does not provide an uncertainty estimate",
+        "deterministic approximation",
+        "fixed-look student",
+        "bounded confidence sequence",
+        "no sampling uncertainty",
+        "true nested owen",
     ):
         assert phrase in text
-    assert "for $r \\geq 2$ independent scrambles" in text
+    assert "$r\\geq 8$" in text
+    assert "jaxstro.quad" in text
 
 
 def test_signal_pages_pin_runtime_ownership_and_planned_status() -> None:
@@ -336,12 +338,6 @@ def test_planned_pages_do_not_claim_unimplemented_runtime_modules() -> None:
         assert "does not exist" in compact, relative
         assert not any(phrase in text for phrase in forbidden), relative
 
-    qmc = _read("probability-sampling/quasi-monte-carlo.md")
-    compact_qmc = " ".join(qmc.split())
-    assert "planned for `jaxstro.quad`" in compact_qmc
-    assert "general-purpose sampling" in compact_qmc
-    assert "`jaxstro.numerics.qmc`" not in qmc
-
 
 def test_new_sources_are_ascii_and_use_latex_for_math() -> None:
     for relative in GUIDES:
@@ -350,9 +346,9 @@ def test_new_sources_are_ascii_and_use_latex_for_math() -> None:
         assert "```{math}" in text, relative
 
 
-def test_new_routes_preserve_all_nineteen_current_method_routes() -> None:
+def test_new_routes_preserve_all_twenty_current_method_routes() -> None:
     manifest = json.loads((DOCS / "route-manifest.json").read_text(encoding="utf-8"))
-    assert len(CURRENT_METHOD_ROUTES) == 19
+    assert len(CURRENT_METHOD_ROUTES) == 20
     for source, route in CURRENT_METHOD_ROUTES.items():
         assert manifest[source] == route
 

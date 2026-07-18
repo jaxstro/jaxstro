@@ -43,9 +43,6 @@ STATUS_PAGES = {
         "Ecosystem guide"
     ),
     "20-methods/linear-structure/iterative-linear-solvers.md": "Ecosystem guide",
-    "20-methods/probability-sampling/quasi-monte-carlo.md": (
-        "Planned Jaxstro capability"
-    ),
     "20-methods/signals/signal-axes.md": "Planned Jaxstro capability",
     "20-methods/signals/windows-spectral-leakage.md": ("Planned Jaxstro capability"),
     "20-methods/signals/spectral-estimation.md": "Planned Jaxstro capability",
@@ -92,6 +89,7 @@ CURRENT_METHOD_PAGES = {
     "20-methods/probability-sampling/distributions.md",
     "20-methods/probability-sampling/random.md",
     "20-methods/probability-sampling/sampling.md",
+    "20-methods/probability-sampling/quasi-monte-carlo.md",
     "20-methods/discrete-space/grids.md",
     "20-methods/discrete-space/meshes.md",
     "20-methods/discrete-space/spatial.md",
@@ -490,7 +488,7 @@ def test_final_routes_are_semantic_and_internal_sources_are_excluded() -> None:
         "/teaching-with-jaxstro",
     }
     assert not (set(manifest.values()) & forbidden_routes)
-    assert len(manifest) == 167
+    assert len(manifest) == 168
     assert set(config["project"]["exclude"]) == {
         "audits/**",
         "plans/**",

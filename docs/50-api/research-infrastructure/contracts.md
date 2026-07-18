@@ -414,11 +414,13 @@ These immutable record or type constructors inherit their module-level contract:
 - `jaxstro.provenance.MethodManifest`
 - `jaxstro.quad.AdaptiveClenshawCurtis`
 - `jaxstro.quad.AdaptiveCubature`
+- `jaxstro.quad.AdaptiveScrambledSobol`
 - `jaxstro.quad.AdaptiveSmolyak`
 - `jaxstro.quad.AdaptiveTanhSinh`
 - `jaxstro.quad.AdaptiveTensorClenshawCurtis`
 - `jaxstro.quad.AffineMapResult`
 - `jaxstro.quad.ClenshawCurtisRule`
+- `jaxstro.quad.DigitalShift`
 - `jaxstro.quad.DomainMapResult`
 - `jaxstro.quad.ErrorKind`
 - `jaxstro.quad.ErrorNorm`
@@ -436,7 +438,9 @@ These immutable record or type constructors inherit their module-level contract:
 - `jaxstro.quad.LaguerreMeasure`
 - `jaxstro.quad.LebesgueMeasure`
 - `jaxstro.quad.LeftInfinite`
+- `jaxstro.quad.LinearMatrixScramble`
 - `jaxstro.quad.MaxNorm`
+- `jaxstro.quad.OwenScramble`
 - `jaxstro.quad.PhysicistsHermiteMeasure`
 - `jaxstro.quad.QuadError`
 - `jaxstro.quad.QuadResult`
@@ -445,7 +449,9 @@ These immutable record or type constructors inherit their module-level contract:
 - `jaxstro.quad.RightInfinite`
 - `jaxstro.quad.Romberg`
 - `jaxstro.quad.RombergTanhSinh`
+- `jaxstro.quad.ScrambledSobol`
 - `jaxstro.quad.Smolyak`
+- `jaxstro.quad.Sobol`
 - `jaxstro.quad.StandardNormalMeasure`
 - `jaxstro.quad.TanhSinhRule`
 - `jaxstro.quad.TensorProduct`

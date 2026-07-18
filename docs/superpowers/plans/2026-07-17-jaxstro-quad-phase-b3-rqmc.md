@@ -1050,7 +1050,12 @@ generation, pytest, Ruff, MyPy, JSON evidence.
   The validation test must:
 
   - reproduce the artifact with `--check`;
-  - assert empirical coverage lies within the frozen binomial band;
+  - assert fixed-look empirical coverage lies within the frozen two-sided
+    binomial band;
+  - assert sequential empirical coverage is not below the frozen lower
+    binomial bound, while reporting coverage above the upper bound as
+    conservatism/efficiency evidence rather than treating excess coverage as a
+    validity failure;
   - assert identical keys reproduce byte-identical estimates;
   - assert changed keys alter at least one replicate;
   - assert deterministic prefixes match the UNSW example;

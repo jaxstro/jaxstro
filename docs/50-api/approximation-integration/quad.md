@@ -117,10 +117,10 @@ The status belongs to a capability, not to the package as a whole.
 
 | Status | Current quadrature scope |
 | --- | --- |
-| shipped and validated | Sampled-data integration; fixed and adaptive one-dimensional rules; typed failure and work evidence; one-dimensional accepted-formula replay; finite-hyperrectangle tensor products, adaptive tensor refinement, Genz-Malik cubature, and fixed or dimension-adaptive Smolyak sparse grids |
+| shipped and validated | Sampled-data integration; fixed and adaptive one-dimensional rules; typed failure and work evidence; one-dimensional accepted-formula replay; finite-hyperrectangle tensor products, adaptive tensor refinement, Genz-Malik cubature, fixed or dimension-adaptive Smolyak sparse grids, deterministic Sobol integration, and fixed-look or bounded sequential randomized QMC |
 | benchmarking | The Apple M2 Max CPU comparison is accepted; additional backends, precisions, batch regimes, and method families remain future benchmarking coverage |
 | alpha | Opt-in quantity normalization through `quad.integrate`; downstream ecosystem adoption is not implied |
-| approved but planned | Sobol and randomized QMC, Phase B4 replay and quantity hardening for multidimensional methods, compact sparse-grid memory ownership, and later scientific geometries |
+| approved but planned | Phase B4 replay and quantity hardening for multidimensional methods, compact sparse-grid and QMC memory ownership, and later scientific geometries |
 | intentionally unsupported | Posterior inference, experimental-design policy, general Monte Carlo inference, and domain-specific scientific acceptance |
 
 ### Reading comparison labels
@@ -176,6 +176,12 @@ Finite-hyperrectangle methods:
 - `GenzMalik`
 - `Smolyak`
 - `AdaptiveSmolyak`
+- `Sobol`
+- `ScrambledSobol`
+- `AdaptiveScrambledSobol`
+- `DigitalShift`
+- `LinearMatrixScramble`
+- `OwenScramble`
 
 Compatibility and expansion helpers:
 
@@ -282,9 +288,10 @@ continue to delegate to the existing adaptive owner with complete
 `max_nodes`, and `key` reserve explicit capacity and random-state boundaries
 for later multidimensional families; one-dimensional calls reject them.
 
-The B1 deterministic families and B2 sparse-grid families have passed their
-family validation gates. B3 randomized QMC remains unavailable until its own
-gate passes.
+The B1 deterministic families, B2 sparse-grid families, and B3 Sobol and
+randomized-QMC families have passed their family validation gates. B3
+randomized methods require scalar real payloads, explicit keys, and
+`gradient="stop"`.
 
 ## Quantity activation
 
