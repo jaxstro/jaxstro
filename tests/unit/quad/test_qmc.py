@@ -5,6 +5,7 @@ import jax.numpy as jnp
 import pytest
 
 from jaxstro import quad
+from jaxstro.quantity import dimensionless
 
 
 def _deterministic_options(**overrides):
@@ -344,3 +345,244 @@ def test_scrambled_sobol_invalid_interval_precedes_nonfinite_integrand(
         gradient="stop",
     )
     assert result.status == quad.QuadStatus.INVALID_INPUT
+
+
+def test_adaptive_schedule_requires_replicate_and_point_level_growth():
+    with pytest.raises(ValueError, match="replicate growth"):
+        quad.AdaptiveScrambledSobol(
+            schedule=((6, 8), (7, 8)),
+            estimate_bounds=(0.0, 1.0),
+        )
+    with pytest.raises(ValueError, match="point-level growth"):
+        quad.AdaptiveScrambledSobol(
+            schedule=((6, 8), (6, 16)),
+            estimate_bounds=(0.0, 1.0),
+        )
+
+
+@pytest.mark.parametrize(
+    "schedule",
+    (
+        ((6.0, 8), (7, 16)),
+        ((6, 8.0), (7, 16)),
+        ((6, 8), (5, 16)),
+        ((6, 16), (7, 8)),
+        ((6, 8), (6, 8), (7, 16)),
+    ),
+)
+def test_adaptive_schedule_rejects_noninteger_or_nonprogressing_rows(schedule):
+    with pytest.raises(ValueError, match="schedule"):
+        quad.AdaptiveScrambledSobol(
+            schedule=schedule,
+            estimate_bounds=(0.0, 1.0),
+        )
+
+
+@pytest.mark.parametrize(
+    "method",
+    (
+        lambda: quad.ScrambledSobol(level=4.0, replicates=8),
+        lambda: quad.ScrambledSobol(level=4, replicates=8.0),
+        lambda: quad.AdaptiveScrambledSobol(
+            schedule=((3.0, 8), (4, 16)),
+            estimate_bounds=(0.0, 1.0),
+        ),
+        lambda: quad.AdaptiveScrambledSobol(
+            schedule=((3, 8.0), (4, 16)),
+            estimate_bounds=(0.0, 1.0),
+        ),
+    ),
+)
+def test_randomized_qmc_declarations_reject_float_controls(method):
+    with pytest.raises(ValueError):
+        method()
+
+
+def test_adaptive_declaration_requires_exactly_one_bound_contract():
+    with pytest.raises(ValueError, match="exactly one"):
+        quad.AdaptiveScrambledSobol(schedule=((3, 8), (4, 16)))
+    with pytest.raises(ValueError, match="exactly one"):
+        quad.AdaptiveScrambledSobol(
+            schedule=((3, 8), (4, 16)),
+            estimate_bounds=(0.0, 1.0),
+            integrand_bounds=(0.0, 1.0),
+        )
+
+
+def test_adaptive_scrambled_sobol_reuses_points_and_replicates_physically():
+    physical_points = 0
+
+    def integrand(x):
+        def record(_):
+            nonlocal physical_points
+            physical_points += x.shape[0]
+
+        jax.debug.callback(record, x[0, 0])
+        return jnp.exp(jnp.sum(x, axis=-1))
+
+    result = quad.integrate(
+        integrand,
+        quad.Hyperrectangle(jnp.zeros(2), jnp.ones(2)),
+        method=quad.AdaptiveScrambledSobol(
+            schedule=((3, 8), (4, 8), (4, 12), (5, 12)),
+            estimate_bounds=(0.0, 10.0),
+        ),
+        key=jax.random.key(59),
+        epsabs=0.0,
+        epsrel=0.0,
+        max_evaluations=12 * 32,
+        gradient="stop",
+    )
+    assert result.status == quad.QuadStatus.MAX_EVALUATIONS
+    assert result.work.evaluations == 12 * 32
+    assert result.work.refinements == 3
+    assert result.work.levels == 5
+    assert result.work.replicates == 12
+    assert physical_points == 12 * 32
+
+
+def test_adaptive_scrambled_sobol_stops_physical_work_at_first_inspection():
+    physical_points = 0
+
+    def integrand(x):
+        def record(_):
+            nonlocal physical_points
+            physical_points += x.shape[0]
+
+        jax.debug.callback(record, x[0, 0])
+        return jnp.exp(jnp.sum(x, axis=-1))
+
+    result = quad.integrate(
+        integrand,
+        quad.Hyperrectangle(jnp.zeros(2), jnp.ones(2)),
+        method=quad.AdaptiveScrambledSobol(
+            schedule=((3, 8), (4, 8), (4, 12), (5, 12)),
+            estimate_bounds=(0.0, 10.0),
+        ),
+        key=jax.random.key(73),
+        epsabs=100.0,
+        epsrel=0.0,
+        max_evaluations=12 * 32,
+        gradient="stop",
+    )
+    assert result.status == quad.QuadStatus.CONVERGED
+    assert result.work.evaluations == 8 * 8
+    assert result.work.refinements == 0
+    assert result.work.levels == 3
+    assert result.work.replicates == 8
+    assert physical_points == 8 * 8
+
+
+def test_adaptive_zero_volume_skips_final_prefix_generation(monkeypatch):
+    qmc_module = importlib.import_module("jaxstro.quad.qmc")
+    generation_calls = 0
+    original = qmc_module.sobol_integer_points
+
+    def record_generation(*args, **kwargs):
+        nonlocal generation_calls
+        generation_calls += 1
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(qmc_module, "sobol_integer_points", record_generation)
+    result = quad.integrate(
+        lambda x: jnp.sum(x, axis=-1),
+        quad.Hyperrectangle(jnp.asarray((0.0, 1.0)), jnp.asarray((2.0, 1.0))),
+        method=quad.AdaptiveScrambledSobol(
+            schedule=((3, 8), (4, 16)),
+            estimate_bounds=(-10.0, 10.0),
+        ),
+        key=jax.random.key(79),
+        epsabs=1.0,
+        epsrel=0.0,
+        max_evaluations=16 * 16,
+        gradient="stop",
+    )
+    assert generation_calls == 0
+    assert result.work.evaluations == 0
+
+
+@pytest.mark.parametrize(
+    ("lower", "upper", "expected_sign"),
+    ((0.0, 1.0, 1.0), (1.0, 0.0, -1.0)),
+)
+def test_integrand_bounds_derive_valid_oriented_lebesgue_estimate_bounds(
+    lower,
+    upper,
+    expected_sign,
+):
+    result = quad.integrate(
+        lambda x: 1.0 + 0.5 * x[:, 0],
+        quad.Hyperrectangle(jnp.asarray((lower,)), jnp.asarray((upper,))),
+        method=quad.AdaptiveScrambledSobol(
+            schedule=((3, 8), (4, 16)),
+            integrand_bounds=(1.0, 1.5),
+        ),
+        key=jax.random.key(61),
+        epsabs=10.0,
+        epsrel=0.0,
+        max_evaluations=16 * 16,
+        gradient="stop",
+    )
+    assert result.status == quad.QuadStatus.CONVERGED
+    assert jnp.sign(result.value) == expected_sign
+
+
+def test_integrand_bound_derivation_rejects_weighted_measure():
+    with pytest.raises(ValueError, match="direct estimate_bounds"):
+        quad.integrate(
+            lambda x: jnp.ones(x.shape[0]),
+            quad.Hyperrectangle(jnp.zeros(1), jnp.ones(1)),
+            method=quad.AdaptiveScrambledSobol(
+                schedule=((3, 8), (4, 16)),
+                integrand_bounds=(0.0, 1.0),
+            ),
+            measure=quad.WeightedMeasure(
+                lambda x, _args: jnp.ones(x.shape[0]),
+                density_unit=dimensionless,
+            ),
+            key=jax.random.key(67),
+            epsabs=1.0,
+            epsrel=0.0,
+            max_evaluations=16 * 16,
+            gradient="stop",
+        )
+
+
+def test_direct_estimate_bounds_support_a_signed_weighted_measure():
+    result = quad.integrate(
+        lambda x: jnp.ones(x.shape[0]),
+        quad.Hyperrectangle(jnp.zeros(1), jnp.ones(1)),
+        method=quad.AdaptiveScrambledSobol(
+            schedule=((3, 8), (4, 16)),
+            estimate_bounds=(-1.0, -1.0),
+        ),
+        measure=quad.WeightedMeasure(
+            lambda x, _args: -jnp.ones(x.shape[0]),
+            density_unit=dimensionless,
+        ),
+        key=jax.random.key(83),
+        epsabs=1.0,
+        epsrel=0.0,
+        max_evaluations=16 * 16,
+        gradient="stop",
+    )
+    assert result.status == quad.QuadStatus.CONVERGED
+    assert result.value == -1.0
+
+
+def test_adaptive_scrambled_sobol_fails_closed_on_bound_violation():
+    result = quad.integrate(
+        lambda x: 2.0 + jnp.sum(x, axis=-1),
+        quad.Hyperrectangle(jnp.zeros(2), jnp.ones(2)),
+        method=quad.AdaptiveScrambledSobol(
+            schedule=((3, 8), (4, 16)),
+            integrand_bounds=(0.0, 1.0),
+        ),
+        key=jax.random.key(71),
+        epsabs=1.0,
+        epsrel=0.0,
+        max_evaluations=16 * 16,
+        gradient="stop",
+    )
+    assert result.status == quad.QuadStatus.INVALID_INPUT
+    assert jnp.isnan(result.value)

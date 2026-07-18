@@ -39,6 +39,7 @@ from .methods import (
     RombergTanhSinh,
 )
 from .qmc import (
+    AdaptiveScrambledSobol,
     DigitalShift,
     LinearMatrixScramble,
     OwenScramble,
@@ -70,6 +71,7 @@ __all__ = [
     "AdaptiveClenshawCurtis",
     "AdaptiveCubature",
     "AdaptiveSmolyak",
+    "AdaptiveScrambledSobol",
     "AdaptiveTensorClenshawCurtis",
     "AdaptiveTanhSinh",
     "AffineMapResult",

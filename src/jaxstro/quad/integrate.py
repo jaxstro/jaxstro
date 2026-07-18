@@ -6,7 +6,14 @@ import jax
 from .adaptive import integrate as integrate_1d
 from .cubature import AdaptiveCubature, integrate_cubature
 from .domains import Hyperrectangle
-from .qmc import ScrambledSobol, Sobol, integrate_qmc, integrate_scrambled_qmc
+from .qmc import (
+    AdaptiveScrambledSobol,
+    ScrambledSobol,
+    Sobol,
+    integrate_adaptive_scrambled_qmc,
+    integrate_qmc,
+    integrate_scrambled_qmc,
+)
 from .sparse import (
     AdaptiveSmolyak,
     Smolyak,
@@ -33,6 +40,20 @@ def _require_stop_gradient(method, gradient: str, *, phase: str) -> None:
 
 def _integrate_hyperrectangle(*args, **kwargs):
     method = kwargs["method"]
+    if isinstance(method, AdaptiveScrambledSobol):
+        _require_stop_gradient(method, kwargs["gradient"], phase="Phase B3")
+        result = integrate_adaptive_scrambled_qmc(
+            *args,
+            args=kwargs["args"],
+            method=method,
+            measure=kwargs["measure"],
+            epsabs=kwargs["epsabs"],
+            epsrel=kwargs["epsrel"],
+            max_evaluations=kwargs["max_evaluations"],
+            key=kwargs["key"],
+            error_norm=kwargs["error_norm"],
+        )
+        return jax.tree.map(jax.lax.stop_gradient, result)
     if isinstance(method, ScrambledSobol):
         _require_stop_gradient(method, kwargs["gradient"], phase="Phase B3")
         result = integrate_scrambled_qmc(

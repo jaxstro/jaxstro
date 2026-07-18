@@ -3,7 +3,9 @@ import jax.numpy as jnp
 import pytest
 
 from jaxstro.quad._qmc_interval import (
+    empirical_bernstein_half_width,
     fixed_look_interval,
+    spent_alpha,
     student_t_quantile,
 )
 
@@ -90,3 +92,45 @@ def test_interval_rejects_too_few_or_nonscalar_replicates():
         fixed_look_interval(jnp.asarray([1.0]), confidence_level=0.95)
     with pytest.raises(ValueError, match="one-dimensional"):
         fixed_look_interval(jnp.ones((8, 2)), confidence_level=0.95)
+
+
+def test_alpha_spending_sums_to_requested_alpha_from_below():
+    alpha = jnp.asarray(0.05, dtype=jnp.float64)
+    spent = sum(spent_alpha(alpha, inspection) for inspection in range(10000))
+    assert spent < alpha
+    assert jnp.allclose(spent, alpha, rtol=2.0e-4)
+
+
+def test_empirical_bernstein_range_term_shrinks_only_with_replicates():
+    same_replicates = empirical_bernstein_half_width(
+        jnp.zeros(8),
+        lower=0.0,
+        upper=1.0,
+        alpha=0.05,
+    )
+    more_replicates = empirical_bernstein_half_width(
+        jnp.zeros(32),
+        lower=0.0,
+        upper=1.0,
+        alpha=0.05,
+    )
+    assert more_replicates < same_replicates
+
+
+def test_empirical_bernstein_uses_unbiased_variance_and_exact_range_term():
+    estimates = jnp.asarray(
+        (0.1, 0.2, 0.3, 0.4, 0.6, 0.7, 0.8, 0.9),
+        dtype=jnp.float64,
+    )
+    alpha = jnp.asarray(0.01, dtype=jnp.float64)
+    actual = empirical_bernstein_half_width(
+        estimates,
+        lower=0.0,
+        upper=1.0,
+        alpha=alpha,
+    )
+    mean = jnp.mean(estimates)
+    variance = jnp.sum((estimates - mean) ** 2) / 7
+    log_term = jnp.log(2.0 / alpha)
+    expected = jnp.sqrt(2.0 * variance * log_term / 8) + (7.0 * log_term / (3.0 * 7))
+    assert jnp.allclose(actual, expected)

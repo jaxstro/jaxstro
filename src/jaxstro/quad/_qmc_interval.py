@@ -141,8 +141,59 @@ def fixed_look_interval(
     )
 
 
+def spent_alpha(alpha, inspection) -> Array:
+    """Allocate one summable inspection-wise error probability."""
+    alpha = jnp.asarray(alpha)
+    inspection = jnp.asarray(inspection, dtype=alpha.dtype)
+    return alpha * 6.0 / (jnp.pi**2 * (inspection + 1.0) ** 2)
+
+
+def empirical_bernstein_half_width(
+    estimates: Array,
+    *,
+    lower,
+    upper,
+    alpha,
+) -> Array:
+    """Return the bounded empirical-Bernstein half-width for one inspection."""
+    estimates = jnp.asarray(estimates)
+    if estimates.ndim != 1:
+        raise ValueError("empirical-Bernstein estimates must be one-dimensional")
+    if estimates.shape[0] < 2:
+        raise ValueError(
+            "empirical-Bernstein evidence requires at least two replicates"
+        )
+    if jnp.issubdtype(estimates.dtype, jnp.complexfloating):
+        raise TypeError("empirical-Bernstein estimates must be real")
+    dtype = jnp.result_type(estimates, lower, upper, alpha, 0.0)
+    estimates = jnp.asarray(estimates, dtype=dtype)
+    lower = jnp.asarray(lower, dtype=dtype)
+    upper = jnp.asarray(upper, dtype=dtype)
+    alpha = jnp.asarray(alpha, dtype=dtype)
+    if lower.ndim != 0 or upper.ndim != 0 or alpha.ndim != 0:
+        raise ValueError("empirical-Bernstein bounds and alpha must be scalar")
+    replicate_count = estimates.shape[0]
+    mean = jnp.mean(estimates)
+    variance = jnp.sum((estimates - mean) ** 2) / (replicate_count - 1)
+    log_term = jnp.log(2.0 / alpha)
+    variance_term = jnp.sqrt(2.0 * variance * log_term / replicate_count)
+    range_term = 7.0 * (upper - lower) * log_term / (3.0 * (replicate_count - 1))
+    valid = (
+        jnp.all(jnp.isfinite(estimates))
+        & jnp.isfinite(lower)
+        & jnp.isfinite(upper)
+        & (lower <= upper)
+        & jnp.isfinite(alpha)
+        & (alpha > 0.0)
+        & (alpha < 1.0)
+    )
+    return jnp.where(valid, variance_term + range_term, jnp.nan)
+
+
 __all__ = [
     "FixedLookInterval",
+    "empirical_bernstein_half_width",
     "fixed_look_interval",
+    "spent_alpha",
     "student_t_quantile",
 ]

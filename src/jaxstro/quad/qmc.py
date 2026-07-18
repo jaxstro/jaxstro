@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
+from typing import NamedTuple
 
 import jax
 import jax.numpy as jnp
@@ -10,7 +12,11 @@ import jax.numpy as jnp
 from jaxstro.numerics.checks import try_concrete_bool
 
 from ._multidim import evaluate_multidim, infer_multidim_payload_zero
-from ._qmc_interval import fixed_look_interval
+from ._qmc_interval import (
+    empirical_bernstein_half_width,
+    fixed_look_interval,
+    spent_alpha,
+)
 from ._scramble import (
     DigitalShift,
     LinearMatrixScramble,
@@ -22,7 +28,11 @@ from ._sobol import (
     sobol_integer_points,
     sobol_points,
 )
-from .domains import Hyperrectangle, hyperrectangle_is_valid
+from .domains import (
+    Hyperrectangle,
+    hyperrectangle_is_valid,
+    hyperrectangle_orientation,
+)
 from .measures import LebesgueMeasure
 from .result import (
     ErrorKind,
@@ -122,6 +132,102 @@ class ScrambledSobol:
         )
 
 
+@jax.tree_util.register_pytree_node_class
+@dataclass(frozen=True)
+class AdaptiveScrambledSobol:
+    """Bounded sequential RQMC under a predeclared inspection schedule."""
+
+    schedule: tuple[tuple[int, int], ...]
+    estimate_bounds: tuple[float, float] | None = None
+    integrand_bounds: tuple[float, float] | None = None
+    scramble: DigitalShift | LinearMatrixScramble | OwenScramble = field(
+        default_factory=LinearMatrixScramble
+    )
+    confidence_level: float = 0.95
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.schedule, tuple) or not self.schedule:
+            raise ValueError("AdaptiveScrambledSobol schedule cannot be empty")
+        if any(not isinstance(row, tuple) or len(row) != 2 for row in self.schedule):
+            raise ValueError("schedule rows must be (level, replicate_count) tuples")
+        levels, replicates = zip(*self.schedule, strict=True)
+        if any(
+            isinstance(level, bool) or not isinstance(level, int) or level < 0
+            for level in levels
+        ):
+            raise ValueError("schedule levels must be nonnegative integers")
+        if any(
+            isinstance(count, bool) or not isinstance(count, int) or count < 8
+            for count in replicates
+        ):
+            raise ValueError("schedule requires at least 8 integer replicates")
+        pairs = zip(self.schedule, self.schedule[1:])
+        if any(
+            next_level < level
+            or next_count < count
+            or (next_level == level and next_count == count)
+            for (level, count), (next_level, next_count) in pairs
+        ):
+            raise ValueError("schedule must be monotone with strict progress")
+        if replicates[-1] <= replicates[0]:
+            raise ValueError("schedule must include replicate growth")
+        if levels[-1] <= levels[0]:
+            raise ValueError("schedule must include point-level growth")
+        if (self.estimate_bounds is None) == (self.integrand_bounds is None):
+            raise ValueError(
+                "provide exactly one of estimate_bounds or integrand_bounds"
+            )
+        selected_bounds = (
+            self.estimate_bounds
+            if self.estimate_bounds is not None
+            else self.integrand_bounds
+        )
+        if not isinstance(selected_bounds, tuple) or len(selected_bounds) != 2:
+            raise ValueError("bounds must be a (lower, upper) tuple")
+        lower, upper = selected_bounds
+        if (
+            not isinstance(lower, int | float)
+            or isinstance(lower, bool)
+            or not isinstance(upper, int | float)
+            or isinstance(upper, bool)
+            or not math.isfinite(lower)
+            or not math.isfinite(upper)
+            or lower > upper
+        ):
+            raise ValueError("bounds must be finite and ordered")
+        if not isinstance(
+            self.scramble,
+            (DigitalShift, LinearMatrixScramble, OwenScramble),
+        ):
+            raise TypeError(
+                "AdaptiveScrambledSobol requires a supported Sobol randomization"
+            )
+        if not 0.0 < self.confidence_level < 1.0:
+            raise ValueError("confidence_level must lie strictly between 0 and 1")
+
+    def tree_flatten(self):
+        return (), (
+            self.schedule,
+            self.estimate_bounds,
+            self.integrand_bounds,
+            self.scramble,
+            self.confidence_level,
+        )
+
+    @classmethod
+    def tree_unflatten(cls, metadata, _children):
+        schedule, estimate_bounds, integrand_bounds, scramble, confidence_level = (
+            metadata
+        )
+        return cls(
+            schedule=schedule,
+            estimate_bounds=estimate_bounds,
+            integrand_bounds=integrand_bounds,
+            scramble=scramble,
+            confidence_level=confidence_level,
+        )
+
+
 def _validate_evaluation_budget(level: int, max_evaluations: int) -> int:
     if (
         isinstance(max_evaluations, bool)
@@ -183,6 +289,7 @@ def _fixed_qmc_result(
     level: int,
     replicates: int,
     error_norm: ErrorNorm,
+    refinements=0,
 ) -> QuadResult:
     value = jnp.asarray(value)
     half_width = jnp.asarray(half_width)
@@ -221,12 +328,71 @@ def _fixed_qmc_result(
         status=status,
         work=QuadWork(
             evaluations=jnp.asarray(evaluations, dtype=jnp.int32),
-            refinements=zero,
+            refinements=jnp.asarray(refinements, dtype=jnp.int32),
             active_regions=zero,
             levels=jnp.asarray(level, dtype=jnp.int32),
             replicates=jnp.asarray(replicates, dtype=jnp.int32),
         ),
     )
+
+
+class _SequentialState(NamedTuple):
+    sums: jax.Array
+    nonfinite: jax.Array
+    value: jax.Array
+    half_width: jax.Array
+    tolerance: jax.Array
+    status: jax.Array
+    evaluations: jax.Array
+    refinements: jax.Array
+    level: jax.Array
+    replicates: jax.Array
+    done: jax.Array
+
+
+def _validate_adaptive_budget(
+    method: AdaptiveScrambledSobol,
+    max_evaluations: int,
+) -> tuple[int, int]:
+    final_level, final_replicates = method.schedule[-1]
+    point_count = _validate_evaluation_budget(final_level, max_evaluations)
+    total = final_replicates * point_count
+    if total > jnp.iinfo(jnp.int32).max:
+        raise ValueError(
+            f"AdaptiveScrambledSobol requires {total} evaluations, "
+            "exceeding the int32 work-accounting limit"
+        )
+    if total > max_evaluations:
+        raise ValueError(
+            f"AdaptiveScrambledSobol requires {total} evaluations, "
+            f"exceeding max_evaluations={max_evaluations}"
+        )
+    return point_count, total
+
+
+def _resolve_sequential_estimate_bounds(
+    method: AdaptiveScrambledSobol,
+    domain: Hyperrectangle,
+    measure,
+    dtype,
+) -> tuple[jax.Array, jax.Array]:
+    if method.estimate_bounds is not None:
+        bounds = jnp.asarray(method.estimate_bounds, dtype=dtype)
+        return bounds[0], bounds[1]
+    if not isinstance(measure, LebesgueMeasure):
+        raise ValueError(
+            "integrand_bounds require LebesgueMeasure in Phase B3; "
+            "supply direct estimate_bounds for other finite measures"
+        )
+    absolute_volume = jnp.prod(
+        jnp.abs(jnp.asarray(domain.upper) - jnp.asarray(domain.lower))
+    )
+    scaled = (
+        hyperrectangle_orientation(domain)
+        * absolute_volume
+        * jnp.asarray(method.integrand_bounds, dtype=dtype)
+    )
+    return jnp.min(scaled), jnp.max(scaled)
 
 
 def integrate_qmc(
@@ -532,12 +698,296 @@ def integrate_scrambled_qmc(
     )
 
 
+def integrate_adaptive_scrambled_qmc(
+    fun,
+    domain: Hyperrectangle,
+    *,
+    args,
+    method: AdaptiveScrambledSobol,
+    measure,
+    epsabs,
+    epsrel,
+    max_evaluations: int,
+    key,
+    error_norm: ErrorNorm,
+) -> QuadResult:
+    """Run a predeclared bounded RQMC confidence-sequence schedule."""
+    if key is None:
+        raise TypeError("AdaptiveScrambledSobol requires an explicit JAX key")
+    _validate_adaptive_budget(method, max_evaluations)
+    final_level, final_replicates = method.schedule[-1]
+    dtype = jnp.result_type(domain.lower, domain.upper, 0.0)
+    resolved_bits = resolve_sobol_bits(final_level, dtype)
+    absolute_tolerance = jnp.asarray(epsabs)
+    relative_tolerance = jnp.asarray(epsrel)
+    if absolute_tolerance.ndim != 0 or relative_tolerance.ndim != 0:
+        raise ValueError("AdaptiveScrambledSobol tolerances must be scalar")
+    if jnp.issubdtype(absolute_tolerance.dtype, jnp.complexfloating) or jnp.issubdtype(
+        relative_tolerance.dtype,
+        jnp.complexfloating,
+    ):
+        raise TypeError("AdaptiveScrambledSobol tolerances must have a real dtype")
+    zero = infer_multidim_payload_zero(
+        fun,
+        args=args,
+        dimension=domain.dimension,
+        dtype=dtype,
+    )
+    if jnp.ndim(zero) != 0 or jnp.issubdtype(
+        jnp.asarray(zero).dtype,
+        jnp.complexfloating,
+    ):
+        raise ValueError(
+            "AdaptiveScrambledSobol requires a scalar real integrand payload"
+        )
+    zero = jnp.asarray(zero, dtype=jnp.result_type(zero, dtype))
+    tolerance_valid = (
+        jnp.isfinite(absolute_tolerance)
+        & jnp.isfinite(relative_tolerance)
+        & (absolute_tolerance >= 0.0)
+        & (relative_tolerance >= 0.0)
+    )
+    invalid = ~hyperrectangle_is_valid(domain) | ~tolerance_valid
+    zero_width = jnp.any(jnp.asarray(domain.lower) == domain.upper)
+    selected_measure = LebesgueMeasure() if measure is None else measure
+    estimate_lower, estimate_upper = _resolve_sequential_estimate_bounds(
+        method,
+        domain,
+        selected_measure,
+        dtype,
+    )
+
+    def invalid_branch(_):
+        tolerance = tolerance_threshold(
+            zero,
+            epsabs=epsabs,
+            epsrel=epsrel,
+            norm=error_norm,
+        )
+        return _fixed_qmc_result(
+            zero,
+            jnp.asarray(jnp.nan, dtype=jnp.real(zero).dtype),
+            tolerance=tolerance,
+            confidence_level=method.confidence_level,
+            status=QuadStatus.INVALID_INPUT,
+            evaluations=0,
+            level=0,
+            replicates=0,
+            refinements=0,
+            error_norm=error_norm,
+        )
+
+    def zero_branch(_):
+        return zero_volume_result(
+            zero,
+            epsabs=epsabs,
+            epsrel=epsrel,
+            error_norm=error_norm,
+        )
+
+    def evaluate_branch(_):
+        integer_points = sobol_integer_points(
+            final_level,
+            domain.dimension,
+            bits=resolved_bits,
+        )
+        scale = jnp.asarray(2.0**resolved_bits, dtype=dtype)
+        initial_tolerance = tolerance_threshold(
+            zero,
+            epsabs=epsabs,
+            epsrel=epsrel,
+            norm=error_norm,
+        )
+        state = _SequentialState(
+            sums=jnp.zeros((final_replicates,), dtype=zero.dtype),
+            nonfinite=jnp.zeros((final_replicates,), dtype=jnp.bool_),
+            value=zero,
+            half_width=jnp.asarray(jnp.nan, dtype=jnp.real(zero).dtype),
+            tolerance=initial_tolerance,
+            status=jnp.asarray(QuadStatus.MAX_EVALUATIONS, dtype=jnp.int32),
+            evaluations=jnp.asarray(0, dtype=jnp.int32),
+            refinements=jnp.asarray(0, dtype=jnp.int32),
+            level=jnp.asarray(0, dtype=jnp.int32),
+            replicates=jnp.asarray(0, dtype=jnp.int32),
+            done=jnp.asarray(False),
+        )
+        previous_level = 0
+        previous_replicates = 0
+        overall_alpha = jnp.asarray(
+            1.0 - method.confidence_level,
+            dtype=jnp.real(zero).dtype,
+        )
+
+        for inspection, (level, replicate_count) in enumerate(method.schedule):
+            endpoint = 1 << level
+            previous_endpoint = 0 if inspection == 0 else 1 << previous_level
+            existing_points = integer_points[previous_endpoint:endpoint]
+            new_points = integer_points[:endpoint]
+            work_increment = (
+                previous_replicates * (endpoint - previous_endpoint)
+                + (replicate_count - previous_replicates) * endpoint
+            )
+            is_last = inspection == len(method.schedule) - 1
+
+            def inspect(current: _SequentialState) -> _SequentialState:
+                def evaluate_points(replicate, selected_points):
+                    replicate_key = jax.random.fold_in(key, replicate)
+                    scrambled = scramble_integers(
+                        selected_points,
+                        method=method.scramble,
+                        key=replicate_key,
+                        bits=resolved_bits,
+                    )
+                    points = scrambled.astype(dtype) / scale
+                    evaluated = evaluate_multidim(
+                        fun,
+                        domain,
+                        points,
+                        args=args,
+                        measure=selected_measure,
+                    )
+                    values = evaluated.values * evaluated.weights
+                    subtotal = jnp.sum(values)
+                    nonfinite = (
+                        evaluated.nonfinite | ~evaluated.valid | ~jnp.isfinite(subtotal)
+                    )
+                    return subtotal, nonfinite
+
+                def evaluate_replicate(replicate):
+                    def inactive(_):
+                        return (
+                            jnp.asarray(0, dtype=zero.dtype),
+                            jnp.asarray(False),
+                        )
+
+                    def evaluate_existing(_):
+                        if endpoint == previous_endpoint:
+                            return inactive(None)
+                        return evaluate_points(
+                            replicate,
+                            existing_points,
+                        )
+
+                    def active(_):
+                        return jax.lax.cond(
+                            replicate < previous_replicates,
+                            evaluate_existing,
+                            lambda _: evaluate_points(replicate, new_points),
+                            operand=None,
+                        )
+
+                    return jax.lax.cond(
+                        replicate < replicate_count,
+                        active,
+                        inactive,
+                        operand=None,
+                    )
+
+                additions, new_nonfinite = jax.lax.map(
+                    evaluate_replicate,
+                    jnp.arange(final_replicates, dtype=jnp.uint32),
+                )
+                sums = current.sums + additions
+                nonfinite = current.nonfinite | new_nonfinite
+                estimates = sums[:replicate_count] / endpoint
+                inspection_alpha = spent_alpha(overall_alpha, inspection)
+                half_width = empirical_bernstein_half_width(
+                    estimates,
+                    lower=estimate_lower,
+                    upper=estimate_upper,
+                    alpha=inspection_alpha,
+                )
+                value = jnp.mean(estimates)
+                tolerance = tolerance_threshold(
+                    value,
+                    epsabs=epsabs,
+                    epsrel=epsrel,
+                    norm=error_norm,
+                )
+                active_nonfinite = jnp.any(nonfinite[:replicate_count])
+                outside_bounds = jnp.any(
+                    (estimates < estimate_lower) | (estimates > estimate_upper)
+                )
+                inspection_invalid = (
+                    active_nonfinite | outside_bounds | ~jnp.isfinite(half_width)
+                )
+                converged = ~inspection_invalid & (half_width <= tolerance)
+                status = jnp.where(
+                    inspection_invalid,
+                    jnp.asarray(QuadStatus.INVALID_INPUT, dtype=jnp.int32),
+                    jnp.where(
+                        converged,
+                        jnp.asarray(QuadStatus.CONVERGED, dtype=jnp.int32),
+                        jnp.asarray(
+                            QuadStatus.MAX_EVALUATIONS,
+                            dtype=jnp.int32,
+                        ),
+                    ),
+                )
+                return _SequentialState(
+                    sums=sums,
+                    nonfinite=nonfinite,
+                    value=value,
+                    half_width=half_width,
+                    tolerance=tolerance,
+                    status=status,
+                    evaluations=current.evaluations + work_increment,
+                    refinements=current.refinements
+                    + jnp.asarray(inspection > 0, dtype=jnp.int32),
+                    level=jnp.asarray(level, dtype=jnp.int32),
+                    replicates=jnp.asarray(replicate_count, dtype=jnp.int32),
+                    done=inspection_invalid | converged | is_last,
+                )
+
+            state = jax.lax.cond(
+                state.done,
+                lambda current: current,
+                inspect,
+                state,
+            )
+            previous_level = level
+            previous_replicates = replicate_count
+
+        return _fixed_qmc_result(
+            state.value,
+            state.half_width,
+            tolerance=state.tolerance,
+            confidence_level=method.confidence_level,
+            status=state.status,
+            evaluations=state.evaluations,
+            level=state.level,
+            replicates=state.replicates,
+            refinements=state.refinements,
+            error_norm=error_norm,
+        )
+
+    invalid_concrete = try_concrete_bool(invalid)
+    if invalid_concrete is True:
+        return invalid_branch(None)
+    zero_concrete = try_concrete_bool(zero_width)
+    if zero_concrete is True:
+        return zero_branch(None)
+    return jax.lax.cond(
+        invalid,
+        invalid_branch,
+        lambda _: jax.lax.cond(
+            zero_width,
+            zero_branch,
+            evaluate_branch,
+            operand=None,
+        ),
+        operand=None,
+    )
+
+
 __all__ = [
+    "AdaptiveScrambledSobol",
     "DigitalShift",
     "LinearMatrixScramble",
     "OwenScramble",
     "ScrambledSobol",
     "Sobol",
     "integrate_qmc",
+    "integrate_adaptive_scrambled_qmc",
     "integrate_scrambled_qmc",
 ]
