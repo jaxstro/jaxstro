@@ -8,6 +8,7 @@ from jaxstro.numerics.quadrature import (
 
 from ._chebyshev import clenshaw_curtis_nodes
 from ._recurrence import gauss_laguerre_nodes, gauss_legendre_nodes
+from .cubature import AdaptiveCubature, GenzMalik
 from .domains import (
     Hyperrectangle,
     Infinite,
@@ -59,6 +60,7 @@ from .transforms import AffineMapResult, DomainMapResult, map_domain, map_interv
 
 __all__ = [
     "AdaptiveClenshawCurtis",
+    "AdaptiveCubature",
     "AdaptiveTensorClenshawCurtis",
     "AdaptiveTanhSinh",
     "AffineMapResult",
@@ -87,6 +89,7 @@ __all__ = [
     "gauss_legendre_nodes",
     "GaussianRule",
     "GaussKronrod",
+    "GenzMalik",
     "hermite_coefficients",
     "hermite_e_basis",
     "L1Norm",

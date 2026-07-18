@@ -4,6 +4,7 @@ from typing import Any
 import jax
 
 from .adaptive import integrate as integrate_1d
+from .cubature import AdaptiveCubature, integrate_cubature
 from .domains import Hyperrectangle
 from .tensor import (
     AdaptiveTensorClenshawCurtis,
@@ -16,6 +17,21 @@ from .tolerance import ErrorNorm, MaxNorm
 
 def _integrate_hyperrectangle(*args, **kwargs):
     method = kwargs["method"]
+    if isinstance(method, AdaptiveCubature):
+        if kwargs["gradient"] != "stop":
+            raise ValueError('AdaptiveCubature requires gradient="stop"')
+        result = integrate_cubature(
+            *args,
+            args=kwargs["args"],
+            method=method,
+            measure=kwargs["measure"],
+            epsabs=kwargs["epsabs"],
+            epsrel=kwargs["epsrel"],
+            max_evaluations=kwargs["max_evaluations"],
+            max_regions=kwargs["max_regions"],
+            error_norm=kwargs["error_norm"],
+        )
+        return jax.tree.map(jax.lax.stop_gradient, result)
     if isinstance(method, AdaptiveTensorClenshawCurtis):
         if kwargs["gradient"] != "stop":
             raise ValueError('AdaptiveTensorClenshawCurtis requires gradient="stop"')

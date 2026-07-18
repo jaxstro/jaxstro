@@ -10,9 +10,15 @@ import jax.numpy as jnp
 import numpy as np
 from jaxtyping import Array
 
+from ._multidim import evaluate_multidim
 from ._tensor import validate_b1_dimension
-from .tolerance import ErrorNorm, MaxNorm
+from .domains import Hyperrectangle
+from .result import QuadStatus
+from .tolerance import ErrorNorm, MaxNorm, tolerance_threshold
 from .tolerance import error_norm as reduce_error_norm
+
+RUNNING = -1
+MAX_CUBATURE_REGIONS = 100_000
 
 
 @jax.tree_util.register_pytree_node_class
@@ -103,6 +109,71 @@ class LocalCubatureEstimate(NamedTuple):
     error: Array
     axis_difference: Array
     nonfinite: Array
+
+
+class CubatureCapacity(NamedTuple):
+    """Static region-store and scan bounds validated before materialization."""
+
+    point_count: int
+    store_capacity: int
+    max_refinements: int
+    evaluation_refinement_limit: int
+    region_refinement_limit: int
+
+
+class CubatureRegionEstimate(NamedTuple):
+    """One aligned estimate row per normalized leaf region."""
+
+    value: Array
+    error: Array
+    error_norm: Array
+    split_axis: Array
+    nonfinite: Array
+
+
+class CubatureReplayEvidence(NamedTuple):
+    """Private stopped leaf metadata reserved for the Phase B4 replay owner."""
+
+    lower: Array
+    upper: Array
+    active: Array
+
+
+class CubatureControllerResult(NamedTuple):
+    """Private primal controller output plus stopped future replay metadata."""
+
+    value: Array
+    error: Array
+    error_norm: Array
+    tolerance: Array
+    status: Array
+    evaluations: Array
+    refinements: Array
+    active_regions: Array
+    deepest_depth: Array
+    evidence: CubatureReplayEvidence
+
+
+class CubatureState(NamedTuple):
+    """Fixed-capacity regional controller state."""
+
+    lower: Array
+    upper: Array
+    local_value: Array
+    local_error: Array
+    local_error_norm: Array
+    split_axis: Array
+    active: Array
+    depth: Array
+    value: Array
+    error: Array
+    error_norm: Array
+    tolerance: Array
+    evaluations: Array
+    refinements: Array
+    active_regions: Array
+    status: Array
+    done: Array
 
 
 def _real_floating_dtype(dtype) -> np.dtype:
@@ -364,3 +435,469 @@ def select_split_axis(axis_difference: Array) -> Array:
     if axis_difference.ndim != 1 or axis_difference.shape[0] == 0:
         raise ValueError("axis_difference must be a nonempty one-dimensional array")
     return jnp.argmax(axis_difference)
+
+
+def genz_malik_point_count(dimension: int) -> int:
+    """Return the closed-form local-rule cost without constructing the rule."""
+    validate_b1_dimension(dimension)
+    return 2**dimension + 2 * dimension**2 + 2 * dimension + 1
+
+
+def validate_cubature_capacity(
+    *,
+    dimension: int,
+    max_evaluations: int,
+    max_regions: int | None,
+) -> CubatureCapacity:
+    """Validate static capacities before rule or payload materialization."""
+    validate_b1_dimension(dimension)
+    if (
+        not isinstance(max_evaluations, int)
+        or isinstance(max_evaluations, bool)
+        or max_evaluations <= 0
+    ):
+        raise ValueError("max_evaluations must be a positive integer")
+    if (
+        not isinstance(max_regions, int)
+        or isinstance(max_regions, bool)
+        or max_regions <= 0
+    ):
+        raise ValueError("max_regions must be a positive integer")
+
+    point_count = genz_malik_point_count(dimension)
+    if max_evaluations < point_count:
+        raise ValueError(
+            f"initial Genz-Malik rule requires {point_count} evaluations, "
+            f"exceeding max_evaluations={max_evaluations}"
+        )
+
+    evaluation_refinements = (max_evaluations - point_count) // (2 * point_count)
+    region_refinements = max_regions - 1
+    max_refinements = min(evaluation_refinements, region_refinements)
+    store_capacity = max_refinements + 1
+    if store_capacity > MAX_CUBATURE_REGIONS:
+        raise ValueError(
+            "cubature region store capacity "
+            f"{store_capacity} exceeds the supported guard "
+            f"{MAX_CUBATURE_REGIONS}"
+        )
+
+    # Limits are clipped just above the reachable scan so even enormous
+    # declarations remain representable as JAX scalar comparisons.
+    unreachable = max_refinements + 1
+    return CubatureCapacity(
+        point_count=point_count,
+        store_capacity=store_capacity,
+        max_refinements=max_refinements,
+        evaluation_refinement_limit=min(evaluation_refinements, unreachable),
+        region_refinement_limit=min(region_refinements, unreachable),
+    )
+
+
+def select_region(active: Array, local_error_norm: Array) -> Array:
+    """Select the largest active local error, with lowest-region ties."""
+    active = jnp.asarray(active)
+    local_error_norm = jnp.asarray(local_error_norm)
+    if (
+        active.ndim != 1
+        or local_error_norm.ndim != 1
+        or active.shape != local_error_norm.shape
+        or active.shape[0] == 0
+    ):
+        raise ValueError("active and local_error_norm must be aligned nonempty vectors")
+    return jnp.argmax(jnp.where(active, local_error_norm, -jnp.inf))
+
+
+def cubature_termination_status(
+    *,
+    nonfinite,
+    converged,
+    midpoint_collapsed,
+    has_evaluation_capacity,
+    has_region_capacity,
+) -> Array:
+    """Apply the complete cubature status precedence without heuristics."""
+    running = jnp.asarray(RUNNING, dtype=jnp.int32)
+    status = jnp.where(
+        has_region_capacity,
+        running,
+        jnp.asarray(QuadStatus.MAX_REGIONS, dtype=jnp.int32),
+    )
+    status = jnp.where(
+        has_evaluation_capacity,
+        status,
+        jnp.asarray(QuadStatus.MAX_EVALUATIONS, dtype=jnp.int32),
+    )
+    status = jnp.where(
+        midpoint_collapsed,
+        jnp.asarray(QuadStatus.ROUNDOFF_LIMITED, dtype=jnp.int32),
+        status,
+    )
+    status = jnp.where(
+        converged,
+        jnp.asarray(QuadStatus.CONVERGED, dtype=jnp.int32),
+        status,
+    )
+    return jnp.where(
+        nonfinite,
+        jnp.asarray(QuadStatus.NONFINITE_INTEGRAND, dtype=jnp.int32),
+        status,
+    )
+
+
+def _payload_factors(values: Array, factors: Array) -> Array:
+    shape = (factors.shape[0],) + (1,) * (values.ndim - 1)
+    return values * factors.reshape(shape)
+
+
+def evaluate_cubature_regions(
+    fun,
+    domain: Hyperrectangle,
+    lower: Array,
+    upper: Array,
+    *,
+    args,
+    measure,
+    error_norm: ErrorNorm,
+    data: GenzMalikData,
+) -> CubatureRegionEstimate:
+    """Evaluate one or more normalized leaves in one atomic point batch."""
+    lower = jnp.asarray(lower, dtype=data.points.dtype)
+    upper = jnp.asarray(upper, dtype=data.points.dtype)
+    if (
+        lower.ndim != 2
+        or upper.shape != lower.shape
+        or lower.shape[1] != data.dimension
+        or lower.shape[0] == 0
+    ):
+        raise ValueError(
+            "cubature region bounds must have shape (region_count, dimension)"
+        )
+    region_count = lower.shape[0]
+    width = upper - lower
+    reference = lower[:, None, :] + width[:, None, :] * data.points[None, :, :]
+    flattened = reference.reshape((region_count * data.point_count, data.dimension))
+    evaluated = evaluate_multidim(
+        fun,
+        domain,
+        flattened,
+        args=args,
+        measure=measure,
+    )
+    weighted = _payload_factors(evaluated.values, evaluated.weights)
+    region_jacobian = jnp.prod(jnp.abs(width), axis=-1)
+    region_index = jnp.repeat(
+        jnp.arange(region_count, dtype=jnp.int32),
+        data.point_count,
+    )
+    weighted = _payload_factors(weighted, region_jacobian[region_index])
+    region_values = weighted.reshape(
+        (region_count, data.point_count) + weighted.shape[1:]
+    )
+    estimates = jax.vmap(
+        lambda values: genz_malik_estimate(
+            values,
+            data,
+            error_norm=error_norm,
+        )
+    )(region_values)
+    local_error_norm = jax.vmap(lambda value: reduce_error_norm(value, error_norm))(
+        estimates.error
+    )
+    split_axis = jax.vmap(select_split_axis)(estimates.axis_difference)
+    nonfinite = (
+        estimates.nonfinite
+        | ~jnp.isfinite(local_error_norm)
+        | ~jnp.asarray(evaluated.valid)
+    )
+    return CubatureRegionEstimate(
+        value=estimates.value,
+        error=estimates.error,
+        error_norm=local_error_norm,
+        split_axis=split_axis.astype(jnp.int32),
+        nonfinite=nonfinite,
+    )
+
+
+def _selected_midpoint(state: CubatureState) -> tuple[Array, Array, Array]:
+    region = select_region(state.active, state.local_error_norm)
+    axis = state.split_axis[region]
+    lower = state.lower[region, axis]
+    upper = state.upper[region, axis]
+    midpoint = jnp.asarray(0.5, dtype=state.lower.dtype) * (lower + upper)
+    collapsed = (midpoint == lower) | (midpoint == upper)
+    return region, midpoint, collapsed
+
+
+def _state_status(
+    state: CubatureState,
+    capacity: CubatureCapacity,
+    *,
+    nonfinite,
+) -> Array:
+    _region, _midpoint, midpoint_collapsed = _selected_midpoint(state)
+    return cubature_termination_status(
+        nonfinite=nonfinite,
+        converged=state.error_norm <= state.tolerance,
+        midpoint_collapsed=midpoint_collapsed,
+        has_evaluation_capacity=(
+            state.refinements < capacity.evaluation_refinement_limit
+        ),
+        has_region_capacity=(state.refinements < capacity.region_refinement_limit),
+    )
+
+
+def _global_nonfinite(
+    value: Array,
+    error: Array,
+    error_norm: Array,
+    tolerance: Array,
+) -> Array:
+    return ~(
+        jnp.all(jnp.isfinite(value))
+        & jnp.all(jnp.isfinite(error))
+        & jnp.isfinite(error_norm)
+        & jnp.isfinite(tolerance)
+    )
+
+
+def cubature_controller(
+    fun,
+    domain: Hyperrectangle,
+    *,
+    args,
+    measure,
+    epsabs,
+    epsrel,
+    max_evaluations: int,
+    max_regions: int,
+    error_norm: ErrorNorm,
+    zero: Array,
+    data: GenzMalikData,
+    capacity: CubatureCapacity,
+) -> CubatureControllerResult:
+    """Run the fixed-capacity h-adaptive Genz-Malik region scan."""
+    del max_evaluations, max_regions
+    dimension = data.dimension
+    store_capacity = capacity.store_capacity
+    value_dtype = jnp.result_type(zero, data.points)
+    zero = jnp.asarray(zero, dtype=value_dtype)
+    initial_lower = jnp.zeros((1, dimension), dtype=data.points.dtype)
+    initial_upper = jnp.ones((1, dimension), dtype=data.points.dtype)
+    initial = evaluate_cubature_regions(
+        fun,
+        domain,
+        initial_lower,
+        initial_upper,
+        args=args,
+        measure=measure,
+        error_norm=error_norm,
+        data=data,
+    )
+    value = initial.value[0]
+    error = initial.error[0]
+    global_error_norm = reduce_error_norm(error, error_norm)
+    tolerance = tolerance_threshold(
+        value,
+        epsabs=epsabs,
+        epsrel=epsrel,
+        norm=error_norm,
+    )
+    lower = jnp.zeros((store_capacity, dimension), dtype=data.points.dtype)
+    upper = jnp.zeros((store_capacity, dimension), dtype=data.points.dtype)
+    upper = upper.at[0].set(1.0)
+    local_value = jnp.zeros((store_capacity,) + zero.shape, dtype=value_dtype)
+    local_value = local_value.at[0].set(value)
+    error_dtype = jnp.result_type(jnp.real(zero), data.points)
+    local_error = jnp.zeros((store_capacity,) + zero.shape, dtype=error_dtype)
+    local_error = local_error.at[0].set(error)
+    local_error_norm = jnp.zeros(
+        (store_capacity,),
+        dtype=global_error_norm.dtype,
+    )
+    local_error_norm = local_error_norm.at[0].set(initial.error_norm[0])
+    split_axis = jnp.zeros((store_capacity,), dtype=jnp.int32)
+    split_axis = split_axis.at[0].set(initial.split_axis[0])
+    active = jnp.zeros((store_capacity,), dtype=jnp.bool_).at[0].set(True)
+    depth = jnp.zeros((store_capacity,), dtype=jnp.int32)
+    initial_nonfinite = initial.nonfinite[0] | _global_nonfinite(
+        value,
+        error,
+        global_error_norm,
+        tolerance,
+    )
+    state = CubatureState(
+        lower=lower,
+        upper=upper,
+        local_value=local_value,
+        local_error=local_error,
+        local_error_norm=local_error_norm,
+        split_axis=split_axis,
+        active=active,
+        depth=depth,
+        value=value,
+        error=error,
+        error_norm=global_error_norm,
+        tolerance=tolerance,
+        evaluations=jnp.asarray(capacity.point_count, dtype=jnp.int32),
+        refinements=jnp.asarray(0, dtype=jnp.int32),
+        active_regions=jnp.asarray(1, dtype=jnp.int32),
+        status=jnp.asarray(RUNNING, dtype=jnp.int32),
+        done=jnp.asarray(False),
+    )
+    initial_status = _state_status(
+        state,
+        capacity,
+        nonfinite=initial_nonfinite,
+    )
+    state = state._replace(
+        status=initial_status,
+        done=initial_status != RUNNING,
+    )
+
+    def split(operand: CubatureState) -> CubatureState:
+        region, midpoint, _collapsed = _selected_midpoint(operand)
+        axis = operand.split_axis[region]
+        parent_lower = operand.lower[region]
+        parent_upper = operand.upper[region]
+        parent_depth = operand.depth[region]
+        left_upper = parent_upper.at[axis].set(midpoint)
+        right_lower = parent_lower.at[axis].set(midpoint)
+        child_lower = jnp.stack((parent_lower, right_lower))
+        child_upper = jnp.stack((left_upper, parent_upper))
+        children = evaluate_cubature_regions(
+            fun,
+            domain,
+            child_lower,
+            child_upper,
+            args=args,
+            measure=measure,
+            error_norm=error_norm,
+            data=data,
+        )
+        append_index = operand.active_regions
+        new_value = (
+            operand.value
+            - operand.local_value[region]
+            + children.value[0]
+            + children.value[1]
+        )
+        new_error = (
+            operand.error
+            - operand.local_error[region]
+            + children.error[0]
+            + children.error[1]
+        )
+        new_error_norm = reduce_error_norm(new_error, error_norm)
+        new_tolerance = tolerance_threshold(
+            new_value,
+            epsabs=epsabs,
+            epsrel=epsrel,
+            norm=error_norm,
+        )
+        child_depth = parent_depth + 1
+        next_state = operand._replace(
+            lower=operand.lower.at[region]
+            .set(child_lower[0])
+            .at[append_index]
+            .set(child_lower[1]),
+            upper=operand.upper.at[region]
+            .set(child_upper[0])
+            .at[append_index]
+            .set(child_upper[1]),
+            local_value=operand.local_value.at[region]
+            .set(children.value[0])
+            .at[append_index]
+            .set(children.value[1]),
+            local_error=operand.local_error.at[region]
+            .set(children.error[0])
+            .at[append_index]
+            .set(children.error[1]),
+            local_error_norm=operand.local_error_norm.at[region]
+            .set(children.error_norm[0])
+            .at[append_index]
+            .set(children.error_norm[1]),
+            split_axis=operand.split_axis.at[region]
+            .set(children.split_axis[0])
+            .at[append_index]
+            .set(children.split_axis[1]),
+            active=operand.active.at[append_index].set(True),
+            depth=operand.depth.at[region]
+            .set(child_depth)
+            .at[append_index]
+            .set(child_depth),
+            value=new_value,
+            error=new_error,
+            error_norm=new_error_norm,
+            tolerance=new_tolerance,
+            evaluations=operand.evaluations + 2 * capacity.point_count,
+            refinements=operand.refinements + 1,
+            active_regions=operand.active_regions + 1,
+        )
+        child_nonfinite = jnp.any(children.nonfinite) | _global_nonfinite(
+            new_value,
+            new_error,
+            new_error_norm,
+            new_tolerance,
+        )
+        new_status = _state_status(
+            next_state,
+            capacity,
+            nonfinite=child_nonfinite,
+        )
+        return next_state._replace(
+            status=new_status,
+            done=new_status != RUNNING,
+        )
+
+    def scan_body(current: CubatureState, _unused):
+        next_state = jax.lax.cond(
+            current.done,
+            lambda operand: operand,
+            split,
+            current,
+        )
+        return next_state, None
+
+    state, _ = jax.lax.scan(
+        scan_body,
+        state,
+        xs=None,
+        length=capacity.max_refinements,
+    )
+    return CubatureControllerResult(
+        value=state.value,
+        error=state.error,
+        error_norm=state.error_norm,
+        tolerance=state.tolerance,
+        status=state.status,
+        evaluations=state.evaluations,
+        refinements=state.refinements,
+        active_regions=state.active_regions,
+        deepest_depth=jnp.max(jnp.where(state.active, state.depth, 0)),
+        evidence=CubatureReplayEvidence(
+            lower=state.lower,
+            upper=state.upper,
+            active=state.active,
+        ),
+    )
+
+
+__all__ = [
+    "CubatureCapacity",
+    "CubatureControllerResult",
+    "CubatureRegionEstimate",
+    "GenzMalikData",
+    "LocalCubatureEstimate",
+    "MAX_CUBATURE_REGIONS",
+    "RUNNING",
+    "cubature_controller",
+    "cubature_termination_status",
+    "evaluate_cubature_regions",
+    "genz_malik_data",
+    "genz_malik_estimate",
+    "genz_malik_point_count",
+    "select_region",
+    "select_split_axis",
+    "validate_cubature_capacity",
+]
