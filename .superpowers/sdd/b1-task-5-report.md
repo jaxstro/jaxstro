@@ -6,8 +6,8 @@ Branch: `codex/quad-phase-b`
 
 Implementation base: `0af8089`
 
-Verdict: implementation and local gates GREEN; B1 remains incomplete pending
-independent whole-rung review.
+Verdict: implementation and local gates GREEN. The subsequent whole-rung review
+is GREEN, so Phase B1 is complete.
 
 ## Scope and ownership
 
@@ -339,5 +339,6 @@ capacity, compile/warm runtime, and process/device memory. B1 certifies only
 the bounded scalar-payload cases above; it is not a universal
 payload/dtype/store-memory safety claim.
 
-Next: run an independent whole-rung B1 numerical-method, JAX, API, and
-test-quality review. Begin B2 only if that review is GREEN.
+The whole-rung B1 numerical-method, JAX, API, provenance, and test-quality
+review is GREEN. Pause at the completed B1 boundary; begin B2 only on explicit
+continuation.
