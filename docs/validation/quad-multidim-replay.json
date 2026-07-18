@@ -1,0 +1,275 @@
+{
+  "artifact_id": "quad.multidim.replay-and-astro",
+  "astro_records": [
+    {
+      "absolute_error": 7.771561172376096e-16,
+      "case_id": "projected_plummer_aperture",
+      "error_kind": 5,
+      "quantity_unit": "1",
+      "quantity_value": 0.8620689655172422,
+      "raw_quantity_absolute_difference": 0.0,
+      "raw_value": 0.8620689655172422,
+      "relative_error": 9.01501095995627e-16,
+      "replay_gradient": -0.19817677368210895,
+      "replay_gradient_absolute_error": 1.5515366769136563e-14,
+      "replay_gradient_truth": -0.19817677368212447,
+      "replay_parameter": "Plummer scale a",
+      "specification": {
+        "bounds": "[0,R] x [0,2*pi]",
+        "equation": "Sigma(R_p) R_p; Sigma=1/(pi a^2 (1+(R_p/a)^2)^2)",
+        "truth": "R^2/(R^2+a^2)",
+        "units": [
+          "pc",
+          "rad"
+        ]
+      },
+      "status": 7,
+      "truth": 0.8620689655172414,
+      "work": {
+        "active_regions": 0,
+        "evaluations": 400,
+        "levels": 0,
+        "refinements": 0,
+        "replicates": 0
+      }
+    },
+    {
+      "absolute_error": 2.2782886688332837e-12,
+      "case_id": "diagonal_gaussian_mass",
+      "error_kind": 5,
+      "quantity_unit": "1",
+      "quantity_value": 0.9010568438727129,
+      "raw_quantity_absolute_difference": 0.0,
+      "raw_value": 0.9010568438727129,
+      "relative_error": 2.528462753843046e-12,
+      "replay_gradient": 0.9010568438727129,
+      "replay_gradient_absolute_error": 2.2782886688332837e-12,
+      "replay_gradient_truth": 0.9010568438749912,
+      "replay_parameter": "multiplicative amplitude",
+      "specification": {
+        "bounds": "product_i [-L_i,L_i]",
+        "equation": "N(x|0,diag(sigma^2))",
+        "truth": "product of erf mass factors and selected truncated second moment",
+        "units": [
+          "pc",
+          "pc"
+        ]
+      },
+      "status": 7,
+      "truth": 0.9010568438749912,
+      "work": {
+        "active_regions": 0,
+        "evaluations": 144,
+        "levels": 0,
+        "refinements": 0,
+        "replicates": 0
+      }
+    },
+    {
+      "absolute_error": 2.3864576981225127e-11,
+      "case_id": "diagonal_gaussian_second_moment_axis_0",
+      "error_kind": 5,
+      "quantity_unit": "pc pc",
+      "quantity_value": 0.36300199067952843,
+      "raw_quantity_absolute_difference": 0.0,
+      "raw_value": 0.36300199067952843,
+      "relative_error": 6.574227578785531e-11,
+      "replay_gradient": 0.3630019906795284,
+      "replay_gradient_absolute_error": 2.3864521470073896e-11,
+      "replay_gradient_truth": 0.36300199065566385,
+      "replay_parameter": "multiplicative amplitude",
+      "specification": {
+        "bounds": "product_i [-L_i,L_i]",
+        "equation": "x_0^2 N(x|0,diag(sigma^2))",
+        "truth": "product of erf mass factors and selected truncated second moment",
+        "units": [
+          "pc",
+          "pc"
+        ]
+      },
+      "status": 7,
+      "truth": 0.36300199065566385,
+      "work": {
+        "active_regions": 0,
+        "evaluations": 144,
+        "levels": 0,
+        "refinements": 0,
+        "replicates": 0
+      }
+    },
+    {
+      "absolute_error": 4.977129819394577e-13,
+      "case_id": "diagonal_gaussian_second_moment_axis_1",
+      "error_kind": 5,
+      "quantity_unit": "pc pc",
+      "quantity_value": 0.764936814034667,
+      "raw_quantity_absolute_difference": 0.0,
+      "raw_value": 0.764936814034667,
+      "relative_error": 6.506589469971274e-13,
+      "replay_gradient": 0.764936814034667,
+      "replay_gradient_absolute_error": 4.977129819394577e-13,
+      "replay_gradient_truth": 0.7649368140351647,
+      "replay_parameter": "multiplicative amplitude",
+      "specification": {
+        "bounds": "product_i [-L_i,L_i]",
+        "equation": "x_1^2 N(x|0,diag(sigma^2))",
+        "truth": "product of erf mass factors and selected truncated second moment",
+        "units": [
+          "pc",
+          "pc"
+        ]
+      },
+      "status": 7,
+      "truth": 0.7649368140351647,
+      "work": {
+        "active_regions": 0,
+        "evaluations": 144,
+        "levels": 0,
+        "refinements": 0,
+        "replicates": 0
+      }
+    },
+    {
+      "absolute_error": 0.0,
+      "case_id": "population_moment",
+      "error_kind": 5,
+      "quantity_unit": "Msun^2 Myr pc^2 Msun Myr pc",
+      "quantity_value": 525.6576000000001,
+      "raw_quantity_absolute_difference": 0.0,
+      "raw_value": 525.6576000000001,
+      "relative_error": 0.0,
+      "replay_gradient": 525.6576000000001,
+      "replay_gradient_absolute_error": 0.0,
+      "replay_gradient_truth": 525.6576000000001,
+      "replay_parameter": "multiplicative amplitude",
+      "specification": {
+        "bounds": "[0.8,2] Msun x [-0.5,0.3] x [1,4] Myr x [2,5] pc",
+        "equation": "M^2 (1+Z) t d^2",
+        "truth": "product of four polynomial antiderivative factors",
+        "units": [
+          "Msun",
+          "1",
+          "Myr",
+          "pc"
+        ]
+      },
+      "status": 7,
+      "truth": 525.6576000000001,
+      "work": {
+        "active_regions": 0,
+        "evaluations": 81,
+        "levels": 0,
+        "refinements": 0,
+        "replicates": 0
+      }
+    },
+    {
+      "absolute_error": 1.340758615242521e-10,
+      "case_id": "separable_selection",
+      "error_kind": 5,
+      "quantity_unit": "Myr",
+      "quantity_value": 2.5532481309308994,
+      "raw_quantity_absolute_difference": 0.0,
+      "raw_value": 2.5532481309308994,
+      "relative_error": 5.251188081058514e-11,
+      "replay_gradient": 2.5532481309308994,
+      "replay_gradient_absolute_error": 1.340758615242521e-10,
+      "replay_gradient_truth": 2.5532481307968236,
+      "replay_parameter": "multiplicative amplitude",
+      "specification": {
+        "bounds": "[-1,2] x [0,4] Myr",
+        "equation": "product_i sigmoid((c_i-x_i)/w_i)",
+        "truth": "product of softplus antiderivative differences",
+        "units": [
+          "1",
+          "Myr"
+        ]
+      },
+      "status": 7,
+      "truth": 2.5532481307968236,
+      "work": {
+        "active_regions": 0,
+        "evaluations": 400,
+        "levels": 0,
+        "refinements": 0,
+        "replicates": 0
+      }
+    }
+  ],
+  "claim_boundary": "Replay evidence is first-order only. Astronomy fixtures are domain-neutral closed-form integrals, not sibling-package models.",
+  "environment": {
+    "jax": "0.10.1",
+    "jax_backend": "cpu",
+    "jax_enable_x64": true,
+    "jaxlib": "0.10.1",
+    "machine": "arm64",
+    "numpy": "2.4.6",
+    "platform": "macOS-26.1-arm64-arm-64bit-Mach-O",
+    "python": "3.13.7"
+  },
+  "generator": "scripts/generate_quad_multidim_evidence.py",
+  "generator_sha256": "4b66a9e996fa903250efdd345c1f8a4db75e0af5c695140f2c0cd66c7c57fec2",
+  "schema_version": 1,
+  "truth_replay_records": [
+    {
+      "family": "tensor_polynomial",
+      "replay_gradient": 3.3611111111111116,
+      "value": 3.361111111111111
+    },
+    {
+      "family": "beta_product",
+      "replay_gradient": 0.0005787037037037041,
+      "value": 0.000578703703703704
+    },
+    {
+      "family": "separable_exponential",
+      "replay_gradient": 0.15966130561729847,
+      "value": 0.1596613056172983
+    },
+    {
+      "family": "rotated_smooth",
+      "replay_gradient": 1.0333333333333332,
+      "value": 1.0333333333333332
+    },
+    {
+      "family": "genz_oscillatory",
+      "replay_gradient": -0.8003996581568846,
+      "value": -0.8003996581568846
+    },
+    {
+      "family": "genz_product_peak",
+      "replay_gradient": 0.031162328926496126,
+      "value": 0.031162328926496126
+    },
+    {
+      "family": "genz_corner_peak",
+      "replay_gradient": 0.37944348289175855,
+      "value": 0.37944348289175855
+    },
+    {
+      "family": "genz_gaussian",
+      "replay_gradient": 0.9609924111324772,
+      "value": 0.9609924111324772
+    },
+    {
+      "family": "genz_continuous",
+      "replay_gradient": 0.7945088190600008,
+      "value": 0.7945088190600008
+    },
+    {
+      "family": "genz_discontinuous",
+      "replay_gradient": 0.2772258096108065,
+      "value": 0.27722580961080645
+    },
+    {
+      "family": "localized_peak",
+      "replay_gradient": 0.12507380258207249,
+      "value": 0.12507380258207243
+    },
+    {
+      "family": "boundary_layer",
+      "replay_gradient": 0.002499999989694231,
+      "value": 0.002499999989694231
+    }
+  ]
+}
