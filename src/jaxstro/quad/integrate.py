@@ -15,11 +15,19 @@ from .tensor import (
 from .tolerance import ErrorNorm, MaxNorm
 
 
+def _require_phase_b1_stop_gradient(method, gradient: str) -> None:
+    if gradient != "stop":
+        method_name = type(method).__name__
+        raise ValueError(
+            f'{method_name} supports only gradient="stop" in Phase B1; '
+            'gradient="replay" is introduced in Phase B4'
+        )
+
+
 def _integrate_hyperrectangle(*args, **kwargs):
     method = kwargs["method"]
     if isinstance(method, AdaptiveCubature):
-        if kwargs["gradient"] != "stop":
-            raise ValueError('AdaptiveCubature requires gradient="stop"')
+        _require_phase_b1_stop_gradient(method, kwargs["gradient"])
         result = integrate_cubature(
             *args,
             args=kwargs["args"],
@@ -33,8 +41,7 @@ def _integrate_hyperrectangle(*args, **kwargs):
         )
         return jax.tree.map(jax.lax.stop_gradient, result)
     if isinstance(method, AdaptiveTensorClenshawCurtis):
-        if kwargs["gradient"] != "stop":
-            raise ValueError('AdaptiveTensorClenshawCurtis requires gradient="stop"')
+        _require_phase_b1_stop_gradient(method, kwargs["gradient"])
         result = integrate_adaptive_tensor(
             *args,
             args=kwargs["args"],
@@ -47,8 +54,7 @@ def _integrate_hyperrectangle(*args, **kwargs):
         )
         return jax.tree.map(jax.lax.stop_gradient, result)
     if isinstance(method, TensorProduct):
-        if kwargs["gradient"] != "stop":
-            raise ValueError('TensorProduct requires gradient="stop"')
+        _require_phase_b1_stop_gradient(method, kwargs["gradient"])
         result = integrate_tensor(
             *args,
             args=kwargs["args"],

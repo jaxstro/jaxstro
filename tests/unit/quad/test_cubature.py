@@ -879,10 +879,7 @@ def test_stop_mode_composes_with_jit_vmap_grad_and_jvp():
 
 @pytest.mark.parametrize("gradient", ["replay", "through", "invalid"])
 def test_adaptive_cubature_rejects_every_gradient_mode_except_stop(gradient):
-    with pytest.raises(
-        ValueError,
-        match='AdaptiveCubature requires gradient="stop"',
-    ):
+    with pytest.raises(ValueError) as exc_info:
         quad.integrate(
             lambda x: jnp.sum(x, axis=-1),
             quad.Hyperrectangle(jnp.zeros(2), jnp.ones(2)),
@@ -893,6 +890,10 @@ def test_adaptive_cubature_rejects_every_gradient_mode_except_stop(gradient):
             max_regions=2,
             gradient=gradient,
         )
+    assert str(exc_info.value) == (
+        'AdaptiveCubature supports only gradient="stop" in Phase B1; '
+        'gradient="replay" is introduced in Phase B4'
+    )
 
 
 @pytest.mark.parametrize("value", [jnp.array([1.0]), 1.0 + 0.0j])

@@ -176,15 +176,18 @@ def test_stop_mode_has_exact_zero_grad_and_jvp(method_name: str):
     (
         (
             quad.TensorProduct(quad.GaussianRule(4)),
-            'TensorProduct requires gradient="stop"',
+            'TensorProduct supports only gradient="stop" in Phase B1; '
+            'gradient="replay" is introduced in Phase B4',
         ),
         (
             quad.AdaptiveTensorClenshawCurtis(initial_level=2),
-            'AdaptiveTensorClenshawCurtis requires gradient="stop"',
+            'AdaptiveTensorClenshawCurtis supports only gradient="stop" in Phase B1; '
+            'gradient="replay" is introduced in Phase B4',
         ),
         (
             quad.AdaptiveCubature(quad.GenzMalik()),
-            'AdaptiveCubature requires gradient="stop"',
+            'AdaptiveCubature supports only gradient="stop" in Phase B1; '
+            'gradient="replay" is introduced in Phase B4',
         ),
     ),
 )
@@ -197,7 +200,7 @@ def test_every_non_stop_mode_is_rejected_with_exact_capability_message(
     kwargs = {}
     if isinstance(method, quad.AdaptiveCubature):
         kwargs["max_regions"] = 1
-    with pytest.raises(ValueError, match=message):
+    with pytest.raises(ValueError) as exc_info:
         quad.integrate(
             lambda x: jnp.ones(x.shape[0]),
             quad.Hyperrectangle(jnp.zeros(2), jnp.ones(2)),
@@ -208,3 +211,4 @@ def test_every_non_stop_mode_is_rejected_with_exact_capability_message(
             gradient=gradient,
             **kwargs,
         )
+    assert str(exc_info.value) == message

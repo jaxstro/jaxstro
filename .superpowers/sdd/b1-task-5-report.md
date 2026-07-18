@@ -12,9 +12,12 @@ independent whole-rung review.
 ## Scope and ownership
 
 Task 5 added validation, transformation, provenance, and release evidence for
-the existing B1 deterministic multidimensional methods. It did not change any
-runtime file under `src/`, add a runtime dependency, implement replay
-derivatives, add quantities, change a numerical rule, or broaden a public API.
+the existing B1 deterministic multidimensional methods. A final review
+correction changed only the non-stop capability message in
+`src/jaxstro/quad/integrate.py` so it names the Phase B1 stop-only boundary and
+directs replay users to Phase B4. It did not add a runtime dependency,
+implement replay derivatives, add quantities, change a numerical rule, or
+broaden the accepted public API.
 
 The tested domain is the dimensionless unit hypercube `[0, 1]^d`. The
 parameter rules are:
@@ -313,9 +316,16 @@ Success: no issues found in 128 source files
 ```
 
 All frozen limitation residuals remained within their original strict
-regression tolerances, so none was changed. Runtime source, method controls,
-scientific thresholds, and the development-only dependency boundary are
-unchanged.
+regression tolerances, so none was changed. Method controls, scientific
+thresholds, and the development-only dependency boundary are unchanged. The
+only runtime-source correction is the exact fail-closed capability message:
+
+```text
+<Method> supports only gradient="stop" in Phase B1;
+gradient="replay" is introduced in Phase B4
+```
+
+All tested non-stop strings must produce that exact method-specific message.
 
 ## B4 carry-forward and next checkpoint
 

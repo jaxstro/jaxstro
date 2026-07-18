@@ -505,10 +505,7 @@ def test_adaptive_tensor_rejects_dimensions_outside_b1_envelope(dimension):
 
 @pytest.mark.parametrize("gradient", ["replay", "through", "invalid"])
 def test_adaptive_tensor_rejects_every_gradient_mode_except_stop(gradient):
-    with pytest.raises(
-        ValueError,
-        match='AdaptiveTensorClenshawCurtis requires gradient="stop"',
-    ):
+    with pytest.raises(ValueError) as exc_info:
         quad.integrate(
             lambda x: jnp.sum(x, axis=-1),
             quad.Hyperrectangle(jnp.zeros(2), jnp.ones(2)),
@@ -518,6 +515,10 @@ def test_adaptive_tensor_rejects_every_gradient_mode_except_stop(gradient):
             max_evaluations=65,
             gradient=gradient,
         )
+    assert str(exc_info.value) == (
+        'AdaptiveTensorClenshawCurtis supports only gradient="stop" in Phase B1; '
+        'gradient="replay" is introduced in Phase B4'
+    )
 
 
 def test_adaptive_tensor_stop_mode_has_exact_zero_grad_and_jvp_tangents():
