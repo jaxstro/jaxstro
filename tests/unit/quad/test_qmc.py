@@ -157,3 +157,190 @@ def test_sobol_replay_fails_closed_at_b4_boundary():
                 gradient="replay",
             ),
         )
+
+
+def test_scrambled_sobol_returns_one_fixed_look_interval():
+    result = quad.integrate(
+        lambda x: jnp.prod(x, axis=-1),
+        quad.Hyperrectangle(jnp.zeros(3), jnp.ones(3)),
+        method=quad.ScrambledSobol(level=8, replicates=8),
+        key=jax.random.key(19),
+        epsabs=0.02,
+        epsrel=0.0,
+        max_evaluations=8 * 256,
+        gradient="stop",
+    )
+    assert result.error.kind == quad.ErrorKind.CONFIDENCE_INTERVAL_HALF_WIDTH
+    assert result.error.confidence_level == 0.95
+    assert result.work.evaluations == 8 * 256
+    assert result.work.replicates == 8
+    assert result.work.levels == 8
+    assert result.status in (
+        quad.QuadStatus.CONVERGED,
+        quad.QuadStatus.MAX_EVALUATIONS,
+    )
+
+
+def test_scrambled_sobol_is_reproducible_and_key_sensitive():
+    options = dict(
+        method=quad.ScrambledSobol(level=5, replicates=8),
+        epsabs=0.0,
+        epsrel=0.0,
+        max_evaluations=8 * 32,
+        gradient="stop",
+    )
+    domain = quad.Hyperrectangle(jnp.zeros(3), jnp.ones(3))
+    first = quad.integrate(
+        lambda x: jnp.exp(jnp.sum(x, axis=-1)),
+        domain,
+        key=jax.random.key(31),
+        **options,
+    )
+    replay = quad.integrate(
+        lambda x: jnp.exp(jnp.sum(x, axis=-1)),
+        domain,
+        key=jax.random.key(31),
+        **options,
+    )
+    independent = quad.integrate(
+        lambda x: jnp.exp(jnp.sum(x, axis=-1)),
+        domain,
+        key=jax.random.key(32),
+        **options,
+    )
+    assert jnp.array_equal(first.value, replay.value)
+    assert jnp.array_equal(first.error.estimate, replay.error.estimate)
+    assert not jnp.array_equal(first.value, independent.value)
+
+
+def test_scrambled_sobol_requires_key_scalar_real_payload_and_exact_budget():
+    domain = quad.Hyperrectangle(jnp.zeros(2), jnp.ones(2))
+    method = quad.ScrambledSobol(level=4, replicates=8)
+    options = dict(
+        method=method,
+        epsabs=0.1,
+        epsrel=0.0,
+        max_evaluations=128,
+        gradient="stop",
+    )
+    with pytest.raises(TypeError, match="explicit JAX key"):
+        quad.integrate(lambda x: jnp.sum(x, axis=-1), domain, **options)
+    with pytest.raises(ValueError, match="scalar real"):
+        quad.integrate(
+            lambda x: x,
+            domain,
+            key=jax.random.key(1),
+            **options,
+        )
+    with pytest.raises(ValueError, match="128 evaluations"):
+        quad.integrate(
+            lambda x: jnp.sum(x, axis=-1),
+            domain,
+            key=jax.random.key(1),
+            **(options | {"max_evaluations": 127}),
+        )
+
+
+def test_scrambled_sobol_zero_volume_returns_zero_work():
+    result = quad.integrate(
+        lambda x: jnp.sum(x, axis=-1),
+        quad.Hyperrectangle(jnp.asarray((0.0, 1.0)), jnp.asarray((2.0, 1.0))),
+        method=quad.ScrambledSobol(level=4, replicates=8),
+        key=jax.random.key(37),
+        epsabs=0.1,
+        epsrel=0.0,
+        max_evaluations=128,
+        gradient="stop",
+    )
+    assert result.value == 0.0
+    assert result.work.evaluations == 0
+    assert result.work.replicates == 0
+
+
+def test_scrambled_sobol_zero_volume_skips_integer_point_generation(monkeypatch):
+    qmc_module = importlib.import_module("jaxstro.quad.qmc")
+    generation_calls = 0
+    original = qmc_module.sobol_integer_points
+
+    def record_generation(*args, **kwargs):
+        nonlocal generation_calls
+        generation_calls += 1
+        return original(*args, **kwargs)
+
+    monkeypatch.setattr(qmc_module, "sobol_integer_points", record_generation)
+    result = quad.integrate(
+        lambda x: jnp.sum(x, axis=-1),
+        quad.Hyperrectangle(jnp.asarray((0.0, 1.0)), jnp.asarray((2.0, 1.0))),
+        method=quad.ScrambledSobol(level=4, replicates=8),
+        key=jax.random.key(41),
+        epsabs=0.1,
+        epsrel=0.0,
+        max_evaluations=128,
+        gradient="stop",
+    )
+    assert generation_calls == 0
+    assert result.work.evaluations == 0
+
+
+def test_scrambled_sobol_is_jittable_over_the_explicit_key():
+    @jax.jit
+    def solve(key):
+        return quad.integrate(
+            lambda x: jnp.exp(jnp.sum(x, axis=-1)),
+            quad.Hyperrectangle(jnp.zeros(2), jnp.ones(2)),
+            method=quad.ScrambledSobol(level=4, replicates=8),
+            key=key,
+            epsabs=0.1,
+            epsrel=0.0,
+            max_evaluations=128,
+            gradient="stop",
+        )
+
+    result = solve(jax.random.key(43))
+    assert jnp.isfinite(result.value)
+    assert jnp.isfinite(result.error.estimate)
+    assert result.work.evaluations == 128
+
+
+def test_scrambled_sobol_nonfinite_replicate_returns_typed_failure():
+    result = quad.integrate(
+        lambda x: jnp.full(x.shape[0], jnp.nan),
+        quad.Hyperrectangle(jnp.zeros(2), jnp.ones(2)),
+        method=quad.ScrambledSobol(level=4, replicates=8),
+        key=jax.random.key(47),
+        epsabs=0.1,
+        epsrel=0.0,
+        max_evaluations=128,
+        gradient="stop",
+    )
+    assert result.status == quad.QuadStatus.NONFINITE_INTEGRAND
+    assert jnp.isnan(result.value)
+    assert jnp.isnan(result.error.estimate)
+
+
+@pytest.mark.parametrize("nonfinite_integrand", (False, True))
+def test_scrambled_sobol_invalid_interval_precedes_nonfinite_integrand(
+    nonfinite_integrand,
+):
+    def integrand(x):
+        values = jnp.sum(x, axis=-1)
+        return jnp.full_like(values, jnp.nan) if nonfinite_integrand else values
+
+    result = quad.integrate(
+        integrand,
+        quad.Hyperrectangle(
+            jnp.zeros(2, dtype=jnp.float32),
+            jnp.ones(2, dtype=jnp.float32),
+        ),
+        method=quad.ScrambledSobol(
+            level=4,
+            replicates=8,
+            confidence_level=1.0e-12,
+        ),
+        key=jax.random.key(53),
+        epsabs=0.1,
+        epsrel=0.0,
+        max_evaluations=128,
+        gradient="stop",
+    )
+    assert result.status == quad.QuadStatus.INVALID_INPUT

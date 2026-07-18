@@ -38,7 +38,13 @@ from .methods import (
     Romberg,
     RombergTanhSinh,
 )
-from .qmc import DigitalShift, LinearMatrixScramble, OwenScramble, Sobol
+from .qmc import (
+    DigitalShift,
+    LinearMatrixScramble,
+    OwenScramble,
+    ScrambledSobol,
+    Sobol,
+)
 from .result import ErrorKind, QuadError, QuadResult, QuadStatus, QuadWork
 from .rules import (
     ClenshawCurtisRule,
@@ -109,6 +115,7 @@ __all__ = [
     "RightInfinite",
     "Romberg",
     "RombergTanhSinh",
+    "ScrambledSobol",
     "StandardNormalMeasure",
     "Smolyak",
     "TanhSinhRule",
