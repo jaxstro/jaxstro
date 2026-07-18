@@ -980,11 +980,25 @@ controller. `integrate.py` only dispatches concrete method declarations to
       "method_controls": {
           "fixed_tensor": {
               "dimensions": (2, 4),
+              "families": (
+                  "oscillatory",
+                  "product_peak",
+                  "corner_peak",
+                  "gaussian",
+              ),
               "method": "TensorProduct(GaussianRule(12))",
               "max_evaluations": "12 ** dimension",
           },
           "adaptive_tensor": {
               "dimensions": (2, 4),
+              "families": (
+                  "oscillatory",
+                  "product_peak",
+                  "corner_peak",
+                  "gaussian",
+                  "continuous",
+                  "discontinuous",
+              ),
               "method": "AdaptiveTensorClenshawCurtis(initial_level=2)",
               "max_evaluations": 250_000,
               "epsabs": 1.0e-8,
@@ -992,6 +1006,14 @@ controller. `integrate.py` only dispatches concrete method declarations to
           },
           "adaptive_cubature": {
               "dimensions": (2, 4, 6, 8),
+              "families": (
+                  "oscillatory",
+                  "product_peak",
+                  "corner_peak",
+                  "gaussian",
+                  "continuous",
+                  "discontinuous",
+              ),
               "method": "AdaptiveCubature(GenzMalik())",
               "max_evaluations": 500_000,
               "max_regions": 4_096,
@@ -1065,8 +1087,6 @@ controller. `integrate.py` only dispatches concrete method declarations to
               "product_peak": 2.0e-8,
               "corner_peak": 2.0e-8,
               "gaussian": 2.0e-8,
-              "continuous": 2.0e-5,
-              "discontinuous": 2.0e-5,
           },
           "adaptive_tensor": {
               "oscillatory": 5.0e-7,
@@ -1104,6 +1124,26 @@ controller. `integrate.py` only dispatches concrete method declarations to
   shrink, or tune an expensive dimension after seeing results. If one cannot
   execute, stop the campaign, preserve the failure evidence, and amend this
   reviewed manifest before further evaluation.
+
+  The initial frozen `2.0e-5` fixed-tensor thresholds for the continuous and
+  discontinuous families were rejected by the first method-filtered campaign.
+  Independent dimension-2 and dimension-4 reruns with the unchanged
+  `TensorProduct(GaussianRule(12))` control measured absolute errors
+  `4.020689850376957e-4` and `3.3746643580634395e-4` for the continuous kink,
+  and `1.455241594837775e-2` and `4.33358357839128e-2` for the discontinuous
+  jump. No threshold is loosened. Fixed tensor now certifies only the four
+  smooth families. Separate limitation tests retain the exact observed
+  residuals, `ERROR_ESTIMATE_UNAVAILABLE`, fixed work, and the explicit
+  boundary that one global Gaussian-12 tensor formula has no high-accuracy
+  claim for unresolved kinks or jumps. Adaptive methods retain the non-smooth
+  truth families.
+
+  The validation harness clears JAX compilation caches and the Task 2/Task 4
+  host metadata caches after each runtime case, then runs Python garbage
+  collection. This per-case teardown is part of the committed gate: manual
+  fresh-process sharding alone is not sufficient evidence. It prevents the
+  required combined pytest command from accumulating the 12.17 GB RSS observed
+  in the rejected first multi-method shard.
 
   Implement the six standard integrands and their published analytic
   hypercube integrals directly in the test module. Generate
