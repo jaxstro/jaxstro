@@ -13,7 +13,7 @@ from .domains import (
     hyperrectangle_is_valid,
     hyperrectangle_orientation,
 )
-from .measures import LebesgueMeasure, WeightedMeasure
+from .measures import LebesgueMeasure, ProductMeasure, WeightedMeasure
 
 
 class MultidimMapResult(NamedTuple):
@@ -67,6 +67,23 @@ def _density_values(measure, x: Array, args: Any) -> Array:
         density = jnp.asarray(measure.density(x, args))
         if density.shape != x.shape[:-1]:
             raise ValueError("multidimensional density must have shape (point_count,)")
+        return density
+    if isinstance(measure, ProductMeasure):
+        if len(measure.components) != x.shape[-1]:
+            raise ValueError(
+                "ProductMeasure requires one component per coordinate axis"
+            )
+        density = jnp.ones(x.shape[:-1], dtype=x.dtype)
+        for axis, component in enumerate(measure.components):
+            if isinstance(component, WeightedMeasure):
+                component_density = jnp.asarray(
+                    component.density(x[..., axis], args)
+                )
+                if component_density.shape != x.shape[:-1]:
+                    raise ValueError(
+                        "ProductMeasure component density must match the point shape"
+                    )
+                density = density * component_density
         return density
     raise TypeError("multidimensional integration requires a finite measure")
 

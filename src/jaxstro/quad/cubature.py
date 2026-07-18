@@ -12,7 +12,7 @@ from ._cubature import (
 )
 from ._multidim import infer_multidim_payload_zero
 from .domains import Hyperrectangle, hyperrectangle_is_valid
-from .measures import LebesgueMeasure, WeightedMeasure
+from .measures import LebesgueMeasure, ProductMeasure, WeightedMeasure
 from .result import (
     ErrorKind,
     QuadError,
@@ -141,8 +141,14 @@ def integrate_cubature(
     ):
         raise TypeError("adaptive cubature tolerances must have a real dtype")
     selected_measure = LebesgueMeasure() if measure is None else measure
-    if not isinstance(selected_measure, (LebesgueMeasure, WeightedMeasure)):
-        raise TypeError("adaptive cubature requires LebesgueMeasure or WeightedMeasure")
+    if not isinstance(
+        selected_measure,
+        (LebesgueMeasure, WeightedMeasure, ProductMeasure),
+    ):
+        raise TypeError(
+            "adaptive cubature requires LebesgueMeasure, WeightedMeasure, "
+            "or ProductMeasure"
+        )
 
     dtype = jnp.result_type(domain.lower, domain.upper, 0.0)
     data = genz_malik_data(domain.dimension, dtype)

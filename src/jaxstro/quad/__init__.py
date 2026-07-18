@@ -8,6 +8,7 @@ from jaxstro.numerics.quadrature import (
 
 from ._chebyshev import clenshaw_curtis_nodes
 from ._recurrence import gauss_laguerre_nodes, gauss_legendre_nodes
+from .coordinates import Axis, CoordinatePoint
 from .cubature import AdaptiveCubature, GenzMalik
 from .domains import (
     Hyperrectangle,
@@ -28,6 +29,7 @@ from .measures import (
     LaguerreMeasure,
     LebesgueMeasure,
     PhysicistsHermiteMeasure,
+    ProductMeasure,
     StandardNormalMeasure,
     WeightedMeasure,
 )
@@ -75,8 +77,10 @@ __all__ = [
     "AdaptiveTensorClenshawCurtis",
     "AdaptiveTanhSinh",
     "AffineMapResult",
+    "Axis",
     "clenshaw_curtis_nodes",
     "ClenshawCurtisRule",
+    "CoordinatePoint",
     "cumulative_simpson",
     "cumulative_trapezoid",
     "DomainMapResult",
@@ -109,6 +113,7 @@ __all__ = [
     "L2Norm",
     "MaxNorm",
     "PhysicistsHermiteMeasure",
+    "ProductMeasure",
     "OwenScramble",
     "QuadError",
     "QuadResult",

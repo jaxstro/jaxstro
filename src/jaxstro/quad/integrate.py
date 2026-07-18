@@ -11,6 +11,11 @@ from ._multidim_replay import (
     ReplayFormula,
     multidim_replay_core,
 )
+from ._quantity import (
+    normalize_multidim_call,
+    quantity_mode,
+    restore_result,
+)
 from ._scramble import scramble_integers
 from ._sobol import resolve_sobol_bits, sobol_integer_points, sobol_points
 from ._sparse import (
@@ -27,6 +32,7 @@ from ._tensor import (
 from .adaptive import integrate as integrate_1d
 from .cubature import AdaptiveCubature, integrate_cubature
 from .domains import Hyperrectangle
+from .measures import LebesgueMeasure
 from .qmc import (
     AdaptiveScrambledSobol,
     ScrambledSobol,
@@ -501,7 +507,25 @@ def integrate(
     heterogeneous batch.
     """
     if isinstance(domain, Hyperrectangle):
-        return _integrate_hyperrectangle(
+        normalized = None
+        if quantity_mode(domain, epsabs):
+            normalized = normalize_multidim_call(
+                fun,
+                domain,
+                args,
+                method,
+                LebesgueMeasure() if measure is None else measure,
+                epsabs,
+                epsrel,
+            )
+            fun = normalized.fun
+            domain = normalized.domain
+            args = normalized.args
+            method = normalized.method
+            measure = normalized.measure
+            epsabs = normalized.epsabs
+            epsrel = normalized.epsrel
+        result = _integrate_hyperrectangle(
             fun,
             domain,
             args=args,
@@ -518,6 +542,9 @@ def integrate(
             error_norm=error_norm,
             gradient=gradient,
         )
+        if normalized is not None:
+            return restore_result(result, normalized.result_unit)
+        return result
     if max_regions is None:
         raise ValueError("one-dimensional integration requires max_regions")
     if any(value is not None for value in (max_indices, max_frontier, max_nodes, key)):

@@ -42,6 +42,25 @@ class WeightedMeasure(_StaticMeasure):
 
 @jax.tree_util.register_pytree_node_class
 @dataclass(frozen=True)
+class ProductMeasure(_StaticMeasure):
+    """Finite separable measure with one component per coordinate axis."""
+
+    components: tuple[LebesgueMeasure | WeightedMeasure, ...]
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.components, tuple) or not self.components:
+            raise ValueError("ProductMeasure requires at least one component")
+        if any(
+            not isinstance(component, (LebesgueMeasure, WeightedMeasure))
+            for component in self.components
+        ):
+            raise TypeError(
+                "ProductMeasure components must be LebesgueMeasure or WeightedMeasure"
+            )
+
+
+@jax.tree_util.register_pytree_node_class
+@dataclass(frozen=True)
 class JacobiMeasure(_StaticMeasure):
     alpha: float
     beta: float

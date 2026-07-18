@@ -10,6 +10,8 @@ import jax
 import jax.numpy as jnp
 
 from jaxstro.numerics.checks import try_concrete_bool
+from jaxstro.quantity import Quantity
+from jaxstro.quantity.errors import DimensionError
 
 from ._multidim import evaluate_multidim, infer_multidim_payload_zero
 from ._qmc_interval import (
@@ -138,8 +140,8 @@ class AdaptiveScrambledSobol:
     """Bounded sequential RQMC under a predeclared inspection schedule."""
 
     schedule: tuple[tuple[int, int], ...]
-    estimate_bounds: tuple[float, float] | None = None
-    integrand_bounds: tuple[float, float] | None = None
+    estimate_bounds: tuple[float | Quantity, float | Quantity] | None = None
+    integrand_bounds: tuple[float | Quantity, float | Quantity] | None = None
     scramble: DigitalShift | LinearMatrixScramble | OwenScramble = field(
         default_factory=LinearMatrixScramble
     )
@@ -185,14 +187,29 @@ class AdaptiveScrambledSobol:
         if not isinstance(selected_bounds, tuple) or len(selected_bounds) != 2:
             raise ValueError("bounds must be a (lower, upper) tuple")
         lower, upper = selected_bounds
+        if isinstance(lower, Quantity) or isinstance(upper, Quantity):
+            if not isinstance(lower, Quantity) or not isinstance(upper, Quantity):
+                raise TypeError("quantity bounds must both be Quantity values")
+            if not lower.unit.is_compatible_with(upper.unit):
+                raise DimensionError(
+                    "Quantity bounds must have compatible units.",
+                    operation="quad-rqmc-bounds",
+                    expected=lower.unit.dimensions,
+                    actual=upper.unit.dimensions,
+                )
+            lower_value = lower.value
+            upper_value = upper.to_value(lower.unit)
+        else:
+            lower_value = lower
+            upper_value = upper
         if (
-            not isinstance(lower, int | float)
-            or isinstance(lower, bool)
-            or not isinstance(upper, int | float)
-            or isinstance(upper, bool)
-            or not math.isfinite(lower)
-            or not math.isfinite(upper)
-            or lower > upper
+            not isinstance(lower_value, int | float)
+            or isinstance(lower_value, bool)
+            or not isinstance(upper_value, int | float)
+            or isinstance(upper_value, bool)
+            or not math.isfinite(lower_value)
+            or not math.isfinite(upper_value)
+            or lower_value > upper_value
         ):
             raise ValueError("bounds must be finite and ordered")
         if not isinstance(

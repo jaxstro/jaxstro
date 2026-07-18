@@ -92,6 +92,7 @@ class Infinite:
 class Hyperrectangle:
     lower: Any
     upper: Any
+    axis_units: tuple[Unit, ...] | None = field(default=None, kw_only=True)
 
     def __post_init__(self) -> None:
         lower = jnp.asarray(self.lower)
@@ -104,6 +105,15 @@ class Hyperrectangle:
             raise ValueError("Hyperrectangle bounds must have matching shapes")
         if lower_shape[0] == 0:
             raise ValueError("Hyperrectangle must have positive dimension")
+        if self.axis_units is not None:
+            if (
+                not isinstance(self.axis_units, tuple)
+                or len(self.axis_units) != lower_shape[0]
+                or any(not isinstance(unit, Unit) for unit in self.axis_units)
+            ):
+                raise ValueError(
+                    "Hyperrectangle axis_units must match the coordinate dimension"
+                )
         if not all(
             jnp.issubdtype(bound.dtype, jnp.integer)
             or jnp.issubdtype(bound.dtype, jnp.floating)
@@ -125,12 +135,34 @@ class Hyperrectangle:
     def dimension(self) -> int:
         return jnp.shape(self.lower)[0]
 
+    @classmethod
+    def from_axes(cls, axes):
+        from .coordinates import Axis
+
+        if not isinstance(axes, tuple) or not axes:
+            raise ValueError("Hyperrectangle.from_axes requires a nonempty axis tuple")
+        if any(not isinstance(axis, Axis) for axis in axes):
+            raise TypeError("Hyperrectangle.from_axes requires Axis values")
+        units = tuple(axis.unit for axis in axes)
+        lower = jnp.stack(
+            [jnp.asarray(axis.lower.to_value(axis.unit)) for axis in axes]
+        )
+        upper = jnp.stack(
+            [jnp.asarray(axis.upper.to_value(axis.unit)) for axis in axes]
+        )
+        return cls(lower, upper, axis_units=units)
+
     def tree_flatten(self):
-        return (self.lower, self.upper), self.dimension
+        return (self.lower, self.upper), (self.dimension, self.axis_units)
 
     @classmethod
-    def tree_unflatten(cls, dimension: int, children):
-        domain = cls(*children)
+    def tree_unflatten(
+        cls,
+        metadata: tuple[int, tuple[Unit, ...] | None],
+        children,
+    ):
+        dimension, axis_units = metadata
+        domain = cls(*children, axis_units=axis_units)
         if domain.dimension != dimension:
             raise ValueError("invalid Hyperrectangle PyTree dimension")
         return domain
