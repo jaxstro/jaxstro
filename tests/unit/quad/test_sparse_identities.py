@@ -15,7 +15,8 @@ def test_same_nested_node_has_same_reduced_identity():
     assert canonical_cc_identity(2, 1) == canonical_cc_identity(3, 2)
     assert canonical_cc_identity(2, 2) == canonical_cc_identity(4, 8)
     assert canonical_cc_identity(4, 0) == (0, 0)
-    assert canonical_cc_identity(4, 16) == (1, 0)
+    assert canonical_cc_identity(4, 8) == (1, 0)
+    assert canonical_cc_identity(1, 0) == (1, 1)
 
 
 @pytest.mark.parametrize(
@@ -31,15 +32,19 @@ def test_canonical_identity_rejects_invalid_level_or_index(level, index):
 @pytest.mark.parametrize("level", range(1, 9))
 def test_unit_rule_matches_phase_a_values_without_changing_dtype(level, dtype):
     sparse = unit_clenshaw_curtis(level, dtype)
-    phase_a = chebyshev_rule_data(
-        ClenshawCurtisRule((1 << level) + 1),
-        dtype=dtype,
-    )
 
     assert sparse.nodes.dtype == dtype
     assert sparse.weights.dtype == dtype
-    assert jnp.array_equal(sparse.nodes, 0.5 * (1.0 - phase_a.nodes))
-    assert jnp.array_equal(sparse.weights, 0.5 * phase_a.weights)
+    if level == 1:
+        assert jnp.array_equal(sparse.nodes, jnp.asarray([0.5], dtype=dtype))
+        assert jnp.array_equal(sparse.weights, jnp.asarray([1.0], dtype=dtype))
+    else:
+        phase_a = chebyshev_rule_data(
+            ClenshawCurtisRule((1 << (level - 1)) + 1),
+            dtype=dtype,
+        )
+        assert jnp.array_equal(sparse.nodes, 0.5 * (1.0 - phase_a.nodes))
+        assert jnp.array_equal(sparse.weights, 0.5 * phase_a.weights)
     assert jnp.allclose(
         jnp.sum(sparse.weights),
         1.0,
@@ -77,8 +82,10 @@ def test_hierarchical_identity_sets_are_nested_and_keep_exact_endpoints():
         rule = hierarchical_rule(level, jnp.float64)
         current = set(rule.identities)
         assert previous <= current
-        assert (0, 0) in current
-        assert (1, 0) in current
+        assert (1, 1) in current
+        if level >= 2:
+            assert (0, 0) in current
+            assert (1, 0) in current
         previous = current
 
 

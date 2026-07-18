@@ -48,25 +48,36 @@ class _SparseHostData(NamedTuple):
 
 def canonical_cc_identity(level: int, index: int) -> DyadicIdentity:
     """Reduce one Clenshaw-Curtis angle index to an exact dyadic identity."""
-    if isinstance(level, bool) or not isinstance(level, int) or level < 0:
-        raise ValueError("Clenshaw-Curtis level must be a nonnegative integer")
+    if isinstance(level, bool) or not isinstance(level, int) or level < 1:
+        raise ValueError("Clenshaw-Curtis level must be a positive integer")
     if isinstance(index, bool) or not isinstance(index, int):
         raise ValueError("Clenshaw-Curtis index must be an integer")
-    denominator = 1 << level
+    if level == 1:
+        if index != 0:
+            raise ValueError("Clenshaw-Curtis index is outside its level")
+        return 1, 1
+    angle_level = level - 1
+    denominator = 1 << angle_level
     if index < 0 or index > denominator:
         raise ValueError("Clenshaw-Curtis index is outside its level")
     if index == 0:
         return 0, 0
-    while level > 0 and index % 2 == 0:
+    while angle_level > 0 and index % 2 == 0:
         index //= 2
-        level -= 1
-    return index, level
+        angle_level -= 1
+    return index, angle_level
 
 
 def identity_to_point(identity: DyadicIdentity, dtype) -> Array:
     """Create a unit-interval coordinate after exact identity coalescing."""
     numerator, denominator_power = identity
     selected_dtype = jnp.dtype(dtype)
+    if identity == (0, 0):
+        return jnp.asarray(0.0, dtype=selected_dtype)
+    if identity == (1, 0):
+        return jnp.asarray(1.0, dtype=selected_dtype)
+    if identity == (1, 1):
+        return jnp.asarray(0.5, dtype=selected_dtype)
     numerator_value = jnp.asarray(numerator, dtype=selected_dtype)
     denominator = jnp.asarray(1 << denominator_power, dtype=selected_dtype)
     return jnp.asarray(0.5, dtype=selected_dtype) * (
@@ -80,8 +91,15 @@ def unit_clenshaw_curtis(level: int, dtype) -> FixedRuleData:
     if isinstance(level, bool) or not isinstance(level, int) or level < 1:
         raise ValueError("sparse Clenshaw-Curtis level must be a positive integer")
     selected_dtype = jnp.dtype(dtype)
+    if level == 1:
+        return FixedRuleData(
+            nodes=jnp.asarray([0.5], dtype=selected_dtype),
+            weights=jnp.asarray([1.0], dtype=selected_dtype),
+            degree=1,
+            nested=True,
+        )
     data = chebyshev_rule_data(
-        ClenshawCurtisRule((1 << level) + 1),
+        ClenshawCurtisRule((1 << (level - 1)) + 1),
         dtype=selected_dtype,
     )
     half = jnp.asarray(0.5, dtype=selected_dtype)
@@ -173,7 +191,7 @@ def _fixed_index_set(
                 current + (excess + 1,),
             )
 
-    append_indices(0, float(level), ())
+    append_indices(0, float(level - 1), ())
     return tuple(sorted(indices, key=lambda index: (sum(index), index)))
 
 
@@ -196,9 +214,8 @@ def _frontier_indices(indices: tuple[SparseIndex, ...]) -> set[SparseIndex]:
 
 def sparse_axis_identities(level: int) -> tuple[DyadicIdentity, ...]:
     """Return exact identities in one hierarchical increment without floats."""
-    return tuple(
-        canonical_cc_identity(level, index) for index in range((1 << level) + 1)
-    )
+    point_count = 1 if level == 1 else (1 << (level - 1)) + 1
+    return tuple(canonical_cc_identity(level, index) for index in range(point_count))
 
 
 def fixed_sparse_node_identities(
@@ -226,6 +243,12 @@ def _host_identity_to_point(
     dtype: np.dtype,
 ) -> np.floating:
     scalar = dtype.type
+    if identity == (0, 0):
+        return scalar(0)
+    if identity == (1, 0):
+        return scalar(1)
+    if identity == (1, 1):
+        return scalar(0.5)
     numerator, denominator_power = identity
     angle = scalar(np.pi) * scalar(numerator) / scalar(1 << denominator_power)
     return scalar(scalar(0.5) * (scalar(1.0) - np.cos(angle, dtype=dtype)))

@@ -25,6 +25,11 @@ construction, `jax.lax.scan`, pytest, Ruff, MyPy.
   `docs/superpowers/specs/2026-07-17-jaxstro-quad-phase-b-multidimensional-design.md`.
 - Use nested Clenshaw-Curtis rules only. Do not add a second one-dimensional
   sparse basis in Phase B.
+- Use the standard level convention
+  `Q_1 =` the one-point midpoint rule and
+  `Q_level = ClenshawCurtisRule(2**(level - 1) + 1)` for `level >= 2`.
+  Consequently the mandatory base tensor contains one node at every dimension,
+  rather than `3**dimension` nodes.
 - Multi-indices begin at one in every dimension.
 - Fixed sets are downward closed. Adaptive candidates are admissible only when
   every valid immediate backward neighbor is accepted.
@@ -137,15 +142,20 @@ construction, `jax.lax.scan`, pytest, Ruff, MyPy.
 
 
   def canonical_cc_identity(level: int, index: int) -> DyadicIdentity:
-      denominator = 1 << level
+      if level == 1:
+          if index != 0:
+              raise ValueError("Clenshaw-Curtis index is outside its level")
+          return 1, 1
+      angle_level = level - 1
+      denominator = 1 << angle_level
       if index < 0 or index > denominator:
           raise ValueError("Clenshaw-Curtis index is outside its level")
       if index == 0:
           return 0, 0
-      while level > 0 and index % 2 == 0:
+      while angle_level > 0 and index % 2 == 0:
           index //= 2
-          level -= 1
-      return index, level
+          angle_level -= 1
+      return index, angle_level
   ```
 
   The floating point for identity `(numerator, denominator_power)` is
@@ -166,7 +176,14 @@ construction, `jax.lax.scan`, pytest, Ruff, MyPy.
   def unit_clenshaw_curtis(level: int, dtype) -> FixedRuleData:
       if isinstance(level, bool) or not isinstance(level, int) or level < 1:
           raise ValueError("sparse Clenshaw-Curtis level must be a positive integer")
-      order = (1 << level) + 1
+      if level == 1:
+          return FixedRuleData(
+              nodes=jnp.asarray([0.5], dtype=dtype),
+              weights=jnp.asarray([1.0], dtype=dtype),
+              degree=1,
+              nested=True,
+          )
+      order = (1 << (level - 1)) + 1
       data = chebyshev_rule_data(
           ClenshawCurtisRule(order),
           dtype=dtype,
@@ -199,10 +216,11 @@ construction, `jax.lax.scan`, pytest, Ruff, MyPy.
   ```
 
   `unit_clenshaw_curtis` is owned by `_sparse.py`; it reuses the Phase A
-  Clenshaw-Curtis arithmetic, maps order $2^\ell+1$ from $[-1,1]$ to
-  $[0,1]$, retains the requested float32/float64 dtype, and leaves the Phase A
-  rule bytes unchanged. Test levels 1 through 8 against direct Phase A values,
-  exact endpoint identities, unit weight sum, and nested identity inclusion.
+  Clenshaw-Curtis arithmetic, uses the midpoint rule at level one, maps order
+  $2^{\ell-1}+1$ from $[-1,1]$ to $[0,1]$ for levels at least two, retains the
+  requested float32/float64 dtype, and leaves the Phase A rule bytes unchanged.
+  Test levels 1 through 8 against the midpoint/direct Phase A values, exact
+  endpoint identities, unit weight sum, and nested identity inclusion.
 
   Drop exact-zero host weights only after checking against zero exactly; do not
   use a floating tolerance to decide identity or reuse.
@@ -344,10 +362,11 @@ construction, `jax.lax.scan`, pytest, Ruff, MyPy.
       return sum(
           weight * (component - 1)
           for weight, component in zip(weights, index, strict=True)
-      ) <= level
+      ) <= level - 1
   ```
 
-  Sort by `(sum(index), index)` for deterministic construction.
+  Thus `Smolyak(level=1)` contains only the all-ones base index. Sort by
+  `(sum(index), index)` for deterministic construction.
 
 - [ ] **Step 4: Coalesce the fixed sparse rule and integrate**
 

@@ -33,6 +33,15 @@ def test_isotropic_index_set_is_downward_closed():
                 assert tuple(backward) in accepted
 
 
+def test_level_one_has_one_base_index_and_one_node_through_dimension_sixteen():
+    method = quad.Smolyak(level=1)
+    assert fixed_index_set(method, dimension=16) == ((1,) * 16,)
+    data = smolyak_rule_data(method, dimension=16, dtype=jnp.float64)
+    assert data.indices == ((1,) * 16,)
+    assert data.points.shape == (1, 16)
+    assert jnp.array_equal(data.points, jnp.full((1, 16), 0.5))
+
+
 def test_anisotropy_restricts_expensive_axis():
     indices = fixed_index_set(
         quad.Smolyak(level=4, anisotropy=(1.0, 3.0)),

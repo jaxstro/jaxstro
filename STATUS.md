@@ -1,8 +1,8 @@
 # jaxstro — status
 
-next: Resolve the Phase B2 level-one sparse-basis contradiction before Task 3. Recommended: amend the plan and implementation to the standard nested convention with a one-point midpoint `Q_1`, then rerun Tasks 1 and 2 under strict TDD before building the adaptive controller.
+next: Apply the approved Phase B2 hierarchy correction under strict TDD, rerun Tasks 1 and 2, then build the Task 3 adaptive controller directly on local `main`.
 
-blocker: The approved B2 plan currently defines `Q_1` with `2**1 + 1 = 3` Clenshaw-Curtis nodes. Its mandatory base tensor therefore requires `3**d` nodes, including 43,046,721 nodes at dimension 16, contradicting the same plan's dimension-16 validation and performance envelope. Continuing Task 3 without changing either the hierarchy or the dimensional claim would knowingly encode an infeasible architecture.
+previous: Anna approved the Phase B2 hierarchy correction (2026-07-18). The reviewed plan now defines `Q_1` as the one-point midpoint rule, `Q_level` for levels at least two as the `2**(level - 1) + 1` nested Clenshaw-Curtis rule, and `Smolyak(level=L)` as excess budget `L - 1`. This removes the infeasible `3**dimension` mandatory base tensor while preserving exact dyadic identities and the dimension-16 validation envelope. Tasks 1 and 2 must be revised and reverified before Task 3.
 
 previous: Phase B2 Tasks 1 and 2 began directly on local `main` after B1 was fast-forwarded and the completed `quad-phase-b` worktree and branch were removed (2026-07-18). Commits `851fa9b` and `223e4b1` added exact reduced dyadic identities, target-dtype hierarchical Clenshaw-Curtis differences, fixed isotropic and statically anisotropic Smolyak grids, exact multidimensional coalescing, pre-materialization capacity rejection, unique-node work, and outer hierarchical-surplus evidence. Focused gates passed 58 sparse/B1-message compatibility tests, Ruff, and MyPy over 130 source files. The pre-Task-3 architecture review then found the level-one dimensional-scaling contradiction recorded above; no adaptive sparse controller or B2 certification claim has been added.
 
