@@ -38,6 +38,7 @@ from .methods import (
     Romberg,
     RombergTanhSinh,
 )
+from .qmc import Sobol
 from .result import ErrorKind, QuadError, QuadResult, QuadStatus, QuadWork
 from .rules import (
     ClenshawCurtisRule,
@@ -116,6 +117,7 @@ __all__ = [
     "map_interval",
     "map_domain",
     "simpson",
+    "Sobol",
     "sorted_breakpoints",
     "trapezoid",
     "tolerance_threshold",
