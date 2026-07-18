@@ -38,7 +38,7 @@ from .methods import (
     Romberg,
     RombergTanhSinh,
 )
-from .qmc import Sobol
+from .qmc import DigitalShift, LinearMatrixScramble, OwenScramble, Sobol
 from .result import ErrorKind, QuadError, QuadResult, QuadStatus, QuadWork
 from .rules import (
     ClenshawCurtisRule,
@@ -72,6 +72,7 @@ __all__ = [
     "cumulative_simpson",
     "cumulative_trapezoid",
     "DomainMapResult",
+    "DigitalShift",
     "ErrorKind",
     "ErrorNorm",
     "FejerIRule",
@@ -87,6 +88,7 @@ __all__ = [
     "LaguerreMeasure",
     "LebesgueMeasure",
     "LeftInfinite",
+    "LinearMatrixScramble",
     "gauss_hermite_nodes",
     "gauss_laguerre_nodes",
     "gauss_legendre_nodes",
@@ -99,6 +101,7 @@ __all__ = [
     "L2Norm",
     "MaxNorm",
     "PhysicistsHermiteMeasure",
+    "OwenScramble",
     "QuadError",
     "QuadResult",
     "QuadStatus",

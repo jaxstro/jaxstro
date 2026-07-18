@@ -10,6 +10,7 @@ import jax.numpy as jnp
 from jaxstro.numerics.checks import try_concrete_bool
 
 from ._multidim import evaluate_multidim, infer_multidim_payload_zero
+from ._scramble import DigitalShift, LinearMatrixScramble, OwenScramble
 from ._sobol import resolve_sobol_bits, sobol_points
 from .domains import Hyperrectangle, hyperrectangle_is_valid
 from .measures import LebesgueMeasure
@@ -213,4 +214,10 @@ def integrate_qmc(
     )
 
 
-__all__ = ["Sobol", "integrate_qmc"]
+__all__ = [
+    "DigitalShift",
+    "LinearMatrixScramble",
+    "OwenScramble",
+    "Sobol",
+    "integrate_qmc",
+]
