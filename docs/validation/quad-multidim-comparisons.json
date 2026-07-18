@@ -1,0 +1,150 @@
+{
+  "artifact_id": "quad.multidim.comparisons",
+  "claim_boundary": "Only records labelled exact support direct timing ratios. Family, strong, node, and capability matches are descriptive.",
+  "environment": {
+    "backend": "cpu",
+    "device": "cpu:0",
+    "device_kind": "cpu",
+    "jax": "0.10.1",
+    "jax_enable_x64": true,
+    "jaxlib": "0.10.1",
+    "machine": "arm64",
+    "numpy": "2.4.6",
+    "platform": "macOS-26.1-arm64-arm-64bit-Mach-O",
+    "python": "3.13.7"
+  },
+  "payload_sha256": "254ff8d6a8685bbf9e29518cc9adb49456c6058beda6e4c22f594feadbec7444",
+  "records": [
+    {
+      "case_id": "rotated_smooth_d4",
+      "controls": {
+        "atol": 1e-09,
+        "matched_control_description": "Same 4D unit hyperrectangle, integrand, tolerances, and Genz-Malik rule family; regional controller details differ.",
+        "max_subdivisions": 1024,
+        "rtol": 1e-09,
+        "rule": "genz-malik"
+      },
+      "elapsed_seconds": 0.0025017093867063522,
+      "evaluations": null,
+      "label": "family-matched",
+      "library": "scipy",
+      "truth_error": 2.220446049250313e-16,
+      "value": 1.0333333333333332,
+      "version": "1.16.0"
+    },
+    {
+      "case_id": "sobol_exponential_d2",
+      "controls": {
+        "bits": 53,
+        "dimension": 2,
+        "level": 8,
+        "matched_control_description": "Bit-exact 53-bit unscrambled Sobol nodes, equal-weight mean, same ordering, domain, and separable exponential integrand.",
+        "scramble": false,
+        "warm_repeats": 5
+      },
+      "elapsed_seconds": 8.124997839331627e-05,
+      "evaluations": 256,
+      "label": "exact",
+      "library": "scipy",
+      "truth_error": 0.0015702794920972596,
+      "value": 0.4011466803858253,
+      "version": "1.16.0"
+    },
+    {
+      "case_id": "sobol_exponential_d4",
+      "controls": {
+        "bits": 53,
+        "dimension": 4,
+        "level": 8,
+        "matched_control_description": "Bit-exact 53-bit unscrambled Sobol nodes, equal-weight mean, same ordering, domain, and separable exponential integrand.",
+        "scramble": false,
+        "warm_repeats": 5
+      },
+      "elapsed_seconds": 6.89169391989708e-05,
+      "evaluations": 256,
+      "label": "exact",
+      "library": "scipy",
+      "truth_error": 0.001838269484750965,
+      "value": 0.16149956963593623,
+      "version": "1.16.0"
+    },
+    {
+      "case_id": "sobol_exponential_d8",
+      "controls": {
+        "bits": 53,
+        "dimension": 8,
+        "level": 8,
+        "matched_control_description": "Bit-exact 53-bit unscrambled Sobol nodes, equal-weight mean, same ordering, domain, and separable exponential integrand.",
+        "scramble": false,
+        "warm_repeats": 5
+      },
+      "elapsed_seconds": 7.037539035081863e-05,
+      "evaluations": 256,
+      "label": "exact",
+      "library": "scipy",
+      "truth_error": 0.0028301499575093085,
+      "value": 0.02832188072347618,
+      "version": "1.16.0"
+    },
+    {
+      "case_id": "sobol_exponential_d16",
+      "controls": {
+        "bits": 53,
+        "dimension": 16,
+        "level": 8,
+        "matched_control_description": "Bit-exact 53-bit unscrambled Sobol nodes, equal-weight mean, same ordering, domain, and separable exponential integrand.",
+        "scramble": false,
+        "warm_repeats": 5
+      },
+      "elapsed_seconds": 7.433397695422173e-05,
+      "evaluations": 256,
+      "label": "exact",
+      "library": "scipy",
+      "truth_error": 0.0038468730600225483,
+      "value": 0.00449670139746709,
+      "version": "1.16.0"
+    },
+    {
+      "case_id": "tensor_polynomial_d2",
+      "controls": {
+        "depth": 4,
+        "macos_relocation_workaround": true,
+        "matched_control_description": "Same 2D unit hyperrectangle and polynomial moment with a Clenshaw-Curtis sparse family; index conventions are library-specific.",
+        "rule": "clenshaw-curtis",
+        "type": "level"
+      },
+      "elapsed_seconds": 0.003975832834839821,
+      "evaluations": 65,
+      "label": "strong-match",
+      "library": "tasmanian",
+      "truth_error": 1.3322676295501878e-15,
+      "value": 3.361111111111112,
+      "version": "8.2"
+    },
+    {
+      "case_id": "tensor_polynomial_d2",
+      "controls": {
+        "backend": "jax",
+        "gradient": 3.3611109256744385,
+        "jax_version": "0.10.1",
+        "matched_control_description": "Same 12-point-per-axis Gauss-Legendre tensor formula, 2D unit hyperrectangle, integrand, and amplitude derivative.",
+        "method": "GaussLegendre",
+        "nodes_per_axis": 12
+      },
+      "elapsed_seconds": 0.8119350830093026,
+      "evaluations": 144,
+      "label": "node-matched",
+      "library": "torchquad",
+      "truth_error": 1.8543667223980265e-07,
+      "value": 3.3611109256744385,
+      "version": "0.5.0"
+    }
+  ],
+  "schema_version": 1,
+  "source_hashes": {
+    "adapters": "3ceaeff0cc8a2a2da3a31409d3b1d355f1a1237ede6909f11f136ff25b9581c2",
+    "benchmark": "7044e2661b84d813d1ae31277dac859cd2375d4b53bfd02db16389187de83125",
+    "truth_evidence": "30902fdfcaf29ee32c5d5b86c5fa02041c5af977d0c37fed8f03079c7f9510df"
+  },
+  "source_revision": "147574690033d2f4cf80cd523e5104c75570ff88"
+}
