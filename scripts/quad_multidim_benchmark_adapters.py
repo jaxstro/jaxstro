@@ -138,9 +138,13 @@ def scipy_sobol_record(dimension: int, *, level: int = 8) -> ComparisonRecord:
             "scramble": False,
             "bits": 53,
             "warm_repeats": 5,
+            "timing_relation": "execution-model-unmatched",
             "matched_control_description": (
                 "Bit-exact 53-bit unscrambled Sobol nodes, equal-weight mean, "
-                "same ordering, domain, and separable exponential integrand."
+                "same ordering, domain, and separable exponential integrand. "
+                "SciPy times engine construction and point generation while "
+                "Jaxstro's compiled warm kernel specializes the fixed formula, "
+                "so the elapsed times are not ratio-eligible."
             ),
         },
         "value": value,
@@ -234,8 +238,9 @@ import jax, jax.numpy as jnp
 from loguru import logger
 from torchquad import GaussLegendre
 logger.remove()
+jax.config.update("jax_enable_x64", True)
 method = GaussLegendre()
-domain = jnp.asarray([[0.0, 1.0], [0.0, 1.0]])
+domain = jnp.asarray([[0.0, 1.0], [0.0, 1.0]], dtype=jnp.float64)
 def solve(amplitude):
     return method.integrate(
         lambda x: amplitude * jnp.prod(1.0 + x + x*x, axis=-1),
@@ -245,6 +250,7 @@ value, gradient = jax.value_and_grad(solve)(jnp.asarray(1.0))
 jax.block_until_ready(value)
 print(json.dumps({"version": metadata.version("torchquad"),
                   "jax_version": jax.__version__,
+                  "dtype": str(value.dtype),
                   "value": float(value), "gradient": float(gradient),
                   "evaluations": 144,
                   "elapsed_seconds": time.perf_counter() - started}))
@@ -254,7 +260,7 @@ print(json.dumps({"version": metadata.version("torchquad"),
     record: ComparisonRecord = {
         "library": "torchquad",
         "version": str(payload["version"]),
-        "label": "node-matched",
+        "label": "strong-match",
         "case_id": "tensor_polynomial_d2",
         "controls": {
             "backend": "jax",
@@ -262,9 +268,12 @@ print(json.dumps({"version": metadata.version("torchquad"),
             "method": "GaussLegendre",
             "nodes_per_axis": 12,
             "gradient": payload["gradient"],
+            "dtype": payload["dtype"],
             "matched_control_description": (
-                "Same 12-point-per-axis Gauss-Legendre tensor formula, "
-                "2D unit hyperrectangle, integrand, and amplitude derivative."
+                "Same float64 12-point-per-axis Gauss-Legendre mathematical "
+                "formula, 2D unit hyperrectangle, integrand, and amplitude "
+                "derivative; independently generated nodes and weights agree "
+                "within float64 roundoff but are not bit-identical."
             ),
         },
         "value": payload["value"],

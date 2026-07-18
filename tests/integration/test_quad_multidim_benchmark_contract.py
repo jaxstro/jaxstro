@@ -38,6 +38,7 @@ def _synthetic_comparator(case_id: str, elapsed: float):
         "library": "scipy",
         "label": "exact",
         "elapsed_seconds": elapsed,
+        "controls": {"timing_relation": "matched"},
     }
 
 

@@ -202,7 +202,6 @@ def _benchmark_record(dimension: int) -> dict[str, Any]:
     jvp_float = float(np.asarray(jvp_value))
     point_count = 1 << LEVEL
     memory_proxy_bytes = point_count * dimension * 8 + point_count * 16
-    expected_memory_bytes = memory_proxy_bytes
     return {
         "case_id": f"sobol_exponential_d{dimension}",
         "dimension": dimension,
@@ -244,8 +243,8 @@ def _benchmark_record(dimension: int) -> dict[str, Any]:
             scalar_timing["compile_seconds"] / scalar_timing["warm_median_seconds"]
         ),
         "memory_proxy_bytes": memory_proxy_bytes,
-        "memory_expected_bytes": expected_memory_bytes,
-        "memory_family_ratio": memory_proxy_bytes / expected_memory_bytes,
+        "memory_family_median_bytes": None,
+        "memory_family_ratio": None,
         "repeated_same_median_seconds": same_median,
         "repeated_changing_median_seconds": changing_median,
         "repeated_scaling_excess": repeated_scaling_excess,
@@ -266,7 +265,12 @@ def _trigger_assessment(
     for record in records:
         comparator = scipy_by_case[record["case_id"]]
         scalar = record["timings"]["scalar"]
-        warm_ratio = scalar["warm_median_seconds"] / comparator["elapsed_seconds"]
+        timing_matched = comparator["controls"].get("timing_relation") == "matched"
+        warm_ratio = (
+            scalar["warm_median_seconds"] / comparator["elapsed_seconds"]
+            if timing_matched
+            else None
+        )
         values = {
             "warm_runtime_ratio": warm_ratio,
             "compiler_cost_ratio": None,
@@ -274,7 +278,7 @@ def _trigger_assessment(
             "repeated_scaling_excess": record["repeated_scaling_excess"],
         }
         record_fired = (
-            warm_ratio >= TRIGGERS["warm_runtime_ratio"]
+            (warm_ratio is not None and warm_ratio >= TRIGGERS["warm_runtime_ratio"])
             or record["memory_family_ratio"] >= TRIGGERS["memory_family_ratio"]
             or record["repeated_scaling_excess"] >= TRIGGERS["repeated_scaling_excess"]
         )
@@ -287,6 +291,12 @@ def _trigger_assessment(
                 "compiler_ratio_reason": (
                     "SciPy's eager exact-node comparator has no matched JIT "
                     "compiler phase, so no compiler ratio is claimed."
+                ),
+                "warm_ratio_reason": (
+                    "Exact nodes do not make the timed execution regions "
+                    "comparable; this ratio is excluded."
+                    if not timing_matched
+                    else "Matched timed execution regions."
                 ),
             }
         )
@@ -319,19 +329,35 @@ def build_artifacts():
         "source_revision": source_revision,
         "source_hashes": source_hashes,
         "environment": _environment(),
+        "supersedes": {
+            "commit": "a1764ec",
+            "reason": (
+                "Corrects tautological memory normalization, unmatched timed "
+                "regions, and unproven Torchquad calibration."
+            ),
+        },
     }
     comparison_artifact = _with_digest(
         {
             **common,
             "artifact_id": "quad.multidim.comparisons",
             "claim_boundary": (
-                "Only records labelled exact support direct timing ratios. "
-                "Family, strong, node, and capability matches are descriptive."
+                "Exact labels describe mathematical configuration. Timing "
+                "ratios additionally require an explicit matched timed region; "
+                "family, strong, node, and capability matches are descriptive."
             ),
             "records": comparisons,
         }
     )
     records = [_benchmark_record(dimension) for dimension in DIMENSIONS]
+    memory_family_median = statistics.median(
+        record["memory_proxy_bytes"] for record in records
+    )
+    for record in records:
+        record["memory_family_median_bytes"] = memory_family_median
+        record["memory_family_ratio"] = (
+            record["memory_proxy_bytes"] / memory_family_median
+        )
     baseline_artifact = _with_digest(
         {
             **common,

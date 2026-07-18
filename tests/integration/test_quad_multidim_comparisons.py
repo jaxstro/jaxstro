@@ -9,6 +9,7 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
+from jaxstro import quad
 from jaxstro.quad._sobol import sobol_points
 
 ROOT = Path(__file__).parents[2]
@@ -108,7 +109,13 @@ def test_external_comparator_adapters_execute_and_match_truth():
         assert record["truth_error"] < 2.0e-6
         assert record["elapsed_seconds"] > 0.0
     torchquad = records[-1]
+    assert torchquad["label"] == "strong-match"
+    assert torchquad["controls"]["dtype"] == "float64"
     assert torchquad["controls"]["gradient"] == pytest.approx(
         torchquad["value"],
-        rel=2.0e-6,
+        rel=2.0e-12,
     )
+    jaxstro_nodes, jaxstro_weights = quad.gauss_legendre_nodes(12)
+    numpy_nodes, numpy_weights = np.polynomial.legendre.leggauss(12)
+    assert np.allclose(jaxstro_nodes, numpy_nodes, rtol=0.0, atol=6.0e-16)
+    assert np.allclose(jaxstro_weights, numpy_weights, rtol=0.0, atol=9.0e-16)
