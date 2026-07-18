@@ -6,7 +6,12 @@ import jax
 from .adaptive import integrate as integrate_1d
 from .cubature import AdaptiveCubature, integrate_cubature
 from .domains import Hyperrectangle
-from .sparse import Smolyak, integrate_sparse
+from .sparse import (
+    AdaptiveSmolyak,
+    Smolyak,
+    integrate_adaptive_sparse,
+    integrate_sparse,
+)
 from .tensor import (
     AdaptiveTensorClenshawCurtis,
     TensorProduct,
@@ -27,6 +32,22 @@ def _require_stop_gradient(method, gradient: str, *, phase: str) -> None:
 
 def _integrate_hyperrectangle(*args, **kwargs):
     method = kwargs["method"]
+    if isinstance(method, AdaptiveSmolyak):
+        _require_stop_gradient(method, kwargs["gradient"], phase="Phase B2")
+        result = integrate_adaptive_sparse(
+            *args,
+            args=kwargs["args"],
+            method=method,
+            measure=kwargs["measure"],
+            epsabs=kwargs["epsabs"],
+            epsrel=kwargs["epsrel"],
+            max_evaluations=kwargs["max_evaluations"],
+            max_indices=kwargs["max_indices"],
+            max_frontier=kwargs["max_frontier"],
+            max_nodes=kwargs["max_nodes"],
+            error_norm=kwargs["error_norm"],
+        )
+        return jax.tree.map(jax.lax.stop_gradient, result)
     if isinstance(method, Smolyak):
         _require_stop_gradient(method, kwargs["gradient"], phase="Phase B2")
         result = integrate_sparse(

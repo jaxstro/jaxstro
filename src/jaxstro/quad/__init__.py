@@ -47,7 +47,7 @@ from .rules import (
     TanhSinhRule,
 )
 from .sampled import cumulative_simpson, cumulative_trapezoid, simpson, trapezoid
-from .sparse import Smolyak
+from .sparse import AdaptiveSmolyak, Smolyak
 from .tensor import AdaptiveTensorClenshawCurtis, TensorProduct
 from .tolerance import (
     ErrorNorm,
@@ -62,6 +62,7 @@ from .transforms import AffineMapResult, DomainMapResult, map_domain, map_interv
 __all__ = [
     "AdaptiveClenshawCurtis",
     "AdaptiveCubature",
+    "AdaptiveSmolyak",
     "AdaptiveTensorClenshawCurtis",
     "AdaptiveTanhSinh",
     "AffineMapResult",

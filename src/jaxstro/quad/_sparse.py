@@ -11,7 +11,13 @@ import numpy as np
 from jaxtyping import Array
 
 from ._chebyshev import chebyshev_rule_data
+from ._multidim import evaluate_multidim
+from .result import QuadStatus
 from .rules import ClenshawCurtisRule, FixedRuleData
+from .tolerance import ErrorNorm, tolerance_threshold
+from .tolerance import error_norm as reduce_error_norm
+
+RUNNING = -1
 
 DyadicIdentity = tuple[int, int]
 
@@ -44,6 +50,63 @@ class _SparseHostData(NamedTuple):
     increment_weights: np.ndarray
     indices: tuple[SparseIndex, ...]
     frontier_mask: np.ndarray
+
+
+class SparseReplayEvidence(NamedTuple):
+    """Stopped adaptive sparse formula metadata reserved for Phase B4 replay."""
+
+    indices: Array
+    active: Array
+    node_ids: Array
+    coefficients: Array
+
+
+class AdaptiveSparseControllerResult(NamedTuple):
+    value: Array
+    error: Array
+    frontier_error: Array
+    tolerance: Array
+    status: Array
+    evaluations: Array
+    refinements: Array
+    level: Array
+    evidence: SparseReplayEvidence
+
+
+class _AdaptiveSparseTables(NamedTuple):
+    points: Array
+    weights: Array
+    identities: Array
+    counts: Array
+
+
+class _SparseCache(NamedTuple):
+    identities: Array
+    values: Array
+    active: Array
+    accepted: Array
+    coefficients: Array
+    evaluations: Array
+    nonfinite: Array
+    exhausted: Array
+
+
+class _SparseAdaptiveState(NamedTuple):
+    accepted_indices: Array
+    accepted_active: Array
+    accepted_count: Array
+    frontier_indices: Array
+    frontier_active: Array
+    frontier_evaluated: Array
+    frontier_surplus: Array
+    frontier_norm: Array
+    frontier_new_cost: Array
+    cache: _SparseCache
+    value: Array
+    evaluations: Array
+    refinements: Array
+    status: Array
+    done: Array
 
 
 def canonical_cc_identity(level: int, index: int) -> DyadicIdentity:
@@ -360,20 +423,796 @@ def smolyak_rule_data(method, dimension: int, dtype) -> SparseRuleData:
     return materialize_smolyak_rule(smolyak_host_data(method, dimension, dtype))
 
 
+def is_admissible(
+    candidate: SparseIndex,
+    accepted: set[SparseIndex],
+) -> bool:
+    """Return whether every valid immediate backward neighbor is accepted."""
+    for axis, component in enumerate(candidate):
+        if component > 1:
+            backward = list(candidate)
+            backward[axis] -= 1
+            if tuple(backward) not in accepted:
+                return False
+    return True
+
+
+def admissible_forward_neighbors(
+    accepted: set[SparseIndex],
+    dimension: int,
+) -> tuple[SparseIndex, ...]:
+    """Enumerate the lexicographically ordered admissible forward frontier."""
+    _validate_dimension(dimension)
+    if any(len(index) != dimension for index in accepted):
+        raise ValueError("accepted sparse indices must match dimension")
+    candidates: set[SparseIndex] = set()
+    for index in accepted:
+        for axis in range(dimension):
+            candidate = index[:axis] + (index[axis] + 1,) + index[axis + 1 :]
+            if candidate not in accepted and is_admissible(candidate, accepted):
+                candidates.add(candidate)
+    return tuple(sorted(candidates))
+
+
+def required_frontier_capacity(dimension: int, accepted_count: int) -> int:
+    """Return the proved fixed frontier allocation for an adaptive declaration."""
+    _validate_dimension(dimension)
+    if (
+        isinstance(accepted_count, bool)
+        or not isinstance(accepted_count, int)
+        or accepted_count < 1
+    ):
+        raise ValueError("accepted_count must be a positive integer")
+    return 1 + dimension * accepted_count
+
+
+def select_profit(
+    indices: tuple[SparseIndex, ...],
+    surplus_norm: Array,
+    new_cost: Array,
+):
+    """Select maximum surplus-per-new-node with an explicit lexicographic tie."""
+    if not indices:
+        raise ValueError("profit selection requires at least one sparse index")
+    surplus_norm = jnp.asarray(surplus_norm)
+    new_cost = jnp.asarray(new_cost)
+    if surplus_norm.shape != (len(indices),) or new_cost.shape != (len(indices),):
+        raise ValueError("profit arrays must match the sparse-index count")
+    order = np.asarray(sorted(range(len(indices)), key=indices.__getitem__))
+    profit = jnp.where(
+        new_cost > 0,
+        surplus_norm / jnp.maximum(new_cost, 1),
+        -jnp.inf,
+    )
+    ordered_slot = jnp.argmax(profit[jnp.asarray(order)])
+    return jnp.asarray(order)[ordered_slot]
+
+
+def sparse_termination_status(
+    *,
+    invalid,
+    nonfinite,
+    converged,
+    all_active_roundoff,
+    evaluation_exhausted,
+    index_exhausted,
+):
+    """Apply the public adaptive sparse-grid status precedence."""
+    status = jnp.asarray(RUNNING, dtype=jnp.int32)
+    status = jnp.where(
+        index_exhausted,
+        jnp.asarray(QuadStatus.MAX_INDICES, dtype=jnp.int32),
+        status,
+    )
+    status = jnp.where(
+        evaluation_exhausted,
+        jnp.asarray(QuadStatus.MAX_EVALUATIONS, dtype=jnp.int32),
+        status,
+    )
+    status = jnp.where(
+        all_active_roundoff,
+        jnp.asarray(QuadStatus.ROUNDOFF_LIMITED, dtype=jnp.int32),
+        status,
+    )
+    status = jnp.where(
+        converged,
+        jnp.asarray(QuadStatus.CONVERGED, dtype=jnp.int32),
+        status,
+    )
+    status = jnp.where(
+        nonfinite,
+        jnp.asarray(QuadStatus.NONFINITE_INTEGRAND, dtype=jnp.int32),
+        status,
+    )
+    return jnp.where(
+        invalid,
+        jnp.asarray(QuadStatus.INVALID_INPUT, dtype=jnp.int32),
+        status,
+    )
+
+
+@lru_cache(maxsize=None)
+def _adaptive_sparse_host_tables(
+    max_nodes: int,
+    dtype_name: str,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    dtype = np.dtype(dtype_name)
+    max_level = 1
+    while (1 << max_level) + 1 <= max_nodes:
+        max_level += 1
+    rules = [hierarchical_rule(level, dtype_name) for level in range(1, max_level + 1)]
+    max_axis_nodes = max(len(rule.identities) for rule in rules)
+    points = np.zeros((max_level, max_axis_nodes), dtype=dtype)
+    weights = np.zeros((max_level, max_axis_nodes), dtype=dtype)
+    identities = np.full((max_level, max_axis_nodes, 2), -1, dtype=np.int32)
+    counts = np.zeros((max_level,), dtype=np.int32)
+    for row, rule in enumerate(rules):
+        count = len(rule.identities)
+        counts[row] = count
+        points[row, :count] = np.asarray(rule.points, dtype=dtype)
+        weights[row, :count] = np.asarray(rule.weights, dtype=dtype)
+        identities[row, :count] = np.asarray(rule.identities, dtype=np.int32)
+    return points, weights, identities, counts
+
+
+def _adaptive_sparse_tables(max_nodes: int, dtype) -> _AdaptiveSparseTables:
+    points, weights, identities, counts = _adaptive_sparse_host_tables(
+        max_nodes,
+        _target_sparse_dtype(dtype),
+    )
+    return _AdaptiveSparseTables(
+        points=jnp.asarray(points),
+        weights=jnp.asarray(weights),
+        identities=jnp.asarray(identities),
+        counts=jnp.asarray(counts),
+    )
+
+
+def _index_membership(index: Array, indices: Array, active: Array) -> Array:
+    return jnp.any(active & jnp.all(indices == index, axis=1))
+
+
+def _jax_is_admissible(
+    candidate: Array,
+    accepted_indices: Array,
+    accepted_active: Array,
+) -> Array:
+    dimension = candidate.shape[0]
+
+    def axis_is_admissible(axis):
+        backward = candidate.at[axis].add(-1)
+        return (candidate[axis] == 1) | _index_membership(
+            backward,
+            accepted_indices,
+            accepted_active,
+        )
+
+    return jnp.all(jax.vmap(axis_is_admissible)(jnp.arange(dimension)))
+
+
+def _formula_layout(
+    index: Array,
+    tables: _AdaptiveSparseTables,
+    max_nodes: int,
+) -> tuple[Array, Array, Array, Array]:
+    """Materialize one padded hierarchical tensor formula from traced levels."""
+    dimension = index.shape[0]
+    max_level = tables.counts.shape[0]
+    valid_level = jnp.all((index >= 1) & (index <= max_level))
+    safe_levels = jnp.clip(index - 1, 0, max_level - 1)
+    counts = tables.counts[safe_levels]
+
+    def capped_product(total, count):
+        safe = total <= max_nodes // jnp.maximum(count, 1)
+        return jnp.where(safe, total * count, max_nodes + 1), None
+
+    point_count, _ = jax.lax.scan(
+        capped_product,
+        jnp.asarray(1, dtype=jnp.int32),
+        counts,
+    )
+    slots = jnp.arange(max_nodes, dtype=jnp.int32)
+
+    def unravel_axis(remainder, axis):
+        reverse_axis = dimension - axis - 1
+        count = counts[reverse_axis]
+        position = remainder % count
+        return remainder // count, position
+
+    _, reverse_positions = jax.lax.scan(
+        unravel_axis,
+        slots,
+        jnp.arange(dimension, dtype=jnp.int32),
+    )
+    positions = jnp.swapaxes(reverse_positions[::-1], 0, 1)
+
+    def row(position):
+        points = tables.points[safe_levels, position]
+        weights = tables.weights[safe_levels, position]
+        identities = tables.identities[safe_levels, position]
+        return points, jnp.prod(weights), identities.reshape(-1)
+
+    points, weights, identities = jax.vmap(row)(positions)
+    active = valid_level & (slots < point_count) & (point_count <= max_nodes)
+    return points, weights, identities, active
+
+
+def _cache_lookup(cache: _SparseCache, identity: Array) -> tuple[Array, Array]:
+    matches = cache.active & jnp.all(cache.identities == identity, axis=1)
+    return jnp.any(matches), jnp.asarray(jnp.argmax(matches), dtype=jnp.int32)
+
+
+def _evaluate_sparse_formula(
+    fun,
+    domain,
+    *,
+    args,
+    measure,
+    index: Array,
+    tables: _AdaptiveSparseTables,
+    cache: _SparseCache,
+    zero: Array,
+    max_evaluations: int,
+    max_nodes: int,
+) -> tuple[_SparseCache, Array, Array, Array]:
+    points, weights, identities, formula_active = _formula_layout(
+        index,
+        tables,
+        max_nodes,
+    )
+    value_dtype = cache.values.dtype
+    formula_slots = jnp.full((max_nodes,), -1, dtype=jnp.int32)
+
+    def scan_row(carry, row):
+        current_cache, surplus, slots_out = carry
+        slot, point, weight, identity, active = row
+        found, cache_slot = _cache_lookup(current_cache, identity)
+        free_slot = jnp.asarray(
+            jnp.argmax(~current_cache.active),
+            dtype=jnp.int32,
+        )
+        can_insert = (
+            active
+            & ~found
+            & (current_cache.evaluations < max_evaluations)
+            & jnp.any(~current_cache.active)
+        )
+        cannot_insert = active & ~found & ~can_insert
+
+        def evaluate_new(operand):
+            cache_before, _surplus, _slots = operand
+            evaluated = evaluate_multidim(
+                fun,
+                domain,
+                point[None, :],
+                args=args,
+                measure=measure,
+            )
+            contribution = jnp.asarray(
+                evaluated.values[0] * evaluated.weights[0],
+                dtype=value_dtype,
+            )
+            cache_after = cache_before._replace(
+                identities=cache_before.identities.at[free_slot].set(identity),
+                values=cache_before.values.at[free_slot].set(contribution),
+                active=cache_before.active.at[free_slot].set(True),
+                evaluations=cache_before.evaluations + 1,
+                nonfinite=cache_before.nonfinite
+                | evaluated.nonfinite
+                | ~evaluated.valid
+                | ~jnp.all(jnp.isfinite(contribution)),
+            )
+            return cache_after
+
+        current_cache = jax.lax.cond(
+            can_insert,
+            evaluate_new,
+            lambda operand: operand[0],
+            (current_cache, surplus, slots_out),
+        )
+        chosen_slot = jnp.where(found, cache_slot, free_slot)
+        usable = active & (found | can_insert)
+        contribution = current_cache.values[chosen_slot]
+        reshape = (1,) * zero.ndim
+        weighted = contribution * jnp.reshape(weight, reshape)
+        surplus = surplus + jnp.where(usable, weighted, jnp.zeros_like(weighted))
+        slots_out = slots_out.at[slot].set(jnp.where(usable, chosen_slot, -1))
+        current_cache = current_cache._replace(
+            exhausted=current_cache.exhausted | cannot_insert,
+        )
+        return (current_cache, surplus, slots_out), None
+
+    rows = (
+        jnp.arange(max_nodes, dtype=jnp.int32),
+        points,
+        weights,
+        identities,
+        formula_active,
+    )
+    (cache, surplus, formula_slots), _ = jax.lax.scan(
+        scan_row,
+        (cache, jnp.asarray(zero), formula_slots),
+        rows,
+    )
+    active_slots = formula_slots >= 0
+    safe_slots = jnp.maximum(formula_slots, 0)
+    new_cost = jnp.sum(
+        active_slots & ~cache.accepted[safe_slots],
+        dtype=jnp.int32,
+    )
+    return cache, surplus, new_cost, formula_slots
+
+
+def _mark_formula_accepted(
+    cache: _SparseCache,
+    formula_slots: Array,
+    formula_weights: Array,
+) -> _SparseCache:
+    def mark(carry, row):
+        accepted, coefficients = carry
+        slot, weight = row
+        return jax.lax.cond(
+            slot >= 0,
+            lambda values: (
+                values[0].at[slot].set(True),
+                values[1].at[slot].add(weight),
+            ),
+            lambda values: values,
+            (accepted, coefficients),
+        ), None
+
+    (accepted, coefficients), _ = jax.lax.scan(
+        mark,
+        (cache.accepted, cache.coefficients),
+        (formula_slots, formula_weights),
+    )
+    return cache._replace(accepted=accepted, coefficients=coefficients)
+
+
+def _insert_admissible_frontier(
+    state: _SparseAdaptiveState,
+) -> _SparseAdaptiveState:
+    dimension = state.accepted_indices.shape[1]
+
+    def accepted_row(current, row):
+        index, accepted_active = row
+
+        def axis_row(frontier_carry, axis):
+            candidate = index.at[axis].add(1)
+            present = _index_membership(
+                candidate,
+                current.accepted_indices,
+                current.accepted_active,
+            ) | _index_membership(
+                candidate,
+                frontier_carry.frontier_indices,
+                frontier_carry.frontier_active,
+            )
+            admissible = _jax_is_admissible(
+                candidate,
+                current.accepted_indices,
+                current.accepted_active,
+            )
+            should_insert = accepted_active & admissible & ~present
+            free = jnp.asarray(
+                jnp.argmax(~frontier_carry.frontier_active),
+                dtype=jnp.int32,
+            )
+            return jax.lax.cond(
+                should_insert,
+                lambda operand: operand._replace(
+                    frontier_indices=operand.frontier_indices.at[free].set(candidate),
+                    frontier_active=operand.frontier_active.at[free].set(True),
+                    frontier_evaluated=operand.frontier_evaluated.at[free].set(False),
+                ),
+                lambda operand: operand,
+                frontier_carry,
+            ), None
+
+        updated, _ = jax.lax.scan(
+            axis_row,
+            current,
+            jnp.arange(dimension, dtype=jnp.int32),
+        )
+        return updated, None
+
+    state, _ = jax.lax.scan(
+        accepted_row,
+        state,
+        (state.accepted_indices, state.accepted_active),
+    )
+    return state
+
+
+def _refresh_sparse_frontier(
+    fun,
+    domain,
+    *,
+    args,
+    measure,
+    tables,
+    state,
+    zero,
+    max_evaluations,
+    max_nodes,
+    error_norm,
+) -> _SparseAdaptiveState:
+    state = _insert_admissible_frontier(state)
+
+    def evaluate_row(current, slot):
+        should_evaluate = (
+            current.frontier_active[slot] & ~current.frontier_evaluated[slot]
+        )
+
+        def evaluate_candidate(operand):
+            cache, surplus, new_cost, _ = _evaluate_sparse_formula(
+                fun,
+                domain,
+                args=args,
+                measure=measure,
+                index=operand.frontier_indices[slot],
+                tables=tables,
+                cache=operand.cache,
+                zero=zero,
+                max_evaluations=max_evaluations,
+                max_nodes=max_nodes,
+            )
+            norm = reduce_error_norm(surplus, error_norm)
+            return operand._replace(
+                cache=cache,
+                frontier_evaluated=operand.frontier_evaluated.at[slot].set(True),
+                frontier_surplus=operand.frontier_surplus.at[slot].set(surplus),
+                frontier_norm=operand.frontier_norm.at[slot].set(norm),
+                frontier_new_cost=operand.frontier_new_cost.at[slot].set(new_cost),
+            )
+
+        return jax.lax.cond(
+            should_evaluate,
+            evaluate_candidate,
+            lambda operand: operand,
+            current,
+        ), None
+
+    state, _ = jax.lax.scan(
+        evaluate_row,
+        state,
+        jnp.arange(state.frontier_indices.shape[0], dtype=jnp.int32),
+    )
+
+    def recount_row(costs, slot):
+        _, _, identities, formula_active = _formula_layout(
+            state.frontier_indices[slot],
+            tables,
+            max_nodes,
+        )
+
+        def identity_is_new(identity, active):
+            found, cache_slot = _cache_lookup(state.cache, identity)
+            return active & found & ~state.cache.accepted[cache_slot]
+
+        count = jnp.sum(
+            jax.vmap(identity_is_new)(identities, formula_active),
+            dtype=jnp.int32,
+        )
+        count = jnp.where(state.frontier_active[slot], count, 0)
+        return costs.at[slot].set(count), None
+
+    costs, _ = jax.lax.scan(
+        recount_row,
+        state.frontier_new_cost,
+        jnp.arange(state.frontier_indices.shape[0], dtype=jnp.int32),
+    )
+    return state._replace(
+        frontier_new_cost=costs,
+        evaluations=state.cache.evaluations,
+    )
+
+
+def _select_jax_profit(state: _SparseAdaptiveState) -> Array:
+    selectable = state.frontier_active & (state.frontier_new_cost > 0)
+    profit = jnp.where(
+        selectable,
+        state.frontier_norm / jnp.maximum(state.frontier_new_cost, 1),
+        -jnp.inf,
+    )
+    best = jnp.max(profit)
+    tied = selectable & (profit == best)
+    max_component = jnp.iinfo(jnp.int32).max
+    candidates = jnp.where(
+        tied[:, None],
+        state.frontier_indices,
+        max_component,
+    )
+    chosen = jnp.asarray(0, dtype=jnp.int32)
+    alive = tied
+    for axis in range(state.frontier_indices.shape[1]):
+        minimum = jnp.min(jnp.where(alive, candidates[:, axis], max_component))
+        alive = alive & (candidates[:, axis] == minimum)
+        chosen = jnp.asarray(jnp.argmax(alive), dtype=jnp.int32)
+    return chosen
+
+
+def adaptive_sparse_controller(
+    fun,
+    domain,
+    *,
+    args,
+    measure,
+    initial_indices: tuple[SparseIndex, ...],
+    epsabs,
+    epsrel,
+    max_evaluations: int,
+    max_indices: int,
+    max_frontier: int,
+    max_nodes: int,
+    error_norm: ErrorNorm,
+    zero: Array,
+) -> AdaptiveSparseControllerResult:
+    """Run the fixed-capacity dimension-adaptive Smolyak frontier scan."""
+    dimension = domain.dimension
+    dtype = jnp.result_type(domain.lower, domain.upper, 0.0)
+    tables = _adaptive_sparse_tables(max_nodes, dtype)
+    value_dtype = jnp.result_type(zero, tables.points)
+    zero = jnp.asarray(zero, dtype=value_dtype)
+    initial_count = len(initial_indices)
+    accepted_indices = jnp.ones((max_indices, dimension), dtype=jnp.int32)
+    accepted_indices = accepted_indices.at[:initial_count].set(
+        jnp.asarray(initial_indices, dtype=jnp.int32)
+    )
+    accepted_active = jnp.arange(max_indices) < initial_count
+    cache = _SparseCache(
+        identities=jnp.full((max_nodes, 2 * dimension), -1, dtype=jnp.int32),
+        values=jnp.zeros((max_nodes,) + zero.shape, dtype=value_dtype),
+        active=jnp.zeros((max_nodes,), dtype=jnp.bool_),
+        accepted=jnp.zeros((max_nodes,), dtype=jnp.bool_),
+        coefficients=jnp.zeros((max_nodes,), dtype=dtype),
+        evaluations=jnp.asarray(0, dtype=jnp.int32),
+        nonfinite=jnp.asarray(False),
+        exhausted=jnp.asarray(False),
+    )
+    state = _SparseAdaptiveState(
+        accepted_indices=accepted_indices,
+        accepted_active=accepted_active,
+        accepted_count=jnp.asarray(initial_count, dtype=jnp.int32),
+        frontier_indices=jnp.ones((max_frontier, dimension), dtype=jnp.int32),
+        frontier_active=jnp.zeros((max_frontier,), dtype=jnp.bool_),
+        frontier_evaluated=jnp.zeros((max_frontier,), dtype=jnp.bool_),
+        frontier_surplus=jnp.zeros(
+            (max_frontier,) + zero.shape,
+            dtype=value_dtype,
+        ),
+        frontier_norm=jnp.zeros((max_frontier,), dtype=dtype),
+        frontier_new_cost=jnp.zeros((max_frontier,), dtype=jnp.int32),
+        cache=cache,
+        value=zero,
+        evaluations=jnp.asarray(0, dtype=jnp.int32),
+        refinements=jnp.asarray(0, dtype=jnp.int32),
+        status=jnp.asarray(RUNNING, dtype=jnp.int32),
+        done=jnp.asarray(False),
+    )
+
+    def initialize_index(current, slot):
+        active = current.accepted_active[slot]
+
+        def evaluate_initial(operand):
+            cache_after, surplus, _, formula_slots = _evaluate_sparse_formula(
+                fun,
+                domain,
+                args=args,
+                measure=measure,
+                index=operand.accepted_indices[slot],
+                tables=tables,
+                cache=operand.cache,
+                zero=zero,
+                max_evaluations=max_evaluations,
+                max_nodes=max_nodes,
+            )
+            _, formula_weights, _, _ = _formula_layout(
+                operand.accepted_indices[slot],
+                tables,
+                max_nodes,
+            )
+            cache_after = _mark_formula_accepted(
+                cache_after,
+                formula_slots,
+                formula_weights,
+            )
+            return operand._replace(
+                cache=cache_after,
+                value=operand.value + surplus,
+                evaluations=cache_after.evaluations,
+            )
+
+        return jax.lax.cond(
+            active,
+            evaluate_initial,
+            lambda operand: operand,
+            current,
+        ), None
+
+    state, _ = jax.lax.scan(
+        initialize_index,
+        state,
+        jnp.arange(max_indices, dtype=jnp.int32),
+    )
+    state = _refresh_sparse_frontier(
+        fun,
+        domain,
+        args=args,
+        measure=measure,
+        tables=tables,
+        state=state,
+        zero=zero,
+        max_evaluations=max_evaluations,
+        max_nodes=max_nodes,
+        error_norm=error_norm,
+    )
+
+    def update_status(current: _SparseAdaptiveState) -> _SparseAdaptiveState:
+        frontier_error = jnp.sum(
+            jnp.where(current.frontier_active, current.frontier_norm, 0.0)
+        )
+        tolerance = tolerance_threshold(
+            current.value,
+            epsabs=epsabs,
+            epsrel=epsrel,
+            norm=error_norm,
+        )
+        any_frontier = jnp.any(current.frontier_active)
+        all_roundoff = any_frontier & jnp.all(
+            jnp.where(
+                current.frontier_active,
+                current.frontier_new_cost == 0,
+                True,
+            )
+        )
+        nonfinite = (
+            current.cache.nonfinite
+            | ~jnp.all(jnp.isfinite(current.value))
+            | ~jnp.all(jnp.isfinite(current.frontier_surplus))
+            | ~jnp.isfinite(frontier_error)
+            | ~jnp.isfinite(tolerance)
+        )
+        status = sparse_termination_status(
+            invalid=False,
+            nonfinite=nonfinite,
+            converged=frontier_error <= tolerance,
+            all_active_roundoff=all_roundoff & (frontier_error > tolerance),
+            evaluation_exhausted=current.cache.exhausted,
+            index_exhausted=(current.accepted_count >= max_indices)
+            & (frontier_error > tolerance),
+        )
+        return current._replace(
+            status=status,
+            done=status != RUNNING,
+        )
+
+    state = update_status(state)
+
+    def step(current: _SparseAdaptiveState, _):
+        def accept_best(operand):
+            slot = _select_jax_profit(operand)
+            index = operand.frontier_indices[slot]
+            surplus = operand.frontier_surplus[slot]
+            cache_after, _, _, formula_slots = _evaluate_sparse_formula(
+                fun,
+                domain,
+                args=args,
+                measure=measure,
+                index=index,
+                tables=tables,
+                cache=operand.cache,
+                zero=zero,
+                max_evaluations=max_evaluations,
+                max_nodes=max_nodes,
+            )
+            _, formula_weights, _, _ = _formula_layout(
+                index,
+                tables,
+                max_nodes,
+            )
+            cache_after = _mark_formula_accepted(
+                cache_after,
+                formula_slots,
+                formula_weights,
+            )
+            accepted_slot = operand.accepted_count
+            next_state = operand._replace(
+                accepted_indices=operand.accepted_indices.at[accepted_slot].set(index),
+                accepted_active=operand.accepted_active.at[accepted_slot].set(True),
+                accepted_count=operand.accepted_count + 1,
+                frontier_active=operand.frontier_active.at[slot].set(False),
+                frontier_evaluated=operand.frontier_evaluated.at[slot].set(False),
+                cache=cache_after,
+                value=operand.value + surplus,
+                refinements=operand.refinements + 1,
+            )
+            next_state = _refresh_sparse_frontier(
+                fun,
+                domain,
+                args=args,
+                measure=measure,
+                tables=tables,
+                state=next_state,
+                zero=zero,
+                max_evaluations=max_evaluations,
+                max_nodes=max_nodes,
+                error_norm=error_norm,
+            )
+            return update_status(next_state)
+
+        next_state = jax.lax.cond(
+            current.done,
+            lambda operand: operand,
+            accept_best,
+            current,
+        )
+        return next_state, None
+
+    state, _ = jax.lax.scan(step, state, xs=None, length=max_indices)
+    frontier_error = jnp.sum(jnp.where(state.frontier_active, state.frontier_norm, 0.0))
+    error_shape = (max_frontier,) + (1,) * zero.ndim
+    error = jnp.sum(
+        jnp.where(
+            state.frontier_active.reshape(error_shape),
+            jnp.abs(state.frontier_surplus),
+            jnp.zeros_like(state.frontier_surplus),
+        ),
+        axis=0,
+    )
+    tolerance = tolerance_threshold(
+        state.value,
+        epsabs=epsabs,
+        epsrel=epsrel,
+        norm=error_norm,
+    )
+    return AdaptiveSparseControllerResult(
+        value=state.value,
+        error=error,
+        frontier_error=frontier_error,
+        tolerance=tolerance,
+        status=state.status,
+        evaluations=state.evaluations,
+        refinements=state.refinements,
+        level=jnp.max(
+            jnp.where(
+                state.accepted_active[:, None],
+                state.accepted_indices,
+                0,
+            )
+        ),
+        evidence=SparseReplayEvidence(
+            indices=state.accepted_indices,
+            active=state.accepted_active,
+            node_ids=state.cache.identities,
+            coefficients=state.cache.coefficients,
+        ),
+    )
+
+
 __all__ = [
     "DyadicIdentity",
     "HierarchicalRule",
+    "RUNNING",
+    "AdaptiveSparseControllerResult",
+    "SparseReplayEvidence",
     "SparseIndex",
     "SparseNodeIdentity",
     "SparseRuleData",
     "canonical_cc_identity",
+    "adaptive_sparse_controller",
+    "admissible_forward_neighbors",
     "fixed_sparse_node_identities",
     "fixed_index_set",
     "hierarchical_rule",
     "identity_to_point",
+    "is_admissible",
     "materialize_smolyak_rule",
     "smolyak_host_data",
     "smolyak_rule_data",
+    "required_frontier_capacity",
+    "select_profit",
+    "sparse_termination_status",
     "sparse_axis_identities",
     "unit_clenshaw_curtis",
 ]
