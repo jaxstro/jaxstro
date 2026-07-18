@@ -100,7 +100,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
   `integrate_tensor(...)->QuadResult`, plus shared
   `unavailable_result` and `zero_volume_result` factories in `result.py`.
 
-- [ ] **Step 1: Write failing fixed-tensor tests**
+- [x] **Step 1: Write failing fixed-tensor tests**
 
   Create `tests/unit/quad/test_tensor.py`:
 
@@ -171,7 +171,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
           )
   ```
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
   Run:
 
@@ -182,7 +182,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
 
   Expected: FAIL because `TensorProduct` is absent.
 
-- [ ] **Step 3: Implement rule normalization and product construction**
+- [x] **Step 3: Implement rule normalization and product construction**
 
   In `src/jaxstro/quad/tensor.py`, define a static declaration:
 
@@ -268,7 +268,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
   and 9 for all three methods: 1 and 9 raise eagerly with the shared message,
   while 2 and 8 enter the controller when capacities are feasible.
 
-- [ ] **Step 4: Assemble the fixed result and dispatch**
+- [x] **Step 4: Assemble the fixed result and dispatch**
 
   Implement `integrate_tensor` in `tensor.py`:
 
@@ -380,7 +380,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
   `jax.jvp` tangents in stop mode. Include one mixed case with a coincident
   axis and a nonfinite axis; it must return `INVALID_INPUT`, not exact zero.
 
-- [ ] **Step 5: Run GREEN and commit**
+- [x] **Step 5: Run GREEN and commit**
 
   Run:
 
@@ -419,7 +419,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
   `TensorReplayEvidence(levels, active_node_ids)` for B4, and
   `integrate_adaptive_tensor`.
 
-- [ ] **Step 1: Write failing policy and reuse tests**
+- [x] **Step 1: Write failing policy and reuse tests**
 
   Create `tests/unit/quad/test_adaptive_tensor.py`:
 
@@ -477,7 +477,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
       )
   ```
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
   Run:
 
@@ -488,7 +488,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
 
   Expected: FAIL because the declaration and frontier helpers are absent.
 
-- [ ] **Step 3: Implement exact nested identities and frontier selection**
+- [x] **Step 3: Implement exact nested identities and frontier selection**
 
   Add to `_tensor.py`:
 
@@ -537,7 +537,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
               raise ValueError("initial_level must be an integer at least 2")
   ```
 
-- [ ] **Step 4: Implement the fixed-capacity adaptive scan**
+- [x] **Step 4: Implement the fixed-capacity adaptive scan**
 
   Define a `TensorState` `NamedTuple` containing `levels`, accepted value,
   directional candidate values/errors/costs, a fixed-capacity canonical-node
@@ -586,7 +586,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
   used by fixed tensor integration. Its zero branch returns
   `zero_volume_result` without constructing frontier work.
 
-- [ ] **Step 5: Run GREEN and commit**
+- [x] **Step 5: Run GREEN and commit**
 
   Run:
 
@@ -621,7 +621,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
   `genz_malik_estimate(values, data)` with degree-7 value, embedded degree-5
   value, error, and per-axis fourth-difference smoothness.
 
-- [ ] **Step 1: Write failing symmetry and exactness tests**
+- [x] **Step 1: Write failing symmetry and exactness tests**
 
   Create `tests/unit/quad/test_genz_malik.py`:
 
@@ -648,7 +648,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
       assert jnp.allclose(estimate, 1.0 / (power + 1), atol=2e-13)
   ```
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
   Run:
 
@@ -659,7 +659,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
 
   Expected: FAIL because `_cubature.py` does not exist.
 
-- [ ] **Step 3: Implement the published symmetric rule**
+- [x] **Step 3: Implement the published symmetric rule**
 
   In `cubature.py`, define the static rule declaration:
 
@@ -704,7 +704,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
   VMAP trace. Add a cold-cache JIT-then-JIT-of-VMAP regression that preserves
   the target-dtype bit and orbit contracts.
 
-- [ ] **Step 4: Add local value, error, and split evidence**
+- [x] **Step 4: Add local value, error, and split evidence**
 
   Implement:
 
@@ -731,7 +731,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
   `axis_fourth_differences` reduces payloads with the configured `ErrorNorm`;
   the controller selects `argmax` and therefore uses the lowest axis on ties.
 
-- [ ] **Step 5: Run GREEN and commit**
+- [x] **Step 5: Run GREEN and commit**
 
   Run:
 
@@ -766,7 +766,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
   `CubatureReplayEvidence(lower, upper, active)`, and
   `integrate_cubature`.
 
-- [ ] **Step 1: Write failing controller tests**
+- [x] **Step 1: Write failing controller tests**
 
   Create `tests/unit/quad/test_cubature.py`:
 
@@ -810,7 +810,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
       assert result.work.active_regions == 3
   ```
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
   Run:
 
@@ -821,7 +821,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
 
   Expected: FAIL because `AdaptiveCubature` is absent.
 
-- [ ] **Step 3: Implement the region-store scan**
+- [x] **Step 3: Implement the region-store scan**
 
   In `cubature.py`, define:
 
@@ -879,7 +879,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
   on the declared region capacity. Ties are lexicographic because `jnp.argmax`
   returns the first index.
 
-- [ ] **Step 4: Assemble, dispatch, and run GREEN**
+- [x] **Step 4: Assemble, dispatch, and run GREEN**
 
   `integrate_cubature` validates dimensions 2 through 8, `max_regions>=1`, and
   initial-rule evaluation capacity before tracing. It returns
@@ -916,7 +916,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
 
   Expected: all commands exit zero.
 
-- [ ] **Step 5: Commit Task 4**
+- [x] **Step 5: Commit Task 4**
 
   ```bash
   git add src/jaxstro/quad/cubature.py src/jaxstro/quad/_cubature.py \
@@ -940,7 +940,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
 - Consumes: all B1 methods.
 - Produces: analytic truth, Genz-family, JAX composition, and release evidence.
 
-- [ ] **Step 1: Add analytic and Genz truth cases**
+- [x] **Step 1: Add analytic and Genz truth cases**
 
   Parameterize the analytic anchors over each method's exact dimension tuple in
   `GENZ_MANIFEST["method_controls"]` and over:
@@ -1243,7 +1243,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
   environment and both packages must remain absent from
   `[project].dependencies`. Refresh the lock before emitting the artifact.
 
-- [ ] **Step 2: Add the stop-mode JAX matrix**
+- [x] **Step 2: Add the stop-mode JAX matrix**
 
   In the integration test, assert eager, `jit`, `vmap`, float32, float64,
   scalar payload, array payload, real payload, and documented complex payload.
@@ -1252,7 +1252,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
   Add mutation-sensitive tests that reject any artifact whose generator source
   hash or formula ID is stale and any replay mode other than exact `stop`.
 
-- [ ] **Step 3: Run the B1 scientific gate**
+- [x] **Step 3: Run the B1 scientific gate**
 
   Run:
 
@@ -1271,7 +1271,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
   Expected: the reference artifact is byte-identical, every analytic case
   passes its predeclared threshold, and every work identity is exact.
 
-- [ ] **Step 4: Run the full B1 engineering gate and update status**
+- [x] **Step 4: Run the full B1 engineering gate and update status**
 
   Run:
 
@@ -1291,7 +1291,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
   and
   `next: Run the independent whole-rung B1 review; begin B2 only if it is GREEN.`
 
-- [ ] **Step 5: Commit and request checkpoint review**
+- [x] **Step 5: Commit and request checkpoint review**
 
   ```bash
   git add tests/validation/test_quad_multidim_deterministic.py \
