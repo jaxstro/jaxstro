@@ -146,33 +146,6 @@ def choose_tensor_axis(directional_error: Array, new_cost: Array):
     return axis, jnp.sum(directional_error)
 
 
-def count_representable_new_nodes(base_points: Array, candidate_points: Array) -> Array:
-    """Count candidate coordinate tuples absent from the representable base set."""
-    base_points = jnp.asarray(base_points)
-    candidate_points = jnp.asarray(candidate_points)
-    if (
-        base_points.ndim != 2
-        or candidate_points.ndim != 2
-        or base_points.shape[1:] != candidate_points.shape[1:]
-    ):
-        raise ValueError("base and candidate points must have matching coordinate axes")
-    matches_base = jnp.all(
-        candidate_points[:, None, :] == base_points[None, :, :],
-        axis=-1,
-    )
-    matches_candidate = jnp.all(
-        candidate_points[:, None, :] == candidate_points[None, :, :],
-        axis=-1,
-    )
-    index = jnp.arange(candidate_points.shape[0])
-    has_previous_duplicate = jnp.any(
-        matches_candidate & (index[None, :] < index[:, None]),
-        axis=1,
-    )
-    is_new = ~jnp.any(matches_base, axis=1) & ~has_previous_duplicate
-    return jnp.sum(is_new, dtype=jnp.int32)
-
-
 class _RepresentedAxisLevel(NamedTuple):
     nodes: np.ndarray
     canonical_ids: np.ndarray
@@ -198,60 +171,73 @@ def _cc_unit_nodes(level: int, dtype) -> np.ndarray:
         return np.asarray(nodes)
 
 
+def _represented_cc_axis_level(
+    level: int,
+    dtype_name: str,
+    *,
+    canonical_owner: dict[tuple[int, int], float],
+    represented_owner: dict[float, int],
+) -> _RepresentedAxisLevel:
+    """Build one target-dtype level while preserving nested alias ownership."""
+    dtype = np.dtype(dtype_name)
+    raw_nodes = _cc_unit_nodes(level, dtype_name)
+    raw_ids = np.asarray(
+        [_reduced_dyadic(index, level) for index in range((1 << level) + 1)],
+        dtype=np.int32,
+    )
+    formula_nodes: list[float] = []
+    formula_represented_ids: list[int] = []
+    for raw_node, raw_id in zip(raw_nodes, raw_ids, strict=True):
+        canonical_id = (int(raw_id[0]), int(raw_id[1]))
+        point = canonical_owner.setdefault(canonical_id, float(raw_node))
+        if point == 0.0:
+            point = 0.0
+        represented_id = represented_owner.setdefault(point, len(represented_owner))
+        formula_nodes.append(point)
+        formula_represented_ids.append(represented_id)
+
+    compact_index: dict[int, int] = {}
+    compact_nodes: list[float] = []
+    compact_ids: list[np.ndarray] = []
+    compact_represented_ids: list[int] = []
+    for point, canonical_id, represented_id in zip(
+        formula_nodes,
+        raw_ids,
+        formula_represented_ids,
+        strict=True,
+    ):
+        if represented_id in compact_index:
+            continue
+        compact_index[represented_id] = len(compact_nodes)
+        compact_nodes.append(point)
+        compact_ids.append(canonical_id)
+        compact_represented_ids.append(represented_id)
+    return _RepresentedAxisLevel(
+        nodes=np.asarray(compact_nodes, dtype=dtype),
+        canonical_ids=np.asarray(compact_ids, dtype=np.int32),
+        represented_ids=np.asarray(compact_represented_ids, dtype=np.int32),
+        formula_represented_ids=np.asarray(
+            formula_represented_ids,
+            dtype=np.int32,
+        ),
+    )
+
+
 @lru_cache(maxsize=None)
 def _represented_cc_axis_metadata_cached(
     max_level: int,
     dtype_name: str,
 ) -> tuple[_RepresentedAxisLevel, ...]:
-    dtype = np.dtype(dtype_name)
     canonical_owner: dict[tuple[int, int], float] = {}
     represented_owner: dict[float, int] = {}
     levels: list[_RepresentedAxisLevel] = []
     for level in range(max_level + 1):
-        raw_nodes = _cc_unit_nodes(level, dtype_name)
-        raw_ids = np.asarray(
-            [_reduced_dyadic(index, level) for index in range((1 << level) + 1)],
-            dtype=np.int32,
-        )
-        formula_nodes: list[float] = []
-        formula_represented_ids: list[int] = []
-        for raw_node, raw_id in zip(raw_nodes, raw_ids, strict=True):
-            canonical_id = (int(raw_id[0]), int(raw_id[1]))
-            point = canonical_owner.setdefault(canonical_id, float(raw_node))
-            if point == 0.0:
-                point = 0.0
-            represented_id = represented_owner.setdefault(
-                point,
-                len(represented_owner),
-            )
-            formula_nodes.append(point)
-            formula_represented_ids.append(represented_id)
-
-        compact_index: dict[int, int] = {}
-        compact_nodes: list[float] = []
-        compact_ids: list[np.ndarray] = []
-        compact_represented_ids: list[int] = []
-        for point, canonical_id, represented_id in zip(
-            formula_nodes,
-            raw_ids,
-            formula_represented_ids,
-            strict=True,
-        ):
-            if represented_id in compact_index:
-                continue
-            compact_index[represented_id] = len(compact_nodes)
-            compact_nodes.append(point)
-            compact_ids.append(canonical_id)
-            compact_represented_ids.append(represented_id)
         levels.append(
-            _RepresentedAxisLevel(
-                nodes=np.asarray(compact_nodes, dtype=dtype),
-                canonical_ids=np.asarray(compact_ids, dtype=np.int32),
-                represented_ids=np.asarray(compact_represented_ids, dtype=np.int32),
-                formula_represented_ids=np.asarray(
-                    formula_represented_ids,
-                    dtype=np.int32,
-                ),
+            _represented_cc_axis_level(
+                level,
+                dtype_name,
+                canonical_owner=canonical_owner,
+                represented_owner=represented_owner,
             )
         )
     return tuple(levels)
@@ -330,11 +316,6 @@ def _represented_frontier_cardinality(
     return jnp.where(has_unavailable, unavailable, cardinality)
 
 
-def _host_represented_axis_count(level: int, dtype_name: str) -> int:
-    metadata = _represented_cc_axis_metadata_cached(level, dtype_name)
-    return int(metadata[level].nodes.size)
-
-
 @lru_cache(maxsize=None)
 def _adaptive_tensor_capacity_cached(
     initial_level: int,
@@ -342,22 +323,56 @@ def _adaptive_tensor_capacity_cached(
     max_evaluations: int,
     dtype_name: str,
 ) -> AdaptiveTensorCapacity:
-    base_nodes = _host_represented_axis_count(initial_level, dtype_name)
-    next_nodes = _host_represented_axis_count(initial_level + 1, dtype_name)
-    base_count = base_nodes**dimension
-    one_axis_delta = (next_nodes - base_nodes) * base_nodes ** (dimension - 1)
-    initial_evaluations = base_count + dimension * one_axis_delta
-    if max_evaluations < initial_evaluations:
-        raise ValueError(
-            "initial adaptive tensor frontier requires "
-            f"{initial_evaluations} evaluations, "
-            f"exceeding max_evaluations={max_evaluations}"
-        )
+    canonical_owner: dict[tuple[int, int], float] = {}
+    represented_owner: dict[float, int] = {}
+    represented_counts: list[int] = []
+
+    def axis_count(level: int) -> int:
+        while len(represented_counts) <= level:
+            next_level = len(represented_counts)
+            metadata = _represented_cc_axis_level(
+                next_level,
+                dtype_name,
+                canonical_owner=canonical_owner,
+                represented_owner=represented_owner,
+            )
+            represented_counts.append(int(metadata.nodes.size))
+        return represented_counts[level]
+
+    initial_evaluations = 0
+    for level in range(2, initial_level + 1):
+        base_nodes = axis_count(level)
+        base_count = base_nodes**dimension
+        if base_count > max_evaluations:
+            raise ValueError(
+                "initial adaptive tensor frontier requires at least "
+                f"{base_count} evaluations by level {level}, "
+                f"exceeding max_evaluations={max_evaluations}"
+            )
+        next_nodes = axis_count(level + 1)
+        one_axis_delta = (next_nodes - base_nodes) * base_nodes ** (dimension - 1)
+        level_frontier = base_count + dimension * one_axis_delta
+        if level_frontier > max_evaluations:
+            if level == initial_level:
+                raise ValueError(
+                    "initial adaptive tensor frontier requires "
+                    f"{level_frontier} evaluations, "
+                    f"exceeding max_evaluations={max_evaluations}"
+                )
+            raise ValueError(
+                "initial adaptive tensor frontier requires at least "
+                f"{level_frontier} evaluations by level {level + 1}, "
+                f"exceeding max_evaluations={max_evaluations}"
+            )
+        if level == initial_level:
+            initial_evaluations = level_frontier
+
+    base_nodes = axis_count(initial_level)
 
     max_level = initial_level + 1
     while True:
-        current_nodes = _host_represented_axis_count(max_level, dtype_name)
-        candidate_nodes = _host_represented_axis_count(max_level + 1, dtype_name)
+        current_nodes = axis_count(max_level)
+        candidate_nodes = axis_count(max_level + 1)
         if candidate_nodes == current_nodes:
             max_level += 1
             break
@@ -368,19 +383,14 @@ def _adaptive_tensor_capacity_cached(
     levels = [initial_level] * dimension
     max_refinements = 0
     while True:
-        current_count = math.prod(
-            _host_represented_axis_count(level, dtype_name) for level in levels
-        )
+        current_count = math.prod(axis_count(level) for level in levels)
         candidates = []
         for axis in range(dimension):
             refined = levels.copy()
             refined[axis] += 1
             candidates.append(
                 (
-                    math.prod(
-                        _host_represented_axis_count(level, dtype_name)
-                        for level in refined
-                    ),
+                    math.prod(axis_count(level) for level in refined),
                     axis,
                     refined,
                 )
@@ -1282,7 +1292,6 @@ __all__ = [
     "canonical_cc_axis_ids",
     "canonical_tensor_ids",
     "choose_tensor_axis",
-    "count_representable_new_nodes",
     "represented_cc_axis_counts",
     "tensor_point_count",
     "tensor_rule_data",

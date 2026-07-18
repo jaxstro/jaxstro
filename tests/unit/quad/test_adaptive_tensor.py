@@ -145,11 +145,9 @@ def test_formula_membership_is_active_only_and_not_capacity_scanned():
     assert not hasattr(_tensor, "_frontier_missing_count")
 
 
-def test_representable_new_node_count_detects_collapsed_coordinates():
-    base = jnp.array([[0.0, 0.0], [0.5, 0.5], [1.0, 1.0]])
-    collapsed = jnp.array([[0.0, 0.0], [0.5, 0.5], [0.5, 0.5], [1.0, 1.0]])
-
-    assert _tensor.count_representable_new_nodes(base, collapsed) == 0
+def test_dormant_quadratic_representable_count_helper_is_removed():
+    assert not hasattr(_tensor, "count_representable_new_nodes")
+    assert "count_representable_new_nodes" not in _tensor.__all__
 
 
 @pytest.mark.parametrize("max_evaluations", [65, 512, 2048])
@@ -291,6 +289,46 @@ def test_initial_frontier_capacity_is_validated_before_payload_inference(monkeyp
             quad.Hyperrectangle(jnp.zeros(2), jnp.ones(2)),
             **_options(max_evaluations=64),
         )
+
+
+def test_oversized_initial_level_rejects_from_a_low_nested_bound(monkeypatch):
+    visited_levels = []
+    original_cc_unit_nodes = _tensor._cc_unit_nodes
+
+    def bounded_cc_unit_nodes(level, dtype):
+        visited_levels.append(level)
+        if level >= 4:
+            raise AssertionError("oversized CC metadata must not be constructed")
+        return original_cc_unit_nodes(level, dtype)
+
+    def fail_payload_inference(*_args, **_kwargs):
+        raise AssertionError("payload inference must follow capacity validation")
+
+    _tensor._adaptive_tensor_capacity_cached.cache_clear()
+    _tensor._represented_cc_axis_metadata_cached.cache_clear()
+    monkeypatch.setattr(_tensor, "_cc_unit_nodes", bounded_cc_unit_nodes)
+    monkeypatch.setattr(
+        tensor,
+        "infer_multidim_payload_zero",
+        fail_payload_inference,
+    )
+
+    with pytest.raises(ValueError) as exc_info:
+        quad.integrate(
+            lambda x: jnp.ones(x.shape[0]),
+            quad.Hyperrectangle(jnp.zeros(2), jnp.ones(2)),
+            method=quad.AdaptiveTensorClenshawCurtis(initial_level=18),
+            epsabs=1e-10,
+            epsrel=1e-10,
+            max_evaluations=65,
+            gradient="stop",
+        )
+
+    assert str(exc_info.value) == (
+        "initial adaptive tensor frontier requires at least 81 evaluations "
+        "by level 3, exceeding max_evaluations=65"
+    )
+    assert visited_levels == [0, 1, 2, 3]
 
 
 def test_convergence_precedes_capacity_at_the_exact_initial_frontier_budget():
