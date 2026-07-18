@@ -1,5 +1,8 @@
 """Exact identities and hierarchical rules for Smolyak integration."""
 
+import itertools
+import math
+from functools import lru_cache
 from typing import NamedTuple
 
 import jax
@@ -17,6 +20,30 @@ class HierarchicalRule(NamedTuple):
     identities: tuple[DyadicIdentity, ...]
     points: Array
     weights: Array
+
+
+SparseNodeIdentity = tuple[DyadicIdentity, ...]
+SparseIndex = tuple[int, ...]
+
+
+class SparseRuleData(NamedTuple):
+    identities: tuple[SparseNodeIdentity, ...]
+    points: Array
+    weights: Array
+    increment_weights: Array
+    indices: tuple[SparseIndex, ...]
+    frontier_mask: Array
+    point_count: int
+    index_count: int
+
+
+class _SparseHostData(NamedTuple):
+    identities: tuple[SparseNodeIdentity, ...]
+    points: np.ndarray
+    weights: np.ndarray
+    increment_weights: np.ndarray
+    indices: tuple[SparseIndex, ...]
+    frontier_mask: np.ndarray
 
 
 def canonical_cc_identity(level: int, index: int) -> DyadicIdentity:
@@ -104,11 +131,226 @@ def hierarchical_rule(level: int, dtype) -> HierarchicalRule:
     )
 
 
+def _validate_dimension(dimension: int) -> None:
+    if isinstance(dimension, bool) or not isinstance(dimension, int) or dimension < 1:
+        raise ValueError("sparse-grid dimension must be a positive integer")
+
+
+def _anisotropy_weights(
+    anisotropy: tuple[float, ...] | None,
+    dimension: int,
+) -> tuple[float, ...]:
+    _validate_dimension(dimension)
+    if anisotropy is None:
+        return (1.0,) * dimension
+    if len(anisotropy) != dimension:
+        raise ValueError("Smolyak anisotropy requires one weight per dimension")
+    return anisotropy
+
+
+def _fixed_index_set(
+    level: int,
+    anisotropy: tuple[float, ...] | None,
+    dimension: int,
+) -> tuple[SparseIndex, ...]:
+    weights = _anisotropy_weights(anisotropy, dimension)
+    indices: list[SparseIndex] = []
+
+    def append_indices(
+        axis: int,
+        remaining: float,
+        current: tuple[int, ...],
+    ) -> None:
+        if axis == dimension:
+            indices.append(current)
+            return
+        weight = weights[axis]
+        max_excess = int(math.floor(remaining / weight))
+        for excess in range(max_excess + 1):
+            append_indices(
+                axis + 1,
+                remaining - weight * excess,
+                current + (excess + 1,),
+            )
+
+    append_indices(0, float(level), ())
+    return tuple(sorted(indices, key=lambda index: (sum(index), index)))
+
+
+def fixed_index_set(method, dimension: int) -> tuple[SparseIndex, ...]:
+    """Enumerate the deterministic downward-closed fixed Smolyak index set."""
+    return _fixed_index_set(method.level, method.anisotropy, dimension)
+
+
+def _frontier_indices(indices: tuple[SparseIndex, ...]) -> set[SparseIndex]:
+    accepted = set(indices)
+    return {
+        index
+        for index in indices
+        if not any(
+            index[:axis] + (index[axis] + 1,) + index[axis + 1 :] in accepted
+            for axis in range(len(index))
+        )
+    }
+
+
+def sparse_axis_identities(level: int) -> tuple[DyadicIdentity, ...]:
+    """Return exact identities in one hierarchical increment without floats."""
+    return tuple(
+        canonical_cc_identity(level, index) for index in range((1 << level) + 1)
+    )
+
+
+def fixed_sparse_node_identities(
+    indices: tuple[SparseIndex, ...],
+    *,
+    node_limit: int | None = None,
+    limit_name: str = "node_limit",
+) -> tuple[SparseNodeIdentity, ...]:
+    """Coalesce the exact multidimensional identity union before rule arrays."""
+    identities: set[SparseNodeIdentity] = set()
+    for index in indices:
+        axes = [sparse_axis_identities(level) for level in index]
+        for identity in itertools.product(*axes):
+            identities.add(identity)
+            if node_limit is not None and len(identities) > node_limit:
+                raise ValueError(
+                    f"fixed Smolyak requires more than {node_limit} unique nodes, "
+                    f"exceeding {limit_name}={node_limit}"
+                )
+    return tuple(sorted(identities))
+
+
+def _host_identity_to_point(
+    identity: DyadicIdentity,
+    dtype: np.dtype,
+) -> np.floating:
+    scalar = dtype.type
+    numerator, denominator_power = identity
+    angle = scalar(np.pi) * scalar(numerator) / scalar(1 << denominator_power)
+    return scalar(scalar(0.5) * (scalar(1.0) - np.cos(angle, dtype=dtype)))
+
+
+@lru_cache(maxsize=None)
+def _smolyak_host_data(
+    level: int,
+    anisotropy: tuple[float, ...] | None,
+    dimension: int,
+    dtype_name: str,
+) -> _SparseHostData:
+    indices = _fixed_index_set(level, anisotropy, dimension)
+    dtype = np.dtype(dtype_name)
+    scalar = dtype.type
+    per_index: list[dict[SparseNodeIdentity, np.floating]] = []
+    identities = fixed_sparse_node_identities(indices)
+
+    for index in indices:
+        axes = [hierarchical_rule(axis_level, dtype_name) for axis_level in index]
+        axis_weights = [np.asarray(axis.weights, dtype=dtype) for axis in axes]
+        increment: dict[SparseNodeIdentity, np.floating] = {}
+        ranges = [range(len(axis.identities)) for axis in axes]
+        for positions in itertools.product(*ranges):
+            identity = tuple(
+                axes[axis].identities[position]
+                for axis, position in enumerate(positions)
+            )
+            weight = scalar(1)
+            for axis, position in enumerate(positions):
+                weight = scalar(weight * axis_weights[axis][position])
+            if weight != scalar(0):
+                increment[identity] = scalar(
+                    increment.get(identity, scalar(0)) + weight
+                )
+        increment = {
+            identity: weight
+            for identity, weight in increment.items()
+            if weight != scalar(0)
+        }
+        per_index.append(increment)
+
+    identity_position = {
+        identity: position for position, identity in enumerate(identities)
+    }
+    increment_weights = np.zeros((len(indices), len(identities)), dtype=dtype)
+    for row, increment in enumerate(per_index):
+        for identity, weight in increment.items():
+            increment_weights[row, identity_position[identity]] = weight
+    weights = np.sum(increment_weights, axis=0, dtype=dtype)
+    points = np.asarray(
+        [
+            [
+                _host_identity_to_point(axis_identity, dtype)
+                for axis_identity in identity
+            ]
+            for identity in identities
+        ],
+        dtype=dtype,
+    )
+    frontier = _frontier_indices(indices)
+    frontier_mask = np.asarray(
+        [index in frontier for index in indices],
+        dtype=np.bool_,
+    )
+    return _SparseHostData(
+        identities=identities,
+        points=points,
+        weights=weights,
+        increment_weights=increment_weights,
+        indices=indices,
+        frontier_mask=frontier_mask,
+    )
+
+
+def _target_sparse_dtype(dtype) -> str:
+    selected = jnp.dtype(dtype)
+    if selected not in (jnp.dtype(jnp.float32), jnp.dtype(jnp.float64)):
+        raise TypeError("sparse-grid dtype must be float32 or float64")
+    return selected.name
+
+
+def smolyak_host_data(method, dimension: int, dtype) -> _SparseHostData:
+    """Return cached host data so capacities can be checked before tracing."""
+    return _smolyak_host_data(
+        method.level,
+        method.anisotropy,
+        dimension,
+        _target_sparse_dtype(dtype),
+    )
+
+
+def materialize_smolyak_rule(host: _SparseHostData) -> SparseRuleData:
+    """Create JAX arrays only after caller-owned static capacity checks."""
+    return SparseRuleData(
+        identities=host.identities,
+        points=jnp.asarray(host.points),
+        weights=jnp.asarray(host.weights),
+        increment_weights=jnp.asarray(host.increment_weights),
+        indices=host.indices,
+        frontier_mask=jnp.asarray(host.frontier_mask),
+        point_count=host.points.shape[0],
+        index_count=len(host.indices),
+    )
+
+
+def smolyak_rule_data(method, dimension: int, dtype) -> SparseRuleData:
+    """Construct one exact-node-coalesced fixed Smolyak rule."""
+    return materialize_smolyak_rule(smolyak_host_data(method, dimension, dtype))
+
+
 __all__ = [
     "DyadicIdentity",
     "HierarchicalRule",
+    "SparseIndex",
+    "SparseNodeIdentity",
+    "SparseRuleData",
     "canonical_cc_identity",
+    "fixed_sparse_node_identities",
+    "fixed_index_set",
     "hierarchical_rule",
     "identity_to_point",
+    "materialize_smolyak_rule",
+    "smolyak_host_data",
+    "smolyak_rule_data",
+    "sparse_axis_identities",
     "unit_clenshaw_curtis",
 ]

@@ -6,6 +6,7 @@ import jax
 from .adaptive import integrate as integrate_1d
 from .cubature import AdaptiveCubature, integrate_cubature
 from .domains import Hyperrectangle
+from .sparse import Smolyak, integrate_sparse
 from .tensor import (
     AdaptiveTensorClenshawCurtis,
     TensorProduct,
@@ -15,19 +16,35 @@ from .tensor import (
 from .tolerance import ErrorNorm, MaxNorm
 
 
-def _require_phase_b1_stop_gradient(method, gradient: str) -> None:
+def _require_stop_gradient(method, gradient: str, *, phase: str) -> None:
     if gradient != "stop":
         method_name = type(method).__name__
         raise ValueError(
-            f'{method_name} supports only gradient="stop" in Phase B1; '
+            f'{method_name} supports only gradient="stop" in {phase}; '
             'gradient="replay" is introduced in Phase B4'
         )
 
 
 def _integrate_hyperrectangle(*args, **kwargs):
     method = kwargs["method"]
+    if isinstance(method, Smolyak):
+        _require_stop_gradient(method, kwargs["gradient"], phase="Phase B2")
+        result = integrate_sparse(
+            *args,
+            args=kwargs["args"],
+            method=method,
+            measure=kwargs["measure"],
+            epsabs=kwargs["epsabs"],
+            epsrel=kwargs["epsrel"],
+            max_evaluations=kwargs["max_evaluations"],
+            max_indices=kwargs["max_indices"],
+            max_frontier=kwargs["max_frontier"],
+            max_nodes=kwargs["max_nodes"],
+            error_norm=kwargs["error_norm"],
+        )
+        return jax.tree.map(jax.lax.stop_gradient, result)
     if isinstance(method, AdaptiveCubature):
-        _require_phase_b1_stop_gradient(method, kwargs["gradient"])
+        _require_stop_gradient(method, kwargs["gradient"], phase="Phase B1")
         result = integrate_cubature(
             *args,
             args=kwargs["args"],
@@ -41,7 +58,7 @@ def _integrate_hyperrectangle(*args, **kwargs):
         )
         return jax.tree.map(jax.lax.stop_gradient, result)
     if isinstance(method, AdaptiveTensorClenshawCurtis):
-        _require_phase_b1_stop_gradient(method, kwargs["gradient"])
+        _require_stop_gradient(method, kwargs["gradient"], phase="Phase B1")
         result = integrate_adaptive_tensor(
             *args,
             args=kwargs["args"],
@@ -54,7 +71,7 @@ def _integrate_hyperrectangle(*args, **kwargs):
         )
         return jax.tree.map(jax.lax.stop_gradient, result)
     if isinstance(method, TensorProduct):
-        _require_phase_b1_stop_gradient(method, kwargs["gradient"])
+        _require_stop_gradient(method, kwargs["gradient"], phase="Phase B1")
         result = integrate_tensor(
             *args,
             args=kwargs["args"],
