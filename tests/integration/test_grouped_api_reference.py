@@ -56,6 +56,15 @@ API_OWNERS = {
     "research-infrastructure/testing.md": "jaxstro.testing",
 }
 
+QUAD_FAMILY_PAGES = {
+    "approximation-integration/quad-tensor-cubature.md": (
+        "jaxstro.quad.tensor",
+        "jaxstro.quad.cubature",
+    ),
+    "approximation-integration/quad-sparse.md": ("jaxstro.quad.sparse",),
+    "approximation-integration/quad-qmc.md": ("jaxstro.quad.qmc",),
+}
+
 PRIVATE_NUMERICS_MODULE_EXCLUSIONS = {
     # Internal contract-registration helpers; public contracts are documented
     # through jaxstro.contracts and the generated contract registry.
@@ -87,6 +96,18 @@ def test_every_api_page_names_an_importable_owner_and_complete_contract() -> Non
         text = (API_ROOT / relative).read_text(encoding="utf-8")
         assert f"`{owner}`" in text, relative
         assert f"from {owner} import" in text, relative
+        for section in REQUIRED_SECTIONS:
+            assert section in text, f"{relative}: missing {section}"
+
+
+def test_quad_family_pages_extend_one_canonical_owner_without_duplication() -> None:
+    for relative, modules in QUAD_FAMILY_PAGES.items():
+        text = (API_ROOT / relative).read_text(encoding="utf-8")
+        for module in modules:
+            importlib.import_module(module)
+            assert f"`{module}`" in text, relative
+        assert "exposed through `jaxstro.quad`" in text, relative
+        assert "from jaxstro.quad import" in text, relative
         for section in REQUIRED_SECTIONS:
             assert section in text, f"{relative}: missing {section}"
 
@@ -181,6 +202,10 @@ def test_grouped_api_pages_are_navigable_with_canonical_routes() -> None:
     assert myst.count("50-api/api.md") == 1
     assert routes["50-api/api.md"] == "/api"
     for relative in API_OWNERS:
+        source = f"50-api/{relative}"
+        assert myst.count(source) == 1, source
+        assert source in routes, source
+    for relative in QUAD_FAMILY_PAGES:
         source = f"50-api/{relative}"
         assert myst.count(source) == 1, source
         assert source in routes, source

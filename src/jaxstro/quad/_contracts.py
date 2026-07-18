@@ -163,21 +163,76 @@ _ADAPTIVE_PERFORMANCE_EVIDENCE = EvidenceReference(
     ),
 )
 
+_MULTIDIM_TRUTH_EVIDENCE = EvidenceReference(
+    id="quad-multidim-truth",
+    kind=EvidenceKind.ARTIFACT,
+    target="docs/validation/quad-multidim-truth.json",
+    claim=(
+        "Independent analytic and numerical truths exercise tensor, cubature, "
+        "sparse-grid, deterministic Sobol, and randomized Sobol values, "
+        "statuses, estimator kinds, and logical work on finite hyperrectangles."
+    ),
+)
+
+_MULTIDIM_REPLAY_EVIDENCE = EvidenceReference(
+    id="quad-multidim-replay",
+    kind=EvidenceKind.ARTIFACT,
+    target="docs/validation/quad-multidim-replay.json",
+    claim=(
+        "First-order accepted-formula replay is checked for parameters, "
+        "bounds, measures, randomized formulas, and heterogeneous quantity axes."
+    ),
+)
+
+_RQMC_CALIBRATION_EVIDENCE = EvidenceReference(
+    id="quad-rqmc-calibration",
+    kind=EvidenceKind.ARTIFACT,
+    target="docs/validation/quad-rqmc-calibration.json",
+    claim=(
+        "Frozen real-scalar coverage campaigns exercise fixed-look Student-t "
+        "and bounded sequential empirical-Bernstein uncertainty contracts."
+    ),
+)
+
+_MULTIDIM_COMPARISON_EVIDENCE = EvidenceReference(
+    id="quad-multidim-comparisons",
+    kind=EvidenceKind.ARTIFACT,
+    target="docs/validation/quad-multidim-comparisons.json",
+    claim=(
+        "Comparator records carry explicit exact, strong-match, node-match, "
+        "family-match, capability, or execution-model-unmatched labels."
+    ),
+)
+
+_MULTIDIM_PERFORMANCE_EVIDENCE = EvidenceReference(
+    id="quad-multidim-performance",
+    kind=EvidenceKind.ARTIFACT,
+    target="docs/validation/quad-multidim-performance-baseline.json",
+    claim=(
+        "The immutable host baseline records predeclared timing, compiler-cost, "
+        "repeat-scaling, and analytic memory-proxy triggers without a universal "
+        "performance claim."
+    ),
+)
+
 _ADAPTIVE_CONTRACT = CallableContract(
     id="quad-integrate",
     import_path="jaxstro.quad.integrate",
     purpose=(
-        "Adaptively estimate a one-dimensional integral with typed error, "
-        "status, logical-work, replay-derivative, and optional quantity evidence."
+        "Estimate a supported one-dimensional or finite-hyperrectangle integral "
+        "with method-specific error, status, logical-work, replay-derivative, "
+        "random-state, and optional quantity evidence."
     ),
     domain=(
-        "Supported one-dimensional domain and measure pairings, a static "
-        "method declaration and capacities, scalar real tolerances or the alpha "
-        "quantity boundary, and an integrand with a leading node axis."
+        "Supported one-dimensional domains or finite Hyperrectangle dimensions, "
+        "a static method declaration and capacities, scalar real tolerances or "
+        "the alpha quantity boundary, and an integrand with a leading node axis. "
+        "Randomized confidence intervals require real scalar outputs."
     ),
     outputs=(
-        "A QuadResult containing the exact adaptive primal value, bounded "
-        "evidence records, and a replay derivative on value."
+        "A QuadResult containing the primal estimate, family-specific error "
+        "evidence, status and work records, and a first-order replay derivative "
+        "on value."
     ),
     ad_semantics=ADSemantics.SMOOTH_PATHWISE,
     precision=(
@@ -189,26 +244,35 @@ _ADAPTIVE_CONTRACT = CallableContract(
             "jax.jit",
             SupportLevel.SUPPORTED,
             conditions=(
-                "Method configuration, capacities, breakpoint count, and "
-                "payload shape remain static."
+                "Method configuration, dimension, capacities, breakpoint count, "
+                "payload shape, QMC schedule, and scramble family remain static."
             ),
             evidence_ids=("quad-adaptive-transforms",),
         ),
         TransformContract(
             "jax.vmap",
             SupportLevel.SUPPORTED,
-            conditions="Each batch member runs one independent bounded controller.",
+            conditions=(
+                "Each batch member runs one independent bounded controller or "
+                "formula; cost-sensitive heterogeneous cubature batches should "
+                "use lax.map for physical per-lane skipping."
+            ),
             evidence_ids=("quad-adaptive-transforms",),
         ),
         TransformContract(
             "jvp",
             SupportLevel.CONDITIONAL,
             conditions=(
-                "First-order replay of value on a successful solve with "
-                "parameters passed through explicit args, smooth finite bounds, "
-                "or the finite boundary of a supported semi-infinite domain."
+                "First-order accepted-formula replay of value with parameters "
+                "passed through explicit args or supported smooth bounds; "
+                "controller decisions, accepted structures, confidence "
+                "construction, and diagnostics are stopped."
             ),
-            evidence_ids=("quad-adaptive-replay", "quad-replay-derivatives"),
+            evidence_ids=(
+                "quad-adaptive-replay",
+                "quad-replay-derivatives",
+                "quad-multidim-replay",
+            ),
         ),
         TransformContract(
             "vjp",
@@ -248,6 +312,11 @@ _ADAPTIVE_CONTRACT = CallableContract(
         _ADAPTIVE_REPLAY_ARTIFACT,
         _ADAPTIVE_QUANTITY_EVIDENCE,
         _ADAPTIVE_PERFORMANCE_EVIDENCE,
+        _MULTIDIM_TRUTH_EVIDENCE,
+        _MULTIDIM_REPLAY_EVIDENCE,
+        _RQMC_CALIBRATION_EVIDENCE,
+        _MULTIDIM_COMPARISON_EVIDENCE,
+        _MULTIDIM_PERFORMANCE_EVIDENCE,
     ),
     limitations=(
         "Estimator convergence is not a universal bound on true error.",
@@ -256,12 +325,18 @@ _ADAPTIVE_CONTRACT = CallableContract(
         "Quantity-aware adaptive integration is alpha and opt-in.",
         "Dimensional improper domains require an explicit positive physical scale.",
         "Direct Quantity-PyTree quotient-unit Jacobians and higher derivatives are not claimed.",
-        "Multidimensional integration is not implemented.",
-        "No performance-superiority claim is established.",
+        "Multidimensional geometry is restricted to finite hyperrectangles.",
+        "TensorProduct and deterministic Sobol provide no runtime error estimate.",
+        "Adaptive tensor, cubature, and sparse-grid estimators are method-specific numerical evidence, not universal true-error bounds.",
+        "Randomized confidence intervals require real scalar outputs and the declared independent scramble construction.",
+        "Observed process and device peak-memory certification remains pending.",
+        "No universal performance-superiority claim is established.",
     ),
     cost_notes=(
         "Regional logical work is node_count * (initial_regions + 2 * refinements); "
-        "global methods report their finest completed active grid."
+        "global methods report their finest completed active grid, sparse methods "
+        "report unique nodes, and QMC reports point-integrand evaluations across "
+        "all accepted replicates."
     ),
 )
 
@@ -269,19 +344,23 @@ MODULE_CONTRACT = replace(
     module_contract(
         "quad",
         (
-            "Canonical sampled-data integration, fixed and adaptive one-dimensional "
-            "quadrature, typed domains, measures, methods, and result evidence."
+            "Canonical sampled-data integration, fixed and adaptive "
+            "one-dimensional quadrature, finite-hyperrectangle tensor, cubature, "
+            "sparse-grid, and randomized QMC methods, typed domains, measures, "
+            "and result evidence."
         ),
         (
-            "Multidimensional integration, direct Quantity-PyTree quotient-unit "
-            "Jacobians, physical-model policy, inference, ODE solving, or "
-            "scientific acceptance."
+            "Non-hyperrectangular geometries, direct Quantity-PyTree quotient-unit "
+            "Jacobians, higher derivatives, physical-model policy, inference, "
+            "ODE solving, or scientific acceptance."
         ),
         (
             "Integrating sampled arrays and evaluating declared fixed formulas "
-            "or bounded adaptive controllers over supported one-dimensional domains."
+            "or bounded adaptive controllers over supported one-dimensional "
+            "domains and finite hyperrectangles."
         ),
-        "Raw kernels with an alpha quantity adapter owned only by quad.integrate.",
+        "Raw kernels with an alpha quantity adapter, heterogeneous coordinate "
+        "normalization, and unit restoration owned only by quad.integrate.",
         maturity=MaturityLevel.EXPERIMENTAL,
     ),
     callables=(_FIXED_CONTRACT, _ADAPTIVE_CONTRACT),

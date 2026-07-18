@@ -87,6 +87,15 @@ project:
             - file: 20-methods/approximation-integration/adaptive-quadrature.md
             - file: 20-methods/approximation-integration/sparse-grid-quadrature.md
             - file: 20-methods/approximation-integration/differentiating-an-integral.md
+            - title: Multidimensional integration
+              children:
+                - file: 20-methods/approximation-integration/multidimensional/hyperrectangles.md
+                - file: 20-methods/approximation-integration/multidimensional/tensor-product.md
+                - file: 20-methods/approximation-integration/multidimensional/adaptive-cubature.md
+                - file: 20-methods/approximation-integration/multidimensional/sparse-grids.md
+                - file: 20-methods/approximation-integration/multidimensional/randomized-qmc.md
+                - file: 20-methods/approximation-integration/multidimensional/differentiating.md
+                - file: 20-methods/approximation-integration/multidimensional/choosing-a-method.md
         - title: Linear structure and reusable operators
           children:
             - file: 20-methods/linear-structure/linear-algebra.md
@@ -196,6 +205,9 @@ project:
             - file: 50-api/approximation-integration/regular-grid.md
             - file: 50-api/approximation-integration/splines.md
             - file: 50-api/approximation-integration/quad.md
+            - file: 50-api/approximation-integration/quad-tensor-cubature.md
+            - file: 50-api/approximation-integration/quad-sparse.md
+            - file: 50-api/approximation-integration/quad-qmc.md
             - file: 50-api/approximation-integration/integration.md
             - file: 50-api/approximation-integration/quadrature.md
         - title: Linear structure
@@ -248,6 +260,7 @@ project:
         - file: 60-validation/numerical/implicit-root-gradients.md
         - file: 60-validation/numerical/quadrature-replay-derivatives.md
         - file: 60-validation/numerical/quadrature-performance.md
+        - file: 60-validation/numerical/quadrature-multidimensional.md
         - file: 60-validation/data/spectra-performance.md
         - file: 60-validation/methods/validation-methods.md
     - title: Project

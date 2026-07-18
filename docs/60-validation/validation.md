@@ -29,6 +29,13 @@ Inspect deterministic comparison policies, measured quantities, tolerances,
 accepted formulas, units, and assertion-bearing numerical anchors.
 :::
 
+:::{card} What supports multidimensional integration?
+:link: ./numerical/quadrature-multidimensional.md
+
+Separate truth, accepted-formula replay, randomized calibration, comparison,
+and performance evidence across the Phase B method families.
+:::
+
 :::{card} Does the scientific data path preserve meaning?
 :link: ./data/spectra-performance.md
 
@@ -81,6 +88,7 @@ it does not inherit model adequacy or scientific acceptance from a passing test.
 | Fixed-node quadrature and cumulative Simpson preserve their exactness contracts | Exact polynomial/moment identities and FD-vs-AD checks | Gauss-Legendre, Gauss-Laguerre, Gauss-Hermite, Clenshaw-Curtis, Hermite coefficients, cumulative Simpson panel sums | `tests/unit/test_quadrature.py`, `tests/unit/test_numerics.py`, `tests/validation/test_grad_checks.py` |
 | Adaptive quadrature preserves its declared analytic acceptance and honest-failure envelope | Predeclared per-case observed-error thresholds across three requested tolerances; explicit acceptable nonconverged statuses | Gauss-Kronrod, adaptive Clenshaw-Curtis, adaptive tanh-sinh, Romberg, and Romberg-tanh-sinh on smooth, complex, vector, breakpoint, improper-tail, endpoint-singular, nonfinite, and exhausted-budget cases | `tests/validation/test_quad_gk_tables.py`, `tests/validation/test_quad_adaptive_reference.py` |
 | Adaptive replay derivatives preserve accepted-formula and representation contracts | Analytic and frozen-formula agreement at predeclared float64 thresholds; diagnostic adaptive reruns; exact failure statuses | All five adaptive methods on scalar, vector, complex, moving-bound, improper, weighted, exhausted-capacity, quantity-rescaling, invalid, and nonfinite cases | `tests/validation/test_quad_replay_derivatives.py`, `docs/validation/quad-replay-derivatives.json`, [](./numerical/quadrature-replay-derivatives.md) |
+| Multidimensional quadrature preserves family-specific value, work, estimator, replay, quantity, and randomized-calibration contracts | Independent truths and accepted-formula derivatives at predeclared float64 thresholds; coverage only for the frozen real-scalar randomized campaigns | Finite hyperrectangles with tensor, Genz-Malik, Smolyak, deterministic Sobol, fixed-look scrambled Sobol, and bounded sequential randomized QMC; no simplex, sphere, manifold, or universal superiority claim | `tests/validation/test_quad_multidim_truth.py`, `tests/validation/test_quad_multidim_replay_derivatives.py`, `tests/validation/test_quad_rqmc_calibration.py`, [](./numerical/quadrature-multidimensional.md) |
 | `quad.performance` separates quadrature correctness, work, transformation support, and timing claims | Independent truth gates, declared comparison labels, normalized work, fresh-process timing, immutable baseline evidence, and two-suite optimization acceptance | Matched Jaxstro-versus-Quadax records plus reproducible classical Romberg VMAP-128 gains on the recorded Apple M2 Max CPU envelope | `docs/validation/quad-performance.json`, `docs/validation/quad-performance-confirmation.json`, [](./numerical/quadrature-performance.md) |
 | Dense linear algebra helpers expose stable contracts for small fits and diagnostics | Exact synthetic identities, invalid eager-input rejection, executable documentation, and FD-vs-AD checks away from rank/cutoff boundaries | Weighted least squares, finite weights, positive covariance normalization, covariance/correlation guards, QR/SVD solves, and positive-definite jitter search | `tests/unit/test_linear_algebra.py`, `tests/integration/test_linear_algebra_docs.py`, `tests/validation/test_grad_checks.py` |
 | Autodiff product helpers match explicit dense derivatives and independent finite-difference checks | Dense-Jacobian/Hessian parity and finite-difference gradient-direction checks | JVP, VJP, HVP, Jacobian-vector, vector-Jacobian, Gauss-Newton, and empirical Fisher-style products | `tests/unit/test_autodiff.py`, `tests/validation/test_grad_checks.py` |
@@ -126,6 +134,9 @@ uv run --no-sync pytest tests/unit/test_numerics.py tests/validation/test_grad_c
 uv run --no-sync python scripts/benchmark_rootfinding.py --check
 uv run --no-sync python scripts/benchmark_implicit_root.py --check
 uv run --no-sync python scripts/generate_quad_replay_evidence.py --check
+uv run --no-sync python scripts/generate_quad_multidim_evidence.py --check
+uv run --no-sync python scripts/generate_quad_rqmc_evidence.py --check
+uv run --no-sync python scripts/benchmark_quad_multidim.py --suite baseline --check
 uv run --no-sync pytest tests/unit/test_implicit_root.py tests/validation/test_implicit_root_gradients.py
 uv run pytest tests/unit/test_linear_algebra.py tests/validation/test_grad_checks.py
 uv run pytest tests/unit/test_autodiff.py tests/validation/test_grad_checks.py

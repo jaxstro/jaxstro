@@ -1,6 +1,6 @@
 ---
 title: Jaxstro quadrature
-description: Canonical one-dimensional quadrature API and Phase B multidimensional structural contracts.
+description: Canonical one- and multidimensional quadrature API with typed numerical evidence.
 ---
 
 # Jaxstro quadrature
@@ -12,9 +12,10 @@ description: Canonical one-dimensional quadrature API and Phase B multidimension
 ## Purpose
 
 This is the canonical integration namespace. It provides sampled-data
-integration, fixed rules, five adaptive method families, domains, measures,
-typed error and work evidence, deterministic stopping statuses, and the
-structural foundation for finite multidimensional integration.
+integration, fixed rules, bounded adaptive methods, deterministic and
+randomized multidimensional families, domains, measures, typed error and work
+evidence, deterministic stopping statuses, accepted-formula replay, and an
+opt-in alpha quantity boundary.
 
 ```python
 from jaxstro import quad
@@ -101,7 +102,9 @@ Supported finite-hyperrectangle declarations are:
 - `Smolyak`
 - `AdaptiveSmolyak`
 
-These Phase B methods currently require `gradient="stop"`.
+All Phase B methods support `gradient="replay"` for first-order
+accepted-formula derivatives and `gradient="stop"` for an explicitly stopped
+result.
 
 :::{important} Classical `Romberg` stopping contract
 Classical `Romberg` has a fixed level-$4$ alias-protection floor. It cannot
@@ -120,7 +123,7 @@ The status belongs to a capability, not to the package as a whole.
 | shipped and validated | Sampled-data integration; fixed and adaptive one-dimensional rules; typed failure and work evidence; one-dimensional accepted-formula replay; finite-hyperrectangle tensor products, adaptive tensor refinement, Genz-Malik cubature, fixed or dimension-adaptive Smolyak sparse grids, deterministic Sobol integration, and fixed-look or bounded sequential randomized QMC |
 | benchmarking | The Apple M2 Max CPU comparison is accepted; additional backends, precisions, batch regimes, and method families remain future benchmarking coverage |
 | alpha | Opt-in quantity normalization through `quad.integrate`; downstream ecosystem adoption is not implied |
-| approved but planned | Phase B4 replay and quantity hardening for multidimensional methods, compact sparse-grid and QMC memory ownership, and later scientific geometries |
+| approved but planned | Observed process/device-memory certification, later scientific geometries, and Phase C specializations |
 | intentionally unsupported | Posterior inference, experimental-design policy, general Monte Carlo inference, and domain-specific scientific acceptance |
 
 ### Reading comparison labels
@@ -289,9 +292,10 @@ continue to delegate to the existing adaptive owner with complete
 for later multidimensional families; one-dimensional calls reject them.
 
 The B1 deterministic families, B2 sparse-grid families, and B3 Sobol and
-randomized-QMC families have passed their family validation gates. B3
-randomized methods require scalar real payloads, explicit keys, and
-`gradient="stop"`.
+randomized-QMC families have passed their family validation gates. Randomized
+methods require scalar real payloads and explicit keys. B4 adds first-order
+accepted-formula replay and heterogeneous quantity-coordinate normalization
+across all Phase B families.
 
 ## Quantity activation
 
@@ -301,9 +305,10 @@ the integral unit on `value`, `error.estimate`, `error.norm`, and `tolerance`.
 Status, work, error kind, and confidence level remain unitless.
 
 :::{important}
-The current quantity adapter is one-dimensional. Phase B finite-hyperrectangle
-methods require raw numeric bounds and payloads until multidimensional quantity
-certification in Phase B4.
+Quantity integration remains alpha and opt-in. Finite hyperrectangles may use
+one compatible unit per coordinate, including heterogeneous axes, but this
+does not imply downstream ecosystem adoption or direct quotient-unit inference
+when differentiating a `Quantity` PyTree.
 :::
 
 | Input condition | Mode and requirement |
@@ -317,6 +322,7 @@ certification in Phase B4.
 | Quantity mode `epsabs` | Required and compatible with the complete integral unit |
 | Quantity `epsrel` | Must be dimensionless |
 | Quantity `WeightedMeasure` density | Receives quantity coordinates and must match `density_unit` |
+| Heterogeneous `Hyperrectangle` axes | Each lower/upper coordinate pair must be compatible; coordinates are normalized independently |
 
 `quad.fixed`, `map_domain`, and `map_interval` reject quantity-valued domains,
 including `Infinite(unit=...)`. The raw `Infinite()` form is unchanged.
@@ -366,11 +372,14 @@ for the masses and normalization equations.
 
 | Method | Measure | Current error kind | Gradient mode |
 | --- | --- | --- | --- |
-| `TensorProduct` | `LebesgueMeasure`, `WeightedMeasure` | `UNAVAILABLE` | `stop` |
-| `AdaptiveTensorClenshawCurtis` | `LebesgueMeasure`, `WeightedMeasure` | `REFINEMENT_DIFFERENCE` | `stop` |
-| `AdaptiveCubature(GenzMalik())` | `LebesgueMeasure`, `WeightedMeasure` | `EMBEDDED_RULE` | `stop` |
-| `Smolyak` | `LebesgueMeasure`, `WeightedMeasure` | `SPARSE_GRID_SURPLUS` | `stop` |
-| `AdaptiveSmolyak` | `LebesgueMeasure`, `WeightedMeasure` | `SPARSE_GRID_SURPLUS` | `stop` |
+| `TensorProduct` | `LebesgueMeasure`, `WeightedMeasure` | `UNAVAILABLE` | `replay`, `stop` |
+| `AdaptiveTensorClenshawCurtis` | `LebesgueMeasure`, `WeightedMeasure` | `REFINEMENT_DIFFERENCE` | `replay`, `stop` |
+| `AdaptiveCubature(GenzMalik())` | `LebesgueMeasure`, `WeightedMeasure`, `ProductMeasure` | `EMBEDDED_RULE` | `replay`, `stop` |
+| `Smolyak` | `LebesgueMeasure`, `WeightedMeasure` | `SPARSE_GRID_SURPLUS` | `replay`, `stop` |
+| `AdaptiveSmolyak` | `LebesgueMeasure`, `WeightedMeasure` | `SPARSE_GRID_SURPLUS` | `replay`, `stop` |
+| `Sobol` | `LebesgueMeasure` | `UNAVAILABLE` | `replay`, `stop` |
+| `ScrambledSobol` | `LebesgueMeasure` | `CONFIDENCE_INTERVAL_HALF_WIDTH` | `replay`, `stop` |
+| `AdaptiveScrambledSobol` | `LebesgueMeasure` | `CONFIDENCE_INTERVAL_HALF_WIDTH` | `replay`, `stop` |
 
 The sparse-grid surplus is hierarchical convergence evidence, not a universal
 absolute error bound. Review the
@@ -386,9 +395,9 @@ new regional split, midpoint collapse precedes exhausted evaluation capacity,
 which precedes exhausted region capacity. A roundoff-scale error floor alone
 does not emit `ROUNDOFF_LIMITED`. Regional controllers distinguish
 `MAX_EVALUATIONS` and `MAX_REGIONS`.
-`DIVERGENCE_SUSPECTED` and `ERROR_ESTIMATE_UNAVAILABLE` are reserved statuses,
-not current controller outputs. Sparse-grid and replicate error kinds are likewise
-reserved.
+`DIVERGENCE_SUSPECTED` remains a reserved status. A fixed tensor or
+deterministic Sobol formula can return `ERROR_ESTIMATE_UNAVAILABLE` because it
+does not own a runtime error estimator.
 
 ## JAX transforms and AD classification
 
@@ -406,9 +415,10 @@ that derivative; diagnostic tangents are exact zero or JAX `float0`.
 `jax.lax.stop_gradient`. VMAP runs one bounded adaptive controller per batch
 member.
 
-The finite-hyperrectangle methods listed above currently support only
-`gradient="stop"`. They fail closed with a Phase B4 boundary message for replay
-or any other gradient mode.
+Finite-hyperrectangle replay reconstructs the accepted tensor grid, cubature
+leaves, sparse index set, or Sobol formula without differentiating controller
+decisions. Randomized replay preserves the accepted key-derived points,
+replicate count, and level. Higher derivatives fail closed.
 
 Replay supports JVP, selected VJP projections, value-only `jacfwd` and
 `jacrev`, JIT, VMAP, real-to-complex realified Jacobians, complex-to-real JAX
@@ -431,6 +441,12 @@ Review [fixed and weighted quadrature](../../20-methods/approximation-integratio
 and [adaptive quadrature](../../20-methods/approximation-integration/adaptive-quadrature.md)
 for primal derivations. [Differentiating an integral](../../20-methods/approximation-integration/differentiating-an-integral.md)
 derives replay, moving-bound, complex, and unit contracts. The
+[multidimensional method guide](../../20-methods/approximation-integration/multidimensional/choosing-a-method.md)
+connects geometry and estimator meaning to the grouped
+[tensor/cubature](./quad-tensor-cubature.md),
+[sparse-grid](./quad-sparse.md), and [QMC](./quad-qmc.md) API pages. The
+[Phase B validation page](../../60-validation/numerical/quadrature-multidimensional.md)
+separates truth, replay, calibration, comparison, and performance claims. The
 [validation index](../../60-validation/validation.md) names the executable
 envelopes,
 [`quad-replay-derivatives.json`](../../validation/quad-replay-derivatives.json)

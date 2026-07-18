@@ -24,8 +24,9 @@ surface is indexed at [](../../50-api/api.md), with evidence boundaries at
 [](../../60-validation/validation.md).
 
 Implemented numerical families include interpolation, complete one-dimensional
-fixed quadrature, replay-differentiable adaptive one-dimensional quadrature
-with an alpha quantity boundary,
+fixed and adaptive quadrature, finite-hyperrectangle tensor and cubature rules,
+fixed and adaptive Smolyak sparse grids, deterministic and randomized Sobol
+integration, first-order accepted-formula replay, an alpha quantity boundary,
 fixed-step differential equations, scalar roots, distributions, random-state
 mechanics, small dense linear algebra, operators, structured one-dimensional
 meshes, and differentiability audits. These foundations do not authorize a
@@ -56,9 +57,16 @@ or the public owner of Jaxstro's integration contract.
 - [x] Complete the matched external comparison, migration guidance, and the
   Phase A release gate with immutable truth-gated evidence on the recorded
   Apple M2 Max CPU envelope.
-- [ ] Design and approve Phase B hyperrectangle integration, adaptive cubature,
-  sparse grids, and randomized quasi-Monte Carlo before implementing any one
-  family.
+- [x] Design and implement Phase B finite-hyperrectangle tensor integration,
+  adaptive Genz-Malik cubature, fixed and dimension-adaptive Smolyak sparse
+  grids, deterministic Sobol, and fixed-look and bounded sequential randomized
+  QMC.
+- [x] Add multidimensional first-order accepted-formula replay, heterogeneous
+  quantity axes, independent truth and derivative evidence, calibrated
+  comparison labels, and an immutable performance baseline.
+- [ ] Complete the Phase B exhaustive release gate, one consolidated checkpoint
+  review, strict rendered-site audit, clean-wheel verification, and observed
+  process/device-memory campaign.
 - [ ] Design Phase C native scientific geometries and specialized integral
   families only after the Phase B evidence boundary is established.
 
@@ -148,8 +156,10 @@ consumers establish a shared topology and conservation boundary.
 - [x] Complete the `jaxstro.quad` Phase A matched-comparison, migration, and
   release gates; replay, quantity normalization, derivations, deterministic
   first-order evidence, and two-suite performance acceptance are complete.
-- [ ] Brainstorm and approve the next `jaxstro.quad` capability family before
-  implementing Phase B or Phase C.
+- [ ] Complete the deferred Phase B exhaustive release and observed-memory
+  gates before claiming full release readiness.
+- [ ] Brainstorm and approve the first Phase C geometry or scientific
+  specialization before implementation.
 - [ ] Decide quantity adoption from downstream parity and migration evidence.
 - [ ] Deliver the smallest evidence-complete `jaxstro.ml` vertical slice.
 - [ ] Deliver analytic and nonlinear-boundary evidence for `jaxstro.uncertainty`.

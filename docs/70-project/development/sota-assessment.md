@@ -21,10 +21,10 @@ feature list.
 | Conditioning | validated | Denominator, slope, covariance, positive-definite, and removable-limit checks are explicit. |
 | AD honesty | ratified | Smooth, zero, blocked, surrogate, validation-only, value-first, and certified implicit paths remain distinct. |
 | JAX transform coverage | validated | Selected `jit`, `vmap`, `lax.map`, `grad`, JVP/VJP, scan, and PyTree behavior is tested with named exceptions. |
-| Dimensional safety | implemented | `jaxstro.units` is canonical; `jaxstro.quantity` is implemented, and adaptive quadrature has an alpha opt-in adapter without claiming ecosystem adoption. |
+| Dimensional safety | implemented | `jaxstro.units` is canonical; `jaxstro.quantity` is implemented, and one- and multidimensional quadrature have an alpha opt-in adapter with heterogeneous coordinate axes without claiming ecosystem adoption. |
 | API cohesion | validated | Grouped owner pages, export checks, typed results, and focused tests expose stable contracts. |
 | Serialization | implemented | Quantity and provenance records have explicit round trips, but no public root-result replay serializer is validated. |
-| Performance and compilation evidence | validated | Rootfinding and spectra use units-explicit evidence records. Quadrature adds truth-gated matched-library labels, normalized work, isolated compile/scalar/VMAP/AD timings, compiler-cost profiling, and two-suite optimization acceptance; coverage is still not uniform across the package. |
+| Performance and compilation evidence | validated | Rootfinding and spectra use units-explicit evidence records. One-dimensional quadrature adds truth-gated matched-library labels and two-suite optimization acceptance. Phase B adds calibrated comparator labels and an immutable host baseline; its analytic dimension-16 memory trigger does not establish an observed bottleneck, and the measured memory campaign remains pending. |
 | Evidence freshness | validated | Computational artifacts, scientific policy, and source-backed provenance remain distinct and freshness checked. |
 | Provenance | validated | Runtime manifests and source-backed cards answer different questions while sharing deterministic identity and digest mechanics. |
 | Research workflow coverage | implemented | Three executable investigations connect public APIs to contracts, indexed evidence, limitations, and warranted claims. |
@@ -47,10 +47,13 @@ feature list.
 Future runtime ownership follows this exact order:
 
 The active exception is to complete the approved `jaxstro.quad` program before this queue.
-Its fixed and adaptive methods, first-order accepted-formula replay derivatives,
-moving-bound contracts, alpha quantity adapter, derivations, and deterministic
-evidence and the Phase A matched external comparison are implemented.
-Later-dimensional methods and downstream adoption remain open gates.
+Phase A and the Phase B runtime families are implemented: finite
+hyperrectangles, tensor and Genz-Malik integration, Smolyak sparse grids,
+deterministic and randomized Sobol methods, first-order accepted-formula
+replay, heterogeneous alpha quantity axes, and family-specific evidence.
+The exhaustive release, strict rendered-site, clean-wheel, consolidated review,
+and observed-memory gates remain open. Phase C geometries and downstream
+adoption remain separate work.
 
 1. `jaxstro.ml`
 2. `jaxstro.uncertainty`
@@ -101,15 +104,15 @@ last-verified revisions.
 
 ## Next
 
-### 1. Approve the next `jaxstro.quad` capability family
+### 1. Complete the `jaxstro.quad` Phase B release gate
 
-**Impact.** Phase B can extend the same typed evidence model to
-multidimensional integration without prematurely coupling adaptive cubature,
-sparse grids, and randomized quasi-Monte Carlo.
+**Impact.** The implemented multidimensional families become release-ready
+without overstating memory, performance, geometry, quantity-adoption, or
+statistical guarantees.
 
-**Evidence gate.** A reviewed design freezes domains, estimators, work,
-statistical semantics where applicable, JAX transformations, comparison
-protocols, and the smallest independently useful implementation slice.
+**Evidence gate.** The exhaustive source/test/docs/clean-wheel gate, strict
+rendered-site audit, one consolidated checkpoint review, and observed
+process/device-memory campaign pass from clean committed source.
 
 ### 2. Build the minimal `jaxstro.ml` evidence-complete slice
 

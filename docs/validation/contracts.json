@@ -95,7 +95,9 @@
     "jaxstro.quad.AdaptiveTanhSinh",
     "jaxstro.quad.AdaptiveTensorClenshawCurtis",
     "jaxstro.quad.AffineMapResult",
+    "jaxstro.quad.Axis",
     "jaxstro.quad.ClenshawCurtisRule",
+    "jaxstro.quad.CoordinatePoint",
     "jaxstro.quad.DigitalShift",
     "jaxstro.quad.DomainMapResult",
     "jaxstro.quad.ErrorKind",
@@ -118,6 +120,7 @@
     "jaxstro.quad.MaxNorm",
     "jaxstro.quad.OwenScramble",
     "jaxstro.quad.PhysicistsHermiteMeasure",
+    "jaxstro.quad.ProductMeasure",
     "jaxstro.quad.QuadError",
     "jaxstro.quad.QuadResult",
     "jaxstro.quad.QuadStatus",
@@ -938,8 +941,8 @@
               "summary": "Dynamic invalid, nonfinite, roundoff-limited, or exhausted cases return a typed status."
             }
           ],
-          "cost_notes": "Regional logical work is node_count * (initial_regions + 2 * refinements); global methods report their finest completed active grid.",
-          "domain": "Supported one-dimensional domain and measure pairings, a static method declaration and capacities, scalar real tolerances or the alpha quantity boundary, and an integrand with a leading node axis.",
+          "cost_notes": "Regional logical work is node_count * (initial_regions + 2 * refinements); global methods report their finest completed active grid, sparse methods report unique nodes, and QMC reports point-integrand evaluations across all accepted replicates.",
+          "domain": "Supported one-dimensional domains or finite Hyperrectangle dimensions, a static method declaration and capacities, scalar real tolerances or the alpha quantity boundary, and an integrand with a leading node axis. Randomized confidence intervals require real scalar outputs.",
           "evidence": [
             {
               "claim": "Deterministic tolerance sweeps record requested tolerances, observed errors, statuses, and logical work for all five method families.",
@@ -972,6 +975,30 @@
               "target": "tests/validation/test_quad_adaptive_reference.py"
             },
             {
+              "claim": "Comparator records carry explicit exact, strong-match, node-match, family-match, capability, or execution-model-unmatched labels.",
+              "id": "quad-multidim-comparisons",
+              "kind": "artifact",
+              "target": "docs/validation/quad-multidim-comparisons.json"
+            },
+            {
+              "claim": "The immutable host baseline records predeclared timing, compiler-cost, repeat-scaling, and analytic memory-proxy triggers without a universal performance claim.",
+              "id": "quad-multidim-performance",
+              "kind": "artifact",
+              "target": "docs/validation/quad-multidim-performance-baseline.json"
+            },
+            {
+              "claim": "First-order accepted-formula replay is checked for parameters, bounds, measures, randomized formulas, and heterogeneous quantity axes.",
+              "id": "quad-multidim-replay",
+              "kind": "artifact",
+              "target": "docs/validation/quad-multidim-replay.json"
+            },
+            {
+              "claim": "Independent analytic and numerical truths exercise tensor, cubature, sparse-grid, deterministic Sobol, and randomized Sobol values, statuses, estimator kinds, and logical work on finite hyperrectangles.",
+              "id": "quad-multidim-truth",
+              "kind": "artifact",
+              "target": "docs/validation/quad-multidim-truth.json"
+            },
+            {
               "claim": "Matched Jaxstro and Quadax correctness, work, transformation, and timing evidence supports only the labeled records and recorded hardware envelope, not universal superiority.",
               "id": "quad-performance",
               "kind": "artifact",
@@ -982,6 +1009,12 @@
               "id": "quad-replay-derivatives",
               "kind": "artifact",
               "target": "docs/validation/quad-replay-derivatives.json"
+            },
+            {
+              "claim": "Frozen real-scalar coverage campaigns exercise fixed-look Student-t and bounded sequential empirical-Bernstein uncertainty contracts.",
+              "id": "quad-rqmc-calibration",
+              "kind": "artifact",
+              "target": "docs/validation/quad-rqmc-calibration.json"
             }
           ],
           "id": "quad-integrate",
@@ -993,13 +1026,17 @@
             "Quantity-aware adaptive integration is alpha and opt-in.",
             "Dimensional improper domains require an explicit positive physical scale.",
             "Direct Quantity-PyTree quotient-unit Jacobians and higher derivatives are not claimed.",
-            "Multidimensional integration is not implemented.",
-            "No performance-superiority claim is established."
+            "Multidimensional geometry is restricted to finite hyperrectangles.",
+            "TensorProduct and deterministic Sobol provide no runtime error estimate.",
+            "Adaptive tensor, cubature, and sparse-grid estimators are method-specific numerical evidence, not universal true-error bounds.",
+            "Randomized confidence intervals require real scalar outputs and the declared independent scramble construction.",
+            "Observed process and device peak-memory certification remains pending.",
+            "No universal performance-superiority claim is established."
           ],
           "maturity": "experimental",
-          "outputs": "A QuadResult containing the exact adaptive primal value, bounded evidence records, and a replay derivative on value.",
+          "outputs": "A QuadResult containing the primal estimate, family-specific error evidence, status and work records, and a first-order replay derivative on value.",
           "precision": "The active JAX precision policy; scientific reference validation uses float64.",
-          "purpose": "Adaptively estimate a one-dimensional integral with typed error, status, logical-work, replay-derivative, and optional quantity evidence.",
+          "purpose": "Estimate a supported one-dimensional or finite-hyperrectangle integral with method-specific error, status, logical-work, replay-derivative, random-state, and optional quantity evidence.",
           "transforms": [
             {
               "conditions": "Apply to value only, using JAX realified conventions for complex maps.",
@@ -1010,7 +1047,7 @@
               "transform": "jacfwd/jacrev"
             },
             {
-              "conditions": "Method configuration, capacities, breakpoint count, and payload shape remain static.",
+              "conditions": "Method configuration, dimension, capacities, breakpoint count, payload shape, QMC schedule, and scramble family remain static.",
               "evidence_ids": [
                 "quad-adaptive-transforms"
               ],
@@ -1018,7 +1055,7 @@
               "transform": "jax.jit"
             },
             {
-              "conditions": "Each batch member runs one independent bounded controller.",
+              "conditions": "Each batch member runs one independent bounded controller or formula; cost-sensitive heterogeneous cubature batches should use lax.map for physical per-lane skipping.",
               "evidence_ids": [
                 "quad-adaptive-transforms"
               ],
@@ -1026,10 +1063,11 @@
               "transform": "jax.vmap"
             },
             {
-              "conditions": "First-order replay of value on a successful solve with parameters passed through explicit args, smooth finite bounds, or the finite boundary of a supported semi-infinite domain.",
+              "conditions": "First-order accepted-formula replay of value with parameters passed through explicit args or supported smooth bounds; controller decisions, accepted structures, confidence construction, and diagnostics are stopped.",
               "evidence_ids": [
                 "quad-adaptive-replay",
-                "quad-replay-derivatives"
+                "quad-replay-derivatives",
+                "quad-multidim-replay"
               ],
               "support": "conditional",
               "transform": "jvp"
@@ -1045,17 +1083,17 @@
           ]
         }
       ],
-      "dimensional_policy": "Raw kernels with an alpha quantity adapter owned only by quad.integrate.",
+      "dimensional_policy": "Raw kernels with an alpha quantity adapter, heterogeneous coordinate normalization, and unit restoration owned only by quad.integrate.",
       "evidence": [],
       "execution_boundary": "runtime",
       "id": "quad",
       "import_path": "jaxstro.quad",
       "intended_uses": [
-        "Integrating sampled arrays and evaluating declared fixed formulas or bounded adaptive controllers over supported one-dimensional domains."
+        "Integrating sampled arrays and evaluating declared fixed formulas or bounded adaptive controllers over supported one-dimensional domains and finite hyperrectangles."
       ],
       "maturity": "experimental",
-      "non_ownership": "Multidimensional integration, direct Quantity-PyTree quotient-unit Jacobians, physical-model policy, inference, ODE solving, or scientific acceptance.",
-      "ownership": "Canonical sampled-data integration, fixed and adaptive one-dimensional quadrature, typed domains, measures, methods, and result evidence."
+      "non_ownership": "Non-hyperrectangular geometries, direct Quantity-PyTree quotient-unit Jacobians, higher derivatives, physical-model policy, inference, ODE solving, or scientific acceptance.",
+      "ownership": "Canonical sampled-data integration, fixed and adaptive one-dimensional quadrature, finite-hyperrectangle tensor, cubature, sparse-grid, and randomized QMC methods, typed domains, measures, and result evidence."
     },
     {
       "callables": [],
@@ -1203,7 +1241,7 @@
   ],
   "package_version": "0.1.0",
   "schema_version": "1",
-  "source_revision": "sha256:04b5196703f2187f807da755a6c0a02122e03c84854d0acf8b30711e9a01b2b3",
+  "source_revision": "sha256:fec7a52c6430ec517637ea9c472c47ab1f6dc230acad83287ff9a5c10b724562",
   "unclassified_callables": [
     "jaxstro.atmospheres.acquisition_rows_to_markdown",
     "jaxstro.atmospheres.build_bosz_index",

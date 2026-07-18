@@ -40,6 +40,14 @@ stellar-model policy, and data packages own their archive-specific schemas.
   validation suite. All five methods have first-order accepted-formula replay
   derivatives; replay is the default, explicit stop remains available, and an
   alpha quantity adapter normalizes into the same raw engine.
+- [x] **Multidimensional quadrature over finite hyperrectangles.** Fixed and
+  globally adaptive tensor rules, adaptive Genz-Malik cubature, fixed and
+  dimension-adaptive Smolyak sparse grids, deterministic Sobol integration,
+  fixed-look scrambled Sobol intervals, and bounded sequential randomized QMC
+  share typed status and work records while retaining family-specific error
+  meanings. First-order accepted-formula replay and heterogeneous alpha
+  quantity axes are implemented. Full release, observed-memory, and rendered
+  documentation certification remain open gates rather than hidden non-claims.
 - [x] **Root-finding and monotone inversion.** Bracket discovery, vectorized
   independent solves, and monotone inverse interpolation for CDF-like tables.
 - [x] **Linear algebra primitives.** Weighted least squares, QR/SVD solve

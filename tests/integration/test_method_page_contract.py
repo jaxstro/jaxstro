@@ -24,6 +24,30 @@ REQUIRED_HEADINGS = (
     "## Connected ideas",
 )
 
+MULTIDIMENSIONAL_HEADINGS = (
+    "## Scientific question",
+    "## Geometric picture",
+    "## Derivation",
+    "## Computational cost",
+    "## What the estimator means",
+    "## JAX and differentiation",
+    "## Quantities and units",
+    "## Worked astrophysical example",
+    "## Failure modes",
+    "## Audit recipe",
+    "## Warranted claim",
+)
+
+MULTIDIMENSIONAL_PAGES = (
+    "hyperrectangles.md",
+    "tensor-product.md",
+    "adaptive-cubature.md",
+    "sparse-grids.md",
+    "randomized-qmc.md",
+    "differentiating.md",
+    "choosing-a-method.md",
+)
+
 PAGE_SPECS = {
     "change-constraints-evolution/autodiff.md": (
         "jaxstro.numerics.autodiff",
@@ -316,6 +340,20 @@ def test_adaptive_quadrature_page_publishes_current_capability_and_boundaries() 
 
     assert "Quadax owns adaptive quadrature" not in text
     assert "does not establish an adaptive Jaxstro API" not in text
+
+
+@pytest.mark.parametrize("name", MULTIDIMENSIONAL_PAGES)
+def test_multidimensional_pages_follow_the_researcher_contract(name: str) -> None:
+    path = DOCS / "20-methods/approximation-integration/multidimensional" / name
+    text = path.read_text(encoding="utf-8")
+    headings = tuple(re.findall(r"^## .+$", text, flags=re.MULTILINE))
+
+    assert headings == MULTIDIMENSIONAL_HEADINGS, name
+    assert text.count("```{math}") >= 2, name
+    assert ":::{warning}" in text or ":::{important}" in text, name
+    assert "course" not in text.lower(), name
+    assert "instructor" not in text.lower(), name
+    assert text.isascii(), name
 
 
 @pytest.mark.parametrize("relative", PAGE_SPECS)
