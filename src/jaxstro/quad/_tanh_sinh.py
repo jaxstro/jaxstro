@@ -3,7 +3,6 @@
 from bisect import bisect_left
 from dataclasses import dataclass
 from functools import lru_cache
-from itertools import pairwise
 from typing import NamedTuple
 
 import jax.numpy as jnp
@@ -52,6 +51,15 @@ class _HostLattice:
     terminal_node: float
     terminal_density_weight: float
     dtype_exhausted: bool
+
+
+@dataclass(frozen=True)
+class _OpenUnitIntervalRetention:
+    """Shared scalar decision for one strict symmetric affine-map slice."""
+
+    positive_indices: tuple[int, ...]
+    compact_slice: slice
+    point_count: int
 
 
 def _positive_candidates(level: int, dtype: np.dtype, cap: int):
@@ -241,30 +249,38 @@ def _selected_dtype(dtype):
     return selected_dtype
 
 
-def _open_unit_interval_trim(host: _HostLattice, dtype: np.dtype) -> int:
-    """Count symmetric outer pairs lost under the affine unit-interval map."""
+@lru_cache(maxsize=None)
+def _open_unit_interval_retention(
+    level: int,
+    dtype_name: str,
+) -> _OpenUnitIntervalRetention:
+    """Choose the global strict affine-map prefix without materializing arrays."""
+    dtype = np.dtype(dtype_name)
     scalar = dtype.type
     half = scalar(0.5)
     zero = scalar(0.0)
     one = scalar(1.0)
-    mapped = tuple(half * (scalar(node) + one) for node in host.compact_nodes)
-    pair_count = (len(mapped) - 1) // 2
-    trim = 0
-    while trim < pair_count and not (
-        mapped[trim] > zero
-        and mapped[-1 - trim] < one
-        and mapped[trim] < mapped[trim + 1]
-        and mapped[-2 - trim] < mapped[-1 - trim]
-    ):
-        trim += 1
-    retained = mapped[trim : len(mapped) - trim if trim else None]
-    if not all(zero < point < one for point in retained) or not all(
-        left < right for left, right in pairwise(retained)
-    ):
-        raise RuntimeError(
-            "tanh-sinh unit-interval nodes are not strictly representable"
-        )
-    return trim
+    positive_indices = _retained_positive_indices(level, dtype_name)
+    retained_count = 1
+    previous_left = half
+    previous_right = half
+
+    for index in positive_indices[1:]:
+        node, _density = _positive_candidate(index, level, dtype)
+        left = half * (-node + one)
+        right = half * (node + one)
+        if not (zero < left < previous_left and previous_right < right < one):
+            break
+        previous_left = left
+        previous_right = right
+        retained_count += 1
+
+    trim = len(positive_indices) - retained_count
+    return _OpenUnitIntervalRetention(
+        positive_indices=positive_indices[:retained_count],
+        compact_slice=slice(trim, -trim if trim else None),
+        point_count=2 * retained_count - 1,
+    )
 
 
 def _tanh_sinh_lattice_data(level: int, *, dtype=None) -> TanhSinhLatticeData:
@@ -308,18 +324,8 @@ def tanh_sinh_rule_point_count(
     if not open_unit_interval:
         return 2 * len(retained) - 1
 
-    scalar = host_dtype.type
-    half = scalar(0.5)
-    zero = scalar(0.0)
-    one = scalar(1.0)
-    point_count = 1
-    for index in retained[1:]:
-        node, _density = _positive_candidate(index, rule.level, host_dtype)
-        left = half * (-node + one)
-        right = half * (node + one)
-        if zero < left < right < one:
-            point_count += 2
-    return point_count
+    retention = _open_unit_interval_retention(rule.level, host_dtype.name)
+    return retention.point_count
 
 
 def tanh_sinh_rule_data(
@@ -332,11 +338,14 @@ def tanh_sinh_rule_data(
     selected_dtype = _selected_dtype(dtype)
     lattice = _tanh_sinh_lattice_data(rule.level, dtype=selected_dtype)
     if open_unit_interval:
-        host = _host_lattice(rule.level, np.dtype(selected_dtype).name)
-        trim = _open_unit_interval_trim(host, np.dtype(selected_dtype))
-        retained = slice(trim, -trim if trim else None)
-        nodes = lattice.compact_nodes[retained]
-        weights = lattice.compact_weights[retained]
+        retention = _open_unit_interval_retention(
+            rule.level,
+            np.dtype(selected_dtype).name,
+        )
+        nodes = lattice.compact_nodes[retention.compact_slice]
+        weights = lattice.compact_weights[retention.compact_slice]
+        if nodes.size != retention.point_count:
+            raise RuntimeError("tanh-sinh scalar and materialized retention diverged")
     else:
         nodes = lattice.compact_nodes
         weights = lattice.compact_weights

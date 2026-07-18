@@ -124,6 +124,29 @@ def test_tanh_sinh_capacity_fails_before_rule_array_materialization(monkeypatch)
         )
 
 
+def test_high_level_tanh_sinh_capacity_rejects_before_materialization(monkeypatch):
+    def fail_materialization(*_args, **_kwargs):
+        raise AssertionError("tanh-sinh rule data and mesh must not be materialized")
+
+    monkeypatch.setattr(_tensor, "tanh_sinh_rule_data", fail_materialization)
+    monkeypatch.setattr(_tanh_sinh, "_host_lattice", fail_materialization)
+    monkeypatch.setattr(_tensor.jnp, "meshgrid", fail_materialization)
+
+    with pytest.raises(ValueError, match="requires 149 evaluations"):
+        quad.integrate(
+            lambda x: jnp.sum(x, axis=-1),
+            quad.Hyperrectangle(
+                jnp.zeros(2, dtype=jnp.float32),
+                jnp.ones(2, dtype=jnp.float32),
+            ),
+            method=quad.TensorProduct((quad.TanhSinhRule(5), quad.GaussianRule(1))),
+            epsabs=0.0,
+            epsrel=0.0,
+            max_evaluations=148,
+            gradient="stop",
+        )
+
+
 @pytest.mark.parametrize(
     ("dtype", "expected_axis_count"),
     [(jnp.float32, 19), (jnp.float64, 25)],
@@ -304,19 +327,49 @@ def test_tanh_sinh_unit_rule_is_not_mass_normalized(level, dtype):
 @pytest.mark.parametrize("dtype", [jnp.float32, jnp.float64])
 def test_tanh_sinh_scalar_point_count_matches_materialized_rules(level, dtype):
     rule = quad.TanhSinhRule(level)
-    lattice = _tanh_sinh_lattice_data(level, dtype=dtype)
-    mapped = 0.5 * (lattice.compact_nodes + 1.0)
-    representable = (mapped > 0.0) & (mapped < 1.0)
-    symmetric_representable = representable & representable[::-1]
-
-    assert _tanh_sinh.tanh_sinh_rule_point_count(rule, dtype=dtype) == int(
-        lattice.compact_nodes.size
-    )
-    assert _tanh_sinh.tanh_sinh_rule_point_count(
+    data = _tanh_sinh.tanh_sinh_rule_data(
         rule,
         dtype=dtype,
         open_unit_interval=True,
-    ) == int(jnp.sum(symmetric_representable))
+    )
+    mapped = 0.5 * (data.nodes + 1.0)
+
+    assert (
+        _tanh_sinh.tanh_sinh_rule_point_count(
+            rule,
+            dtype=dtype,
+            open_unit_interval=True,
+        )
+        == data.nodes.size
+    )
+    assert jnp.all((mapped > 0.0) & (mapped < 1.0))
+    assert jnp.all(jnp.diff(mapped) > 0.0)
+    assert jnp.all(data.weights > 0.0)
+    assert jnp.array_equal(data.nodes, -data.nodes[::-1])
+    assert jnp.array_equal(data.weights, data.weights[::-1])
+
+
+@pytest.mark.parametrize(
+    ("dtype", "level", "axis_count"),
+    [(jnp.float32, 5, 149), (jnp.float64, 7, 803)],
+)
+def test_high_level_tanh_sinh_public_exact_capacity(dtype, level, axis_count):
+    result = quad.integrate(
+        lambda x: jnp.ones(x.shape[0], dtype=dtype),
+        quad.Hyperrectangle(
+            jnp.zeros(2, dtype=dtype),
+            jnp.ones(2, dtype=dtype),
+        ),
+        method=quad.TensorProduct((quad.TanhSinhRule(level), quad.GaussianRule(1))),
+        epsabs=0.0,
+        epsrel=0.0,
+        max_evaluations=axis_count,
+        gradient="stop",
+    )
+
+    assert jnp.isfinite(result.value)
+    assert result.status == quad.QuadStatus.ERROR_ESTIMATE_UNAVAILABLE
+    assert result.work.evaluations == axis_count
 
 
 def test_tensor_product_requires_exactly_one_rule_per_axis():
