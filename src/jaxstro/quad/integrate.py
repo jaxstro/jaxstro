@@ -1,8 +1,28 @@
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 import jax
+import jax.numpy as jnp
 
+from ._cubature import genz_malik_data, validate_cubature_capacity
+from ._multidim_replay import (
+    MultidimConfig,
+    MultidimPrimalSolve,
+    ReplayFormula,
+)
+from ._scramble import scramble_integers
+from ._sobol import resolve_sobol_bits, sobol_integer_points, sobol_points
+from ._sparse import (
+    identities_to_points,
+    materialize_smolyak_rule,
+    smolyak_host_data,
+)
+from ._tensor import (
+    adaptive_tensor_replay_formula,
+    adaptive_tensor_tables,
+    tensor_rule_data,
+    validate_adaptive_tensor_capacity,
+)
 from .adaptive import integrate as integrate_1d
 from .cubature import AdaptiveCubature, integrate_cubature
 from .domains import Hyperrectangle
@@ -29,6 +49,168 @@ from .tensor import (
 from .tolerance import ErrorNorm, MaxNorm
 
 
+def _fixed_tensor_formula(method, domain) -> ReplayFormula:
+    dtype = jnp.result_type(domain.lower, domain.upper, 0.0)
+    data = tensor_rule_data(method, domain.dimension, dtype)
+    return ReplayFormula(
+        data.points,
+        data.weights,
+        jnp.ones((data.point_count,), dtype=jnp.bool_),
+    )
+
+
+def _adaptive_tensor_formula(method, domain, levels, max_evaluations) -> ReplayFormula:
+    dtype = jnp.result_type(domain.lower, domain.upper, 0.0)
+    capacity = validate_adaptive_tensor_capacity(
+        initial_level=method.initial_level,
+        dimension=domain.dimension,
+        max_evaluations=max_evaluations,
+        dtype=dtype,
+    )
+    tables = adaptive_tensor_tables(
+        initial_level=method.initial_level,
+        max_level=capacity.max_level,
+        dtype=dtype,
+    )
+    return ReplayFormula(
+        *adaptive_tensor_replay_formula(levels, tables, max_evaluations)
+    )
+
+
+def _cubature_formula(domain, leaves, max_evaluations, max_regions):
+    dtype = jnp.result_type(domain.lower, domain.upper, 0.0)
+    capacity = validate_cubature_capacity(
+        dimension=domain.dimension,
+        max_evaluations=max_evaluations,
+        max_regions=max_regions,
+    )
+    data = genz_malik_data(domain.dimension, dtype)
+    lower, upper, active = leaves
+    width = upper - lower
+    points = lower[:, None, :] + width[:, None, :] * data.points[None, :, :]
+    weights = jnp.prod(width, axis=-1)[:, None] * data.high_weights[None, :]
+    formula_active = jnp.broadcast_to(
+        active[:, None],
+        (capacity.store_capacity, data.point_count),
+    )
+    return ReplayFormula(
+        points.reshape((-1, domain.dimension)),
+        weights.reshape(-1),
+        formula_active.reshape(-1),
+    )
+
+
+def _fixed_sparse_formula(method, domain) -> ReplayFormula:
+    dtype = jnp.result_type(domain.lower, domain.upper, 0.0)
+    data = materialize_smolyak_rule(
+        smolyak_host_data(method, domain.dimension, dtype)
+    )
+    return ReplayFormula(
+        data.points,
+        data.weights,
+        jnp.ones((data.point_count,), dtype=jnp.bool_),
+    )
+
+
+def _sparse_identity_points(node_ids, *, dimension: int, dtype):
+    identities = node_ids.reshape((node_ids.shape[0], dimension, 2))
+    return identities_to_points(identities, dtype)
+
+
+def _adaptive_sparse_formula(domain, nodes) -> ReplayFormula:
+    dtype = jnp.result_type(domain.lower, domain.upper, 0.0)
+    node_ids, coefficients, active = nodes
+    return ReplayFormula(
+        _sparse_identity_points(
+            node_ids,
+            dimension=domain.dimension,
+            dtype=dtype,
+        ),
+        coefficients,
+        active,
+    )
+
+
+def _qmc_formula(method, domain, key, *, result=None) -> ReplayFormula:
+    dtype = jnp.result_type(domain.lower, domain.upper, 0.0)
+    if isinstance(method, Sobol):
+        points = sobol_points(
+            method.level,
+            domain.dimension,
+            dtype,
+            bits=method.bits,
+        )
+        count = points.shape[0]
+        return ReplayFormula(
+            points,
+            jnp.full((count,), 1.0 / count, dtype=dtype),
+            jnp.ones((count,), dtype=jnp.bool_),
+        )
+
+    if isinstance(method, ScrambledSobol):
+        level = method.level
+        replicate_capacity = method.replicates
+    else:
+        level, replicate_capacity = method.schedule[-1]
+    resolved_bits = resolve_sobol_bits(level, dtype)
+    integer_points = sobol_integer_points(
+        level,
+        domain.dimension,
+        bits=resolved_bits,
+    )
+    scale = jnp.asarray(2.0**resolved_bits, dtype=dtype)
+
+    def one_replicate(replicate):
+        replicate_key = jax.random.fold_in(key, replicate)
+        return (
+            scramble_integers(
+                integer_points,
+                method=method.scramble,
+                key=replicate_key,
+                bits=resolved_bits,
+            ).astype(dtype)
+            / scale
+        )
+
+    points = jax.lax.map(
+        one_replicate,
+        jnp.arange(replicate_capacity, dtype=jnp.uint32),
+    )
+    point_capacity = points.shape[1]
+    if isinstance(method, AdaptiveScrambledSobol):
+        active_level = result.work.levels
+        active_replicates = result.work.replicates
+        active_points = jnp.left_shift(
+            jnp.asarray(1, dtype=jnp.int32),
+            active_level,
+        )
+        active = (
+            jnp.arange(replicate_capacity)[:, None] < active_replicates
+        ) & (jnp.arange(point_capacity)[None, :] < active_points)
+        denominator = jnp.asarray(
+            active_replicates * active_points,
+            dtype=dtype,
+        )
+    else:
+        active = jnp.ones(
+            (replicate_capacity, point_capacity),
+            dtype=jnp.bool_,
+        )
+        denominator = jnp.asarray(
+            replicate_capacity * point_capacity,
+            dtype=dtype,
+        )
+    return ReplayFormula(
+        points.reshape((-1, domain.dimension)),
+        jnp.full(
+            (replicate_capacity * point_capacity,),
+            jnp.asarray(1.0, dtype=dtype) / denominator,
+            dtype=dtype,
+        ),
+        active.reshape(-1),
+    )
+
+
 def _require_stop_gradient(method, gradient: str, *, phase: str) -> None:
     if gradient != "stop":
         method_name = type(method).__name__
@@ -38,123 +220,233 @@ def _require_stop_gradient(method, gradient: str, *, phase: str) -> None:
         )
 
 
-def _integrate_hyperrectangle(*args, **kwargs):
-    method = kwargs["method"]
-    if isinstance(method, AdaptiveScrambledSobol):
-        _require_stop_gradient(method, kwargs["gradient"], phase="Phase B3")
-        result = integrate_adaptive_scrambled_qmc(
-            *args,
-            args=kwargs["args"],
-            method=method,
-            measure=kwargs["measure"],
-            epsabs=kwargs["epsabs"],
-            epsrel=kwargs["epsrel"],
-            max_evaluations=kwargs["max_evaluations"],
-            key=kwargs["key"],
-            error_norm=kwargs["error_norm"],
-        )
-        return jax.tree.map(jax.lax.stop_gradient, result)
-    if isinstance(method, ScrambledSobol):
-        _require_stop_gradient(method, kwargs["gradient"], phase="Phase B3")
-        result = integrate_scrambled_qmc(
-            *args,
-            args=kwargs["args"],
-            method=method,
-            measure=kwargs["measure"],
-            epsabs=kwargs["epsabs"],
-            epsrel=kwargs["epsrel"],
-            max_evaluations=kwargs["max_evaluations"],
-            key=kwargs["key"],
-            error_norm=kwargs["error_norm"],
-        )
-        return jax.tree.map(jax.lax.stop_gradient, result)
-    if isinstance(method, Sobol):
-        _require_stop_gradient(method, kwargs["gradient"], phase="Phase B3")
-        result = integrate_qmc(
-            *args,
-            args=kwargs["args"],
-            method=method,
-            measure=kwargs["measure"],
-            epsabs=kwargs["epsabs"],
-            epsrel=kwargs["epsrel"],
-            max_evaluations=kwargs["max_evaluations"],
-            key=kwargs["key"],
-            error_norm=kwargs["error_norm"],
-        )
-        return jax.tree.map(jax.lax.stop_gradient, result)
-    if isinstance(method, AdaptiveSmolyak):
-        _require_stop_gradient(method, kwargs["gradient"], phase="Phase B2")
-        result = integrate_adaptive_sparse(
-            *args,
-            args=kwargs["args"],
-            method=method,
-            measure=kwargs["measure"],
-            epsabs=kwargs["epsabs"],
-            epsrel=kwargs["epsrel"],
-            max_evaluations=kwargs["max_evaluations"],
-            max_indices=kwargs["max_indices"],
-            max_frontier=kwargs["max_frontier"],
-            max_nodes=kwargs["max_nodes"],
-            error_norm=kwargs["error_norm"],
-        )
-        return jax.tree.map(jax.lax.stop_gradient, result)
-    if isinstance(method, Smolyak):
-        _require_stop_gradient(method, kwargs["gradient"], phase="Phase B2")
-        result = integrate_sparse(
-            *args,
-            args=kwargs["args"],
-            method=method,
-            measure=kwargs["measure"],
-            epsabs=kwargs["epsabs"],
-            epsrel=kwargs["epsrel"],
-            max_evaluations=kwargs["max_evaluations"],
-            max_indices=kwargs["max_indices"],
-            max_frontier=kwargs["max_frontier"],
-            max_nodes=kwargs["max_nodes"],
-            error_norm=kwargs["error_norm"],
-        )
-        return jax.tree.map(jax.lax.stop_gradient, result)
-    if isinstance(method, AdaptiveCubature):
-        _require_stop_gradient(method, kwargs["gradient"], phase="Phase B1")
-        result = integrate_cubature(
-            *args,
-            args=kwargs["args"],
-            method=method,
-            measure=kwargs["measure"],
-            epsabs=kwargs["epsabs"],
-            epsrel=kwargs["epsrel"],
-            max_evaluations=kwargs["max_evaluations"],
-            max_regions=kwargs["max_regions"],
-            error_norm=kwargs["error_norm"],
-        )
-        return jax.tree.map(jax.lax.stop_gradient, result)
-    if isinstance(method, AdaptiveTensorClenshawCurtis):
-        _require_stop_gradient(method, kwargs["gradient"], phase="Phase B1")
-        result = integrate_adaptive_tensor(
-            *args,
-            args=kwargs["args"],
-            method=method,
-            measure=kwargs["measure"],
-            epsabs=kwargs["epsabs"],
-            epsrel=kwargs["epsrel"],
-            max_evaluations=kwargs["max_evaluations"],
-            error_norm=kwargs["error_norm"],
-        )
-        return jax.tree.map(jax.lax.stop_gradient, result)
-    if isinstance(method, TensorProduct):
-        _require_stop_gradient(method, kwargs["gradient"], phase="Phase B1")
-        result = integrate_tensor(
-            *args,
-            args=kwargs["args"],
-            method=method,
-            measure=kwargs["measure"],
-            epsabs=kwargs["epsabs"],
-            epsrel=kwargs["epsrel"],
-            max_evaluations=kwargs["max_evaluations"],
-            error_norm=kwargs["error_norm"],
-        )
-        return jax.tree.map(jax.lax.stop_gradient, result)
+def _method_phase(method) -> str:
+    if isinstance(
+        method,
+        (TensorProduct, AdaptiveTensorClenshawCurtis, AdaptiveCubature),
+    ):
+        return "Phase B1"
+    if isinstance(method, (Smolyak, AdaptiveSmolyak)):
+        return "Phase B2"
+    if isinstance(method, (Sobol, ScrambledSobol, AdaptiveScrambledSobol)):
+        return "Phase B3"
     raise TypeError(f"{type(method).__name__} is not an implemented Phase B method")
+
+
+def _solve_multidim(
+    config: MultidimConfig,
+    domain,
+    args,
+    key,
+    epsabs,
+    epsrel,
+) -> MultidimPrimalSolve:
+    method = config.method
+    common = {
+        "args": args,
+        "method": method,
+        "measure": config.measure,
+        "epsabs": epsabs,
+        "epsrel": epsrel,
+        "max_evaluations": config.max_evaluations,
+        "error_norm": config.error_norm,
+    }
+    if isinstance(method, AdaptiveScrambledSobol):
+        result = integrate_adaptive_scrambled_qmc(
+            config.fun,
+            domain,
+            **common,
+            key=key,
+        )
+        formula = _qmc_formula(method, domain, key, result=result)
+    elif isinstance(method, ScrambledSobol):
+        result = integrate_scrambled_qmc(
+            config.fun,
+            domain,
+            **common,
+            key=key,
+        )
+        formula = _qmc_formula(method, domain, key)
+    elif isinstance(method, Sobol):
+        result = integrate_qmc(
+            config.fun,
+            domain,
+            **common,
+            key=key,
+        )
+        formula = _qmc_formula(method, domain, key)
+    elif isinstance(method, AdaptiveSmolyak):
+        result, nodes = cast(
+            tuple[
+                Any,
+                tuple[jax.Array, jax.Array, jax.Array],
+            ],
+            integrate_adaptive_sparse(
+                config.fun,
+                domain,
+                **common,
+                max_indices=config.max_indices,
+                max_frontier=config.max_frontier,
+                max_nodes=config.max_nodes,
+                _return_nodes=True,
+            ),
+        )
+        formula = _adaptive_sparse_formula(domain, nodes)
+    elif isinstance(method, Smolyak):
+        result = integrate_sparse(
+            config.fun,
+            domain,
+            **common,
+            max_indices=config.max_indices,
+            max_frontier=config.max_frontier,
+            max_nodes=config.max_nodes,
+        )
+        formula = _fixed_sparse_formula(method, domain)
+    elif isinstance(method, AdaptiveCubature):
+        result, leaves = cast(
+            tuple[
+                Any,
+                tuple[jax.Array, jax.Array, jax.Array],
+            ],
+            integrate_cubature(
+                config.fun,
+                domain,
+                **common,
+                max_regions=config.max_regions,
+                _return_leaves=True,
+            ),
+        )
+        formula = _cubature_formula(
+            domain,
+            leaves,
+            config.max_evaluations,
+            config.max_regions,
+        )
+    elif isinstance(method, AdaptiveTensorClenshawCurtis):
+        result, levels = cast(
+            tuple[Any, jax.Array],
+            integrate_adaptive_tensor(
+                config.fun,
+                domain,
+                **common,
+                _return_levels=True,
+            ),
+        )
+        formula = _adaptive_tensor_formula(
+            method,
+            domain,
+            levels,
+            config.max_evaluations,
+        )
+    elif isinstance(method, TensorProduct):
+        result = integrate_tensor(config.fun, domain, **common)
+        formula = _fixed_tensor_formula(method, domain)
+    else:
+        _method_phase(method)
+        raise AssertionError("unreachable")
+    return MultidimPrimalSolve(result, formula, config, domain, args)
+
+
+def _prepare_multidim_solve(
+    fun,
+    domain,
+    *,
+    args,
+    method,
+    measure,
+    key,
+    epsabs,
+    epsrel,
+    max_evaluations,
+    max_regions,
+    max_indices,
+    max_frontier,
+    max_nodes,
+    error_norm,
+) -> MultidimPrimalSolve:
+    config = MultidimConfig(
+        fun=fun,
+        method=method,
+        measure=measure,
+        max_evaluations=max_evaluations,
+        max_regions=max_regions,
+        max_indices=max_indices,
+        max_frontier=max_frontier,
+        max_nodes=max_nodes,
+        error_norm=error_norm,
+    )
+    return _solve_multidim(config, domain, args, key, epsabs, epsrel)
+
+
+def _integrate_hyperrectangle(fun, domain, **kwargs):
+    method = kwargs["method"]
+    _require_stop_gradient(
+        method,
+        kwargs["gradient"],
+        phase=_method_phase(method),
+    )
+    common = {
+        "args": kwargs["args"],
+        "method": method,
+        "measure": kwargs["measure"],
+        "epsabs": kwargs["epsabs"],
+        "epsrel": kwargs["epsrel"],
+        "max_evaluations": kwargs["max_evaluations"],
+        "error_norm": kwargs["error_norm"],
+    }
+    if isinstance(method, AdaptiveScrambledSobol):
+        result = integrate_adaptive_scrambled_qmc(
+            fun,
+            domain,
+            **common,
+            key=kwargs["key"],
+        )
+    elif isinstance(method, ScrambledSobol):
+        result = integrate_scrambled_qmc(
+            fun,
+            domain,
+            **common,
+            key=kwargs["key"],
+        )
+    elif isinstance(method, Sobol):
+        result = integrate_qmc(
+            fun,
+            domain,
+            **common,
+            key=kwargs["key"],
+        )
+    elif isinstance(method, AdaptiveSmolyak):
+        result = integrate_adaptive_sparse(
+            fun,
+            domain,
+            **common,
+            max_indices=kwargs["max_indices"],
+            max_frontier=kwargs["max_frontier"],
+            max_nodes=kwargs["max_nodes"],
+        )
+    elif isinstance(method, Smolyak):
+        result = integrate_sparse(
+            fun,
+            domain,
+            **common,
+            max_indices=kwargs["max_indices"],
+            max_frontier=kwargs["max_frontier"],
+            max_nodes=kwargs["max_nodes"],
+        )
+    elif isinstance(method, AdaptiveCubature):
+        result = integrate_cubature(
+            fun,
+            domain,
+            **common,
+            max_regions=kwargs["max_regions"],
+        )
+    elif isinstance(method, AdaptiveTensorClenshawCurtis):
+        result = integrate_adaptive_tensor(fun, domain, **common)
+    elif isinstance(method, TensorProduct):
+        result = integrate_tensor(fun, domain, **common)
+    else:
+        raise AssertionError("unreachable")
+    return jax.tree.map(jax.lax.stop_gradient, result)
 
 
 def integrate(

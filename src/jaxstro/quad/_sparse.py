@@ -59,6 +59,7 @@ class SparseReplayEvidence(NamedTuple):
     active: Array
     node_ids: Array
     coefficients: Array
+    node_active: Array
 
 
 class AdaptiveSparseControllerResult(NamedTuple):
@@ -131,22 +132,38 @@ def canonical_cc_identity(level: int, index: int) -> DyadicIdentity:
     return index, angle_level
 
 
-def identity_to_point(identity: DyadicIdentity, dtype) -> Array:
-    """Create a unit-interval coordinate after exact identity coalescing."""
-    numerator, denominator_power = identity
+def identities_to_points(identities: Array, dtype) -> Array:
+    """Map canonical dyadic identities to their exact special coordinates."""
+    identities = jnp.asarray(identities)
+    if identities.shape[-1:] != (2,):
+        raise ValueError("dyadic identities must have a final axis of length 2")
     selected_dtype = jnp.dtype(dtype)
-    if identity == (0, 0):
-        return jnp.asarray(0.0, dtype=selected_dtype)
-    if identity == (1, 0):
-        return jnp.asarray(1.0, dtype=selected_dtype)
-    if identity == (1, 1):
-        return jnp.asarray(0.5, dtype=selected_dtype)
-    numerator_value = jnp.asarray(numerator, dtype=selected_dtype)
-    denominator = jnp.asarray(1 << denominator_power, dtype=selected_dtype)
-    return jnp.asarray(0.5, dtype=selected_dtype) * (
+    numerator = identities[..., 0]
+    denominator_power = identities[..., 1]
+    numerator_value = numerator.astype(selected_dtype)
+    denominator = jnp.exp2(denominator_power.astype(selected_dtype))
+    general = jnp.asarray(0.5, dtype=selected_dtype) * (
         jnp.asarray(1.0, dtype=selected_dtype)
         - jnp.cos(jnp.pi * numerator_value / denominator)
     )
+    return jnp.where(
+        (numerator == 0) & (denominator_power == 0),
+        jnp.asarray(0.0, dtype=selected_dtype),
+        jnp.where(
+            (numerator == 1) & (denominator_power == 0),
+            jnp.asarray(1.0, dtype=selected_dtype),
+            jnp.where(
+                (numerator == 1) & (denominator_power == 1),
+                jnp.asarray(0.5, dtype=selected_dtype),
+                general,
+            ),
+        ),
+    )
+
+
+def identity_to_point(identity: DyadicIdentity, dtype) -> Array:
+    """Create a unit-interval coordinate after exact identity coalescing."""
+    return identities_to_points(jnp.asarray(identity), dtype)
 
 
 def unit_clenshaw_curtis(level: int, dtype) -> FixedRuleData:
@@ -1186,6 +1203,7 @@ def adaptive_sparse_controller(
             active=state.accepted_active,
             node_ids=state.cache.identities,
             coefficients=state.cache.coefficients,
+            node_active=state.cache.active & state.cache.accepted,
         ),
     )
 
@@ -1205,6 +1223,7 @@ __all__ = [
     "fixed_sparse_node_identities",
     "fixed_index_set",
     "hierarchical_rule",
+    "identities_to_points",
     "identity_to_point",
     "is_admissible",
     "materialize_smolyak_rule",

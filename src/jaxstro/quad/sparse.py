@@ -393,7 +393,8 @@ def integrate_adaptive_sparse(
     max_frontier: int | None,
     max_nodes: int | None,
     error_norm: ErrorNorm,
-) -> QuadResult:
+    _return_nodes: bool = False,
+) -> QuadResult | tuple[QuadResult, tuple[jax.Array, jax.Array, jax.Array]]:
     """Evaluate one fixed-capacity dimension-adaptive Smolyak formula."""
     max_evaluations = _validate_positive_capacity(
         "max_evaluations",
@@ -447,6 +448,12 @@ def integrate_adaptive_sparse(
     invalid = ~hyperrectangle_is_valid(domain) | ~tolerance_valid
     zero_width = jnp.any(jnp.asarray(domain.lower) == domain.upper)
     selected_measure = LebesgueMeasure() if measure is None else measure
+    empty_node_ids = jnp.zeros(
+        (max_nodes, 2 * domain.dimension),
+        dtype=jnp.int32,
+    )
+    empty_coefficients = jnp.zeros((max_nodes,), dtype=dtype)
+    empty_node_active = jnp.zeros((max_nodes,), dtype=jnp.bool_)
 
     def invalid_branch(_):
         error = jnp.full_like(jnp.real(zero), jnp.nan)
@@ -457,23 +464,29 @@ def integrate_adaptive_sparse(
             epsrel=epsrel,
             norm=error_norm,
         )
-        return _sparse_result(
-            zero,
-            error,
-            frontier_error=frontier_error,
-            tolerance=tolerance,
-            status=QuadStatus.INVALID_INPUT,
-            evaluations=0,
-            refinements=0,
-            level=method.initial_level,
+        return (
+            _sparse_result(
+                zero,
+                error,
+                frontier_error=frontier_error,
+                tolerance=tolerance,
+                status=QuadStatus.INVALID_INPUT,
+                evaluations=0,
+                refinements=0,
+                level=method.initial_level,
+            ),
+            (empty_node_ids, empty_coefficients, empty_node_active),
         )
 
     def zero_branch(_):
-        return zero_volume_result(
-            zero,
-            epsabs=epsabs,
-            epsrel=epsrel,
-            error_norm=error_norm,
+        return (
+            zero_volume_result(
+                zero,
+                epsabs=epsabs,
+                epsrel=epsrel,
+                error_norm=error_norm,
+            ),
+            (empty_node_ids, empty_coefficients, empty_node_active),
         )
 
     def evaluate_branch(_):
@@ -492,18 +505,25 @@ def integrate_adaptive_sparse(
             error_norm=error_norm,
             zero=zero,
         )
-        return _sparse_result(
-            controller.value,
-            controller.error,
-            frontier_error=controller.frontier_error,
-            tolerance=controller.tolerance,
-            status=controller.status,
-            evaluations=controller.evaluations,
-            refinements=controller.refinements,
-            level=controller.level,
+        return (
+            _sparse_result(
+                controller.value,
+                controller.error,
+                frontier_error=controller.frontier_error,
+                tolerance=controller.tolerance,
+                status=controller.status,
+                evaluations=controller.evaluations,
+                refinements=controller.refinements,
+                level=controller.level,
+            ),
+            (
+                controller.evidence.node_ids,
+                controller.evidence.coefficients,
+                controller.evidence.node_active,
+            ),
         )
 
-    return jax.lax.cond(
+    result, nodes = jax.lax.cond(
         invalid,
         invalid_branch,
         lambda _: jax.lax.cond(
@@ -514,6 +534,9 @@ def integrate_adaptive_sparse(
         ),
         operand=None,
     )
+    if _return_nodes:
+        return result, nodes
+    return result
 
 
 __all__ = [

@@ -227,7 +227,8 @@ def integrate_adaptive_tensor(
     epsrel,
     max_evaluations: int,
     error_norm: ErrorNorm,
-) -> QuadResult:
+    _return_levels: bool = False,
+) -> QuadResult | tuple[QuadResult, jax.Array]:
     """Evaluate one bounded anisotropic tensor frontier controller."""
     dtype = jnp.result_type(domain.lower, domain.upper, 0.0)
     capacity = validate_adaptive_tensor_capacity(
@@ -264,7 +265,7 @@ def integrate_adaptive_tensor(
             jnp.asarray(epsabs, dtype=dtype),
             jnp.asarray(epsrel, dtype=dtype) * reduce_error_norm(zero, error_norm),
         )
-        return _adaptive_result(
+        result = _adaptive_result(
             zero,
             error,
             frontier_error=jnp.asarray(jnp.nan, dtype=dtype),
@@ -278,13 +279,25 @@ def integrate_adaptive_tensor(
                 dtype=jnp.int32,
             ),
         )
+        return result, jnp.full(
+            (domain.dimension,),
+            method.initial_level,
+            dtype=jnp.int32,
+        )
 
     def zero_branch(_):
-        return zero_volume_result(
-            zero,
-            epsabs=epsabs,
-            epsrel=epsrel,
-            error_norm=error_norm,
+        return (
+            zero_volume_result(
+                zero,
+                epsabs=epsabs,
+                epsrel=epsrel,
+                error_norm=error_norm,
+            ),
+            jnp.full(
+                (domain.dimension,),
+                method.initial_level,
+                dtype=jnp.int32,
+            ),
         )
 
     def evaluate_branch(_):
@@ -301,18 +314,21 @@ def integrate_adaptive_tensor(
             zero=zero,
             capacity=capacity,
         )
-        return _adaptive_result(
-            controller.value,
-            controller.error,
-            frontier_error=controller.frontier_error,
-            tolerance=controller.tolerance,
-            status=controller.status,
-            evaluations=controller.evaluations,
-            refinements=controller.refinements,
-            levels=controller.levels,
+        return (
+            _adaptive_result(
+                controller.value,
+                controller.error,
+                frontier_error=controller.frontier_error,
+                tolerance=controller.tolerance,
+                status=controller.status,
+                evaluations=controller.evaluations,
+                refinements=controller.refinements,
+                levels=controller.levels,
+            ),
+            controller.evidence.levels,
         )
 
-    return jax.lax.cond(
+    result, levels = jax.lax.cond(
         invalid,
         invalid_branch,
         lambda _: jax.lax.cond(
@@ -323,6 +339,9 @@ def integrate_adaptive_tensor(
         ),
         operand=None,
     )
+    if _return_levels:
+        return result, levels
+    return result
 
 
 __all__ = [

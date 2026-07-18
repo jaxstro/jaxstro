@@ -123,7 +123,8 @@ def integrate_cubature(
     max_evaluations: int,
     max_regions: int | None,
     error_norm: ErrorNorm,
-) -> QuadResult:
+    _return_leaves: bool = False,
+) -> QuadResult | tuple[QuadResult, tuple[jax.Array, jax.Array, jax.Array]]:
     """Evaluate one bounded h-adaptive Genz-Malik region controller."""
     capacity = validate_cubature_capacity(
         dimension=domain.dimension,
@@ -161,6 +162,12 @@ def integrate_cubature(
     )
     invalid = ~hyperrectangle_is_valid(domain) | ~tolerance_valid
     zero_width = jnp.any(jnp.asarray(domain.lower) == domain.upper)
+    empty_lower = jnp.zeros(
+        (capacity.store_capacity, domain.dimension),
+        dtype=data.points.dtype,
+    )
+    empty_upper = jnp.zeros_like(empty_lower)
+    empty_active = jnp.zeros((capacity.store_capacity,), dtype=jnp.bool_)
 
     def invalid_branch(_):
         error = jnp.full_like(jnp.real(zero), jnp.nan)
@@ -171,24 +178,30 @@ def integrate_cubature(
             epsrel=epsrel,
             norm=error_norm,
         )
-        return _cubature_result(
-            zero,
-            error,
-            error_value_norm=error_value_norm,
-            tolerance=tolerance,
-            status=QuadStatus.INVALID_INPUT,
-            evaluations=0,
-            refinements=0,
-            active_regions=0,
-            deepest_depth=0,
+        return (
+            _cubature_result(
+                zero,
+                error,
+                error_value_norm=error_value_norm,
+                tolerance=tolerance,
+                status=QuadStatus.INVALID_INPUT,
+                evaluations=0,
+                refinements=0,
+                active_regions=0,
+                deepest_depth=0,
+            ),
+            (empty_lower, empty_upper, empty_active),
         )
 
     def zero_branch(_):
-        return zero_volume_result(
-            zero,
-            epsabs=epsabs,
-            epsrel=epsrel,
-            error_norm=error_norm,
+        return (
+            zero_volume_result(
+                zero,
+                epsabs=epsabs,
+                epsrel=epsrel,
+                error_norm=error_norm,
+            ),
+            (empty_lower, empty_upper, empty_active),
         )
 
     def evaluate_branch(_):
@@ -206,19 +219,26 @@ def integrate_cubature(
             data=data,
             capacity=capacity,
         )
-        return _cubature_result(
-            controller.value,
-            controller.error,
-            error_value_norm=controller.error_norm,
-            tolerance=controller.tolerance,
-            status=controller.status,
-            evaluations=controller.evaluations,
-            refinements=controller.refinements,
-            active_regions=controller.active_regions,
-            deepest_depth=controller.deepest_depth,
+        return (
+            _cubature_result(
+                controller.value,
+                controller.error,
+                error_value_norm=controller.error_norm,
+                tolerance=controller.tolerance,
+                status=controller.status,
+                evaluations=controller.evaluations,
+                refinements=controller.refinements,
+                active_regions=controller.active_regions,
+                deepest_depth=controller.deepest_depth,
+            ),
+            (
+                controller.evidence.lower,
+                controller.evidence.upper,
+                controller.evidence.active,
+            ),
         )
 
-    return jax.lax.cond(
+    result, leaves = jax.lax.cond(
         invalid,
         invalid_branch,
         lambda _: jax.lax.cond(
@@ -229,6 +249,9 @@ def integrate_cubature(
         ),
         operand=None,
     )
+    if _return_leaves:
+        return result, leaves
+    return result
 
 
 __all__ = ["AdaptiveCubature", "GenzMalik", "integrate_cubature"]

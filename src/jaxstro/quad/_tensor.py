@@ -952,6 +952,42 @@ def _formula_node_ids(
     return ids, active
 
 
+def adaptive_tensor_replay_formula(
+    levels: Array,
+    tables: AdaptiveTensorTables,
+    max_evaluations: int,
+) -> tuple[Array, Array, Array]:
+    """Materialize the accepted normalized tensor formula at fixed capacity."""
+    level_index, counts, point_count = _formula_structure(levels, tables)
+    points = jnp.zeros(
+        (max_evaluations, levels.shape[0]),
+        dtype=tables.nodes.dtype,
+    )
+    weights = jnp.zeros((max_evaluations,), dtype=tables.weights.dtype)
+
+    def store_row(flat: Array, carry: tuple[Array, Array]):
+        current_points, current_weights = carry
+        point, weight, _canonical_id, _point_key = _formula_row(
+            flat,
+            level_index=level_index,
+            counts=counts,
+            tables=tables,
+        )
+        return (
+            current_points.at[flat].set(point),
+            current_weights.at[flat].set(weight),
+        )
+
+    points, weights = jax.lax.fori_loop(
+        0,
+        point_count,
+        store_row,
+        (points, weights),
+    )
+    active = jnp.arange(max_evaluations, dtype=jnp.int32) < point_count
+    return points, weights, active
+
+
 def _frontier_refresh_cost(
     levels: Array,
     accepted_axis: Array,
@@ -1288,6 +1324,7 @@ __all__ = [
     "TensorReplayEvidence",
     "TensorRuleData",
     "adaptive_tensor_controller",
+    "adaptive_tensor_replay_formula",
     "adaptive_tensor_tables",
     "canonical_cc_axis_ids",
     "canonical_tensor_ids",
