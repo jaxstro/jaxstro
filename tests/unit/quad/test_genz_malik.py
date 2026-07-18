@@ -460,6 +460,59 @@ def test_local_estimate_flags_finite_payload_reduction_overflow(
     assert jnp.all(jnp.isfinite(batched.axis_difference[1]))
 
 
+@pytest.mark.parametrize(
+    ("dtype", "complex_dtype"),
+    [(jnp.float32, jnp.complex64), (jnp.float64, jnp.complex128)],
+)
+@pytest.mark.parametrize("payload_kind", ["scalar", "vector", "complex"])
+def test_local_estimate_flags_axis_only_overflow_without_sanitizing(
+    dtype,
+    complex_dtype,
+    payload_kind,
+):
+    data = genz_malik_data(2, dtype)
+    scale = jnp.asarray(0.04 * np.finfo(np.dtype(dtype)).max, dtype=dtype)
+    base = jnp.zeros((data.point_count,), dtype=dtype)
+    base = base.at[data.center_slice.start].set(scale)
+    base = base.at[data.lambda2_axis_indices[0]].set(-scale)
+    base = base.at[data.lambda4_axis_indices[0]].set(scale)
+    if payload_kind == "scalar":
+        values = base
+    elif payload_kind == "vector":
+        values = jnp.stack((base, jnp.zeros_like(base)), axis=-1)
+    else:
+        values = base.astype(complex_dtype) * jnp.asarray(
+            1.0 + 1.0j,
+            dtype=complex_dtype,
+        )
+
+    assert jnp.all(jnp.isfinite(values))
+
+    eager = genz_malik_estimate(values, data)
+    compiled = jax.jit(genz_malik_estimate)(values, data)
+    batched_values = jnp.stack((values, jnp.zeros_like(values)), axis=0)
+    batched = jax.jit(jax.vmap(genz_malik_estimate, in_axes=(0, None)))(
+        batched_values,
+        data,
+    )
+
+    for estimate in (eager, compiled):
+        assert estimate.nonfinite
+        assert jnp.all(jnp.isfinite(estimate.value))
+        assert jnp.all(jnp.isfinite(estimate.error))
+        assert jnp.isinf(estimate.axis_difference[0])
+        assert jnp.all(jnp.isfinite(estimate.axis_difference[1:]))
+    assert jnp.array_equal(
+        batched.nonfinite,
+        jnp.asarray([True, False]),
+    )
+    assert jnp.all(jnp.isfinite(batched.value))
+    assert jnp.all(jnp.isfinite(batched.error))
+    assert jnp.isinf(batched.axis_difference[0, 0])
+    assert jnp.all(jnp.isfinite(batched.axis_difference[0, 1:]))
+    assert jnp.all(jnp.isfinite(batched.axis_difference[1]))
+
+
 def test_axis_fourth_differences_match_the_five_point_formula():
     data = genz_malik_data(3, jnp.float64)
     centered = data.points - 0.5
