@@ -986,6 +986,12 @@ controller. `integrate.py` only dispatches concrete method declarations to
                   "corner_peak",
                   "gaussian",
               ),
+              "family_dimensions": {
+                  "oscillatory": (2, 4),
+                  "product_peak": (2, 4),
+                  "corner_peak": (2, 4),
+                  "gaussian": (2, 4),
+              },
               "method": "TensorProduct(GaussianRule(12))",
               "max_evaluations": "12 ** dimension",
           },
@@ -997,8 +1003,14 @@ controller. `integrate.py` only dispatches concrete method declarations to
                   "corner_peak",
                   "gaussian",
                   "continuous",
-                  "discontinuous",
               ),
+              "family_dimensions": {
+                  "oscillatory": (2, 4),
+                  "product_peak": (2, 4),
+                  "corner_peak": (2, 4),
+                  "gaussian": (2, 4),
+                  "continuous": (2,),
+              },
               "method": "AdaptiveTensorClenshawCurtis(initial_level=2)",
               "max_evaluations": 32_768,
               "epsabs": 1.0e-8,
@@ -1014,6 +1026,14 @@ controller. `integrate.py` only dispatches concrete method declarations to
                   "continuous",
                   "discontinuous",
               ),
+              "family_dimensions": {
+                  "oscillatory": (2, 4, 6, 8),
+                  "product_peak": (2, 4, 6, 8),
+                  "corner_peak": (2, 4, 6, 8),
+                  "gaussian": (2, 4, 6, 8),
+                  "continuous": (2, 4, 6, 8),
+                  "discontinuous": (2, 4, 6, 8),
+              },
               "method": "AdaptiveCubature(GenzMalik())",
               "max_evaluations": 500_000,
               "max_regions": 4_096,
@@ -1165,6 +1185,23 @@ controller. `integrate.py` only dispatches concrete method declarations to
   x64 preflight it yields `(max_level, max_refinements)=(12, 10)` in dimension
   2 and `(8, 6)` in dimension 4. These are resource controls, not accuracy
   tuning; every truth threshold remains unchanged.
+
+  The complete practical adaptive-tensor gate finished in 214.01 s at
+  1,055,113,216-byte peak RSS. Fifteen cases passed and three non-smooth cases
+  rejected their frozen thresholds. Dimension-2 discontinuous had absolute
+  truth error `1.21599337392575e-3`, status `MAX_EVALUATIONS`, 24,961
+  evaluations, 9 refinements, maximum level 7, and frontier norm
+  `5.352858148793382e-3`. Dimension-4 continuous had error
+  `3.9738172472236766e-4`, `MAX_EVALUATIONS`, 32,385 evaluations, 4
+  refinements, maximum level 4, and frontier norm
+  `6.916251122028871e-4`. Dimension-4 discontinuous had error
+  `3.218803677795348e-2`, the same work/status, and frontier norm
+  `2.3432820553677375e-2`. All tolerances were `1.0e-8`.
+
+  No threshold is loosened. Adaptive tensor certifies the four smooth families
+  in dimensions 2 and 4 plus the continuous family in dimension 2. The three
+  rejected cases remain exact limitation records. Adaptive cubature owns the
+  complete continuous/discontinuous dimensional truth matrix in B1.
 
   The validation harness clears JAX compilation caches and the Task 2/Task 4
   host metadata caches after each runtime case, then runs Python garbage
