@@ -172,31 +172,15 @@ def test_stop_mode_has_exact_zero_grad_and_jvp(method_name: str):
 
 
 @pytest.mark.parametrize(
-    ("method", "message"),
+    "method",
     (
-        (
-            quad.TensorProduct(quad.GaussianRule(4)),
-            'TensorProduct supports only gradient="stop" in Phase B1; '
-            'gradient="replay" is introduced in Phase B4',
-        ),
-        (
-            quad.AdaptiveTensorClenshawCurtis(initial_level=2),
-            'AdaptiveTensorClenshawCurtis supports only gradient="stop" in Phase B1; '
-            'gradient="replay" is introduced in Phase B4',
-        ),
-        (
-            quad.AdaptiveCubature(quad.GenzMalik()),
-            'AdaptiveCubature supports only gradient="stop" in Phase B1; '
-            'gradient="replay" is introduced in Phase B4',
-        ),
+        quad.TensorProduct(quad.GaussianRule(4)),
+        quad.AdaptiveTensorClenshawCurtis(initial_level=2),
+        quad.AdaptiveCubature(quad.GenzMalik()),
     ),
 )
-@pytest.mark.parametrize("gradient", ("replay", "Replay", "forward", ""))
-def test_every_non_stop_mode_is_rejected_with_exact_capability_message(
-    method,
-    message: str,
-    gradient: str,
-):
+@pytest.mark.parametrize("gradient", ("Replay", "forward", ""))
+def test_unknown_gradient_modes_are_rejected(method, gradient: str):
     kwargs = {}
     if isinstance(method, quad.AdaptiveCubature):
         kwargs["max_regions"] = 1
@@ -211,4 +195,4 @@ def test_every_non_stop_mode_is_rejected_with_exact_capability_message(
             gradient=gradient,
             **kwargs,
         )
-    assert str(exc_info.value) == message
+    assert str(exc_info.value) == 'gradient must be "replay" or "stop"'

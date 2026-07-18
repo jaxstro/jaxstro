@@ -25,10 +25,11 @@ def _controls(method):
     )
 
 
-def _integrate(fun, lower, upper, method, *, gradient="stop"):
+def _integrate(fun, lower, upper, method, *, args=(), gradient="stop"):
     return quad.integrate(
         fun,
         quad.Hyperrectangle(lower, upper),
+        args=args,
         method=method,
         epsabs=1.0e-6,
         epsrel=1.0e-6,
@@ -166,15 +167,15 @@ def test_sparse_orientation_and_stop_gradient_contract(method):
     (quad.Smolyak(3), quad.AdaptiveSmolyak()),
     ids=("fixed", "adaptive"),
 )
-def test_sparse_replay_fails_closed_at_the_phase_b4_boundary(method):
-    with pytest.raises(
-        ValueError,
-        match='supports only gradient="stop" in Phase B2',
-    ):
-        _integrate(
-            lambda x: jnp.sum(x, axis=-1),
+def test_sparse_replay_differentiates_the_accepted_formula(method):
+    def objective(scale):
+        return _integrate(
+            lambda x, live_scale: live_scale * jnp.sum(x, axis=-1),
             jnp.zeros(2),
             jnp.ones(2),
             method,
+            args=scale,
             gradient="replay",
-        )
+        ).value
+
+    assert jax.grad(objective)(2.0) == pytest.approx(objective(1.0))

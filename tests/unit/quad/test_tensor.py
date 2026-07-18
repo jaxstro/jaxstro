@@ -516,8 +516,8 @@ def test_tensor_stop_mode_has_exact_zero_grad_and_jvp_tangents():
     assert jnp.array_equal(tangent, 0.0)
 
 
-@pytest.mark.parametrize("gradient", ["replay", "through", "invalid"])
-def test_tensor_rejects_every_gradient_mode_except_stop(gradient):
+@pytest.mark.parametrize("gradient", ["through", "invalid"])
+def test_tensor_rejects_unknown_gradient_modes(gradient):
     with pytest.raises(ValueError) as exc_info:
         quad.integrate(
             lambda x: jnp.sum(x, axis=-1),
@@ -528,10 +528,7 @@ def test_tensor_rejects_every_gradient_mode_except_stop(gradient):
             max_evaluations=4,
             gradient=gradient,
         )
-    assert str(exc_info.value) == (
-        'TensorProduct supports only gradient="stop" in Phase B1; '
-        'gradient="replay" is introduced in Phase B4'
-    )
+    assert str(exc_info.value) == 'gradient must be "replay" or "stop"'
 
 
 def test_tensor_composes_with_jit_and_vmap_in_stop_mode():

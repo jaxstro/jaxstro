@@ -147,17 +147,20 @@ def test_sobol_declaration_accepts_and_rejects_exact_bit_boundary():
         quad.Sobol(level=54, bits=53)
 
 
-def test_sobol_replay_fails_closed_at_b4_boundary():
-    with pytest.raises(ValueError, match='supports only gradient="stop" in Phase B3'):
-        quad.integrate(
-            lambda x: jnp.sum(x, axis=-1),
+def test_sobol_replay_differentiates_the_accepted_prefix():
+    def objective(scale):
+        return quad.integrate(
+            lambda x, live_scale: live_scale * jnp.sum(x, axis=-1),
             quad.Hyperrectangle(jnp.zeros(2), jnp.ones(2)),
+            args=scale,
             **_deterministic_options(
                 method=quad.Sobol(level=4),
                 max_evaluations=16,
                 gradient="replay",
             ),
-        )
+        ).value
+
+    assert jax.grad(objective)(2.0) == pytest.approx(objective(1.0))
 
 
 def test_scrambled_sobol_returns_one_fixed_look_interval():

@@ -9,6 +9,7 @@ from ._multidim_replay import (
     MultidimConfig,
     MultidimPrimalSolve,
     ReplayFormula,
+    multidim_replay_core,
 )
 from ._scramble import scramble_integers
 from ._sobol import resolve_sobol_bits, sobol_integer_points, sobol_points
@@ -380,6 +381,29 @@ def _prepare_multidim_solve(
 
 def _integrate_hyperrectangle(fun, domain, **kwargs):
     method = kwargs["method"]
+    _method_phase(method)
+    if kwargs["gradient"] not in ("replay", "stop"):
+        raise ValueError('gradient must be "replay" or "stop"')
+    if kwargs["gradient"] == "replay":
+        config = MultidimConfig(
+            fun=fun,
+            method=method,
+            measure=kwargs["measure"],
+            max_evaluations=kwargs["max_evaluations"],
+            max_regions=kwargs["max_regions"],
+            max_indices=kwargs["max_indices"],
+            max_frontier=kwargs["max_frontier"],
+            max_nodes=kwargs["max_nodes"],
+            error_norm=kwargs["error_norm"],
+        )
+        return multidim_replay_core(
+            config,
+            domain,
+            kwargs["args"],
+            kwargs["key"],
+            kwargs["epsabs"],
+            kwargs["epsrel"],
+        )
     _require_stop_gradient(
         method,
         kwargs["gradient"],
