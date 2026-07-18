@@ -1225,11 +1225,15 @@ controller. `integrate.py` only dispatches concrete method declarations to
   hypercube integrals directly in the test module. Generate
   `quad-b1-genz-reference.json` only as an independent redundant check from
   80-digit closed-form `mpmath` evaluation in
-  `scripts/generate_quad_b1_reference.py`; it stores schema version, formula
-  ID, exact parameter vectors, decimal truth, generator version, and generator
-  source SHA-256. The script supports deterministic `--emit` and byte-exact
-  `--check`. No method under test or external quadrature routine may generate
-  truth. Tests instantiate controls directly from this immutable mapping;
+  `scripts/generate_quad_b1_reference.py`. Every rational conversion and
+  formula evaluation executes inside a generator-owned 100-digit
+  `mp.workdps(...)` context, independent of and restoring the caller's global
+  precision. The artifact stores schema version, formula ID, exact parameter
+  vectors, decimal truth, generator version, reported precision, working
+  precision, and generator source SHA-256. The script supports deterministic
+  `--emit` and byte-exact `--check`. No method under test or external
+  quadrature routine may generate truth. Tests instantiate controls directly
+  from this immutable mapping;
   changing a rule order, level, capacity, tolerance, dimension, or threshold
   requires a reviewed manifest change rather than post-hoc tuning.
   `threshold_by_family` is the single threshold owner read by assertions.

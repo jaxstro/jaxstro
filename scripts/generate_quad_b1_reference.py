@@ -16,8 +16,9 @@ import mpmath as mp
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT_PATH = ROOT / "tests/validation/data/quad-b1-genz-reference.json"
 FORMULA_SET_ID = "genz-unit-hypercube-six-family-v1"
-GENERATOR_VERSION = "1.0.0"
+GENERATOR_VERSION = "1.1.0"
 PRECISION_DECIMAL_DIGITS = 80
+WORKING_PRECISION_DECIMAL_DIGITS = 100
 DIMENSIONS = (2, 4, 6, 8)
 FAMILIES = (
     "oscillatory",
@@ -114,27 +115,28 @@ def _truth(family: str, a: list[mp.mpf], u: list[mp.mpf]) -> mp.mpf:
 
 
 def _records() -> list[dict]:
-    records = []
-    for dimension in DIMENSIONS:
-        a_fraction, u_fraction = _parameter_fractions(dimension)
-        a = [_mp_fraction(value) for value in a_fraction]
-        u = [_mp_fraction(value) for value in u_fraction]
-        for family in FAMILIES:
-            records.append(
-                {
-                    "a": [_fraction_text(value) for value in a_fraction],
-                    "dimension": dimension,
-                    "family": family,
-                    "formula_id": FORMULA_IDS[family],
-                    "truth_decimal": mp.nstr(
-                        _truth(family, a, u),
-                        n=PRECISION_DECIMAL_DIGITS,
-                        strip_zeros=False,
-                    ),
-                    "u": [_fraction_text(value) for value in u_fraction],
-                }
-            )
-    return records
+    with mp.workdps(WORKING_PRECISION_DECIMAL_DIGITS):
+        records = []
+        for dimension in DIMENSIONS:
+            a_fraction, u_fraction = _parameter_fractions(dimension)
+            a = [_mp_fraction(value) for value in a_fraction]
+            u = [_mp_fraction(value) for value in u_fraction]
+            for family in FAMILIES:
+                records.append(
+                    {
+                        "a": [_fraction_text(value) for value in a_fraction],
+                        "dimension": dimension,
+                        "family": family,
+                        "formula_id": FORMULA_IDS[family],
+                        "truth_decimal": mp.nstr(
+                            _truth(family, a, u),
+                            n=PRECISION_DECIMAL_DIGITS,
+                            strip_zeros=False,
+                        ),
+                        "u": [_fraction_text(value) for value in u_fraction],
+                    }
+                )
+        return records
 
 
 def _artifact() -> dict:
@@ -171,6 +173,7 @@ def _artifact() -> dict:
             "precision_decimal_digits": PRECISION_DECIMAL_DIGITS,
             "source_sha256": source_sha256,
             "version": GENERATOR_VERSION,
+            "working_precision_decimal_digits": WORKING_PRECISION_DECIMAL_DIGITS,
         },
         "manifest": {
             "a_rule": "0.35 + 0.05 * arange(1, dimension + 1)",

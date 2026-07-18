@@ -29,8 +29,11 @@ tests use float64 unless the transformation matrix explicitly selects float32.
 
 ## Independent truth provenance
 
-`scripts/generate_quad_b1_reference.py` evaluates analytic closed forms with
-80-decimal-digit `mpmath`; it never calls a Jaxstro method or an external
+`scripts/generate_quad_b1_reference.py` evaluates analytic closed forms inside
+a generator-owned 100-decimal-digit `mp.workdps(...)` context and reports 80
+decimal digits. Rational conversion and every formula evaluation occur inside
+that guarded context, which is independent of and restores the caller's
+global precision. The generator never calls a Jaxstro method or an external
 quadrature routine. The six formula IDs are:
 
 ```text
@@ -44,16 +47,22 @@ genz-unit-hypercube-six-family-v1:discontinuous-first-two-axes
 
 The immutable artifact contains 24 records: six families at dimensions
 2, 4, 6, and 8. It stores schema version 1, formula-set ID, exact inputs,
-decimal truth, generator version, precision, and generator source SHA-256.
+decimal truth, generator version, reported precision, working precision, and
+generator source SHA-256.
 
 ```text
 generator SHA-256:
-d80894dddd444eb230b297286f739250095ad81d6542f3374e5a14aa6bedd56e
+ce950bb6fff540bf5e989bd08f49960fce23dac1dd294439cb054fc169f4d8e0
 
 artifact SHA-256:
-2825272da7fd220ae840afe83e837a02b28f5d443962692fa3c9470a8bb5fd83
+227f7d9477de44f46a3448000f251e7ebfe885954f1c9e8e6ab87d293c644c30
 ```
 
+The caller-precision mutation test failed before the repair because 15- and
+37-digit callers produced different records. It now proves byte-identical
+records under both callers, exact caller-context restoration, and a frozen
+full-precision decimal oracle that differs from the former binary64-derived
+tail. An independent 200-digit audit matched every emitted 80-digit record.
 The direct JAX closed-form redundancy check passed all 24 records. Artifact
 freshness is byte-exact and source-hash-sensitive.
 
@@ -258,6 +267,55 @@ uv run --no-sync ruff format --check src tests
 uv run --no-sync mypy src/jaxstro
 Success: no issues found in 128 source files
 ```
+
+The independent Task 5 review then exposed that the original generator inherited
+the default 15-digit global `mpmath` context before formatting 80 decimal
+digits. The precision/provenance repair followed a second strict TDD cycle:
+
+```text
+RED:
+uv run --no-sync pytest -q
+  tests/validation/test_quad_multidim_deterministic.py
+  -k 'reference_generator_owns_precision or
+      reference_artifact_records_reported'
+2 failed, 113 deselected in 0.29 s
+
+GREEN:
+uv run --locked --group reference python
+  scripts/generate_quad_b1_reference.py --check
+fresh tests/validation/data/quad-b1-genz-reference.json
+
+uv run --no-sync pytest -q
+  tests/validation/test_quad_multidim_deterministic.py
+  -k 'reference or direct_closed_forms'
+28 passed, 87 deselected in 5.32 s
+
+uv run --no-sync pytest -q
+  tests/validation/test_quad_multidim_deterministic.py -k limitation
+8 passed, 107 deselected in 63.71 s
+
+uv run --no-sync pytest -q
+  tests/integration/test_quad_multidim_deterministic_transforms.py
+51 passed in 43.27 s
+
+uv run --no-sync ruff check
+  scripts/generate_quad_b1_reference.py
+  tests/validation/test_quad_multidim_deterministic.py
+All checks passed!
+
+uv run --no-sync ruff format --check
+  scripts/generate_quad_b1_reference.py
+  tests/validation/test_quad_multidim_deterministic.py
+2 files already formatted
+
+uv run --no-sync mypy src/jaxstro
+Success: no issues found in 128 source files
+```
+
+All frozen limitation residuals remained within their original strict
+regression tolerances, so none was changed. Runtime source, method controls,
+scientific thresholds, and the development-only dependency boundary are
+unchanged.
 
 ## B4 carry-forward and next checkpoint
 

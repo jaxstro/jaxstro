@@ -38,8 +38,9 @@
   "formula_set_id": "genz-unit-hypercube-six-family-v1",
   "generator": {
     "precision_decimal_digits": 80,
-    "source_sha256": "d80894dddd444eb230b297286f739250095ad81d6542f3374e5a14aa6bedd56e",
-    "version": "1.0.0"
+    "source_sha256": "ce950bb6fff540bf5e989bd08f49960fce23dac1dd294439cb054fc169f4d8e0",
+    "version": "1.1.0",
+    "working_precision_decimal_digits": 100
   },
   "manifest": {
     "a_rule": "0.35 + 0.05 * arange(1, dimension + 1)",
@@ -68,7 +69,7 @@
       "dimension": 2,
       "family": "oscillatory",
       "formula_id": "genz-unit-hypercube-six-family-v1:oscillatory",
-      "truth_decimal": "-0.80039965815688474126687879106611944735050201416015625000000000000000000000000000",
+      "truth_decimal": "-0.80039965815688459973909807494292399787055795739660590014938079512729989307212925",
       "u": [
         "1/3",
         "2/3"
@@ -82,7 +83,7 @@
       "dimension": 2,
       "family": "product_peak",
       "formula_id": "genz-unit-hypercube-six-family-v1:product-peak",
-      "truth_decimal": "0.031162328926496129372081256292403850238770246505737304687500000000000000000000000",
+      "truth_decimal": "0.031162328926496119207205997486613568259874968722395522314007532921320502315105599",
       "u": [
         "1/3",
         "2/3"
@@ -96,7 +97,7 @@
       "dimension": 2,
       "family": "corner_peak",
       "formula_id": "genz-unit-hypercube-six-family-v1:corner-peak",
-      "truth_decimal": "0.37944348289175833244257773912977427244186401367187500000000000000000000000000000",
+      "truth_decimal": "0.37944348289175875382771934496072427106909865530555185727599520702968978831047797",
       "u": [
         "1/3",
         "2/3"
@@ -110,7 +111,7 @@
       "dimension": 2,
       "family": "gaussian",
       "formula_id": "genz-unit-hypercube-six-family-v1:gaussian",
-      "truth_decimal": "0.96099241113247690915244447751319967210292816162109375000000000000000000000000000",
+      "truth_decimal": "0.96099241113247717482330249392465329753663678510075852331843401135483113877322298",
       "u": [
         "1/3",
         "2/3"
@@ -124,7 +125,7 @@
       "dimension": 2,
       "family": "continuous",
       "formula_id": "genz-unit-hypercube-six-family-v1:continuous",
-      "truth_decimal": "0.79450881902705827730670762321096844971179962158203125000000000000000000000000000",
+      "truth_decimal": "0.79450881902705794532657323093092607191333706413201359372558591493959424115006991",
       "u": [
         "1/3",
         "2/3"
@@ -138,7 +139,7 @@
       "dimension": 2,
       "family": "discontinuous",
       "formula_id": "genz-unit-hypercube-six-family-v1:discontinuous-first-two-axes",
-      "truth_decimal": "0.27722580965804899388871262999600730836391448974609375000000000000000000000000000",
+      "truth_decimal": "0.27722580965804907792038295616210625355654302745602654160461088730891523862445329",
       "u": [
         "1/3",
         "2/3"
@@ -154,7 +155,7 @@
       "dimension": 4,
       "family": "oscillatory",
       "formula_id": "genz-unit-hypercube-six-family-v1:oscillatory",
-      "truth_decimal": "-0.57159565868411488231970452034147456288337707519531250000000000000000000000000000",
+      "truth_decimal": "-0.57159565868411479744297666413965419635651471145521615313643586527260117891303459",
       "u": [
         "1/5",
         "2/5",
@@ -172,7 +173,7 @@
       "dimension": 4,
       "family": "product_peak",
       "formula_id": "genz-unit-hypercube-six-family-v1:product-peak",
-      "truth_decimal": "0.0021824475154223334054381933100330570596270263195037841796875000000000000000000000",
+      "truth_decimal": "0.0021824475154223324689171759984569338534000191520548045893800128366023944371507397",
       "u": [
         "1/5",
         "2/5",
@@ -190,7 +191,7 @@
       "dimension": 4,
       "family": "corner_peak",
       "formula_id": "genz-unit-hypercube-six-family-v1:corner-peak",
-      "truth_decimal": "0.049662566797783296024260124568172614090144634246826171875000000000000000000000000",
+      "truth_decimal": "0.049662566797783328037155321368701781676016170455062348531834337624768707546731410",
       "u": [
         "1/5",
         "2/5",
@@ -208,7 +209,7 @@
       "dimension": 4,
       "family": "gaussian",
       "formula_id": "genz-unit-hypercube-six-family-v1:gaussian",
-      "truth_decimal": "0.88701343894893547314950410509482026100158691406250000000000000000000000000000000",
+      "truth_decimal": "0.88701343894893592253374434197854347870837441859216959874059039665107147949134424",
       "u": [
         "1/5",
         "2/5",
@@ -226,7 +227,7 @@
       "dimension": 4,
       "family": "continuous",
       "formula_id": "genz-unit-hypercube-six-family-v1:continuous",
-      "truth_decimal": "0.57633456844318164957741146281477995216846466064453125000000000000000000000000000",
+      "truth_decimal": "0.57633456844318109285579361406120043077663505478923456628721252407441415346485224",
       "u": [
         "1/5",
         "2/5",
@@ -244,7 +245,7 @@
       "dimension": 4,
       "family": "discontinuous",
       "formula_id": "genz-unit-hypercube-six-family-v1:discontinuous-first-two-axes",
-      "truth_decimal": "0.15784452335664328481712459506525192409753799438476562500000000000000000000000000",
+      "truth_decimal": "0.15784452335664328499771806720403423964649381150138116203206494273441974581710693",
       "u": [
         "1/5",
         "2/5",
@@ -264,7 +265,7 @@
       "dimension": 6,
       "family": "oscillatory",
       "formula_id": "genz-unit-hypercube-six-family-v1:oscillatory",
-      "truth_decimal": "-0.73074413723733244729885427659610286355018615722656250000000000000000000000000000",
+      "truth_decimal": "-0.73074413723733242914300821788184809181750388847475367120137854701276216586028012",
       "u": [
         "1/7",
         "2/7",
@@ -286,7 +287,7 @@
       "dimension": 6,
       "family": "product_peak",
       "formula_id": "genz-unit-hypercube-six-family-v1:product-peak",
-      "truth_decimal": "0.00029729230890596010936435811267131157364929094910621643066406250000000000000000000",
+      "truth_decimal": "0.00029729230890596005873061056744184817928663375691297158802330063436579778685287020",
       "u": [
         "1/7",
         "2/7",
@@ -308,7 +309,7 @@
       "dimension": 6,
       "family": "corner_peak",
       "formula_id": "genz-unit-hypercube-six-family-v1:corner-peak",
-      "truth_decimal": "0.0027138164597992875913534671639126827358268201351165771484375000000000000000000000",
+      "truth_decimal": "0.0027138164597992879441233662193815376632766966527763510193631821895243967778620008",
       "u": [
         "1/7",
         "2/7",
@@ -330,7 +331,7 @@
       "dimension": 6,
       "family": "gaussian",
       "formula_id": "genz-unit-hypercube-six-family-v1:gaussian",
-      "truth_decimal": "0.78874426284641119266893838357646018266677856445312500000000000000000000000000000",
+      "truth_decimal": "0.78874426284641169902085552199711044472091601936708890194545203033462094904849355",
       "u": [
         "1/7",
         "2/7",
@@ -352,7 +353,7 @@
       "dimension": 6,
       "family": "continuous",
       "formula_id": "genz-unit-hypercube-six-family-v1:continuous",
-      "truth_decimal": "0.39163483596481180049053705261030700057744979858398437500000000000000000000000000",
+      "truth_decimal": "0.39163483596481214810254586768486735384793437684510052997744457510612313208298976",
       "u": [
         "1/7",
         "2/7",
@@ -374,7 +375,7 @@
       "dimension": 6,
       "family": "discontinuous",
       "formula_id": "genz-unit-hypercube-six-family-v1:discontinuous-first-two-axes",
-      "truth_decimal": "0.14963956240703493727473016861040377989411354064941406250000000000000000000000000",
+      "truth_decimal": "0.14963956240703495127917331117199843680494697462884560209358409684372194512773262",
       "u": [
         "1/7",
         "2/7",
@@ -398,7 +399,7 @@
       "dimension": 8,
       "family": "oscillatory",
       "formula_id": "genz-unit-hypercube-six-family-v1:oscillatory",
-      "truth_decimal": "-0.88224207822421496505427285228506661951541900634765625000000000000000000000000000",
+      "truth_decimal": "-0.88224207822421497945638533101214825615449094786183360131376039404623366379455358",
       "u": [
         "1/9",
         "2/9",
@@ -424,7 +425,7 @@
       "dimension": 8,
       "family": "product_peak",
       "formula_id": "genz-unit-hypercube-six-family-v1:product-peak",
-      "truth_decimal": "0.000070784868108442720868733744055134593509137630462646484375000000000000000000000000",
+      "truth_decimal": "0.000070784868108442709700830506289849424586555269044496717933198497479207379835418803",
       "u": [
         "1/9",
         "2/9",
@@ -450,7 +451,7 @@
       "dimension": 8,
       "family": "corner_peak",
       "formula_id": "genz-unit-hypercube-six-family-v1:corner-peak",
-      "truth_decimal": "0.000070991823605724214182183251509172805526759475469589233398437500000000000000000000",
+      "truth_decimal": "0.000070991823605723027044455268219147446373329527794821808013625857697827554592339019",
       "u": [
         "1/9",
         "2/9",
@@ -476,7 +477,7 @@
       "dimension": 8,
       "family": "gaussian",
       "formula_id": "genz-unit-hypercube-six-family-v1:gaussian",
-      "truth_decimal": "0.67261211709151458304489779038704000413417816162109375000000000000000000000000000",
+      "truth_decimal": "0.67261211709151486715390568291356382949833243010941410574253000385926554490325243",
       "u": [
         "1/9",
         "2/9",
@@ -502,7 +503,7 @@
       "dimension": 8,
       "family": "continuous",
       "formula_id": "genz-unit-hypercube-six-family-v1:continuous",
-      "truth_decimal": "0.25028397090098625232812423746509011834859848022460937500000000000000000000000000",
+      "truth_decimal": "0.25028397090098636723982461666487278778380165541657891145380466299023451458488599",
       "u": [
         "1/9",
         "2/9",
@@ -528,7 +529,7 @@
       "dimension": 8,
       "family": "discontinuous",
       "formula_id": "genz-unit-hypercube-six-family-v1:discontinuous-first-two-axes",
-      "truth_decimal": "0.19119664631411634192481585614586947485804557800292968750000000000000000000000000",
+      "truth_decimal": "0.19119664631411641190266253490451814125137472223680395935316784706679030952504514",
       "u": [
         "1/9",
         "2/9",

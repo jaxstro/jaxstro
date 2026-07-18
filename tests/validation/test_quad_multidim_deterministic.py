@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import gc
 import hashlib
+import importlib.util
 import itertools
 import json
 import math
@@ -591,6 +592,45 @@ def test_reference_dependencies_are_development_only_and_exactly_pinned():
     runtime = tuple(pyproject["project"]["dependencies"])
     assert all("mpmath" not in dependency for dependency in runtime)
     assert all("scipy" not in dependency for dependency in runtime)
+
+
+def test_reference_generator_owns_precision_and_restores_caller_context():
+    spec = importlib.util.spec_from_file_location(
+        "quad_b1_reference_generator",
+        GENERATOR_PATH,
+    )
+    assert spec is not None
+    assert spec.loader is not None
+    generator = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(generator)
+
+    original_dps = generator.mp.mp.dps
+    try:
+        generator.mp.mp.dps = 15
+        records_from_low_precision_caller = generator._records()
+        assert generator.mp.mp.dps == 15
+
+        generator.mp.mp.dps = 37
+        records_from_higher_precision_caller = generator._records()
+        assert generator.mp.mp.dps == 37
+    finally:
+        generator.mp.mp.dps = original_dps
+
+    assert records_from_low_precision_caller == records_from_higher_precision_caller
+    oscillatory_d2 = next(
+        record["truth_decimal"]
+        for record in records_from_low_precision_caller
+        if record["family"] == "oscillatory" and record["dimension"] == 2
+    )
+    assert oscillatory_d2 == (
+        "-0.80039965815688459973909807494292399787055795739660590014938079512729989307212925"
+    )
+
+
+def test_reference_artifact_records_reported_and_working_precision():
+    artifact = _load_reference()
+    assert artifact["generator"]["precision_decimal_digits"] == 80
+    assert artifact["generator"]["working_precision_decimal_digits"] == 100
 
 
 def test_reference_artifact_is_fresh_complete_and_formula_identified():
