@@ -96,6 +96,10 @@ dev = [
   "mypy",
   "pyyaml>=6.0",
 ]
+reference = [
+  "mpmath==1.3.0",
+  "scipy==1.16.0",
+]
 
 # -----------------------
 # Ruff configuration
