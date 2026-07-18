@@ -1031,7 +1031,7 @@ controller. `integrate.py` only dispatches concrete method declarations to
                   "product_peak": (2, 4, 6, 8),
                   "corner_peak": (2, 4, 6, 8),
                   "gaussian": (2, 4, 6, 8),
-                  "continuous": (2, 4, 6, 8),
+                  "continuous": (2, 4, 8),
                   "discontinuous": (2, 4, 6, 8),
               },
               "method": "AdaptiveCubature(GenzMalik())",
@@ -1200,8 +1200,19 @@ controller. `integrate.py` only dispatches concrete method declarations to
 
   No threshold is loosened. Adaptive tensor certifies the four smooth families
   in dimensions 2 and 4 plus the continuous family in dimension 2. The three
-  rejected cases remain exact limitation records. Adaptive cubature owns the
-  complete continuous/discontinuous dimensional truth matrix in B1.
+  rejected cases remain exact limitation records.
+
+  Under the unchanged adaptive-cubature control, 35 of 36 analytic/Genz cases
+  passed in 18.75 s at 343,048,192-byte peak RSS. The dimension-6 continuous
+  case returned `MAX_EVALUATIONS` at 499,895 evaluations, 1,677 refinements,
+  and 1,678 active regions, with absolute residual
+  `1.0946951546741968e-4` and estimator norm
+  `2.654924527754773e-4`; it missed the unchanged `5.0e-5` threshold. Retain
+  this exact residual/work/error evidence as a limitation record. Adaptive
+  cubature certifies every other declared family/dimension pair, including
+  continuous dimensions 2, 4, and 8 and discontinuous dimensions 2, 4, 6,
+  and 8. Do not change the rule, capacity, tolerance, dimension set, or
+  threshold in response.
 
   The validation harness clears JAX compilation caches and the Task 2/Task 4
   host metadata caches after each runtime case, then runs Python garbage
