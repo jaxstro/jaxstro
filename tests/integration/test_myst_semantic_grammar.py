@@ -488,7 +488,7 @@ def test_final_routes_are_semantic_and_internal_sources_are_excluded() -> None:
         "/teaching-with-jaxstro",
     }
     assert not (set(manifest.values()) & forbidden_routes)
-    assert len(manifest) == 179
+    assert len(manifest) == 180
     assert set(config["project"]["exclude"]) == {
         "audits/**",
         "plans/**",

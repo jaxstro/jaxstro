@@ -1,0 +1,79 @@
+# Self-gravitating-sphere structure: the Lane-Emden family (isothermal + polytropic).
+# Verification is NUMERICAL: the solver is checked against the exact closed-form
+# solutions and the derived origin series (see each card's validation node ids), not by
+# page-checking the cited editions. The literature entries are the canonical references
+# for the equations themselves.
+- id: lane-emden-polytropic-spheres
+  title: Polytropic Lane-Emden equation and its exact solutions
+  summary: >-
+    The polytropic Lane-Emden equation theta'' + (2/xi) theta' = -theta^n admits three
+    closed-form solutions (n = 0, 1, 5) and a first zero xi_1 that marks the sphere's
+    surface; jaxstro integrates it with an adaptive diffrax solve and locates xi_1 as a
+    differentiable event root.
+  scope: >-
+    solve_polytrope and polytrope_xi1 on n < 5 (finite radius), including the origin
+    series start and the differentiable first-zero event.
+  conventions:
+    - "theta(0) = 1, theta'(0) = 0; density rho = rho_c theta^n; mass m = -xi^2 theta'"
+    - "n relates to the adiabatic index by n = 1/(gamma - 1)"
+    - "integration starts at XI_0 = 1e-6 seeded with theta = 1 - xi^2/6 + n xi^4/120"
+    - "xi_max and n_points are static; n is traced and differentiable"
+    - >-
+      verification is numerical against the exact n = 0, 1, 5 solutions (theta = 1 -
+      xi^2/6 with xi_1 = sqrt(6); sin(xi)/xi with xi_1 = pi; (1 + xi^2/3)^(-1/2) with no
+      zero), not by page-checking the cited editions
+  sources:
+    - reference: "Chandrasekhar, S. (1939), An Introduction to the Study of Stellar Structure, Univ. of Chicago Press"
+      locator: "Chapter IV, the Lane-Emden equation and its solutions for n = 0, 1, 5"
+      supports: "the polytropic Lane-Emden equation and its three exact closed-form solutions"
+  code_refs:
+    - "src/jaxstro/numerics/lane_emden.py::solve_polytrope"
+    - "src/jaxstro/numerics/lane_emden.py::polytrope_xi1"
+    - "src/jaxstro/numerics/lane_emden.py::LaneEmdenSolution"
+  validation:
+    - "tests/unit/test_lane_emden.py::TestPolytropeExactSolutions::test_n0_matches_exact_theta"
+    - "tests/unit/test_lane_emden.py::TestPolytropeExactSolutions::test_n1_matches_exact_theta"
+    - "tests/unit/test_lane_emden.py::TestPolytropeExactSolutions::test_n5_matches_exact_theta"
+    - "tests/unit/test_lane_emden.py::TestPolytropeFirstZero::test_xi1_n0_is_sqrt6"
+    - "tests/unit/test_lane_emden.py::TestPolytropeFirstZero::test_xi1_n1_is_pi"
+    - "tests/validation/test_lane_emden_gradients.py::test_polytrope_xi1_gradient_matches_finite_difference"
+  status: verified
+  deviations: []
+
+- id: bonnor-ebert-isothermal-spheres
+  title: Isothermal Lane-Emden equation for Bonnor-Ebert spheres
+  summary: >-
+    The isothermal Lane-Emden equation psi'' + (2/xi) psi' = e^{-psi} has no closed form
+    and no finite edge; jaxstro integrates it with an adaptive diffrax solve seeded by
+    its origin series, giving the density and enclosed-mass profile of a pressure-bounded
+    isothermal (Bonnor-Ebert) sphere.
+  scope: >-
+    solve_isothermal on its documented domain, including the origin series start and the
+    enclosed-mass and monotonicity contracts consumed downstream.
+  conventions:
+    - "psi(0) = 0, psi'(0) = 0; density rho = rho_c e^{-psi}; mass m = xi^2 psi'"
+    - "the isothermal sphere has no zero; its edge is set by the confining external pressure"
+    - "integration starts at XI_0 = 1e-6 seeded with psi = xi^2/6 - xi^4/120"
+    - "xi_max and n_points are static (they size the output grid)"
+    - >-
+      verification is numerical against the derived origin series (psi = xi^2/6 -
+      xi^4/120, m = xi^3/3 - xi^5/30) with the truncation error's xi^4 convergence rate
+      checked explicitly, not by page-checking the cited editions
+  sources:
+    - reference: "Bonnor, W. B. (1956), Monthly Notices of the Royal Astronomical Society 116, 351"
+      locator: "the pressure-bounded isothermal gas sphere and its critical mass"
+      supports: "the Bonnor-Ebert sphere as a pressure-truncated isothermal Lane-Emden solution"
+    - reference: "Ebert, R. (1955), Zeitschrift fuer Astrophysik 37, 217"
+      locator: "the isothermal self-gravitating sphere embedded in a pressured medium"
+      supports: "the isothermal self-gravitating sphere confined by external pressure"
+  code_refs:
+    - "src/jaxstro/numerics/lane_emden.py::solve_isothermal"
+    - "src/jaxstro/numerics/lane_emden.py::LaneEmdenSolution"
+  validation:
+    - "tests/unit/test_lane_emden.py::TestIsothermalOriginSeries::test_psi_matches_series_near_origin"
+    - "tests/unit/test_lane_emden.py::TestIsothermalOriginSeries::test_psi_is_monotonically_increasing"
+    - "tests/unit/test_lane_emden.py::TestEnclosedMass::test_isothermal_mass_small_xi"
+    - "tests/unit/test_lane_emden.py::TestEnclosedMass::test_isothermal_mass_series_converges_at_expected_order"
+    - "tests/unit/test_lane_emden.py::TestEnclosedMass::test_isothermal_mass_strictly_increasing"
+  status: verified
+  deviations: []

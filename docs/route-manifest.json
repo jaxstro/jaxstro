@@ -107,6 +107,7 @@
   "50-api/approximation-integration/splines.md": "/splines",
   "50-api/change-constraints/autodiff.md": "/autodiff-1",
   "50-api/change-constraints/kepler.md": "/kepler",
+  "50-api/change-constraints/lane-emden.md": "/lane-emden",
   "50-api/change-constraints/ode.md": "/ode-1",
   "50-api/change-constraints/optimization.md": "/optimization-1",
   "50-api/change-constraints/rootfinding.md": "/rootfinding-1",

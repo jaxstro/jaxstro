@@ -197,6 +197,7 @@ project:
             - file: 50-api/change-constraints/autodiff.md
             - file: 50-api/change-constraints/rootfinding.md
             - file: 50-api/change-constraints/kepler.md
+            - file: 50-api/change-constraints/lane-emden.md
             - file: 50-api/change-constraints/optimization.md
             - file: 50-api/change-constraints/ode.md
         - title: Approximation and integration

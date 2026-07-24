@@ -20,6 +20,7 @@ API_OWNERS = {
     "change-constraints/autodiff.md": "jaxstro.numerics.autodiff",
     "change-constraints/rootfinding.md": "jaxstro.numerics.rootfinding",
     "change-constraints/kepler.md": "jaxstro.numerics.kepler",
+    "change-constraints/lane-emden.md": "jaxstro.numerics.lane_emden",
     "change-constraints/optimization.md": "jaxstro.numerics.optimization",
     "change-constraints/ode.md": "jaxstro.numerics.ode",
     "approximation-integration/interpolation.md": "jaxstro.numerics.interpolation",

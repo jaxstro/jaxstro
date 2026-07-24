@@ -61,6 +61,7 @@ from . import (
     integration,
     interpolation,
     kepler,
+    lane_emden,
     linear_algebra,
     meshes,
     ode,
@@ -119,6 +120,12 @@ from .kepler import (
     KEPLER_STATUS_SINGULAR_RADIUS,
     UniversalKeplerResult,
     universal_kepler_step,
+)
+from .lane_emden import (
+    LaneEmdenSolution,
+    polytrope_xi1,
+    solve_isothermal,
+    solve_polytrope,
 )
 from .linear_algebra import (
     add_diagonal_jitter,
@@ -290,6 +297,11 @@ __all__ = [
     "KEPLER_STATUS_MAX_STEPS",
     "UniversalKeplerResult",
     "universal_kepler_step",
+    "lane_emden",
+    "LaneEmdenSolution",
+    "solve_isothermal",
+    "solve_polytrope",
+    "polytrope_xi1",
     "PROPOSAL_NONE",
     "PROPOSAL_SECANT",
     "PROPOSAL_MIDPOINT",

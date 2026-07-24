@@ -25,6 +25,7 @@ FAMILY_TITLES = {
     "atmospheres": "Atmosphere boundaries",
     "constants": "Constants and unit conventions",
     "transforms": "Coordinate and astrometric transforms",
+    "lane_emden": "Lane-Emden self-gravitating spheres",
 }
 
 
