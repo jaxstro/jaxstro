@@ -13,7 +13,7 @@
       "target": "docs/validation/atmosphere-interpolation.json"
     },
     {
-      "content_digest": "sha256:5b68caec5b185a32ca84dcfbac50bb70a94e52acb012ca062b19b5c90651a7a0",
+      "content_digest": "sha256:0da7b3240bfdd33b47a0f28d9223deca67b854363d5a801fcec62aed2b16eced",
       "evidence_class": "source_provenance",
       "id": "provenance.cards",
       "limitations": [
@@ -21,7 +21,7 @@
       ],
       "optional_data_policy": "Uses repository-owned source cards; no runtime dataset required.",
       "schema_version": "source-card-v1",
-      "source_revision": "sha256:5b68caec5b185a32ca84dcfbac50bb70a94e52acb012ca062b19b5c90651a7a0",
+      "source_revision": "sha256:0da7b3240bfdd33b47a0f28d9223deca67b854363d5a801fcec62aed2b16eced",
       "target": "docs/50-api/research-infrastructure/source-provenance/source-provenance.md"
     },
     {
