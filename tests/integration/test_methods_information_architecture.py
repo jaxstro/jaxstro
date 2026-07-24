@@ -62,6 +62,15 @@ TOC_FAMILIES = {
         "sparse-grid-quadrature",
         "differentiating-an-integral",
     ),
+    "approximation-integration/multidimensional": (
+        "hyperrectangles",
+        "tensor-product",
+        "adaptive-cubature",
+        "sparse-grids",
+        "randomized-qmc",
+        "differentiating",
+        "choosing-a-method",
+    ),
     "linear-structure": (
         "linear-algebra",
         "operators",
@@ -85,6 +94,7 @@ TOC_FAMILIES = {
 
 TOC_TITLES = {
     **FAMILY_TITLES,
+    "approximation-integration/multidimensional": "Multidimensional integration",
     "signals": "Signals as sampled evidence",
 }
 
