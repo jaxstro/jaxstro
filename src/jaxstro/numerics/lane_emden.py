@@ -118,9 +118,39 @@ def _polytropic_y0(n):
     return jnp.array([theta, dtheta])
 
 
-def _solve(term, y0, xi_max, n_points, args):
+def _output_points(xi_max, n_points, xi_out):
+    """Resolve the output grid, validating explicit points against the solve range.
+
+    Explicit points are a *mesh specification* (static, like ``n_points``), so they are
+    validated eagerly. ``xi_max`` may be traced — it is a differentiable input — so its
+    bound is only checked when it is concrete.
+    """
+    if xi_out is None:
+        return jnp.linspace(XI_0, xi_max, n_points)
+
+    xi_out = jnp.asarray(xi_out, dtype=float)
+    lo, hi = float(jnp.min(xi_out)), float(jnp.max(xi_out))
+    try:
+        upper = float(xi_max)
+    except Exception:  # xi_max is traced; its bound cannot be checked eagerly
+        upper = None
+    if lo < XI_0 or (upper is not None and hi > upper * (1.0 + 1e-12)):
+        raise ValueError(
+            f"xi_out must lie within the integration range [{XI_0}, xi_max]; got "
+            f"[{lo}, {hi}]"
+            + ("" if upper is None else f" against xi_max={upper}.")
+            + " Saving outside the solve range would silently extrapolate."
+        )
+    # Repair round-off only. diffrax checks the bounds exactly, and the natural way to
+    # build a refined mesh -- jnp.geomspace(a, xi_max, n) -- can land its endpoint an ULP
+    # past xi_max (measured: 0.2 -> 0.20000000000000004). Genuine out-of-range input was
+    # already rejected above, so this clip can move a point by at most a rounding error.
+    return jnp.clip(xi_out, XI_0, xi_max)
+
+
+def _solve(term, y0, xi_max, n_points, args, xi_out=None):
     """Run the shared diffrax solve and return ``(xi, y, dy)``."""
-    saveat = diffrax.SaveAt(ts=jnp.linspace(XI_0, xi_max, n_points))
+    saveat = diffrax.SaveAt(ts=_output_points(xi_max, n_points, xi_out))
     solution = diffrax.diffeqsolve(
         term,
         diffrax.Tsit5(),
@@ -136,7 +166,9 @@ def _solve(term, y0, xi_max, n_points, args):
     return solution.ts, solution.ys[:, 0], solution.ys[:, 1]
 
 
-def solve_isothermal(xi_max: float, n_points: int = 2000) -> LaneEmdenSolution:
+def solve_isothermal(
+    xi_max: float, n_points: int = 2000, xi_out=None
+) -> LaneEmdenSolution:
     r"""Solve the isothermal Lane-Emden equation for a Bonnor-Ebert sphere.
 
     Args:
@@ -144,19 +176,29 @@ def solve_isothermal(xi_max: float, n_points: int = 2000) -> LaneEmdenSolution:
             physical input -- an isothermal sphere has no zero, so its edge is set by the
             confining external pressure.
         n_points: size of the output grid (STATIC; sets the ``linspace`` length).
+            Ignored when ``xi_out`` is given.
+        xi_out: optional explicit output points (STATIC), e.g. a geometric mesh
+            refined toward the centre. The ODE is *evaluated* at these points rather
+            than interpolated onto them, which matters whenever the caller differences
+            the enclosed mass: ``dm = diff(m)`` amplifies interpolation error by
+            ``1/dxi``. Costs nothing — the adaptive controller holds its tolerance
+            regardless of the output grid.
 
     Returns:
         :class:`LaneEmdenSolution` with ``y = psi`` and ``m = xi^2 psi'``.
     """
     xi, psi, dpsi = _solve(
-        diffrax.ODETerm(_isothermal_rhs), _isothermal_y0(), xi_max, n_points, None
+        diffrax.ODETerm(_isothermal_rhs), _isothermal_y0(), xi_max, n_points, None,
+        xi_out=xi_out,
     )
     return LaneEmdenSolution(
         xi=xi, y=psi, dy=dpsi, m=xi**2 * dpsi, dm=xi**2 * jnp.exp(-psi)
     )
 
 
-def solve_polytrope(n, xi_max: float, n_points: int = 2000) -> LaneEmdenSolution:
+def solve_polytrope(
+    n, xi_max: float, n_points: int = 2000, xi_out=None
+) -> LaneEmdenSolution:
     r"""Solve the polytropic Lane-Emden equation of index ``n``.
 
     Args:
@@ -172,7 +214,8 @@ def solve_polytrope(n, xi_max: float, n_points: int = 2000) -> LaneEmdenSolution
     """
     n = jnp.asarray(n, dtype=float)
     xi, theta, dtheta = _solve(
-        diffrax.ODETerm(_polytropic_rhs), _polytropic_y0(n), xi_max, n_points, (n,)
+        diffrax.ODETerm(_polytropic_rhs), _polytropic_y0(n), xi_max, n_points, (n,),
+        xi_out=xi_out,
     )
     return LaneEmdenSolution(
         xi=xi,
