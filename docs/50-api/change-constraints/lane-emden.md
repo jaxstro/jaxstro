@@ -42,6 +42,11 @@ longer physical; callers integrate only to `xi_1` (`solve_polytrope(n, xi_max=xi
 For `n >= 5` the sphere has infinite extent, no event fires, and `polytrope_xi1` runs
 to `xi_search_max`; that regime must be rejected by the caller.
 
+AD caveat: differentiating `solve_polytrope` in `n` with `xi_max` fixed **beyond**
+`xi_1(n)` can return NaN gradients even though the forward value is finite -- the
+floored `theta^n` has an undefined derivative where `theta = 0`. Differentiate with
+`xi_max = polytrope_xi1(n)` (the physical edge) to keep the gradient well defined.
+
 ## Contract and evidence links
 
 See the generated provenance cards in

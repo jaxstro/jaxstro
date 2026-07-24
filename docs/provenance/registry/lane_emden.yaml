@@ -61,8 +61,8 @@
       checked explicitly, not by page-checking the cited editions
   sources:
     - reference: "Bonnor, W. B. (1956), Monthly Notices of the Royal Astronomical Society 116, 351"
-      locator: "the pressure-bounded isothermal gas sphere and its critical mass"
-      supports: "the Bonnor-Ebert sphere as a pressure-truncated isothermal Lane-Emden solution"
+      locator: "the pressure-bounded isothermal gas sphere"
+      supports: "the Bonnor-Ebert sphere as a pressure-truncated isothermal Lane-Emden solution (the isothermal ODE and profile this module integrates; the critical mass is not computed here)"
     - reference: "Ebert, R. (1955), Zeitschrift fuer Astrophysik 37, 217"
       locator: "the isothermal self-gravitating sphere embedded in a pressured medium"
       supports: "the isothermal self-gravitating sphere confined by external pressure"

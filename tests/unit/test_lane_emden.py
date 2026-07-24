@@ -36,7 +36,10 @@ from jaxstro.numerics.lane_emden import (
     solve_polytrope,
 )
 
-# Tsit5 with rtol=1e-8/atol=1e-10; leave headroom for the origin-series start.
+# The solve runs at Tsit5 rtol=1e-8/atol=1e-10, so the tabulated y carries a
+# per-point error near 1e-8 plus accumulation over the integration. 1e-7 sits one
+# decade above that solver floor -- tight enough to catch a real regression, loose
+# enough not to trip on the adaptive controller's own tolerance.
 RTOL_EXACT = 1e-7
 
 

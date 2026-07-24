@@ -29,7 +29,7 @@ solve_isothermal on its documented domain, including the origin series start and
 
 ### Sources
 
-- <a href="Bonnor, W. B. (1956), Monthly Notices of the Royal Astronomical Society 116, 351">source</a> - the Bonnor-Ebert sphere as a pressure-truncated isothermal Lane-Emden solution. *Locator:* `the pressure-bounded isothermal gas sphere and its critical mass`
+- <a href="Bonnor, W. B. (1956), Monthly Notices of the Royal Astronomical Society 116, 351">source</a> - the Bonnor-Ebert sphere as a pressure-truncated isothermal Lane-Emden solution (the isothermal ODE and profile this module integrates; the critical mass is not computed here). *Locator:* `the pressure-bounded isothermal gas sphere`
 - <a href="Ebert, R. (1955), Zeitschrift fuer Astrophysik 37, 217">source</a> - the isothermal self-gravitating sphere confined by external pressure. *Locator:* `the isothermal self-gravitating sphere embedded in a pressured medium`
 
 ### Code & validation
