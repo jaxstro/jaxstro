@@ -22,7 +22,7 @@ REGISTRY_DIR = REPO_ROOT / "docs" / "provenance" / "registry"
 OUTPUT_DIR = (
     REPO_ROOT / "docs" / "50-api" / "research-infrastructure" / "source-provenance"
 )
-EXPECTED_FAMILIES = {"atmospheres", "constants", "transforms"}
+EXPECTED_FAMILIES = {"atmospheres", "constants", "transforms", "lane_emden"}
 
 
 def _load_builder():

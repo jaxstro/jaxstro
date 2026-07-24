@@ -202,6 +202,8 @@ Domains and transformations:
 - `LeftInfinite`
 - `Infinite`
 - `Hyperrectangle`
+- `Axis`
+- `CoordinatePoint`
 - `interval_orientation`
 - `sorted_breakpoints`
 - `interval_is_valid`
@@ -211,6 +213,10 @@ Domains and transformations:
 - `DomainMapResult`
 - `map_interval`
 - `map_domain`
+
+`Axis` is one finite scalar coordinate interval with a static physical unit, and
+`CoordinatePoint` bundles such axes into a single heterogeneous quantity-coordinate
+point; both belong to the opt-in alpha quantity boundary of `quad.integrate`.
 
 Measures:
 

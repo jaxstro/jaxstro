@@ -32,6 +32,10 @@ dependencies = [
   "jaxlib>=0.10.1",
   "equinox>=0.13.8",
   "jaxtyping>=0.3.11",
+  # Canonical adaptive ODE + implicit-solve backend for numerics/lane_emden.py
+  # (Lane-Emden / Bonnor-Ebert). See docs/plans/2026-07-24-lane-emden-promotion-design.md.
+  "diffrax>=0.6",
+  "optimistix>=0.0.9",
 ]
 
 [project.optional-dependencies]

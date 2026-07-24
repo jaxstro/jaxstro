@@ -76,6 +76,7 @@ project:
             - file: 20-methods/change-constraints-evolution/nonlinear-systems.md
             - file: 20-methods/change-constraints-evolution/optimization.md
             - file: 20-methods/change-constraints-evolution/ode.md
+            - file: 20-methods/change-constraints-evolution/lane-emden.md
             - file: 20-methods/change-constraints-evolution/adaptive-differential-equations.md
         - title: Approximation from finite information
           children:
@@ -87,15 +88,15 @@ project:
             - file: 20-methods/approximation-integration/adaptive-quadrature.md
             - file: 20-methods/approximation-integration/sparse-grid-quadrature.md
             - file: 20-methods/approximation-integration/differentiating-an-integral.md
-            - title: Multidimensional integration
-              children:
-                - file: 20-methods/approximation-integration/multidimensional/hyperrectangles.md
-                - file: 20-methods/approximation-integration/multidimensional/tensor-product.md
-                - file: 20-methods/approximation-integration/multidimensional/adaptive-cubature.md
-                - file: 20-methods/approximation-integration/multidimensional/sparse-grids.md
-                - file: 20-methods/approximation-integration/multidimensional/randomized-qmc.md
-                - file: 20-methods/approximation-integration/multidimensional/differentiating.md
-                - file: 20-methods/approximation-integration/multidimensional/choosing-a-method.md
+        - title: Multidimensional integration
+          children:
+            - file: 20-methods/approximation-integration/multidimensional/hyperrectangles.md
+            - file: 20-methods/approximation-integration/multidimensional/tensor-product.md
+            - file: 20-methods/approximation-integration/multidimensional/adaptive-cubature.md
+            - file: 20-methods/approximation-integration/multidimensional/sparse-grids.md
+            - file: 20-methods/approximation-integration/multidimensional/randomized-qmc.md
+            - file: 20-methods/approximation-integration/multidimensional/differentiating.md
+            - file: 20-methods/approximation-integration/multidimensional/choosing-a-method.md
         - title: Linear structure and reusable operators
           children:
             - file: 20-methods/linear-structure/linear-algebra.md
@@ -197,6 +198,7 @@ project:
             - file: 50-api/change-constraints/autodiff.md
             - file: 50-api/change-constraints/rootfinding.md
             - file: 50-api/change-constraints/kepler.md
+            - file: 50-api/change-constraints/lane-emden.md
             - file: 50-api/change-constraints/optimization.md
             - file: 50-api/change-constraints/ode.md
         - title: Approximation and integration
