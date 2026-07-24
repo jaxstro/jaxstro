@@ -73,6 +73,11 @@ PAGE_SPECS = {
         "../../50-api/change-constraints/ode.md",
         ("eq-ode-euler", "eq-ode-midpoint", "eq-ode-rk4", "eq-ode-local-global"),
     ),
+    "change-constraints-evolution/lane-emden.md": (
+        "jaxstro.numerics.lane_emden",
+        "../../50-api/change-constraints/lane-emden.md",
+        ("eq-lane-emden-isothermal", "eq-lane-emden-polytropic", "eq-lane-emden-mass"),
+    ),
     "approximation-integration/interpolation.md": (
         "jaxstro.numerics.interpolation",
         "../../50-api/approximation-integration/interpolation.md",

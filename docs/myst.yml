@@ -76,6 +76,7 @@ project:
             - file: 20-methods/change-constraints-evolution/nonlinear-systems.md
             - file: 20-methods/change-constraints-evolution/optimization.md
             - file: 20-methods/change-constraints-evolution/ode.md
+            - file: 20-methods/change-constraints-evolution/lane-emden.md
             - file: 20-methods/change-constraints-evolution/adaptive-differential-equations.md
         - title: Approximation from finite information
           children:

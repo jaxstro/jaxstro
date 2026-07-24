@@ -17,6 +17,7 @@ FAMILIES = {
         "rootfinding",
         "optimization",
         "ode",
+        "lane-emden",
     ),
     "approximation-integration": (
         "interpolation",
@@ -50,6 +51,7 @@ TOC_FAMILIES = {
         "nonlinear-systems",
         "optimization",
         "ode",
+        "lane-emden",
         "adaptive-differential-equations",
     ),
     "approximation-integration": (
@@ -104,6 +106,7 @@ ROUTES = {
     "change-constraints-evolution/rootfinding.md": "/rootfinding",
     "change-constraints-evolution/optimization.md": "/optimization",
     "change-constraints-evolution/ode.md": "/ode",
+    "change-constraints-evolution/lane-emden.md": "/lane-emden",
     "approximation-integration/interpolation.md": "/interpolation",
     "approximation-integration/regular-grid.md": "/regular-grid",
     "approximation-integration/bsplines.md": "/bsplines",
@@ -126,7 +129,7 @@ def test_current_method_pages_exist_once_in_the_toc_with_stable_routes() -> None
     myst = (DOCS / "myst.yml").read_text(encoding="utf-8")
     manifest = json.loads((DOCS / "route-manifest.json").read_text(encoding="utf-8"))
 
-    assert sum(len(pages) for pages in FAMILIES.values()) == 19
+    assert sum(len(pages) for pages in FAMILIES.values()) == 20
     for family, pages in FAMILIES.items():
         for page in pages:
             relative = f"{family}/{page}.md"
