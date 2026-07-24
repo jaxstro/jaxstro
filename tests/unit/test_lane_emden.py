@@ -89,6 +89,28 @@ class TestPolytropeFirstZero:
     def test_xi1_n1_is_pi(self):
         assert jnp.allclose(polytrope_xi1(n=1.0), jnp.pi, rtol=1e-8)
 
+    @pytest.mark.parametrize(
+        ("n", "tabulated"),
+        [
+            (1.5, 3.65375),  # the polytrope of a convective/first-core interior
+            (3.0, 6.89685),  # the Eddington standard model
+        ],
+    )
+    def test_xi1_matches_the_classical_tables(self, n, tabulated):
+        """The two indices with no closed form, against Chandrasekhar (1967).
+
+        Unlike n=0 and n=1 above, these have no analytic xi_1 -- the classical values
+        are themselves numerical results, quoted to six significant figures. So the
+        tolerance here is set by the *reference's* precision, not by ours: agreement
+        at rtol=1e-5 means we reproduce the table to every digit it states.
+
+        These are load-bearing downstream. n=1.5 is the index Masunaga, Miyama &
+        Inutsuka (1998) use to derive the first-core radius analytically (their
+        Eqs. 21-22), which hydrax M4 gates against; n=3 is the index the Offner et al.
+        (2009) protostellar model uses for a radiative interior.
+        """
+        assert jnp.allclose(polytrope_xi1(n=n), tabulated, rtol=1e-5)
+
 
 class TestIsothermalOriginSeries:
     """Bonnor-Ebert psi against its derived origin series."""
