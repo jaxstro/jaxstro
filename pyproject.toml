@@ -7,7 +7,7 @@ name = "jaxstro"
 version = "0.1.0"
 description = "Core utilities for the jaxstro differentiable astrophysics ecosystem (units, constants, helpers)."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 authors = [
@@ -19,8 +19,6 @@ classifiers = [
   "Intended Audience :: Science/Research",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Topic :: Scientific/Engineering :: Astronomy",
   "Operating System :: OS Independent",
@@ -136,7 +134,7 @@ indent-style = "space"
 # mypy configuration
 # -----------------------
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.13"
 mypy_path = ["src"]
 packages = ["jaxstro"]
 ignore_missing_imports = true

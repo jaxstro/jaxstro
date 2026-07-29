@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.11+-blue.svg" alt="Python 3.11+"></a>
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.13+-blue.svg" alt="Python 3.13+"></a>
   <a href="https://github.com/google/jax"><img src="https://img.shields.io/badge/JAX-0.10.1+-green.svg" alt="JAX"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License: Apache-2.0"></a>
   <a href="#"><img src="https://img.shields.io/badge/status-v0.1.0--dev-yellow.svg" alt="Development Status"></a>
@@ -62,7 +62,7 @@ the [validation anchors](docs/60-validation/validation.md).
 
 ## 📦 Installation
 
-**Requirements:** Python 3.11+ and JAX $\geq$ 0.10.1
+**Requirements:** Python 3.13+ and JAX $\geq$ 0.10.1
 
 ### From source
 
