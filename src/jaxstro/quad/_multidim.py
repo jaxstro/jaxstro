@@ -76,9 +76,7 @@ def _density_values(measure, x: Array, args: Any) -> Array:
         density = jnp.ones(x.shape[:-1], dtype=x.dtype)
         for axis, component in enumerate(measure.components):
             if isinstance(component, WeightedMeasure):
-                component_density = jnp.asarray(
-                    component.density(x[..., axis], args)
-                )
+                component_density = jnp.asarray(component.density(x[..., axis], args))
                 if component_density.shape != x.shape[:-1]:
                     raise ValueError(
                         "ProductMeasure component density must match the point shape"

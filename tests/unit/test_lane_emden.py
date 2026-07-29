@@ -49,7 +49,9 @@ def _theta_exact_n0(xi):
 
 def _theta_exact_n1(xi):
     # sin(xi)/xi, with the removable singularity at the origin handled.
-    return jnp.where(xi > 0, jnp.sin(jnp.where(xi > 0, xi, 1.0)) / jnp.where(xi > 0, xi, 1.0), 1.0)
+    return jnp.where(
+        xi > 0, jnp.sin(jnp.where(xi > 0, xi, 1.0)) / jnp.where(xi > 0, xi, 1.0), 1.0
+    )
 
 
 def _theta_exact_n5(xi):

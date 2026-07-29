@@ -68,9 +68,7 @@ class CoordinatePoint:
         return Quantity(self.values[..., index], self.units[index])
 
     def as_quantity(self, unit: Unit) -> Quantity:
-        converted = [
-            self.axis(index).to_value(unit) for index in range(self.dimension)
-        ]
+        converted = [self.axis(index).to_value(unit) for index in range(self.dimension)]
         return Quantity(jnp.stack(converted, axis=-1), unit)
 
     def tree_flatten(self):

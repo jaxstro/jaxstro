@@ -75,8 +75,7 @@ def test_reversed_quantity_axis_preserves_oriented_integral():
 def test_dimensionless_hyperrectangle_quantity_mode_uses_coordinate_point():
     result = quad.integrate(
         lambda x: Quantity(
-            jnp.ones(x.shape[:-1])
-            + 0.0 * x.axis(0).to_value(dimensionless),
+            jnp.ones(x.shape[:-1]) + 0.0 * x.axis(0).to_value(dimensionless),
             Msun,
         ),
         quad.Hyperrectangle(jnp.zeros(2), jnp.ones(2)),
@@ -223,9 +222,7 @@ def test_moving_quantity_bound_replay_differentiates_raw_magnitude():
         ).value.to_value(output_unit)
 
     derivative = jax.jit(jax.grad(objective))(jnp.asarray(2.0))
-    batched = jax.jit(jax.vmap(jax.grad(objective)))(
-        jnp.asarray([1.0, 2.0, 4.0])
-    )
+    batched = jax.jit(jax.vmap(jax.grad(objective)))(jnp.asarray([1.0, 2.0, 4.0]))
 
     assert derivative == pytest.approx(3.0)
     assert jnp.allclose(batched, 3.0)

@@ -45,8 +45,7 @@ def _controls(method, *, gradient="replay"):
 
 def _scalar_objective(method, scale):
     return quad.integrate(
-        lambda x, live_scale: live_scale
-        * (1.0 + 0.1 * jnp.sum(x, axis=-1)),
+        lambda x, live_scale: live_scale * (1.0 + 0.1 * jnp.sum(x, axis=-1)),
         quad.Hyperrectangle(jnp.asarray([-0.2, 0.1]), jnp.asarray([1.1, 1.3])),
         args=scale,
         method=method,
@@ -100,9 +99,9 @@ def test_moving_upper_bound_gradient_matches_adaptive_rerun_finite_difference(
     location = jnp.asarray(1.2)
     step = jnp.asarray(2e-5)
     derivative = jax.grad(objective)(location)
-    finite_difference = (
-        objective(location + step) - objective(location - step)
-    ) / (2.0 * step)
+    finite_difference = (objective(location + step) - objective(location - step)) / (
+        2.0 * step
+    )
 
     assert jnp.allclose(
         derivative,
@@ -118,8 +117,7 @@ def test_explicit_parameter_pytree_replay_derivative():
 
     def objective(parameters):
         return quad.integrate(
-            lambda x, live: live["amplitude"]
-            * (live["offset"] + x @ live["slope"]),
+            lambda x, live: live["amplitude"] * (live["offset"] + x @ live["slope"]),
             domain,
             args=parameters,
             method=method,
@@ -171,13 +169,15 @@ def test_deterministic_replay_supports_array_and_complex_payloads(method):
 
     def array_objective(scale):
         return quad.integrate(
-            lambda x, live_scale: live_scale
-            * jnp.stack(
-                (
-                    jnp.sum(x, axis=-1),
-                    jnp.prod(x, axis=-1),
-                ),
-                axis=-1,
+            lambda x, live_scale: (
+                live_scale
+                * jnp.stack(
+                    (
+                        jnp.sum(x, axis=-1),
+                        jnp.prod(x, axis=-1),
+                    ),
+                    axis=-1,
+                )
             ),
             domain,
             args=scale,
@@ -201,9 +201,8 @@ def test_deterministic_replay_supports_array_and_complex_payloads(method):
     def complex_objective(scale):
         return quad.integrate(
             lambda x, live_scale: (
-                live_scale + 1j * live_scale**2
-            )
-            * jnp.sum(x, axis=-1),
+                (live_scale + 1j * live_scale**2) * jnp.sum(x, axis=-1)
+            ),
             domain,
             args=scale,
             method=method,

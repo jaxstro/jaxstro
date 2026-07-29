@@ -455,9 +455,7 @@ def _normalize_rqmc_quantity_bounds(method, *, integrand_unit, result_unit):
         raise TypeError(
             "quantity AdaptiveScrambledSobol bounds must be Quantity values"
         )
-    target_unit = (
-        result_unit if method.estimate_bounds is not None else integrand_unit
-    )
+    target_unit = result_unit if method.estimate_bounds is not None else integrand_unit
     normalized_bounds = tuple(
         float(jnp.asarray(bound.to_value(target_unit))) for bound in selected
     )

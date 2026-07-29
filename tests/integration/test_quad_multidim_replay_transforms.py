@@ -94,11 +94,13 @@ def test_inactive_padding_cannot_evaluate_a_singular_point():
 
     def objective(scale):
         return quad.integrate(
-            lambda x, live_scale: live_scale
-            * jnp.where(
-                jnp.all(x == 0.0, axis=-1),
-                jnp.asarray(jnp.nan),
-                jnp.sum(x, axis=-1),
+            lambda x, live_scale: (
+                live_scale
+                * jnp.where(
+                    jnp.all(x == 0.0, axis=-1),
+                    jnp.asarray(jnp.nan),
+                    jnp.sum(x, axis=-1),
+                )
             ),
             domain,
             args=scale,

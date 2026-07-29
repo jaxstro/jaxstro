@@ -188,7 +188,11 @@ def solve_isothermal(
         :class:`LaneEmdenSolution` with ``y = psi`` and ``m = xi^2 psi'``.
     """
     xi, psi, dpsi = _solve(
-        diffrax.ODETerm(_isothermal_rhs), _isothermal_y0(), xi_max, n_points, None,
+        diffrax.ODETerm(_isothermal_rhs),
+        _isothermal_y0(),
+        xi_max,
+        n_points,
+        None,
         xi_out=xi_out,
     )
     return LaneEmdenSolution(
@@ -214,7 +218,11 @@ def solve_polytrope(
     """
     n = jnp.asarray(n, dtype=float)
     xi, theta, dtheta = _solve(
-        diffrax.ODETerm(_polytropic_rhs), _polytropic_y0(n), xi_max, n_points, (n,),
+        diffrax.ODETerm(_polytropic_rhs),
+        _polytropic_y0(n),
+        xi_max,
+        n_points,
+        (n,),
         xi_out=xi_out,
     )
     return LaneEmdenSolution(

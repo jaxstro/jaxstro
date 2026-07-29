@@ -109,9 +109,7 @@ def _cubature_formula(domain, leaves, max_evaluations, max_regions):
 
 def _fixed_sparse_formula(method, domain) -> ReplayFormula:
     dtype = jnp.result_type(domain.lower, domain.upper, 0.0)
-    data = materialize_smolyak_rule(
-        smolyak_host_data(method, domain.dimension, dtype)
-    )
+    data = materialize_smolyak_rule(smolyak_host_data(method, domain.dimension, dtype))
     return ReplayFormula(
         data.points,
         data.weights,
@@ -191,9 +189,9 @@ def _qmc_formula(method, domain, key, *, result=None) -> ReplayFormula:
             jnp.asarray(1, dtype=jnp.int32),
             active_level,
         )
-        active = (
-            jnp.arange(replicate_capacity)[:, None] < active_replicates
-        ) & (jnp.arange(point_capacity)[None, :] < active_points)
+        active = (jnp.arange(replicate_capacity)[:, None] < active_replicates) & (
+            jnp.arange(point_capacity)[None, :] < active_points
+        )
         denominator = jnp.asarray(
             active_replicates * active_points,
             dtype=dtype,
