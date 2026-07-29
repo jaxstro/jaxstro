@@ -298,12 +298,9 @@ def test_random_reference_documents_zero_weight_and_tracing_boundaries() -> None
     assert "non-normalizable weights raise" not in text
 
 
-def test_status_counts_the_corrected_api_surface() -> None:
-    text = (ROOT / "STATUS.md").read_text(encoding="utf-8")
-    a0_entry = next(
-        line
-        for line in text.splitlines()
-        if line.startswith("previous: Jaxstro.quad Phase A0 API ownership")
-    )
-    assert "37 current owner pages, including `jaxstro.quad`" in a0_entry
-    assert "164 unique routes" in a0_entry
+def test_generated_manifest_counts_the_current_api_surface() -> None:
+    routes = json.loads((DOCS / "route-manifest.json").read_text(encoding="utf-8"))
+
+    assert len(API_OWNERS) == 38
+    assert "jaxstro.quad" in API_OWNERS.values()
+    assert len(routes) == 181
