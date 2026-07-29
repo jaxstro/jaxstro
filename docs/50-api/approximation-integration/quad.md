@@ -447,7 +447,7 @@ Review [fixed and weighted quadrature](../../20-methods/approximation-integratio
 and [adaptive quadrature](../../20-methods/approximation-integration/adaptive-quadrature.md)
 for primal derivations. [Differentiating an integral](../../20-methods/approximation-integration/differentiating-an-integral.md)
 derives replay, moving-bound, complex, and unit contracts. The
-[multidimensional method guide](../../20-methods/approximation-integration/multidimensional/choosing-a-method.md)
+[multidimensional method guide](../../20-methods/approximation-integration/multidimensional/choosing-a-multidimensional-integration-method.md)
 connects geometry and estimator meaning to the grouped
 [tensor/cubature](./quad-tensor-cubature.md),
 [sparse-grid](./quad-sparse.md), and [QMC](./quad-qmc.md) API pages. The

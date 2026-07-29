@@ -90,13 +90,13 @@ project:
             - file: 20-methods/approximation-integration/differentiating-an-integral.md
         - title: Multidimensional integration
           children:
-            - file: 20-methods/approximation-integration/multidimensional/hyperrectangles.md
-            - file: 20-methods/approximation-integration/multidimensional/tensor-product.md
-            - file: 20-methods/approximation-integration/multidimensional/adaptive-cubature.md
-            - file: 20-methods/approximation-integration/multidimensional/sparse-grids.md
-            - file: 20-methods/approximation-integration/multidimensional/randomized-qmc.md
-            - file: 20-methods/approximation-integration/multidimensional/differentiating.md
-            - file: 20-methods/approximation-integration/multidimensional/choosing-a-method.md
+            - file: 20-methods/approximation-integration/multidimensional/integrals-over-hyperrectangles.md
+            - file: 20-methods/approximation-integration/multidimensional/tensor-product-integration.md
+            - file: 20-methods/approximation-integration/multidimensional/multidimensional-adaptive-cubature.md
+            - file: 20-methods/approximation-integration/multidimensional/multidimensional-sparse-grids.md
+            - file: 20-methods/approximation-integration/multidimensional/multidimensional-randomized-qmc.md
+            - file: 20-methods/approximation-integration/multidimensional/differentiating-multidimensional-integrals.md
+            - file: 20-methods/approximation-integration/multidimensional/choosing-a-multidimensional-integration-method.md
         - title: Linear structure and reusable operators
           children:
             - file: 20-methods/linear-structure/linear-algebra.md

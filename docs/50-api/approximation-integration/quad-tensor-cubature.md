@@ -68,9 +68,9 @@ certificate.
 
 ## Contract and evidence links
 
-- [Method choice](../../20-methods/approximation-integration/multidimensional/choosing-a-method.md)
-- [Tensor derivation](../../20-methods/approximation-integration/multidimensional/tensor-product.md)
-- [Cubature derivation](../../20-methods/approximation-integration/multidimensional/adaptive-cubature.md)
+- [Method choice](../../20-methods/approximation-integration/multidimensional/choosing-a-multidimensional-integration-method.md)
+- [Tensor derivation](../../20-methods/approximation-integration/multidimensional/tensor-product-integration.md)
+- [Cubature derivation](../../20-methods/approximation-integration/multidimensional/multidimensional-adaptive-cubature.md)
 - [Phase B validation](../../60-validation/numerical/quadrature-multidimensional.md)
 - [Truth artifact](../../validation/quad-multidim-truth.json)
 - [Replay artifact](../../validation/quad-multidim-replay.json)
@@ -91,4 +91,3 @@ result = integrate(
     gradient="replay",
 )
 ```
-

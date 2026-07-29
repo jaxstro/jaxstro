@@ -55,8 +55,8 @@ universal bound on true error.
 
 ## Contract and evidence links
 
-- [Sparse-grid derivation](../../20-methods/approximation-integration/multidimensional/sparse-grids.md)
-- [Method choice](../../20-methods/approximation-integration/multidimensional/choosing-a-method.md)
+- [Sparse-grid derivation](../../20-methods/approximation-integration/multidimensional/multidimensional-sparse-grids.md)
+- [Method choice](../../20-methods/approximation-integration/multidimensional/choosing-a-multidimensional-integration-method.md)
 - [Phase B validation](../../60-validation/numerical/quadrature-multidimensional.md)
 - [Truth artifact](../../validation/quad-multidim-truth.json)
 - [Replay artifact](../../validation/quad-multidim-replay.json)
@@ -79,4 +79,3 @@ result = integrate(
     gradient="replay",
 )
 ```
-
