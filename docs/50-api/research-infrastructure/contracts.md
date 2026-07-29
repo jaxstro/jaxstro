@@ -88,7 +88,7 @@ from jaxstro.contracts import get_callable_contract
 
 ## Unclassified callable surfaces
 
-The runtime export audit found **227** public callables without callable-level records:
+The runtime export audit found **230** public callables without callable-level records:
 
 - `jaxstro.atmospheres.acquisition_rows_to_markdown`
 - `jaxstro.atmospheres.build_bosz_index`
@@ -214,6 +214,7 @@ The runtime export audit found **227** public callables without callable-level r
 - `jaxstro.numerics.open_uniform_knots`
 - `jaxstro.numerics.planck_lambda_cgs`
 - `jaxstro.numerics.planck_nu_cgs`
+- `jaxstro.numerics.polytrope_xi1`
 - `jaxstro.numerics.positive_definite_jitter`
 - `jaxstro.numerics.pseudo_huber_loss`
 - `jaxstro.numerics.qr_solve`
@@ -224,6 +225,8 @@ The runtime export audit found **227** public callables without callable-level r
 - `jaxstro.numerics.scale`
 - `jaxstro.numerics.seed_manifest`
 - `jaxstro.numerics.solve_fixed_step`
+- `jaxstro.numerics.solve_isothermal`
+- `jaxstro.numerics.solve_polytrope`
 - `jaxstro.numerics.squared_loss`
 - `jaxstro.numerics.stratified_resample`
 - `jaxstro.numerics.stratified_uniform`
@@ -391,6 +394,7 @@ These immutable record or type constructors inherit their module-level contract:
 - `jaxstro.numerics.ImplicitRootAssumptions`
 - `jaxstro.numerics.ImplicitRootCertificate`
 - `jaxstro.numerics.ImplicitRootResult`
+- `jaxstro.numerics.LaneEmdenSolution`
 - `jaxstro.numerics.LineSearchResult`
 - `jaxstro.numerics.LinearOperator`
 - `jaxstro.numerics.Mesh1D`
