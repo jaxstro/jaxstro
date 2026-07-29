@@ -4,12 +4,12 @@ Updated: 2026-07-29
 
 ## Current checkpoint
 
-- Active work: publish the Python 3.13 runtime floor and the completed
-  Lane–Emden ownership migration from local `main`.
+- Published checkpoint: Python 3.13 runtime floor and the completed Lane–Emden
+  ownership migration are on `origin/main`.
 - Jaxstro is the shared Lane–Emden numerical owner. Progenax consumes it for
   Bonnor–Ebert and polytropic initial conditions; Hydrax consumes it for
   Bonnor–Ebert initial conditions and polytropic protostar structure.
-- The feature-branch release gate passed on Python 3.13.7: Ruff, MyPy over 138
+- The release gate passed on Python 3.13.7: Ruff, MyPy over 138
   source files, all generated registries, the strict 181-route rendered-site
   audit, 2,890 non-slow tests with 24 declared optional-data skips, 580 ML
   integration tests, and a clean-wheel import.
@@ -20,12 +20,12 @@ Updated: 2026-07-29
   contracts, 230 explicitly unclassified callables, and 174 inherited record
   symbols.
 
-## Immediate exit path
+## Next
 
-1. Fast-forward the verified branch into local `main`.
-2. Repeat the complete release gate on merged `main`.
-3. Push the exact verified `main` commit and confirm local/remote identity and
-   a clean worktree.
+1. Run the Phase B observed process/device-memory campaign when that scientific
+   performance decision is scheduled.
+2. Use the single consolidated checkpoint review to decide Phase B release
+   closure without broadening the method or geometry scope.
 
 ## Scientific boundary
 
