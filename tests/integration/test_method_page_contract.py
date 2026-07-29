@@ -39,13 +39,13 @@ MULTIDIMENSIONAL_HEADINGS = (
 )
 
 MULTIDIMENSIONAL_PAGES = (
-    "hyperrectangles.md",
-    "tensor-product.md",
-    "adaptive-cubature.md",
-    "sparse-grids.md",
-    "randomized-qmc.md",
-    "differentiating.md",
-    "choosing-a-method.md",
+    "integrals-over-hyperrectangles.md",
+    "tensor-product-integration.md",
+    "multidimensional-adaptive-cubature.md",
+    "multidimensional-sparse-grids.md",
+    "multidimensional-randomized-qmc.md",
+    "differentiating-multidimensional-integrals.md",
+    "choosing-a-multidimensional-integration-method.md",
 )
 
 PAGE_SPECS = {

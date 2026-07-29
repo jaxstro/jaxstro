@@ -6,19 +6,12 @@ import json
 import re
 from pathlib import Path
 
-import pytest
-
 ROOT = Path(__file__).resolve().parents[2]
 PAGE = ROOT / "docs" / "70-project/development" / "future-capabilities-roadmap.md"
 NUMERICAL_ROADMAP = (
     ROOT / "docs" / "70-project/development" / "numerical-methods-roadmap.md"
 )
 QMC_PROGRAM_HEADING = "### Active program: `jaxstro.quad`"
-QMC_CLAIMS = re.compile(
-    r"\b(?:QMC|Sobol|Halton|Latin[- ]hypercube|low[- ]discrepancy|"
-    r"quasi[- ](?:random|Monte[- ]Carlo))\b",
-    re.IGNORECASE,
-)
 
 
 def _section(text: str, heading: str) -> str:
@@ -42,19 +35,16 @@ def _checked_items(text: str) -> tuple[str, ...]:
     )
 
 
-def _qmc_scope_errors(future: str, numerical: str) -> tuple[str, ...]:
+def _premature_quad_completion_errors(future: str) -> tuple[str, ...]:
     qmc_program = _section(future, QMC_PROGRAM_HEADING)
-    errors = [
-        f"completed quad QMC item: {item}"
+    return tuple(
+        item
         for item in _checked_items(qmc_program)
-        if QMC_CLAIMS.search(item)
-    ]
-    errors.extend(
-        f"completed numerical-roadmap QMC claim: {item}"
-        for item in _checked_items(numerical)
-        if QMC_CLAIMS.search(item)
+        if (
+            "Complete the Phase B exhaustive release gate" in item
+            or "Design Phase C native scientific geometries" in item
+        )
     )
-    return tuple(errors)
 
 
 def test_future_capabilities_roadmap_preserves_scope_and_build_advice() -> None:
@@ -106,52 +96,34 @@ def test_development_log_links_future_capabilities_roadmap() -> None:
     assert "future-capabilities-roadmap.md" in index
 
 
-def test_completed_numerical_items_do_not_claim_deferred_qmc_scope() -> None:
+def test_phase_b_qmc_is_implemented_but_release_and_phase_c_remain_open() -> None:
     future = PAGE.read_text(encoding="utf-8")
     numerical = NUMERICAL_ROADMAP.read_text(encoding="utf-8")
     qmc_program = _section(future, QMC_PROGRAM_HEADING)
+    checked = _checked_items(qmc_program)
 
-    assert "randomized quasi-Monte Carlo" in qmc_program
-    assert not any(QMC_CLAIMS.search(item) for item in _checked_items(qmc_program))
-    assert _qmc_scope_errors(future, numerical) == ()
+    assert any("bounded sequential randomized QMC" in item for item in checked)
+    assert "bounded sequential randomized QMC" in numerical
+    assert _premature_quad_completion_errors(future) == ()
 
 
-def test_qmc_priority_rejects_uppercase_completed_checkbox_mutation() -> None:
+def test_phase_b_release_gate_rejects_uppercase_completed_checkbox_mutation() -> None:
     future = PAGE.read_text(encoding="utf-8")
-    numerical = NUMERICAL_ROADMAP.read_text(encoding="utf-8")
     mutated = future.replace(
-        "- [ ] Design and approve Phase B hyperrectangle integration, adaptive cubature,",
-        "- [X] Design and approve Phase B hyperrectangle integration, adaptive cubature,",
+        "- [ ] Complete the Phase B exhaustive release gate",
+        "- [X] Complete the Phase B exhaustive release gate",
         1,
     )
 
-    assert _qmc_scope_errors(mutated, numerical)
+    assert _premature_quad_completion_errors(mutated)
 
 
-def test_entire_qmc_priority_rejects_any_completed_item_mutation() -> None:
+def test_phase_c_rejects_lowercase_completed_checkbox_mutation() -> None:
     future = PAGE.read_text(encoding="utf-8")
-    numerical = NUMERICAL_ROADMAP.read_text(encoding="utf-8")
     mutated = future.replace(
-        "- [ ] Design and approve Phase B",
-        "- [x] Design and approve Phase B",
+        "- [ ] Design Phase C native scientific geometries",
+        "- [x] Design Phase C native scientific geometries",
         1,
     )
 
-    assert _qmc_scope_errors(mutated, numerical)
-
-
-@pytest.mark.parametrize(
-    "claim",
-    (
-        "QMC sequences",
-        "Halton sequences",
-        "low-discrepancy sequences",
-        "quasi-Monte-Carlo sequences",
-    ),
-)
-def test_numerical_roadmap_rejects_deferred_qmc_alias_mutations(claim: str) -> None:
-    future = PAGE.read_text(encoding="utf-8")
-    numerical = NUMERICAL_ROADMAP.read_text(encoding="utf-8")
-    mutated = f"{numerical}\n- [x] **Mutation fixture.** Completed {claim}.\n"
-
-    assert _qmc_scope_errors(future, mutated)
+    assert _premature_quad_completion_errors(mutated)

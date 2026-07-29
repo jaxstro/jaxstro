@@ -88,4 +88,4 @@ def test_sota_assessment_uses_the_approved_future_runtime_priority() -> None:
     positions = [text.index(priority) for priority in priorities]
     assert positions == sorted(positions)
     assert "complete the approved `jaxstro.quad` program before this queue" in text
-    assert "Approve the next `jaxstro.quad` capability family" in text
+    assert "Complete the `jaxstro.quad` Phase B release gate" in text
