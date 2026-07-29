@@ -33,7 +33,7 @@ $RUN python scripts/build_research_workflow_registry.py --check
 echo "== documentation gate =="
 bash scripts/check_docs.sh
 
-echo "== test-matrix (current interpreter; CI does 3.11/3.12/3.13) =="
+echo "== test-matrix (current interpreter; supported CI runtime is 3.13) =="
 $RUN pytest -m "not slow" -q
 
 echo "== ml-integration =="
