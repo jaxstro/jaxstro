@@ -25,6 +25,8 @@ References:
     - Asplund et al. (2009), ARA&A, 47, 481: Solar composition
 """
 
+import math
+
 # ===========================================================================
 # Fundamental constants (CODATA 2018)
 # ===========================================================================
@@ -41,13 +43,12 @@ H_CGS: float = 6.62607015e-27
 # Boltzmann constant [erg/K] (exact)
 K_B: float = 1.380649e-16
 
-# Radiation constant a = 4σ/c [erg cm⁻³ K⁻⁴].
-# CODATA-derived: a = 4 * SIGMA_SB / C_CGS, with the CODATA-2018 Stefan–Boltzmann
-# constant and the exact speed of light below
-# (4 * 5.670374419e-5 / 2.99792458e10 = 7.565733250033928...e-15).
-# The compatibility literal is rounded to its stored decimal precision; it is
-# not bit-identical to the expression below.
-A_RAD: float = 7.565733250e-15
+# Reduced Planck constant ħ = h/(2π) [erg·s]. Exact, since h is exact.
+HBAR_CGS: float = H_CGS / (2.0 * math.pi)
+
+# A_RAD moved to the "Radiation / thermodynamics" section below, where it is
+# derived from SIGMA_SB (which must be defined first). It is still exported
+# under the same name.
 
 # Avogadro's number [mol⁻¹]
 N_A: float = 6.02214076e23
@@ -80,11 +81,17 @@ R_E: float = 2.8179403262e-13
 SIGMA_T: float = 6.6524587321e-25
 
 # Molar gas constant R = k_B N_A [erg mol⁻¹ K⁻¹].
-# CODATA 2018: 8.314462618 J mol⁻¹ K⁻¹ = 8.314462618e7 erg mol⁻¹ K⁻¹
-# (×1e7 for the J→erg conversion). k_B and N_A are exact in the revised SI;
-# this frozen compatibility literal is rounded, so it is not bit-identical to
-# K_B * N_A.
-R_GAS: float = 8.314462618e7
+#
+# DERIVED. k_B and N_A are both exact in the revised SI, so their product is
+# exact and this is R's definition. CODATA 2018 publishes 8.314462618
+# J mol⁻¹ K⁻¹, rounded for print; the product gives 8.31446261815324e7
+# erg mol⁻¹ K⁻¹, matching to every published digit.
+#
+# **Was the literal 8.314462618e7 until 2026-07-30.** Its own comment already
+# recorded that it "is not bit-identical to K_B * N_A" — the third constant in
+# this module documenting its own imprecision at the callsite and keeping it.
+# Same fix, same reason, as SIGMA_SB and A_RAD below.
+R_GAS: float = K_B * N_A
 
 # ===========================================================================
 # Atomic and particle masses (CODATA 2018)
@@ -161,10 +168,31 @@ KM_CM: float = 1.0e5  # 1 km = 1e5 cm
 # ===========================================================================
 
 # Stefan–Boltzmann constant σ = 2π⁵k⁴/(15h³c²) [erg cm⁻² s⁻¹ K⁻⁴].
-# CODATA 2018: 5.670374419e-8 W m⁻² K⁻⁴ = 5.670374419e-5 erg cm⁻² s⁻¹ K⁻⁴
-# (×1e3 for the W→erg/s and m⁻²→cm⁻² CGS conversion). Tiesinga et al. (2021),
-# Rev. Mod. Phys., 93, 025010.
-SIGMA_SB: float = 5.670374419e-5
+#
+# DERIVED, not quoted. Since the 2019 SI redefinition h, k and c are all exact,
+# so σ is exact too and this expression is its definition rather than a fit to
+# it. CODATA 2018 publishes 5.670374419e-8 W m⁻² K⁻⁴ (Tiesinga et al. 2021,
+# Rev. Mod. Phys. 93, 025010), rounded for print; the expression gives
+# 5.670374419184e-5 erg cm⁻² s⁻¹ K⁻⁴, matching to every published digit.
+#
+# **Was the literal 5.670374419e-5 until 2026-07-30**, i.e. the published value
+# truncated at ten digits, 3.3e-11 below exact. Changed because this module
+# declares itself the ecosystem's single source of truth, so a downstream package
+# that derives σ correctly ends up disagreeing with the source of truth — which
+# is what happened: `stellax.core.constants` was corrected to derive on the same
+# day and then differed from jaxstro by 3e-11 in `A_RAD`. Deriving in BOTH places
+# is the only arrangement where they cannot disagree.
+SIGMA_SB: float = 2.0 * math.pi**5 * K_B**4 / (15.0 * H_CGS**3 * C_CGS**2)
+
+# Radiation constant a = 4σ/c [erg cm⁻³ K⁻⁴]. Derived from the σ above, so it
+# cannot drift from it. Defined here rather than with the fundamental constants
+# because it is a radiation quantity and because σ must exist first.
+#
+# **Was the literal 7.565733250e-15 until 2026-07-30.** The comment at its old
+# site already said "the compatibility literal is rounded to its stored decimal
+# precision; it is not bit-identical to the expression below" — the defect was
+# documented at the callsite and left in place. Exact value 7.565733250280009e-15.
+A_RAD: float = 4.0 * SIGMA_SB / C_CGS
 
 # ===========================================================================
 # Photometric units and zeropoints
@@ -206,6 +234,7 @@ __all__ = [
     "G_CGS",
     "C_CGS",
     "H_CGS",
+    "HBAR_CGS",
     "K_B",
     "A_RAD",
     "N_A",

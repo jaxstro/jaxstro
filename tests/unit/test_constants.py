@@ -34,26 +34,59 @@ class TestFundamentalConstants:
         assert C.K_B == 1.380649e-16  # Exact by definition
 
     def test_stefan_boltzmann_constant(self):
-        """sigma_SB should be consistent with k_B, h, c."""
+        """sigma_SB IS `2 pi^5 k^4 / (15 h^3 c^2)`, bit for bit.
+
+        Tightened from `rel=1e-6` to exact on 2026-07-30, when SIGMA_SB stopped
+        being a literal and became this expression. At 1e-6 the test could not
+        see a 3.3e-11 truncation, which is precisely the error that was live;
+        a tolerance five orders looser than the defect it guards is not a guard.
+
+        Exact equality is the right assertion because the module now evaluates
+        this same expression -- so this pins that it continues to, and any future
+        replacement by a hand-typed decimal fails here immediately.
+        """
         # sigma = 2 * pi^5 * k^4 / (15 * h^3 * c^2)
         sigma_computed = 2 * math.pi**5 * C.K_B**4 / (15 * C.H_CGS**3 * C.C_CGS**2)
-        assert C.SIGMA_SB == pytest.approx(sigma_computed, rel=1e-6)
+        assert C.SIGMA_SB == sigma_computed
 
     def test_stefan_boltzmann_codata_value(self):
-        """sigma_SB should match the CODATA 2018 CGS value exactly."""
+        """sigma_SB matches CODATA 2018 to every digit CODATA publishes.
+
+        **This test asserted bit-exact equality with the printed decimal until
+        2026-07-30, and that is what kept the truncated value in place.**
+
+        CODATA publishes 5.670374419e-8 W m^-2 K^-4. That is a *rounded
+        presentation* of a quantity which, since the 2019 SI redefinition, is
+        exactly `2 pi^5 k^4 / (15 h^3 c^2)` with h, k and c all exact. So the
+        ten-digit decimal is not the constant; it is ten digits of it. Pinning
+        `==` against it pinned the rounding, 3.3e-11 below exact, and the module
+        then disagreed with any downstream package that derived sigma correctly
+        -- which is exactly what happened with `stellax.core.constants`.
+
+        The claim worth testing is "agrees with CODATA to CODATA's precision".
+        `rel=1e-10` is that: tighter than the published 10 significant figures,
+        so a genuinely wrong sigma still fails, while a correctly-derived one
+        passes. Note this test would ALSO pass on the old truncated literal --
+        it is deliberately not the test that distinguishes them. That job belongs
+        to `test_stefan_boltzmann_constant`, which compares against the formula.
+        """
         # CODATA 2018: 5.670374419e-8 W m^-2 K^-4 = 5.670374419e-5 erg cm^-2 s^-1 K^-4
-        assert C.SIGMA_SB == 5.670374419e-5
+        assert C.SIGMA_SB == pytest.approx(5.670374419e-5, rel=1e-10)
 
     def test_radiation_constant(self):
-        """a_rad should match 4 * sigma_SB / c at its stored precision.
+        """a_rad IS `4 sigma / c`, bit for bit.
 
-        Compares as a ratio to dodge pytest.approx's default abs=1e-12 floor,
-        which would otherwise swamp these ~1e-14 magnitudes and make the check
-        vacuous. A_RAD is a frozen rounded compatibility literal, not an exact
-        floating-point expression; 5e-10 is its ten-significant-figure budget.
+        **A_RAD stopped being "a frozen rounded compatibility literal" on
+        2026-07-30** -- the previous docstring said exactly that, and the 5e-10
+        budget existed to accommodate it. It is now the expression, so the
+        accommodation is gone and equality is assertable.
+
+        The old ratio-comparison trick (to dodge `pytest.approx`'s abs=1e-12
+        floor swamping a ~1e-14 magnitude) is no longer needed either, since
+        `==` has no absolute floor. Keeping it would obscure that the constant
+        is now exact.
         """
-        a_computed = 4 * C.SIGMA_SB / C.C_CGS
-        assert C.A_RAD / a_computed == pytest.approx(1.0, rel=5e-10)
+        assert C.A_RAD == 4 * C.SIGMA_SB / C.C_CGS
 
 
 class TestElectromagneticAndAtomicConstants:
@@ -95,8 +128,15 @@ class TestElectromagneticAndAtomicConstants:
         assert C.R_GAS == pytest.approx(8.314462618e7, rel=1e-10)
 
     def test_molar_gas_constant_from_k_b_n_a(self):
-        """R matches k_B * N_A at the frozen literal's stored precision."""
-        assert C.R_GAS == pytest.approx(C.K_B * C.N_A, rel=5e-10)
+        """R IS `k_B N_A`, bit for bit.
+
+        Tightened from `rel=5e-10` on 2026-07-30. R_GAS was "the frozen
+        literal's stored precision" -- its own module comment said it "is not
+        bit-identical to K_B * N_A" -- and both factors are exact in the revised
+        SI, so there was never a reason for it not to be. Now it is the product,
+        and equality pins that it stays one.
+        """
+        assert C.R_GAS == C.K_B * C.N_A
 
 
 class TestParticleMasses:
