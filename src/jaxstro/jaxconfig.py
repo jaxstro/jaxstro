@@ -123,4 +123,59 @@ def enable_high_precision() -> None:
     jax_config.update("jax_default_matmul_precision", "highest")
 
 
-__all__ = ["enable_high_precision"]
+_CACHE_INITIALIZED: str | None = None
+
+
+def ensure_jax_compilation_cache(base_dir: str | None = None) -> str:
+    """Enable JAX's persistent on-disk compilation cache, idempotently.
+
+    XLA compilation of large graphs is expensive per process — measured
+    2026-07-31 on stellax's 339-species micrax EOS (CPU, JAX 0.11.0): a
+    cache hit cut the compile phase from 166 s to 25 s (6.5x), through
+    both the jit and AOT ``.lower().compile()`` paths. The cache key is
+    derived from the lowered HLO plus compile options and the JAX/XLA
+    version, so entries are stable across processes and invalidate
+    themselves when any of those change.
+
+    What the cache does **not** buy: tracing (a per-process cost no disk
+    cache can remove) and the compile-phase memory peak (XLA still does
+    real backend work on a hit).
+
+    If ``JAX_COMPILATION_CACHE_DIR`` is already set, respects the user's
+    choice and returns the existing path. Otherwise creates a cache
+    directory under *base_dir* (defaulting to ``~/.cache/jaxstro/jax``).
+
+    Moved here 2026-07-31 from ``stellax.solver._jax_cache`` so that
+    packages which must not import stellax (micrax's pinned invariant)
+    can share the one implementation. The default directory changed from
+    ``~/.cache/stellax/jax`` to ``~/.cache/jaxstro/jax`` with the move;
+    existing entries under the old path are simply recompiled once.
+
+    Returns the path to the active cache directory.
+    """
+    global _CACHE_INITIALIZED  # noqa: PLW0603
+
+    import os
+
+    existing = os.environ.get("JAX_COMPILATION_CACHE_DIR")
+    if existing:
+        _CACHE_INITIALIZED = existing
+        return existing
+
+    if _CACHE_INITIALIZED is not None:
+        return _CACHE_INITIALIZED
+
+    if base_dir is None:
+        base_dir = os.path.join(os.path.expanduser("~"), ".cache", "jaxstro", "jax")
+
+    cache_dir = os.path.join(base_dir, "xla_compilation_cache")
+    os.makedirs(cache_dir, exist_ok=True)
+    os.environ["JAX_COMPILATION_CACHE_DIR"] = cache_dir
+
+    jax_config.update("jax_compilation_cache_dir", cache_dir)
+
+    _CACHE_INITIALIZED = cache_dir
+    return cache_dir
+
+
+__all__ = ["enable_high_precision", "ensure_jax_compilation_cache"]
