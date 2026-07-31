@@ -109,6 +109,13 @@ M_P: float = 1.67262192369e-24
 # Neutron mass [g]
 M_N: float = 1.67492749804e-24
 
+# Bohr radius [cm], CODATA 2018: a_0 = 5.29177210903(80)e-9 cm.
+# A literal rather than hbar^2/(M_E * E_ESU^2): the derivation reproduces
+# CODATA only to the rounding of its inputs, and both existing consumers
+# (micrax occupation + coulomb, previously two private copies) carry exactly
+# these digits — the literal keeps the consolidation 0 ULP.
+A_0_CGS: float = 5.29177210903e-9
+
 # ===========================================================================
 # Solar parameters and compatibility scales
 # IAU 2015 Resolution B3 (direct locator):
