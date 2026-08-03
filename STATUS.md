@@ -1,6 +1,6 @@
 # jaxstro — status
 
-Updated: 2026-07-29
+Updated: 2026-08-02
 
 ## Current checkpoint
 
@@ -16,8 +16,20 @@ Updated: 2026-07-29
 - The release gate now installs the existing pinned `reference` group, so its
   arbitrary-precision multidimensional reference-generator test executes in
   the declared environment.
+- **Riccati-Bessel `S_l` and `C_l` landed in `numerics.special` (2026-08-02),
+  retiring the "spherical Bessel functions are deferred until a downstream
+  contract exists" known-limit.** micrax's H-H scattering work supplied the
+  contract. The Miller seed order is a **caller obligation** -- it must clear
+  both the degree and the argument, not the degree alone -- because the
+  downward sweep self-corrects only where `l > x`. A seed that is too low
+  returns finite, smooth, wrong values; `riccati_wronskian_residual` is the
+  gate that detects it.
+- Regenerating the contract registry surfaced pre-existing drift:
+  `jaxconfig.ensure_jax_compilation_cache` (commit `7b1a116`) had never been
+  added to the generated inventory, so `docs/validation/contracts.json` had
+  been stale since then. Both that gap and this change are now recorded.
 - The contract inventory records 17 public modules, 18 callable-level
-  contracts, 230 explicitly unclassified callables, and 174 inherited record
+  contracts, 235 explicitly unclassified callables, and 174 inherited record
   symbols.
 
 ## Next
