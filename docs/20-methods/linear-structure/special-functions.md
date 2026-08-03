@@ -81,6 +81,43 @@ that result. `legendre_basis`, `chebyshev_t_basis`, and `laguerre_basis` use
 fixed-length `jax.lax.scan` recurrences and return shape `x.shape + (degree + 1,)`.
 `degree` and `axis` are static where used, so changing either can recompile.
 
+`riccati_bessel_basis` returns $S_\ell(x) = x\,j_\ell(x)$ and
+$C_\ell(x) = -x\,y_\ell(x)$ on a leading order axis. The two satisfy the same
+three-term recurrence
+
+$$f_{\ell+1}(x) = \frac{2\ell+1}{x} f_\ell(x) - f_{\ell-1}(x),$$
+
+but not in the same direction. $C_\ell$ grows with $\ell$, so upward recurrence
+is stable. $S_\ell$ decays like $x^{\ell+1}/(2\ell+1)!!$ once $\ell > x$, and
+upward recurrence there amplifies the contaminating growing solution: measured at
+$x = 2$, the Wronskian residual below is $1.1\times10^{-16}$ at $\ell = 10$ and
+$5.6\times10^{14}$ at $\ell = 25$. **The intermediate values stay finite and
+smooth**, so nothing signals the failure. $S_\ell$ therefore uses Miller's
+downward sweep, seeded above the wanted order and normalized at the end against
+the exact $S_0 = \sin x$.
+
+:::{warning}
+The seed order must clear **both the degree and the argument**, not the degree
+alone. Miller's sweep is self-correcting only where $\ell > x$, because that is
+where the wanted solution grows downward; below $x$ both solutions oscillate,
+neither dominates, and whatever relative error entered the oscillatory region
+persists. Measured with a seed 60 orders above the degree only: exact at
+$\ell = 14$, $x = 0.5$, but wrong by $1.7\times10^{-5}$ at $\ell = 1$, $x = 50$,
+and by $O(1)$ at $x = 400$.
+
+`seed_order` is therefore caller-supplied rather than inferred, since the caller
+knows the range of $x$ it will sweep. `riccati_seed_order(degree, x_max)`
+computes a sufficient value from that range.
+:::
+
+`riccati_wronskian_residual` evaluates
+
+$$S_\ell(x)\,C_{\ell-1}(x) - S_{\ell-1}(x)\,C_\ell(x) = -1,$$
+
+which is exact for every order and argument. It is a **recurrence-stability
+gate**, not an approximation check: an unstable sweep violates it by orders of
+magnitude while the function values themselves remain plausible.
+
 ## What JAX differentiates
 
 On positive coordinates and away from numerical underflow, JAX differentiates
@@ -143,8 +180,15 @@ dynamic range after the linear value has underflowed.
 
 These functions do not define filters, luminosities, priors, fitting policy, or
 model selection. Polynomial recurrence parity at low degree does not guarantee
-good conditioning at high degree. Spherical Bessel functions remain deferred
-until a downstream use supplies a stable recurrence and normalization contract.
+good conditioning at high degree.
+
+The Riccati-Bessel pair is provided with a stable recurrence and an exact
+normalization, but the seed order is a **caller obligation**: a value that does
+not clear the largest argument in use returns wrong numbers without any signal
+other than `riccati_wronskian_residual`. The Wronskian gate certifies recurrence
+stability only; it cannot detect an off-by-one in the order labelling, which the
+small-argument power law $S_\ell \sim x^{\ell+1}/(2\ell+1)!!$ is tested for
+separately.
 
 ## Connected ideas
 

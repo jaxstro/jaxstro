@@ -259,6 +259,10 @@ from .special import (
     normalize_log_weights,
     planck_lambda_cgs,
     planck_nu_cgs,
+    riccati_bessel_at_order,
+    riccati_bessel_basis,
+    riccati_seed_order,
+    riccati_wronskian_residual,
 )
 from .splines import (
     BSpline1D,
@@ -401,6 +405,10 @@ __all__ = [
     "legendre_basis",
     "chebyshev_t_basis",
     "laguerre_basis",
+    "riccati_bessel_at_order",
+    "riccati_seed_order",
+    "riccati_bessel_basis",
+    "riccati_wronskian_residual",
     "splines",
     "BSpline1D",
     "adaptive_open_uniform_knots",

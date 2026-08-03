@@ -158,3 +158,121 @@ class TestOrthogonalPolynomialBases:
     def test_rejects_negative_degree(self):
         with pytest.raises(ValueError, match="degree"):
             special.legendre_basis(jnp.array([0.0]), degree=-1)
+
+
+class TestRiccatiBessel:
+    """Tests for Riccati-Bessel ``S_l = x j_l(x)`` and ``C_l = -x y_l(x)``.
+
+    Everything is gated on the Wronskian identity ``S_l C_{l-1} - S_{l-1} C_l =
+    -1``, exact for every order and argument, because the failure mode is an
+    unstable recurrence returning finite, smooth, plausible wrong values.
+    """
+
+    @pytest.mark.parametrize("x", [0.5, 2.0, 10.0, 50.0, 120.0, 400.0])
+    def test_wronskian_identity_holds(self, x):
+        """Spans both regimes: ``l > x`` (direction matters) and ``l < x`` (seed does)."""
+        degree = 30
+        s, c = special.riccati_bessel_basis(
+            jnp.asarray(x),
+            degree=degree,
+            seed_order=special.riccati_seed_order(degree, x),
+        )
+        assert float(jnp.max(special.riccati_wronskian_residual(s, c))) < 1e-14
+
+    def test_seed_order_that_does_not_clear_the_argument_fails(self):
+        """The default seed clears the degree only, and that is not sufficient.
+
+        Miller's sweep self-corrects only where ``l > x``. Below ``x`` both
+        solutions oscillate and the seed error persists. Residual with the
+        default seed: ``6.7e-16`` at ``x = 50``, ``0.57`` at ``x = 400``.
+        """
+        degree, x = 30, 400.0
+        s, c = special.riccati_bessel_basis(jnp.asarray(x), degree=degree)
+        assert float(jnp.max(special.riccati_wronskian_residual(s, c))) > 1e-3
+
+        s, c = special.riccati_bessel_basis(
+            jnp.asarray(x),
+            degree=degree,
+            seed_order=special.riccati_seed_order(degree, x),
+        )
+        assert float(jnp.max(special.riccati_wronskian_residual(s, c))) < 1e-14
+
+    @pytest.mark.parametrize("x", [0.7, 3.0, 12.0])
+    def test_lowest_orders_match_closed_forms(self, x):
+        """Against textbook expressions, which involve no recurrence."""
+        s, c = special.riccati_bessel_basis(
+            jnp.asarray(x), degree=4, seed_order=special.riccati_seed_order(4, x)
+        )
+        expected_s = [
+            jnp.sin(x),
+            jnp.sin(x) / x - jnp.cos(x),
+            (3.0 / x**2 - 1.0) * jnp.sin(x) - 3.0 * jnp.cos(x) / x,
+        ]
+        expected_c = [
+            jnp.cos(x),
+            jnp.cos(x) / x + jnp.sin(x),
+            (3.0 / x**2 - 1.0) * jnp.cos(x) + 3.0 * jnp.sin(x) / x,
+        ]
+        for order in range(3):
+            assert float(s[order]) == pytest.approx(
+                float(expected_s[order]), rel=1e-12, abs=0.0
+            )
+            assert float(c[order]) == pytest.approx(
+                float(expected_c[order]), rel=1e-12, abs=0.0
+            )
+
+    def test_small_argument_power_law(self):
+        """``S_l ~ x^(l+1)/(2l+1)!!``, which constrains the ORDER LABELLING.
+
+        The Wronskian cannot detect an off-by-one in the order index; this can.
+        """
+        x = 0.02
+        s, _ = special.riccati_bessel_basis(
+            jnp.asarray(x), degree=5, seed_order=special.riccati_seed_order(5, x)
+        )
+        double_factorial = 1.0
+        for order in range(4):
+            if order > 0:
+                double_factorial *= 2 * order + 1
+            assert float(s[order]) == pytest.approx(
+                x ** (order + 1) / double_factorial, rel=1e-4, abs=0.0
+            )
+
+    def test_negative_degree_raises(self):
+        with pytest.raises(ValueError, match="degree must be nonnegative"):
+            special.riccati_bessel_basis(jnp.asarray(1.0), degree=-1)
+
+    def test_jit_and_vmap_agree_with_eager(self):
+        """Both transformations must preserve the values exactly."""
+        x = jnp.linspace(0.5, 20.0, 7)
+        seed = special.riccati_seed_order(8, 20.0)
+        eager = special.riccati_bessel_basis(x, degree=8, seed_order=seed)
+        jitted = jax.jit(
+            lambda v: special.riccati_bessel_basis(v, degree=8, seed_order=seed)
+        )(x)
+        for lhs, rhs in zip(eager, jitted):
+            assert jnp.allclose(lhs, rhs, rtol=1e-13, atol=0.0)
+
+    @pytest.mark.parametrize("x", [0.5, 3.0, 50.0, 120.0])
+    def test_single_order_matches_the_basis_exactly(self, x):
+        """Two implementations of one quantity must not drift.
+
+        ``riccati_bessel_at_order`` exists only to avoid materializing lower
+        orders a caller never reads -- roughly 250 MB at ``order = 30`` and
+        ``n = 1e6``. With a matched seed it is bit-identical to the basis.
+        """
+        degree = 14
+        seed = special.riccati_seed_order(degree, x)
+        s, c = special.riccati_bessel_basis(
+            jnp.asarray(x), degree=degree, seed_order=seed
+        )
+        for order in range(degree + 1):
+            s1, c1 = special.riccati_bessel_at_order(
+                jnp.asarray(x), order=order, seed_order=seed
+            )
+            assert float(s1) == float(s[order])
+            assert float(c1) == float(c[order])
+
+    def test_negative_order_raises(self):
+        with pytest.raises(ValueError, match="order must be nonnegative"):
+            special.riccati_bessel_at_order(jnp.asarray(1.0), order=-1)

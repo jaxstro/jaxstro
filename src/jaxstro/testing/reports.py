@@ -217,7 +217,9 @@ def default_numerics_trust_report() -> NumericalTrustReport:
                     ),
                 ),
                 known_limits=(
-                    "Spherical Bessel functions are deferred until a downstream contract exists.",
+                    "Riccati-Bessel S_l and C_l are provided; the Miller seed order "
+                    "must clear both the degree and the argument, and is caller-supplied "
+                    "rather than inferred. Verify with riccati_wronskian_residual.",
                 ),
             ),
             MethodEvidence(

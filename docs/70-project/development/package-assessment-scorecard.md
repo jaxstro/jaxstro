@@ -69,7 +69,7 @@ and an unclassified symbol is not treated as supported.
 | --- | --- | ---: | --- |
 | Registered public modules | `N_module,contract` | 17 | modules |
 | Callable-level contracts | `N_callable,contract` | 18 | callables |
-| Explicitly unclassified public callables | `N_callable,unclassified` | 230 | callables |
+| Explicitly unclassified public callables | `N_callable,unclassified` | 235 | callables |
 | Module-inherited public record types | `N_symbol,inherited` | 174 | symbols |
 
 **Unified evidence infrastructure: implemented.** Computational measurements,

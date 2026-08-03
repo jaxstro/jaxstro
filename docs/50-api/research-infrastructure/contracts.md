@@ -88,7 +88,7 @@ from jaxstro.contracts import get_callable_contract
 
 ## Unclassified callable surfaces
 
-The runtime export audit found **230** public callables without callable-level records:
+The runtime export audit found **235** public callables without callable-level records:
 
 - `jaxstro.atmospheres.acquisition_rows_to_markdown`
 - `jaxstro.atmospheres.build_bosz_index`
@@ -137,6 +137,7 @@ The runtime export audit found **230** public callables without callable-level r
 - `jaxstro.geometry.rigid_transform`
 - `jaxstro.geometry.rotation_matrix`
 - `jaxstro.jaxconfig.enable_high_precision`
+- `jaxstro.jaxconfig.ensure_jax_compilation_cache`
 - `jaxstro.numerics.ScalarFn`
 - `jaxstro.numerics.adaptive_open_uniform_knots`
 - `jaxstro.numerics.add`
@@ -220,6 +221,10 @@ The runtime export audit found **230** public callables without callable-level r
 - `jaxstro.numerics.qr_solve`
 - `jaxstro.numerics.relative_step_norm`
 - `jaxstro.numerics.residual_resample`
+- `jaxstro.numerics.riccati_bessel_at_order`
+- `jaxstro.numerics.riccati_bessel_basis`
+- `jaxstro.numerics.riccati_seed_order`
+- `jaxstro.numerics.riccati_wronskian_residual`
 - `jaxstro.numerics.rk4`
 - `jaxstro.numerics.rk4_step`
 - `jaxstro.numerics.scale`
