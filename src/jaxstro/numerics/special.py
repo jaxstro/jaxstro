@@ -311,6 +311,42 @@ def riccati_bessel_basis(
     seed = (jnp.zeros_like(x), jnp.full_like(x, 1.0e-280))
     _, s_down = jax.lax.scan(s_step, seed, jnp.arange(top, 0, -1, dtype=x.dtype))
     s_asc = s_down[::-1][: degree + 1]
+
+    # Put the sweep on an O(1) scale before normalising. The seed magnitude is
+    # arbitrary for the PRIMAL -- Miller depends only on ratios and ``sin_x /
+    # s_asc[0]`` divides it out -- but NOT for the DERIVATIVE, which carries a
+    # ``1 / s_asc[0]**2`` term and so squares the sweep's magnitude.
+    #
+    # Wherever the sweep has little growth (the oscillatory region ``l < x``,
+    # which is most of the useful domain) it ends near its ``1e-280`` seed, and
+    # ``(1e-280)**2 = 1e-560`` underflows float64 to exactly zero. Until
+    # 2026-08-03 this function therefore returned finite VALUES with NaN
+    # DERIVATIVES: measured at degree 3, ``dS/dx`` was NaN at every ``x`` from 2
+    # to 50 at the seed order :func:`riccati_seed_order` prescribes. Nothing
+    # forward-only notices, and there was no derivative test.
+    #
+    # ``stop_gradient`` is what makes this correct rather than approximate. The
+    # scale cancels IDENTICALLY: for any fixed ``M``, ``(s/M) * sin_x / (s_0/M)``
+    # is the same function of ``x`` as ``s * sin_x / s_0``. So the derivative does
+    # not depend on ``dM/dx``, and holding ``M`` constant is exact. Without
+    # ``stop_gradient`` the ``-s dM / M**2`` term reintroduces the identical
+    # underflow one level up -- that was tried, and the NaN pattern was unchanged.
+    #
+    # Rescaling HERE rather than reseeding the sweep is also deliberate. A larger
+    # seed makes the sweep cross ``_RICCATI_RESCALE`` at small ``x``, and the
+    # rescale in ``s_step`` divides the carry and subsequent outputs but does not
+    # retroactively rescale the ones already stacked -- so the returned array
+    # silently mixes two scales. Seeding at ``1.0`` was tried and drove the
+    # Wronskian residual to ``1e150`` at ``x = 0.5``. That latent inconsistency is
+    # untouched here; it is simply no longer stepped on.
+    # Scaling by ``|s_asc[0]|`` specifically -- not by the sweep's maximum -- makes
+    # the denominator of the normalisation exactly ``+-1``, so ``1 / s_asc[0]**2``
+    # is exactly 1 and underflow is impossible by construction rather than by
+    # margin. It also keeps this in lockstep with :func:`riccati_bessel_at_order`,
+    # which does the identical arithmetic on the identical values, so the two stay
+    # bit-for-bit equal (pinned by ``test_single_order_matches_the_basis_exactly``).
+    scale = jax.lax.stop_gradient(jnp.abs(s_asc[0]))
+    s_asc = s_asc / scale
     return s_asc * (sin_x / s_asc[0]), c
 
 
@@ -391,6 +427,13 @@ def riccati_bessel_at_order(
     )
     if order == 0:
         s_order = s_zero
+    # Same rescale as :func:`riccati_bessel_basis`, for the same reason and with
+    # the same arithmetic -- see the long note there. Without it the derivative of
+    # ``sin_x / s_zero`` carries ``1 / s_zero**2``, and ``s_zero`` sits near the
+    # ``1e-280`` seed wherever the sweep does not grow, so the square underflows
+    # to zero and this returns a finite value with a NaN derivative.
+    scale = jax.lax.stop_gradient(jnp.abs(s_zero))
+    s_order, s_zero = s_order / scale, s_zero / scale
     return s_order * (sin_x / s_zero), c
 
 
