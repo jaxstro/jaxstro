@@ -1,6 +1,6 @@
 # jaxstro — status
 
-Updated: 2026-08-02
+Updated: 2026-08-03
 
 ## Current checkpoint
 
@@ -24,6 +24,19 @@ Updated: 2026-08-02
   downward sweep self-corrects only where `l > x`. A seed that is too low
   returns finite, smooth, wrong values; `riccati_wronskian_residual` is the
   gate that detects it.
+- **`riccati_bessel_basis` returned an array carrying two scales (fixed
+  2026-08-03).** Miller's mid-sweep rescale reached the `scan` carry and every
+  later value, but never the outputs already stacked, so a rescale firing inside
+  the retained window `[0, degree]` left the upper orders larger than the lower
+  ones by exactly the rescale factor. The source documented this and declined to
+  fix it as "no longer stepped on" -- it *was* being stepped on at the production
+  seed order: 16 of 40 temperatures in micrax's H-H solve carried a corrupt node,
+  worst Wronskian residual `1.0e+150`. The sweep now carries its cumulative
+  rescale exponent alongside each value and reconciles the window onto one scale;
+  the rescale factor became `2**500` so the scaling is exact and the result is
+  provably independent of how often it fired. `riccati_bessel_at_order` never had
+  the defect -- it keeps its saved value in the carry. After: 0 of 40
+  temperatures corrupt, worst residual `4.0e-12`.
 - Regenerating the contract registry surfaced pre-existing drift:
   `jaxconfig.ensure_jax_compilation_cache` (commit `7b1a116`) had never been
   added to the generated inventory, so `docs/validation/contracts.json` had

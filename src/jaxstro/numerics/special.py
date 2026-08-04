@@ -232,9 +232,21 @@ _RICCATI_WRONSKIAN = -1.0
 _RICCATI_SEED_MARGIN = 60
 """Orders above ``max(degree, x)`` at which Miller's downward sweep is seeded."""
 
-_RICCATI_RESCALE = 1.0e150
-"""Downward-sweep rescale threshold. Miller depends only on ratios, so this is
-exact rather than a tolerance."""
+_RICCATI_RESCALE_EXP2 = 500
+"""Base-2 exponent of the downward-sweep rescale factor.
+
+A **power of two** rather than a round decimal, so that dividing by it is exact
+in binary. The recurrence is linear and homogeneous, so an exact scaling of the
+carry scales every later value exactly, and the final normalisation divides the
+common factor straight back out: the returned values become provably independent
+of how many times the rescale fired. With the previous ``1e150`` each division
+rounded, so the result depended on the rescale history at the ``1e-16`` level and
+the two implementations here could not stay bit-for-bit equal past one rescale.
+"""
+
+_RICCATI_RESCALE = float(2.0**_RICCATI_RESCALE_EXP2)
+"""Downward-sweep rescale threshold, ``2**500 ~ 3.3e150``. Miller depends only on
+ratios, so this is exact rather than a tolerance."""
 
 
 def riccati_seed_order(degree: int, x_max: float) -> int:
@@ -302,15 +314,49 @@ def riccati_bessel_basis(
 
     top = (degree + _RICCATI_SEED_MARGIN) if seed_order is None else int(seed_order)
 
+    # The sweep rescales whenever it would overflow, and each rescale reaches the
+    # carry and therefore every LATER value -- but ``scan`` stacks its outputs
+    # once and never revisits them, so a rescale reaches nothing already emitted.
+    # Going downward the values GROW, so the retained window ``[0, degree]`` is
+    # emitted last: a rescale firing at order ``b <= degree`` leaves the orders
+    # above ``b`` larger than the orders at or below it by exactly the rescale
+    # factor. Every entry stays finite, smooth and individually plausible, so
+    # nothing forward-only notices; the Wronskian residual jumps to the rescale
+    # factor itself. Measured 2026-08-03 at degree 11 and seed order 2118 (the
+    # H-H scattering configuration): 323 of 2000 arguments in ``x`` in
+    # ``[1e-3, 5]`` corrupt, worst residual ``1.0e+150``.
+    #
+    # The cure is to carry the cumulative rescale exponent ALONGSIDE each value
+    # and put the retained window back on one scale afterwards. ``e`` is an
+    # integer count of base-2 exponent, so it costs one add per step, contributes
+    # no tangent, and the reconciliation below is an exact power-of-two scaling.
+    #
+    # ``riccati_bessel_at_order`` never had this defect: it keeps its one saved
+    # value IN THE CARRY, so every later rescale divides it too.
     def s_step(carry, n):
-        s_next, s_curr = carry
+        s_next, s_curr, exponent = carry
         s_prev = (2.0 * n + 1.0) / x * s_curr - s_next
-        scale = jnp.where(jnp.abs(s_prev) > _RICCATI_RESCALE, _RICCATI_RESCALE, 1.0)
-        return (s_curr / scale, s_prev / scale), s_prev / scale
+        fired = jnp.abs(s_prev) > _RICCATI_RESCALE
+        scale = jnp.where(fired, _RICCATI_RESCALE, 1.0)
+        exponent = exponent + jnp.where(fired, _RICCATI_RESCALE_EXP2, 0)
+        return (s_curr / scale, s_prev / scale, exponent), (s_prev / scale, exponent)
 
-    seed = (jnp.zeros_like(x), jnp.full_like(x, 1.0e-280))
-    _, s_down = jax.lax.scan(s_step, seed, jnp.arange(top, 0, -1, dtype=x.dtype))
+    seed = (
+        jnp.zeros_like(x),
+        jnp.full_like(x, 1.0e-280),
+        jnp.zeros(jnp.shape(x), dtype=jnp.int32),
+    )
+    _, (s_down, e_down) = jax.lax.scan(
+        s_step, seed, jnp.arange(top, 0, -1, dtype=x.dtype)
+    )
     s_asc = s_down[::-1][: degree + 1]
+    e_asc = e_down[::-1][: degree + 1]
+
+    # Order 0 is emitted last and so carries the largest exponent; ``delta <= 0``
+    # and the reconciliation only ever scales DOWN. It can therefore underflow but
+    # never overflow, and underflow here is the genuine float64 representability
+    # limit on ``S_degree / S_0``, not an artifact of the rescale.
+    s_asc = s_asc * jnp.exp2((e_asc - e_asc[0]).astype(x.dtype))
 
     # Put the sweep on an O(1) scale before normalising. The seed magnitude is
     # arbitrary for the PRIMAL -- Miller depends only on ratios and ``sin_x /
@@ -332,13 +378,13 @@ def riccati_bessel_basis(
     # ``stop_gradient`` the ``-s dM / M**2`` term reintroduces the identical
     # underflow one level up -- that was tried, and the NaN pattern was unchanged.
     #
-    # Rescaling HERE rather than reseeding the sweep is also deliberate. A larger
-    # seed makes the sweep cross ``_RICCATI_RESCALE`` at small ``x``, and the
-    # rescale in ``s_step`` divides the carry and subsequent outputs but does not
-    # retroactively rescale the ones already stacked -- so the returned array
-    # silently mixes two scales. Seeding at ``1.0`` was tried and drove the
-    # Wronskian residual to ``1e150`` at ``x = 0.5``. That latent inconsistency is
-    # untouched here; it is simply no longer stepped on.
+    # Rescaling HERE rather than reseeding the sweep is also deliberate: a larger
+    # seed makes the sweep cross ``_RICCATI_RESCALE`` at small ``x``, and seeding
+    # at ``1.0`` was tried and drove the Wronskian residual to ``1e150`` at
+    # ``x = 0.5``. Until 2026-08-03 that was recorded here as a latent
+    # inconsistency merely "no longer stepped on" -- it WAS being stepped on, at
+    # the production seed order, and the exponent bookkeeping above now removes it
+    # rather than avoiding it.
     # Scaling by ``|s_asc[0]|`` specifically -- not by the sweep's maximum -- makes
     # the denominator of the normalisation exactly ``+-1``, so ``1 / s_asc[0]**2``
     # is exactly 1 and underflow is impossible by construction rather than by
@@ -414,6 +460,12 @@ def riccati_bessel_at_order(
 
     top = (order + _RICCATI_SEED_MARGIN) if seed_order is None else int(seed_order)
 
+    # No exponent bookkeeping is needed here, unlike in
+    # :func:`riccati_bessel_basis`: ``s_saved`` lives in the CARRY, so every
+    # rescale after the order was captured divides it along with everything else
+    # and it never leaves the common scale. Keeping the two paths equal is why
+    # the rescale factor is a power of two -- repeated exact divisions here and a
+    # single exact multiply there give bit-identical results.
     def s_step(carry, n):
         s_next, s_curr, s_saved = carry
         s_prev = (2.0 * n + 1.0) / x * s_curr - s_next

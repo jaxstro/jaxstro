@@ -391,9 +391,7 @@ class TestRiccatiBessel:
 
     # ---- a documented limitation, not a passing grade ---------------------
 
-    @pytest.mark.parametrize(
-        "sin_x_scale, max_residual", [(1e-3, 1e-12), (1e-6, 1e-9)]
-    )
+    @pytest.mark.parametrize("sin_x_scale, max_residual", [(1e-3, 1e-12), (1e-6, 1e-9)])
     def test_accuracy_degrades_as_one_over_sin_x_near_multiples_of_pi(
         self, sin_x_scale, max_residual
     ):
@@ -435,3 +433,98 @@ class TestRiccatiBessel:
             f"residual {residual:.3e} at |sin x| ~ {sin_x_scale:.0e} exceeds the "
             f"recorded {max_residual:.0e}; accuracy near n*pi got WORSE"
         )
+
+    # ---- the mid-sweep rescale must not split the returned array ----------
+    #
+    # Miller's downward sweep divides by ``_RICCATI_RESCALE`` whenever it would
+    # overflow. Until 2026-08-03 that division reached the carry and every LATER
+    # output but never the orders already stacked, so a rescale firing inside the
+    # retained window ``[0, degree]`` returned an array carrying two scales that
+    # differ by the rescale factor exactly. Nothing forward-only notices: every
+    # entry is finite, smooth and individually plausible.
+    #
+    # It needs a seed order well above the degree to appear, which is the
+    # production regime (micrax's H-H solve: degree 11, seed_order 2118) and NOT
+    # the regime the other tests here use.
+
+    _CORRUPTED_BAND_DEGREE = 11
+    _CORRUPTED_BAND_SEED = 2118
+
+    def _basis_over(self, x):
+        return jax.vmap(
+            lambda v: special.riccati_bessel_basis(
+                v,
+                degree=self._CORRUPTED_BAND_DEGREE,
+                seed_order=self._CORRUPTED_BAND_SEED,
+            )
+        )(x)
+
+    def test_wronskian_holds_across_the_rescale_band_at_production_seed_order(self):
+        """Dense sweep through the band where the mid-sweep rescale fires.
+
+        ``x`` below roughly 5 makes the sweep grow fast enough per order that a
+        rescale lands inside ``[0, degree]``. Measured on the pre-fix code over
+        these 2000 points: 323 arguments corrupt, worst residual ``1.0e+150`` --
+        which is the rescale factor itself, not round-off. The identity ``S_l
+        C_{l-1} - S_{l-1} C_l = -1`` is exact for every order and argument, so
+        any deviation is a defect and the tolerance is a numerics budget only.
+        """
+        x = jnp.geomspace(1.0e-3, 5.0, 2000)
+        s, c = self._basis_over(x)
+        residual = jax.vmap(special.riccati_wronskian_residual)(s, c)
+        worst = float(jnp.max(jnp.abs(residual)))
+        assert worst < 1e-10, (
+            f"Wronskian residual {worst:.3e} over x in [1e-3, 5]. A residual near "
+            f"{special._RICCATI_RESCALE:.3e} (or a power-of-two multiple of it) "
+            "means a rescale fired inside the retained window and the returned "
+            "array mixes two scales -- check that every stacked output is put "
+            "back on a common scale after the sweep."
+        )
+
+    def test_the_rescale_band_result_is_not_vacuous(self):
+        """Guards the sweep above against passing on zeros or constants.
+
+        A repair that returned zeros, or that collapsed the array to one value,
+        would satisfy the Wronskian nowhere -- but a repair that quietly returned
+        ``-1``-preserving junk, or that a future refactor shortened to an empty
+        axis, would. Pin the shape, the finiteness, the known closed form of
+        ``S_0`` and ``C_0``, and the fact that the orders actually differ.
+        """
+        x = jnp.geomspace(1.0e-3, 5.0, 64)
+        s, c = self._basis_over(x)
+        degree = self._CORRUPTED_BAND_DEGREE
+        assert s.shape == (x.shape[0], degree + 1)
+        assert c.shape == (x.shape[0], degree + 1)
+        assert bool(jnp.all(jnp.isfinite(s))) and bool(jnp.all(jnp.isfinite(c)))
+        # Closed forms, which involve no recurrence.
+        assert jnp.allclose(s[:, 0], jnp.sin(x), rtol=1e-12, atol=0.0)
+        assert jnp.allclose(c[:, 0], jnp.cos(x), rtol=1e-12, atol=0.0)
+        # S_l ~ x^(l+1)/(2l+1)!! falls steeply in l where x < 1, so below that the
+        # orders must strictly decrease -- they cannot all be one repeated value.
+        # (Above x ~ 1 the orders oscillate and monotonicity is not expected.)
+        small = s[x < 0.2]
+        assert small.shape[0] > 0
+        assert bool(jnp.all(jnp.abs(small[:, :-1]) > jnp.abs(small[:, 1:])))
+        assert bool(jnp.all(jnp.max(jnp.abs(s), axis=0) > 0.0))
+
+    def test_the_derivative_survives_the_rescale_band(self):
+        """The 2026-08-03 derivative repair must not regress in the fixed band.
+
+        The scale bookkeeping and the ``stop_gradient`` normalisation touch the
+        same expression, so a fix to one can silently break the other.
+        """
+        seed = self._CORRUPTED_BAND_SEED
+
+        def f(v):
+            return special.riccati_bessel_basis(v, degree=3, seed_order=seed)[0]
+
+        for x in (0.05, 0.5, 2.0, 4.5):
+            auto = jax.jacfwd(f)(jnp.asarray(x))
+            assert bool(jnp.all(jnp.isfinite(auto))), f"dS/dx non-finite at x={x}"
+            h = 1.0e-7 * x
+            fd = (f(jnp.asarray(x + h)) - f(jnp.asarray(x - h))) / (2.0 * h)
+            rel = jnp.abs(auto - fd) / jnp.maximum(jnp.abs(fd), 1e-300)
+            assert float(jnp.max(rel)) < 1e-6, (
+                f"dS/dx disagrees with central differences at x={x}: "
+                f"max relative error {float(jnp.max(rel)):.3e}"
+            )
