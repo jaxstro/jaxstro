@@ -605,19 +605,42 @@ def riccati_bessel_log_basis(
         (2.0 * (top + 1.0) + 1.0) / x,
         jnp.arange(top, 0, -1, dtype=x.dtype),
     )
-    r_asc = r_desc[::-1][:degree]  # r_1 .. r_degree
+    r_asc = r_desc[::-1][:degree]  # r_1 .. r_degree (r_1 unused, see below)
 
-    log_s0 = jnp.log(jnp.abs(sin_x))
-    sign_s0 = jnp.sign(sin_x)
+    # **Anchor at order 1, never at order 0, and never use r_1.**
+    #
+    # `r_1 = S_0/S_1` is computed as `3/x - 1/r_2`, and near a zero of
+    # `S_0 = sin x` those two terms agree to sixteen digits: the true ratio is
+    # ~1e-16 while each term is ~1. Catastrophic cancellation, and the error is
+    # 100% relative -- every higher order inherits it through the cumulative
+    # sum.
+    #
+    # Measured 2026-08-05, before this fix: at `x = pi` the reconstruction gave
+    # `S_1 = 1.103` against a true `0.2978` (3.7x); at `x = 2 pi`, `-1.471`
+    # against `-1.000` (47%). That was live in micrax, where `x = k r_max`
+    # sweeps through `n pi` continuously -- at `x = 10 pi` the l = 4 phase shift
+    # read 2.2115 against a smooth trend of 2.4022.
+    #
+    # `S_0` and `S_1` cannot both be small: `S_0 = sin x` and
+    # `S_1 = sin x / x - cos x`, so `S_0 = 0` forces `S_1 = -cos x = +-1`. Both
+    # are known in closed form, so orders 0 and 1 are written down exactly and
+    # the accumulation starts at order 2 using only `r_2, r_3, ...` -- ratios
+    # that are O(l/x) and well conditioned wherever this representation is
+    # needed (`l > x`, where `S_l` is monotonic and has no zeros).
+    s0, s1 = sin_x, sin_x / x - cos_x
+    log_s01 = jnp.stack([jnp.log(jnp.abs(s0)), jnp.log(jnp.abs(s1))])
+    sign_s01 = jnp.stack([jnp.sign(s0), jnp.sign(s1)])
     if degree == 0:
-        log_s = log_s0[None]
-        sign_s = sign_s0[None]
+        log_s, sign_s = log_s01[:1], sign_s01[:1]
+    elif degree == 1:
+        log_s, sign_s = log_s01, sign_s01
     else:
+        r_up = r_asc[1:]  # r_2 .. r_degree; r_1 is deliberately unused
         log_s = jnp.concatenate(
-            [log_s0[None], log_s0[None] - jnp.cumsum(jnp.log(jnp.abs(r_asc)), axis=0)]
+            [log_s01, log_s01[1:2] - jnp.cumsum(jnp.log(jnp.abs(r_up)), axis=0)]
         )
         sign_s = jnp.concatenate(
-            [sign_s0[None], sign_s0[None] * jnp.cumprod(jnp.sign(r_asc), axis=0)]
+            [sign_s01, sign_s01[1:2] * jnp.cumprod(jnp.sign(r_up), axis=0)]
         )
 
     del log_x

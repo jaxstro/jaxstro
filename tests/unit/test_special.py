@@ -617,3 +617,55 @@ def test_the_log_basis_is_finite_where_the_value_basis_returns_zero_and_nan():
         assert abs(float(log_c[degree, i]) - want_c) < 0.05, (
             f"log|C_72({xv})| = {float(log_c[degree, i]):.3f}, asymptotic {want_c:.3f}"
         )
+
+
+def test_the_log_basis_is_exact_at_the_zeros_of_its_own_normalisation():
+    """``x = n pi`` makes ``S_0 = sin x`` vanish while ``S_l`` do not.
+
+    Checked against the CLOSED FORMS, deliberately, not against
+    :func:`riccati_bessel_basis` -- that function is itself wrong here, by 3.36x
+    at ``x = pi`` and NaN at ``2 pi``, because it normalises the Miller sweep by
+    ``sin_x / s_asc[0]``. So this is not a consistency check between two
+    implementations; it is a check against arithmetic.
+
+        ``S_0 = sin x``
+        ``S_1 = sin x / x - cos x``
+        ``S_2 = (3/x^2 - 1) sin x - (3/x) cos x``
+
+    The defect this pins was live in micrax on 2026-08-05: ``x = k r_max`` sweeps
+    through ``n pi`` continuously, and at ``x = 10 pi`` the ``l = 4`` phase shift
+    read 2.2115 against a smooth trend of 2.4022. The cause was
+    ``r_1 = S_0 / S_1`` being formed as ``3/x - 1/r_2`` -- two terms agreeing to
+    sixteen digits when ``S_0 -> 0``, so 100% relative error, inherited by every
+    higher order through the cumulative sum.
+
+    The cure is that ``S_0`` and ``S_1`` cannot both be small (``S_0 = 0`` forces
+    ``S_1 = -cos x = +-1``), so both are written in closed form and the
+    accumulation starts at order 2, never touching ``r_1``.
+    """
+    import math
+
+    from jaxstro.numerics.special import riccati_bessel_log_basis, riccati_seed_order
+
+    xs = [math.pi, 2.0 * math.pi, 3.0 * math.pi, math.pi + 1e-12, math.pi - 1e-12]
+    x = jnp.asarray(xs)
+    degree = 6
+    sign_s, log_s, _, _ = riccati_bessel_log_basis(
+        x, degree=degree, seed_order=riccati_seed_order(degree, 20.0)
+    )
+    got = sign_s * jnp.exp(log_s)
+
+    assert bool(jnp.all(jnp.isfinite(log_s))), "log|S| went non-finite at a zero of S_0"
+
+    for i, xv in enumerate(xs):
+        closed = (
+            math.sin(xv),
+            math.sin(xv) / xv - math.cos(xv),
+            (3.0 / xv**2 - 1.0) * math.sin(xv) - (3.0 / xv) * math.cos(xv),
+        )
+        for ell, want in enumerate(closed):
+            err = abs(float(got[ell, i]) - want) / max(abs(want), 1e-12)
+            assert err < 1e-10, (
+                f"x = {xv!r}, l = {ell}: got {float(got[ell, i])!r}, closed form "
+                f"{want!r} (rel {err:.2e})"
+            )
