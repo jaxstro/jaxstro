@@ -528,3 +528,92 @@ class TestRiccatiBessel:
                 f"dS/dx disagrees with central differences at x={x}: "
                 f"max relative error {float(jnp.max(rel)):.3e}"
             )
+
+
+# ---- the log basis: where the value basis provably cannot go ---------------
+
+
+def test_the_log_basis_agrees_with_the_value_basis_where_both_are_valid():
+    """Equivalence first, on the domain the existing basis actually spans.
+
+    A new representation that is only checked where the old one FAILS has not
+    been checked at all -- agreement in the well-conditioned region is what makes
+    the extrapolation into the ill-conditioned one credible.
+    """
+    from jaxstro.numerics.special import (
+        riccati_bessel_basis,
+        riccati_bessel_log_basis,
+        riccati_seed_order,
+    )
+
+    x = jnp.asarray([0.5, 2.0, 7.3, 25.0])
+    degree = 12
+    seed = riccati_seed_order(degree, 25.0)
+
+    S, C = riccati_bessel_basis(x, degree=degree, seed_order=seed)
+    sign_s, log_s, sign_c, log_c = riccati_bessel_log_basis(
+        x, degree=degree, seed_order=seed
+    )
+
+    for name, got, want in (
+        ("S", sign_s * jnp.exp(log_s), S),
+        ("C", sign_c * jnp.exp(log_c), C),
+    ):
+        rel = jnp.max(jnp.abs(got - want) / (jnp.abs(want) + 1e-300))
+        assert float(rel) < 1e-12, f"{name} log basis disagrees by {float(rel):.2e}"
+
+
+def test_the_log_basis_is_finite_where_the_value_basis_returns_zero_and_nan():
+    """**The defect this function was written for, pinned at its own argument.**
+
+    For ``l >> x`` the two solutions leave float64 in opposite directions:
+    ``S_l ~ x^(l+1)/(2l+1)!!`` underflows to zero while ``C_l ~ (2l-1)!!/x^l``
+    overflows to inf. Measured here at ``l = 72``, ``x = 2e-3`` -- the
+    configuration where micrax's H-H channel integral returned NaN on 2026-08-05
+    for ``l = 68..72`` at 32 and 64 quadrature nodes per panel, and finite values
+    at 16, because finer panels sample smaller ``k``.
+
+    The log form must be finite and must bracket the true magnitudes, and the
+    value form must still fail -- if it stops failing, the underflow moved and
+    this test is measuring the wrong thing.
+    """
+    from jaxstro.numerics.special import (
+        riccati_bessel_basis,
+        riccati_bessel_log_basis,
+        riccati_seed_order,
+    )
+
+    x = jnp.asarray([2.0e-3, 1.0e-4])
+    degree = 72
+    seed = riccati_seed_order(degree, 25.0)
+
+    S, C = riccati_bessel_basis(x, degree=degree, seed_order=seed)
+    assert bool(jnp.all(S[degree] == 0.0)), (
+        "S no longer underflows here -- the log basis is being pinned at an "
+        "argument that no longer exercises the defect. Find the new one."
+    )
+    assert not bool(jnp.all(jnp.isfinite(C[degree]))), (
+        "C no longer overflows here -- same problem, other side."
+    )
+
+    _, log_s, _, log_c = riccati_bessel_log_basis(x, degree=degree, seed_order=seed)
+    assert bool(jnp.all(jnp.isfinite(log_s))), "log|S| is not finite"
+    assert bool(jnp.all(jnp.isfinite(log_c))), "log|C| is not finite"
+
+    # The asymptotic magnitudes, as an independent check that these are the RIGHT
+    # finite numbers rather than merely finite ones:
+    #     log|S_l| ~ (l+1) log x - log (2l+1)!!
+    #     log|C_l| ~ log (2l-1)!! - l log x
+    import math
+
+    for i, xv in enumerate((2.0e-3, 1.0e-4)):
+        ln_dfact_hi = sum(math.log(2 * m + 1) for m in range(degree + 1))  # (2l+1)!!
+        ln_dfact_lo = ln_dfact_hi - math.log(2 * degree + 1)  # (2l-1)!!
+        want_s = (degree + 1) * math.log(xv) - ln_dfact_hi
+        want_c = ln_dfact_lo - degree * math.log(xv)
+        assert abs(float(log_s[degree, i]) - want_s) < 0.05, (
+            f"log|S_72({xv})| = {float(log_s[degree, i]):.3f}, asymptotic {want_s:.3f}"
+        )
+        assert abs(float(log_c[degree, i]) - want_c) < 0.05, (
+            f"log|C_72({xv})| = {float(log_c[degree, i]):.3f}, asymptotic {want_c:.3f}"
+        )

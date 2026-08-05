@@ -504,3 +504,121 @@ __all__ = [
     "riccati_bessel_at_order",
     "riccati_wronskian_residual",
 ]
+
+
+def riccati_bessel_log_basis(
+    x: Float[Array, "..."],
+    *,
+    degree: int,
+    seed_order: int | None = None,
+) -> tuple[
+    Float[Array, "degree ..."],
+    Float[Array, "degree ..."],
+    Float[Array, "degree ..."],
+    Float[Array, "degree ..."],
+]:
+    """``(sign_S, log|S_l|, sign_C, log|C_l|)`` -- the pair, in a representable form.
+
+    Same ``S_l = x j_l(x)``, ``C_l = -x y_l(x)`` as :func:`riccati_bessel_basis`,
+    returned as sign and log-magnitude so that neither one can leave float64.
+
+    **Why this exists.** The two solutions run in opposite directions: for
+    ``l >> x``, ``S_l ~ x^{l+1}/(2l+1)!!`` underflows while
+    ``C_l ~ (2l-1)!!/x^l`` overflows. Any expression that forms them as *values*
+    and then combines them -- which is exactly what a direct phase-shift match
+    does -- meets ``0 * inf`` or ``inf - inf`` and returns NaN, at arguments
+    where the true answer is perfectly well defined and simply very small.
+
+    Measured 2026-08-05 in micrax: at ``T = 3000 K`` the H-H channel integral
+    returned NaN for ``l = 68..72`` at 32 and 64 Gauss-Legendre nodes per panel
+    and finite values at 16 -- because finer panels place nodes at smaller ``k``,
+    and ``S_72(2e-3)`` is ``~1e-391``. In log form that is ``-900``, an ordinary
+    double.
+
+    The caller recombines with a common scale, e.g. ``M = max(log|.|)`` over the
+    terms it needs, and any term genuinely below the others by more than ~700
+    e-folds underflows to exactly zero -- which is the correctly rounded result
+    of the stable formula, not a mask over a failure.
+
+    Zeros of ``S_l`` or ``C_l`` give ``-inf`` here, which is the honest log of
+    zero and behaves correctly under the same recombination.
+
+    Parameters
+    ----------
+    x
+        Argument. Must be positive.
+    degree
+        Highest order returned; leading axis has ``degree + 1`` entries.
+    seed_order
+        Start of the downward sweep for ``S``. See :func:`riccati_seed_order`.
+    """
+    if degree < 0:
+        raise ValueError("degree must be nonnegative")
+    x = jnp.asarray(x)
+    sin_x = jnp.sin(x)
+    cos_x = jnp.cos(x)
+    log_x = jnp.log(x)
+
+    # ---- C: upward, the direction in which the dominant solution grows -----
+    # Carries a base-2 exponent alongside the value for exactly the reason the
+    # `S` sweep in `riccati_bessel_basis` does: the recurrence would otherwise
+    # overflow, and an overflow here is representational, not physical.
+    c0, c1 = cos_x, cos_x / x + sin_x
+    if degree == 0:
+        c_vals = c0[None]
+        c_exp = jnp.zeros_like(c0)[None]
+    else:
+
+        def c_step(carry, n):
+            c_prev, c_curr, e = carry
+            c_next = (2.0 * n + 1.0) / x * c_curr - c_prev
+            fired = jnp.abs(c_next) > _RICCATI_RESCALE
+            scale = jnp.where(fired, _RICCATI_RESCALE, 1.0)
+            e = e + jnp.where(fired, float(_RICCATI_RESCALE_EXP2), 0.0)
+            return (c_curr / scale, c_next / scale, e), (c_next / scale, e)
+
+        zero = jnp.zeros_like(x)
+        _, (c_rest, e_rest) = jax.lax.scan(
+            c_step, (c0, c1, zero), jnp.arange(1, degree, dtype=x.dtype)
+        )
+        c_vals = jnp.concatenate([jnp.stack([c0, c1]), c_rest])
+        c_exp = jnp.concatenate([jnp.stack([zero, zero]), e_rest])
+
+    sign_c = jnp.sign(c_vals)
+    log_c = jnp.log(jnp.abs(c_vals)) + c_exp * jnp.log(2.0)
+
+    # ---- S: the ratio recurrence, which cannot under- or overflow ----------
+    # `r_l = S_{l-1} / S_l` satisfies `r_l = (2l+1)/x - 1/r_{l+1}` downward, and
+    # every `r_l` is O(l/x) -- an ordinary number at every order. Accumulating
+    # `log|S_l| = log|S_0| - sum_m log|r_m|` then reaches arbitrarily small `S`
+    # without ever forming it. This is the continued-fraction route, and it is
+    # why no rescale bookkeeping is needed on this side.
+    top = riccati_seed_order(degree, 0.0) if seed_order is None else int(seed_order)
+    top = max(top, degree + 1)
+
+    def r_step(r_next, m):
+        r = (2.0 * m + 1.0) / x - 1.0 / r_next
+        return r, r
+
+    _, r_desc = jax.lax.scan(
+        r_step,
+        (2.0 * (top + 1.0) + 1.0) / x,
+        jnp.arange(top, 0, -1, dtype=x.dtype),
+    )
+    r_asc = r_desc[::-1][:degree]  # r_1 .. r_degree
+
+    log_s0 = jnp.log(jnp.abs(sin_x))
+    sign_s0 = jnp.sign(sin_x)
+    if degree == 0:
+        log_s = log_s0[None]
+        sign_s = sign_s0[None]
+    else:
+        log_s = jnp.concatenate(
+            [log_s0[None], log_s0[None] - jnp.cumsum(jnp.log(jnp.abs(r_asc)), axis=0)]
+        )
+        sign_s = jnp.concatenate(
+            [sign_s0[None], sign_s0[None] * jnp.cumprod(jnp.sign(r_asc), axis=0)]
+        )
+
+    del log_x
+    return sign_s, log_s, sign_c, log_c
