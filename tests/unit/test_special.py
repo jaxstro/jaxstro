@@ -723,3 +723,66 @@ def test_the_value_basis_is_exact_at_the_zeros_of_sin():
                 f"x = {xv!r}, l = {ell}: got {float(s[ell, i])!r}, expected "
                 f"{want!r} (rel {err:.2e})"
             )
+
+
+def test_the_basis_holds_on_a_DENSE_sweep_not_just_at_chosen_points():
+    """**The guard shape that would have caught all four Riccati-Bessel defects.**
+
+    Four of the seven commits ever made to this module are fixes to the same
+    operation -- tying Miller's downward sweep, which fixes every ratio and no
+    overall scale, to one known absolute value:
+
+    ==========  =======================================================
+    ``8365c85`` the normalisation's derivative carried ``1/s[0]**2`` and
+                underflowed: finite values, NaN derivatives
+    ``e56d5eb`` a rescale fired inside the retained window, so the array
+                carried two scales
+    ``165a4d0`` the anchor was ``S_0``, which vanishes at ``x = n pi``
+    ``8a2e06e`` (log basis) ``r_1`` formed through a cancellation, same
+                zeros
+    ==========  =======================================================
+
+    The recurrence has never been wrong. The seam has been wrong four times.
+
+    **Every one was found by a caller, not by this file**, and the reason is
+    visible in how they are tested: point checks pick convenient arguments
+    (0.5, 2, 7.3, 25), while micrax evaluates at ``x = k r_max`` and sweeps
+    continuously through thousands. A special function's failures live at
+    SPECIFIC arguments -- zeros, thresholds, regime boundaries -- and nobody
+    picks those by hand. The one dense test in this file
+    (``test_wronskian_holds_across_the_rescale_band_at_production_seed_order``)
+    is also the only one that ever caught a regression before a caller did, and
+    it caught one during the 165a4d0 fix itself.
+
+    So this sweeps densely through eighteen zeros of ``sin x`` and gates on
+    CLOSED FORMS -- an oracle that is exact at every argument, not a reference
+    implementation that could share a bug.
+    """
+    import math
+
+    from jaxstro.numerics.special import riccati_bessel_basis, riccati_seed_order
+
+    x = jnp.linspace(0.05, 56.0, 3000)  # spans 17 zeros of sin x
+    degree = 8
+    s, c = riccati_bessel_basis(
+        x, degree=degree, seed_order=riccati_seed_order(degree, 60.0)
+    )
+    assert bool(jnp.all(jnp.isfinite(s))), "S non-finite somewhere on the sweep"
+    assert bool(jnp.all(jnp.isfinite(c))), "C non-finite somewhere on the sweep"
+
+    sin_x, cos_x = jnp.sin(x), jnp.cos(x)
+    closed = jnp.stack([
+        sin_x,
+        sin_x / x - cos_x,
+        (3.0 / x**2 - 1.0) * sin_x - (3.0 / x) * cos_x,
+    ])
+    # Scaled by the LOCAL envelope: near a zero of one order the others are O(1),
+    # so a pure relative test would divide by ~0 and report noise as failure.
+    envelope = jnp.maximum(jnp.max(jnp.abs(closed), axis=0), 1.0e-12)
+    err = jnp.max(jnp.abs(s[:3] - closed) / envelope)
+    worst = int(jnp.argmax(jnp.max(jnp.abs(s[:3] - closed) / envelope, axis=0)))
+    assert float(err) < 1e-12, (
+        f"worst deviation from closed form {float(err):.3e} at x = "
+        f"{float(x[worst]):.6f} (sin x = {float(sin_x[worst]):.3e}) -- a "
+        "normalisation defect looks exactly like this and point checks miss it."
+    )
