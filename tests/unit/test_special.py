@@ -669,3 +669,57 @@ def test_the_log_basis_is_exact_at_the_zeros_of_its_own_normalisation():
                 f"x = {xv!r}, l = {ell}: got {float(got[ell, i])!r}, closed form "
                 f"{want!r} (rel {err:.2e})"
             )
+
+
+def test_the_value_basis_is_exact_at_the_zeros_of_sin():
+    """``x = n pi`` broke the NORMALISATION, not the recurrence.
+
+    Miller's sweep fixes every ratio and no overall scale, so it must be tied to
+    one known value. Tying it to ``S_0 = sin x`` fails exactly where ``S_0``
+    vanishes: the sweep's own last step is ``S_0 = (3/x) S_1 - S_2``, which at
+    ``x = pi`` is ``0.9549 - 0.9549``. The array was then normalised by the one
+    value in it computed to no significant digits.
+
+    Measured before the fix, against closed forms: ``S_1(pi) = 0.297774`` for a
+    true ``1.000000`` -- a factor of 3.36 -- and every order NaN at ``2 pi``.
+    Live in micrax, whose matching evaluates at ``x = k r_max`` and sweeps
+    through ``n pi`` continuously.
+
+    The anchor is now the larger of ``|S_0|`` and ``|S_1|``, which cannot both be
+    small (``S_0 = 0`` forces ``S_1 = -cos x = +-1``).
+
+    **Small ``x`` is checked in the same test on purpose.** The obvious extra
+    step -- also take ``S_1`` from its closed form -- makes things WORSE, because
+    ``sin x / x - cos x`` cancels catastrophically as ``x -> 0``. It was tried,
+    and it pushed the Wronskian residual from 3.5e-14 to 4.9e-10. So this pins
+    both ends: the sweep owns order 1, the closed form owns order 0, and neither
+    choice is arbitrary.
+    """
+    import math
+
+    from jaxstro.numerics.special import riccati_bessel_basis, riccati_seed_order
+
+    xs = [math.pi, 2.0 * math.pi, 3.0 * math.pi, 2.0, 7.3, 0.5, 1.0e-3]
+    x = jnp.asarray(xs)
+    degree = 8
+    s, c = riccati_bessel_basis(
+        x, degree=degree, seed_order=riccati_seed_order(degree, 30.0)
+    )
+    assert bool(jnp.all(jnp.isfinite(s))), "S went non-finite"
+    assert bool(jnp.all(jnp.isfinite(c))), "C went non-finite"
+
+    for i, xv in enumerate(xs):
+        closed = [
+            math.sin(xv),
+            math.sin(xv) / xv - math.cos(xv),
+            (3.0 / xv**2 - 1.0) * math.sin(xv) - (3.0 / xv) * math.cos(xv),
+        ]
+        if xv < 0.01:  # the closed forms themselves cancel here; use the series
+            closed[1] = xv**2 / 3.0 - xv**4 / 30.0
+            closed[2] = xv**3 / 15.0 - xv**5 / 210.0
+        for ell, want in enumerate(closed):
+            err = abs(float(s[ell, i]) - want) / max(abs(want), 1e-300)
+            assert err < 1e-12, (
+                f"x = {xv!r}, l = {ell}: got {float(s[ell, i])!r}, expected "
+                f"{want!r} (rel {err:.2e})"
+            )

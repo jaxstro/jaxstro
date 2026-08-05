@@ -391,9 +391,53 @@ def riccati_bessel_basis(
     # margin. It also keeps this in lockstep with :func:`riccati_bessel_at_order`,
     # which does the identical arithmetic on the identical values, so the two stay
     # bit-for-bit equal (pinned by ``test_single_order_matches_the_basis_exactly``).
-    scale = jax.lax.stop_gradient(jnp.abs(s_asc[0]))
+    # **The anchor is the LARGER of orders 0 and 1, never order 0 unconditionally.**
+    #
+    # Miller's sweep fixes every ratio and no overall scale, so it must be tied
+    # to one known value. Tying it to ``S_0 = sin x`` fails at ``x = n pi``,
+    # where ``S_0`` vanishes but no higher order does: the sweep's own last step
+    # is ``S_0 = (3/x) S_1 - S_2``, and at ``x = pi`` that is
+    # ``0.9549 - 0.9549`` -- catastrophic cancellation, so the value the whole
+    # array is normalised BY is the one value computed to no significant digits.
+    #
+    # Measured 2026-08-05 against closed forms at ``x = pi``: ``S_1`` came back
+    # 0.297774 against a true 1.000000, a factor of 3.36, and at ``x = 2 pi``
+    # every order was NaN. This was live in micrax, whose matching evaluates at
+    # ``x = k r_max`` and therefore sweeps through ``n pi`` continuously.
+    #
+    # ``S_0`` and ``S_1`` cannot both be small: ``S_0 = sin x`` and
+    # ``S_1 = sin x / x - cos x``, so ``S_0 = 0`` forces ``S_1 = -cos x = +-1``.
+    # Both are exact in closed form, so anchoring on whichever is larger is
+    # always well conditioned, and reduces to the old behaviour everywhere the
+    # old behaviour was correct.
+    s0_true = sin_x
+    s1_true = sin_x / x - cos_x
+    use1 = jnp.abs(s1_true) > jnp.abs(s0_true)
+    if degree == 0:
+        # Nothing to normalise: order 0 IS the closed form.
+        return s0_true[None], c
+    anchor_sweep = jnp.where(use1, s_asc[1], s_asc[0])
+    anchor_true = jnp.where(use1, s1_true, s0_true)
+    scale = jax.lax.stop_gradient(jnp.abs(anchor_sweep))
     s_asc = s_asc / scale
-    return s_asc * (sin_x / s_asc[0]), c
+    anchor_sweep = anchor_sweep / scale
+    s_asc = s_asc * (anchor_true / anchor_sweep)
+    # Order 0 is taken from its closed form; order 1 is NOT, and the asymmetry is
+    # measured rather than stylistic. ``sin x`` never cancels, so ``S_0`` is
+    # exact everywhere and the sweep's own value (~2e-4 relative at ``x = n pi``,
+    # on a magnitude of 1e-16) is strictly worse.
+    #
+    # ``S_1 = sin x / x - cos x`` DOES cancel: as ``x -> 0`` both terms approach
+    # 1 while the difference is ``x^2/3``, so at ``x = 1e-3`` the relative error
+    # is ~3e-10. Overriding order 1 with that closed form was tried and pushed
+    # the Wronskian residual from 3.5e-14 to 4.9e-10 over ``x in [1e-3, 5]``,
+    # concentrated entirely at ``x < 0.02`` and entirely in the order-1 identity.
+    # The sweep is better there, so the sweep keeps it.
+    #
+    # The closed form is still used for the ANCHOR when ``|S_1| > |S_0|``, which
+    # happens only near ``x = n pi`` where ``S_1 -> -cos x = +-1`` and there is
+    # no cancellation to suffer.
+    return jnp.concatenate([s0_true[None], s_asc[1:]]), c
 
 
 def riccati_wronskian_residual(
@@ -466,15 +510,22 @@ def riccati_bessel_at_order(
     # and it never leaves the common scale. Keeping the two paths equal is why
     # the rescale factor is a power of two -- repeated exact divisions here and a
     # single exact multiply there give bit-identical results.
+    # `s_one` rides in the CARRY beside `s_saved` for the same reason it does
+    # there: every later rescale must divide it too, or it leaves the common
+    # scale. It is captured at `n == 2`, where `s_prev` is `S_1`.
     def s_step(carry, n):
-        s_next, s_curr, s_saved = carry
+        s_next, s_curr, s_saved, s_one = carry
         s_prev = (2.0 * n + 1.0) / x * s_curr - s_next
         s_saved = jnp.where(n == order + 1, s_prev, s_saved)
+        s_one = jnp.where(n == 2, s_prev, s_one)
         scale = jnp.where(jnp.abs(s_prev) > _RICCATI_RESCALE, _RICCATI_RESCALE, 1.0)
-        return (s_curr / scale, s_prev / scale, s_saved / scale), None
+        return (s_curr / scale, s_prev / scale, s_saved / scale, s_one / scale), None
 
-    seed = (jnp.zeros_like(x), jnp.full_like(x, 1.0e-280), jnp.zeros_like(x))
-    (_, s_zero, s_order), _ = jax.lax.scan(
+    seed = (
+        jnp.zeros_like(x), jnp.full_like(x, 1.0e-280),
+        jnp.zeros_like(x), jnp.zeros_like(x),
+    )
+    (_, s_zero, s_order, s_one), _ = jax.lax.scan(
         s_step, seed, jnp.arange(top, 0, -1, dtype=x.dtype)
     )
     if order == 0:
@@ -484,9 +535,41 @@ def riccati_bessel_at_order(
     # ``sin_x / s_zero`` carries ``1 / s_zero**2``, and ``s_zero`` sits near the
     # ``1e-280`` seed wherever the sweep does not grow, so the square underflows
     # to zero and this returns a finite value with a NaN derivative.
-    scale = jax.lax.stop_gradient(jnp.abs(s_zero))
-    s_order, s_zero = s_order / scale, s_zero / scale
-    return s_order * (sin_x / s_zero), c
+    # Same anchor choice as :func:`riccati_bessel_basis`, identical arithmetic
+    # so the two stay bit-for-bit equal.
+    # **The anchor is the LARGER of orders 0 and 1, never order 0 unconditionally.**
+    #
+    # Miller's sweep fixes every ratio and no overall scale, so it must be tied
+    # to one known value. Tying it to ``S_0 = sin x`` fails at ``x = n pi``,
+    # where ``S_0`` vanishes but no higher order does: the sweep's own last step
+    # is ``S_0 = (3/x) S_1 - S_2``, and at ``x = pi`` that is
+    # ``0.9549 - 0.9549`` -- catastrophic cancellation, so the value the whole
+    # array is normalised BY is the one value computed to no significant digits.
+    #
+    # Measured 2026-08-05 against closed forms at ``x = pi``: ``S_1`` came back
+    # 0.297774 against a true 1.000000, a factor of 3.36, and at ``x = 2 pi``
+    # every order was NaN. This was live in micrax, whose matching evaluates at
+    # ``x = k r_max`` and therefore sweeps through ``n pi`` continuously.
+    #
+    # ``S_0`` and ``S_1`` cannot both be small: ``S_0 = sin x`` and
+    # ``S_1 = sin x / x - cos x``, so ``S_0 = 0`` forces ``S_1 = -cos x = +-1``.
+    # Both are exact in closed form, so anchoring on whichever is larger is
+    # always well conditioned, and reduces to the old behaviour everywhere the
+    # old behaviour was correct.
+    s0_true = sin_x
+    s1_true = sin_x / x - cos_x
+    use1 = jnp.abs(s1_true) > jnp.abs(s0_true)
+    if order == 0:
+        return s0_true, c
+    # Order 1 comes from the sweep, NOT its closed form -- see the note in
+    # `riccati_bessel_basis`: `sin x / x - cos x` cancels catastrophically as
+    # x -> 0 and is measurably worse than the recurrence below x ~ 0.02.
+    anchor_sweep = jnp.where(use1, s_one, s_zero)
+    anchor_true = jnp.where(use1, s1_true, s0_true)
+    scale = jax.lax.stop_gradient(jnp.abs(anchor_sweep))
+    s_order = s_order / scale
+    anchor_sweep = anchor_sweep / scale
+    return s_order * (anchor_true / anchor_sweep), c
 
 
 __all__ = [
