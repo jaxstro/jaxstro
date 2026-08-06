@@ -226,6 +226,25 @@ def universal_kepler_step(
     rv_bar = jnp.dot(position_bar, velocity_bar)
     tau = safe_dt / time_scale
 
+    # An elliptic Cartesian state is periodic.  Solving for a universal
+    # anomaly over complete revolutions needlessly worsens the Newton initial
+    # guess and can exhaust the fixed, JIT-static iteration budget even though
+    # the physical endpoint is well defined.  Reduce only elliptic spans to a
+    # centered principal period before the solve; the reconstructed Cartesian
+    # state is exactly phase-equivalent, while parabolic and hyperbolic flows
+    # retain their physical signed spans.
+    near_parabolic = jnp.sqrt(jnp.finfo(dtype).eps)
+    elliptic = alpha_bar > near_parabolic
+    safe_elliptic_alpha = jnp.where(elliptic, alpha_bar, jnp.ones_like(alpha_bar))
+    elliptic_period = 2.0 * jnp.pi / (
+        safe_elliptic_alpha * jnp.sqrt(safe_elliptic_alpha)
+    )
+    reduced_tau = jnp.remainder(
+        tau + 0.5 * elliptic_period,
+        elliptic_period,
+    ) - 0.5 * elliptic_period
+    tau = jnp.where(elliptic, reduced_tau, tau)
+
     anomaly = _initial_anomaly(alpha_bar, rv_bar, tau)
     residual, radius = _tof_residual_and_radius(
         anomaly,
@@ -315,6 +334,88 @@ def universal_kepler_step(
         )
 
     final, _ = lax.scan(newton_step, initial, xs=None, length=max_steps)
+
+    # On the centered principal elliptic period, the universal time-of-flight
+    # residual is monotone and one full universal-anomaly period, +/- 2 pi /
+    # sqrt(alpha), brackets the root independently of the initial anomaly.  A
+    # bounded bisection fallback therefore resolves rare high-eccentricity
+    # Newton-basin failures without changing the residual tolerance, using a
+    # fixed JIT-compatible iteration count.  Exact radial collision roots stay
+    # on the existing fail-closed path rather than being numerically accepted.
+    angular_momentum_squared = jnp.sum(jnp.cross(position_bar, velocity_bar) ** 2)
+    needs_safeguard = (
+        input_valid
+        & elliptic
+        & final.finite
+        & ~final.singular
+        & ~final.converged
+        & (angular_momentum_squared > 0.0)
+    )
+
+    def safeguarded_elliptic_root(_: None) -> _KeplerCarry:
+        half_period_anomaly = 2.0 * jnp.pi / jnp.sqrt(safe_elliptic_alpha)
+        lower = -half_period_anomaly
+        upper = half_period_anomaly
+        lower_residual, _ = _tof_residual_and_radius(
+            lower, alpha_bar, rv_bar, tau
+        )
+        upper_residual, _ = _tof_residual_and_radius(
+            upper, alpha_bar, rv_bar, tau
+        )
+        bracket_valid = (
+            jnp.isfinite(lower_residual)
+            & jnp.isfinite(upper_residual)
+            & (lower_residual <= 0.0)
+            & (upper_residual >= 0.0)
+        )
+
+        def bisect_step(
+            bounds: tuple[Array, Array],
+            _: None,
+        ) -> tuple[tuple[Array, Array], None]:
+            low, high = bounds
+            midpoint = 0.5 * (low + high)
+            midpoint_residual, _ = _tof_residual_and_radius(
+                midpoint, alpha_bar, rv_bar, tau
+            )
+            return (
+                (
+                    jnp.where(midpoint_residual <= 0.0, midpoint, low),
+                    jnp.where(midpoint_residual <= 0.0, high, midpoint),
+                ),
+                None,
+            )
+
+        (lower, upper), _ = lax.scan(
+            bisect_step,
+            (lower, upper),
+            xs=None,
+            length=56,
+        )
+        anomaly = 0.5 * (lower + upper)
+        residual, radius = _tof_residual_and_radius(
+            anomaly, alpha_bar, rv_bar, tau
+        )
+        finite = (
+            bracket_valid
+            & jnp.isfinite(anomaly)
+            & jnp.isfinite(residual)
+            & jnp.isfinite(radius)
+        )
+        singular = finite & (radius <= radius_floor)
+        converged = finite & ~singular & (jnp.abs(residual) <= residual_bound)
+        safeguarded = _KeplerCarry(
+            anomaly=anomaly,
+            residual=residual,
+            radius=radius,
+            iterations=final.iterations + jnp.asarray(56, dtype=jnp.int32),
+            converged=converged,
+            finite=finite,
+            singular=singular,
+        )
+        return lax.cond(bracket_valid, lambda _: safeguarded, lambda _: final, None)
+
+    final = lax.cond(needs_safeguard, safeguarded_elliptic_root, lambda _: final, None)
 
     z = alpha_bar * final.anomaly**2
     c, s = _stumpff_pair(z)

@@ -170,6 +170,96 @@ def test_universal_kepler_closes_eccentric_ellipse() -> None:
     assert abs(float(result.residual)) <= 1.0e-12
 
 
+def test_universal_kepler_reduces_high_eccentricity_elliptic_periods() -> None:
+    """A long elliptic span must not consume Newton iterations on full revolutions."""
+
+    eccentricity = 0.9674073088129677
+    eccentric_anomaly = 2.945243112740431
+    root = jnp.sqrt(1.0 - eccentricity**2)
+    position = jnp.array(
+        [
+            jnp.cos(eccentric_anomaly) - eccentricity,
+            root * jnp.sin(eccentric_anomaly),
+            0.0,
+        ]
+    )
+    velocity = jnp.array(
+        [
+            -jnp.sin(eccentric_anomaly)
+            / (1.0 - eccentricity * jnp.cos(eccentric_anomaly)),
+            root
+            * jnp.cos(eccentric_anomaly)
+            / (1.0 - eccentricity * jnp.cos(eccentric_anomaly)),
+            0.0,
+        ]
+    )
+    physical_span = 1.5326297078617077 * 2.0 * jnp.pi
+    result = universal_kepler_step(
+        position,
+        velocity,
+        jnp.array(1.0),
+        physical_span,
+        max_steps=24,
+    )
+    reduced = universal_kepler_step(
+        position,
+        velocity,
+        jnp.array(1.0),
+        physical_span - 2.0 * 2.0 * jnp.pi,
+        max_steps=24,
+    )
+
+    assert bool(result.valid)
+    assert bool(reduced.valid)
+    assert int(result.iterations) <= 24
+    assert abs(float(result.residual)) <= 1.0e-12
+    assert jnp.allclose(result.position, reduced.position, rtol=0.0, atol=2.0e-12)
+    assert jnp.allclose(result.velocity, reduced.velocity, rtol=0.0, atol=2.0e-12)
+
+
+def test_universal_kepler_safeguards_the_measured_high_eccentricity_c6_state() -> None:
+    """A valid principal-period elliptic root must not fail from Newton's basin."""
+
+    position = jnp.array(
+        [-0.00042334855727825527, 0.00026507012466628344, -0.00015288078263919758]
+    )
+    velocity = jnp.array(
+        [-1.5658384271531207, -0.3079699761582919, -1.477716290587468]
+    )
+    gravitational_parameter = jnp.array(0.03688718844216691)
+    physical_span = jnp.array(-0.00022273080331458925)
+
+    result = universal_kepler_step(
+        position,
+        velocity,
+        gravitational_parameter,
+        physical_span,
+    )
+
+    assert bool(result.valid)
+    assert abs(float(result.residual)) <= 1.0e-12
+
+
+def test_universal_kepler_safeguards_the_late_c6_phase() -> None:
+    """The elliptic safeguard brackets roots from arbitrary initial anomaly."""
+
+    position = jnp.array(
+        [-0.00017649377360673402, 4.849373129617307e-05, -0.00010764558873455066]
+    )
+    velocity = jnp.array(
+        [11.994174801287707, -6.38593588293568, 5.127192500252846]
+    )
+    result = universal_kepler_step(
+        position,
+        velocity,
+        jnp.array(0.03688718844216691),
+        jnp.array(0.00019389842628891388),
+    )
+
+    assert bool(result.valid)
+    assert abs(float(result.residual)) <= 1.0e-12
+
+
 def test_universal_kepler_preserves_hyperbolic_invariants_and_reverses() -> None:
     r0 = jnp.array([1.0, 0.0, 0.0])
     v0 = jnp.array([0.0, 1.6, 0.0])
