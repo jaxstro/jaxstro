@@ -216,15 +216,6 @@ def _qmc_formula(method, domain, key, *, result=None) -> ReplayFormula:
     )
 
 
-def _require_stop_gradient(method, gradient: str, *, phase: str) -> None:
-    if gradient != "stop":
-        method_name = type(method).__name__
-        raise ValueError(
-            f'{method_name} supports only gradient="stop" in {phase}; '
-            'gradient="replay" is introduced in Phase B4'
-        )
-
-
 def _method_phase(method) -> str:
     if isinstance(
         method,
@@ -408,11 +399,6 @@ def _integrate_hyperrectangle(fun, domain, **kwargs):
             kwargs["epsabs"],
             kwargs["epsrel"],
         )
-    _require_stop_gradient(
-        method,
-        kwargs["gradient"],
-        phase=_method_phase(method),
-    )
     common = {
         "args": kwargs["args"],
         "method": method,
