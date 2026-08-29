@@ -25,6 +25,54 @@
       "target": "docs/50-api/research-infrastructure/source-provenance/source-provenance.md"
     },
     {
+      "content_digest": "sha256:67bcccaebe9c33032c08f2bf78cd2729434176a51421c5492f3fdffe75d18ab1",
+      "evidence_class": "computational",
+      "id": "quad.multidim.comparisons",
+      "limitations": [
+        "Exact labels describe mathematical configuration. Timing ratios additionally require an explicit matched timed region; family, strong, node, and capability matches are descriptive."
+      ],
+      "optional_data_policy": "No external data required; labels apply only to the recorded comparator cases.",
+      "schema_version": "1",
+      "source_revision": "e091640eefc7322714126e06e380ca3f9486af07",
+      "target": "docs/validation/quad-multidim-comparisons.json"
+    },
+    {
+      "content_digest": "sha256:a7d34c51573b2e3981ce96acbf87f7d8d6140c5a5356cfa30d7bbdd8317c2b73",
+      "evidence_class": "computational",
+      "id": "quad.multidim.performance-baseline",
+      "limitations": [
+        "Host-specific baseline for the frozen Sobol campaign only; it is not a universal library ranking."
+      ],
+      "optional_data_policy": "No external data required; this immutable baseline contains an analytic memory proxy, not observed peak memory.",
+      "schema_version": "1",
+      "source_revision": "e091640eefc7322714126e06e380ca3f9486af07",
+      "target": "docs/validation/quad-multidim-performance-baseline.json"
+    },
+    {
+      "content_digest": "sha256:f49936410df2b33addf7b7c286c1ff3dcdaa6dcdb8815f12e35ba15827504276",
+      "evidence_class": "computational",
+      "id": "quad.multidim.replay-and-astro",
+      "limitations": [
+        "Replay evidence is first-order only. Astronomy fixtures are domain-neutral closed-form integrals, not sibling-package models."
+      ],
+      "optional_data_policy": "No external data required; first-order accepted-formula replay only.",
+      "schema_version": "1",
+      "source_revision": "not-recorded",
+      "target": "docs/validation/quad-multidim-replay.json"
+    },
+    {
+      "content_digest": "sha256:30902fdfcaf29ee32c5d5b86c5fa02041c5af977d0c37fed8f03079c7f9510df",
+      "evidence_class": "computational",
+      "id": "quad.multidim.truth",
+      "limitations": [
+        "The artifact certifies only the frozen dimensions, controls, integrands, and tolerances; it is not a universal accuracy claim."
+      ],
+      "optional_data_policy": "No external data required; finite-hyperrectangle truths only.",
+      "schema_version": "1",
+      "source_revision": "not-recorded",
+      "target": "docs/validation/quad-multidim-truth.json"
+    },
+    {
       "content_digest": "sha256:f180998ce250ad422397faf3f0dc4ebda870c1a998c845e416034d1a59b16f38",
       "evidence_class": "computational",
       "id": "quad.performance",
@@ -54,6 +102,18 @@
       "schema_version": "1",
       "source_revision": "251d997723114c5a92d388cc87aadc0e68fd0799",
       "target": "docs/validation/quad-replay-derivatives.json"
+    },
+    {
+      "content_digest": "sha256:566f1867e2aae49c12d3a1bcdde63f282ff1a3378f0a9f9784c7cb9a7b58bdff",
+      "evidence_class": "computational",
+      "id": "quad.rqmc-calibration",
+      "limitations": [
+        "Empirical calibration supports the frozen campaign only; fixed-look Student-t intervals are nominal randomized-replicate intervals, and sequential intervals require the declared finite estimate bounds."
+      ],
+      "optional_data_policy": "No external data required; coverage is limited to the frozen real-scalar campaigns.",
+      "schema_version": "1",
+      "source_revision": "not-recorded",
+      "target": "docs/validation/quad-rqmc-calibration.json"
     },
     {
       "content_digest": "sha256:4404e73d8f0b5bbcf8fd966b9e88ebe4a7096e58e1da589a829dbee2944aa077",

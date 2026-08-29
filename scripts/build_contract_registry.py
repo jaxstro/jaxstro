@@ -40,8 +40,9 @@ def _load_evidence_index() -> dict[str, dict[str, object]]:
         if entry["evidence_class"] != "computational":
             continue
         artifact = json.loads((ROOT / str(entry["target"])).read_text(encoding="utf-8"))
+        comparisons = artifact.get("comparisons", ())
         entry["comparison_statuses"] = {
-            item["identity"]: item["status"] for item in artifact["comparisons"]
+            item["identity"]: item["status"] for item in comparisons
         }
     return result
 

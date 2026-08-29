@@ -33,7 +33,7 @@ class TensorRuleData(NamedTuple):
 
 
 class TensorReplayEvidence(NamedTuple):
-    """Stopped accepted-formula metadata reserved for the Phase B4 replay owner."""
+    """Stopped accepted-formula metadata consumed by the Phase B4 replay owner."""
 
     levels: Array
     active_node_ids: Array

@@ -7,6 +7,7 @@ import json
 from dataclasses import asdict, dataclass
 from enum import Enum
 from pathlib import Path
+from typing import Mapping
 
 from .render import artifact_from_dict
 
@@ -61,6 +62,36 @@ _TARGETS = (
         "No external data required; timings are bounded to the recorded machine.",
     ),
     (
+        "quad.multidim.truth",
+        EvidenceClass.COMPUTATIONAL,
+        "docs/validation/quad-multidim-truth.json",
+        "No external data required; finite-hyperrectangle truths only.",
+    ),
+    (
+        "quad.multidim.replay-and-astro",
+        EvidenceClass.COMPUTATIONAL,
+        "docs/validation/quad-multidim-replay.json",
+        "No external data required; first-order accepted-formula replay only.",
+    ),
+    (
+        "quad.rqmc-calibration",
+        EvidenceClass.COMPUTATIONAL,
+        "docs/validation/quad-rqmc-calibration.json",
+        "No external data required; coverage is limited to the frozen real-scalar campaigns.",
+    ),
+    (
+        "quad.multidim.comparisons",
+        EvidenceClass.COMPUTATIONAL,
+        "docs/validation/quad-multidim-comparisons.json",
+        "No external data required; labels apply only to the recorded comparator cases.",
+    ),
+    (
+        "quad.multidim.performance-baseline",
+        EvidenceClass.COMPUTATIONAL,
+        "docs/validation/quad-multidim-performance-baseline.json",
+        "No external data required; this immutable baseline contains an analytic memory proxy, not observed peak memory.",
+    ),
+    (
         "spectra.performance",
         EvidenceClass.COMPUTATIONAL,
         "docs/validation/spectra-performance.json",
@@ -103,12 +134,9 @@ def build_evidence_index(root: str | Path) -> EvidenceIndex:
                 )
             )
         if evidence_class is EvidenceClass.COMPUTATIONAL:
-            artifact = artifact_from_dict(json.loads(content))
-            if artifact.artifact_id != identity:
-                raise ValueError(f"evidence artifact identity mismatch: {identity}")
-            schema_version = artifact.schema_version
-            source_revision = artifact.source_revision
-            limitations = artifact.limitations
+            schema_version, source_revision, limitations = _computational_metadata(
+                json.loads(content), identity
+            )
         else:
             payload = json.loads(content) if path.suffix == ".json" else {}
             schema_version = str(payload.get("schema_version", "source-card-v1"))
@@ -129,6 +157,42 @@ def build_evidence_index(root: str | Path) -> EvidenceIndex:
             )
         )
     return EvidenceIndex("1", tuple(sorted(entries, key=lambda item: item.id)))
+
+
+def _computational_metadata(
+    payload: Mapping[str, object], identity: str
+) -> tuple[str, str, tuple[str, ...]]:
+    """Read one existing computational artifact without normalizing its schema.
+
+    The cross-class index has long accepted the generic ``EvidenceArtifact``
+    envelope. Phase B's generated truth, replay, calibration, comparison, and
+    baseline records predate that envelope and already have their own checked
+    schemas. Indexing them must preserve those owners rather than minting a
+    replacement artifact schema solely for the index.
+    """
+    try:
+        artifact = artifact_from_dict(payload)
+    except ValueError:
+        artifact_id = payload.get("artifact_id")
+        schema_version = payload.get("schema_version")
+        claim_boundary = payload.get("claim_boundary")
+        if (
+            artifact_id != identity
+            or schema_version is None
+            or not isinstance(claim_boundary, str)
+        ):
+            raise
+        source_revision = payload.get("source_revision")
+        if source_revision is None:
+            source_revision = "not-recorded"
+        if not isinstance(source_revision, str):
+            raise ValueError(
+                f"evidence artifact source revision is invalid: {identity}"
+            )
+        return str(schema_version), source_revision, (claim_boundary,)
+    if artifact.artifact_id != identity:
+        raise ValueError(f"evidence artifact identity mismatch: {identity}")
+    return artifact.schema_version, artifact.source_revision, artifact.limitations
 
 
 def _digest_files(paths: tuple[Path, ...]) -> str:

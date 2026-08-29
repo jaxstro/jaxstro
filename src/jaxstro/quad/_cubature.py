@@ -148,7 +148,7 @@ class CubatureRegionEstimate(NamedTuple):
 
 
 class CubatureReplayEvidence(NamedTuple):
-    """Private stopped leaf metadata reserved for the Phase B4 replay owner."""
+    """Private stopped leaf metadata consumed by the Phase B4 replay owner."""
 
     lower: Array
     upper: Array

@@ -29,11 +29,11 @@ manifolds, and domain-specific scientific acceptance are Phase C work.
 | Family | `QuadError.kind` | Interpretation |
 | --- | --- | --- |
 | Fixed tensor | `UNAVAILABLE` | No truncation-error estimate is supplied |
-| Adaptive tensor | `SUCCESSIVE_LEVEL` | Difference between accepted global nested levels |
+| Adaptive tensor | `REFINEMENT_DIFFERENCE` | Difference between accepted global nested levels |
 | Adaptive cubature | `EMBEDDED_RULE` | Shared-node high/low Genz-Malik disagreement |
 | Sparse grid | `SPARSE_GRID_SURPLUS` | Hierarchical frontier or accepted-index evidence |
 | Deterministic Sobol | `UNAVAILABLE` | No randomization, therefore no confidence interval |
-| Randomized Sobol | `CONFIDENCE_INTERVAL` | Fixed-look Student-t or bounded sequential empirical-Bernstein evidence |
+| Randomized Sobol | `CONFIDENCE_INTERVAL_HALF_WIDTH` | Fixed-look Student-t or bounded sequential empirical-Bernstein evidence |
 
 ## Replay and quantity boundary
 

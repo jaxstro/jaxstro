@@ -13,6 +13,18 @@ def test_evidence_index_preserves_distinct_evidence_classes() -> None:
     index = build_evidence_index(ROOT)
     entries = {item.id: item for item in index.entries}
     assert entries["quad.performance"].evidence_class is EvidenceClass.COMPUTATIONAL
+    for identity in (
+        "quad.multidim.truth",
+        "quad.multidim.replay-and-astro",
+        "quad.rqmc-calibration",
+        "quad.multidim.comparisons",
+        "quad.multidim.performance-baseline",
+    ):
+        assert entries[identity].evidence_class is EvidenceClass.COMPUTATIONAL
+    assert entries["quad.multidim.truth"].source_revision == "not-recorded"
+    assert entries["quad.multidim.comparisons"].source_revision == (
+        "e091640eefc7322714126e06e380ca3f9486af07"
+    )
     assert (
         entries["rootfinding.performance"].evidence_class is EvidenceClass.COMPUTATIONAL
     )
