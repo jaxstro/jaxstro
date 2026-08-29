@@ -37,6 +37,18 @@
       "target": "docs/validation/quad-multidim-comparisons.json"
     },
     {
+      "content_digest": "sha256:964085f0514cc8224134eccb883089f3a9db6003a31a9931cf7c0cc262cc949a",
+      "evidence_class": "computational",
+      "id": "quad.multidim.observed-memory",
+      "limitations": [
+        "Fresh-process peak RSS for the frozen CPU replay campaign. It does not measure separate device memory or establish a universal memory claim."
+      ],
+      "optional_data_policy": "No external data required; CPU process RSS only, with no separate device-memory metric.",
+      "schema_version": "1",
+      "source_revision": "1048b5b5fab2efb8e2c418c5249afbe5c715d603",
+      "target": "docs/validation/quad-multidim-memory.json"
+    },
+    {
       "content_digest": "sha256:a7d34c51573b2e3981ce96acbf87f7d8d6140c5a5356cfa30d7bbdd8317c2b73",
       "evidence_class": "computational",
       "id": "quad.multidim.performance-baseline",

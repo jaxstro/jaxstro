@@ -18,12 +18,16 @@ def test_evidence_index_preserves_distinct_evidence_classes() -> None:
         "quad.multidim.replay-and-astro",
         "quad.rqmc-calibration",
         "quad.multidim.comparisons",
+        "quad.multidim.observed-memory",
         "quad.multidim.performance-baseline",
     ):
         assert entries[identity].evidence_class is EvidenceClass.COMPUTATIONAL
     assert entries["quad.multidim.truth"].source_revision == "not-recorded"
     assert entries["quad.multidim.comparisons"].source_revision == (
         "e091640eefc7322714126e06e380ca3f9486af07"
+    )
+    assert entries["quad.multidim.observed-memory"].source_revision == (
+        "1048b5b5fab2efb8e2c418c5249afbe5c715d603"
     )
     assert (
         entries["rootfinding.performance"].evidence_class is EvidenceClass.COMPUTATIONAL

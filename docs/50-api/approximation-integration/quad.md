@@ -123,7 +123,7 @@ The status belongs to a capability, not to the package as a whole.
 | shipped and validated | Sampled-data integration; fixed and adaptive one-dimensional rules; typed failure and work evidence; one-dimensional accepted-formula replay; finite-hyperrectangle tensor products, adaptive tensor refinement, Genz-Malik cubature, fixed or dimension-adaptive Smolyak sparse grids, deterministic Sobol integration, and fixed-look or bounded sequential randomized QMC |
 | benchmarking | The Apple M2 Max CPU comparison is accepted; additional backends, precisions, batch regimes, and method families remain future benchmarking coverage |
 | alpha | Opt-in quantity normalization through `quad.integrate`; downstream ecosystem adoption is not implied |
-| approved but planned | Observed process/device-memory certification, later scientific geometries, and Phase C specializations |
+| approved but planned | Later scientific geometries and Phase C specializations |
 | intentionally unsupported | Posterior inference, experimental-design policy, general Monte Carlo inference, and domain-specific scientific acceptance |
 
 ### Reading comparison labels
@@ -143,6 +143,11 @@ The second lane asks a practical choice question. Its `best_method` label uses
 predeclared library-specific settings intended to represent a reasonable
 public method in each library. It is not an algorithm-equivalence label and is
 not mixed into family-matched superiority claims.
+
+The frozen CPU observed-memory campaign found no material replay burden: its
+largest matched replay-minus-primal peak-RSS increment was 43.8 MiB, below the
+predeclared 10 GiB threshold. This authorizes no runtime optimization; the
+active backend exposes no separate reliable device-memory metric.
 
 ### Complete public inventory
 

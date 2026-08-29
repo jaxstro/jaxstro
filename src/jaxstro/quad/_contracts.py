@@ -215,6 +215,16 @@ _MULTIDIM_PERFORMANCE_EVIDENCE = EvidenceReference(
     ),
 )
 
+_MULTIDIM_OBSERVED_MEMORY_EVIDENCE = EvidenceReference(
+    id="quad-multidim-observed-memory",
+    kind=EvidenceKind.ARTIFACT,
+    target="docs/validation/quad-multidim-memory.json",
+    claim=(
+        "The frozen fresh-process CPU campaign found no 10-GiB replay RSS "
+        "increment; separate device memory is unavailable on the active backend."
+    ),
+)
+
 _ADAPTIVE_CONTRACT = CallableContract(
     id="quad-integrate",
     import_path="jaxstro.quad.integrate",
@@ -317,6 +327,7 @@ _ADAPTIVE_CONTRACT = CallableContract(
         _RQMC_CALIBRATION_EVIDENCE,
         _MULTIDIM_COMPARISON_EVIDENCE,
         _MULTIDIM_PERFORMANCE_EVIDENCE,
+        _MULTIDIM_OBSERVED_MEMORY_EVIDENCE,
     ),
     limitations=(
         "Estimator convergence is not a universal bound on true error.",
@@ -329,7 +340,7 @@ _ADAPTIVE_CONTRACT = CallableContract(
         "TensorProduct and deterministic Sobol provide no runtime error estimate.",
         "Adaptive tensor, cubature, and sparse-grid estimators are method-specific numerical evidence, not universal true-error bounds.",
         "Randomized confidence intervals require real scalar outputs and the declared independent scramble construction.",
-        "Observed process and device peak-memory certification remains pending.",
+        "The frozen CPU process-RSS campaign found no material replay increment; the active backend exposes no separate device-memory metric.",
         "No universal performance-superiority claim is established.",
     ),
     cost_notes=(

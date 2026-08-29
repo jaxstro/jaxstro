@@ -982,6 +982,12 @@
               "target": "docs/validation/quad-multidim-comparisons.json"
             },
             {
+              "claim": "The frozen fresh-process CPU campaign found no 10-GiB replay RSS increment; separate device memory is unavailable on the active backend.",
+              "id": "quad-multidim-observed-memory",
+              "kind": "artifact",
+              "target": "docs/validation/quad-multidim-memory.json"
+            },
+            {
               "claim": "The immutable host baseline records predeclared timing, compiler-cost, repeat-scaling, and analytic memory-proxy triggers without a universal performance claim.",
               "id": "quad-multidim-performance",
               "kind": "artifact",
@@ -1031,7 +1037,7 @@
             "TensorProduct and deterministic Sobol provide no runtime error estimate.",
             "Adaptive tensor, cubature, and sparse-grid estimators are method-specific numerical evidence, not universal true-error bounds.",
             "Randomized confidence intervals require real scalar outputs and the declared independent scramble construction.",
-            "Observed process and device peak-memory certification remains pending.",
+            "The frozen CPU process-RSS campaign found no material replay increment; the active backend exposes no separate device-memory metric.",
             "No universal performance-superiority claim is established."
           ],
           "maturity": "experimental",
@@ -1242,7 +1248,7 @@
   ],
   "package_version": "0.1.0",
   "schema_version": "1",
-  "source_revision": "sha256:4fc311bb2f6433ff9a6382fe223eca8c7321f2c43238f2d3c1db5de1d55ad353",
+  "source_revision": "sha256:c034b224df4bd17de6594e97b48fabede28ec2106ac8f830eb3a1299aa26e616",
   "unclassified_callables": [
     "jaxstro.atmospheres.acquisition_rows_to_markdown",
     "jaxstro.atmospheres.build_bosz_index",

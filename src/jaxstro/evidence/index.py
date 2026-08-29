@@ -92,6 +92,12 @@ _TARGETS = (
         "No external data required; this immutable baseline contains an analytic memory proxy, not observed peak memory.",
     ),
     (
+        "quad.multidim.observed-memory",
+        EvidenceClass.COMPUTATIONAL,
+        "docs/validation/quad-multidim-memory.json",
+        "No external data required; CPU process RSS only, with no separate device-memory metric.",
+    ),
+    (
         "spectra.performance",
         EvidenceClass.COMPUTATIONAL,
         "docs/validation/spectra-performance.json",
