@@ -758,7 +758,6 @@ def test_the_basis_holds_on_a_DENSE_sweep_not_just_at_chosen_points():
     CLOSED FORMS -- an oracle that is exact at every argument, not a reference
     implementation that could share a bug.
     """
-    import math
 
     from jaxstro.numerics.special import riccati_bessel_basis, riccati_seed_order
 
@@ -771,11 +770,13 @@ def test_the_basis_holds_on_a_DENSE_sweep_not_just_at_chosen_points():
     assert bool(jnp.all(jnp.isfinite(c))), "C non-finite somewhere on the sweep"
 
     sin_x, cos_x = jnp.sin(x), jnp.cos(x)
-    closed = jnp.stack([
-        sin_x,
-        sin_x / x - cos_x,
-        (3.0 / x**2 - 1.0) * sin_x - (3.0 / x) * cos_x,
-    ])
+    closed = jnp.stack(
+        [
+            sin_x,
+            sin_x / x - cos_x,
+            (3.0 / x**2 - 1.0) * sin_x - (3.0 / x) * cos_x,
+        ]
+    )
     # Scaled by the LOCAL envelope: near a zero of one order the others are O(1),
     # so a pure relative test would divide by ~0 and report noise as failure.
     envelope = jnp.maximum(jnp.max(jnp.abs(closed), axis=0), 1.0e-12)

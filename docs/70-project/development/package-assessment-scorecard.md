@@ -78,7 +78,7 @@ Method-specific scientific thresholds remain method-owned.
 
 | Metric identity | Symbol | Value | Units |
 | --- | --- | ---: | --- |
-| Indexed evidence artifacts | `N_artifact,evidence` | 7 | artifacts |
+| Indexed evidence artifacts | `N_artifact,evidence` | 13 | artifacts |
 | Distinct evidence classes | `N_class,evidence` | 3 | evidence classes |
 
 **Executable research workflow registry: implemented.** The schema-2 registry

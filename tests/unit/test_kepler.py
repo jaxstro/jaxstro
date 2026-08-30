@@ -223,9 +223,7 @@ def test_universal_kepler_safeguards_the_measured_high_eccentricity_c6_state() -
     position = jnp.array(
         [-0.00042334855727825527, 0.00026507012466628344, -0.00015288078263919758]
     )
-    velocity = jnp.array(
-        [-1.5658384271531207, -0.3079699761582919, -1.477716290587468]
-    )
+    velocity = jnp.array([-1.5658384271531207, -0.3079699761582919, -1.477716290587468])
     gravitational_parameter = jnp.array(0.03688718844216691)
     physical_span = jnp.array(-0.00022273080331458925)
 
@@ -246,9 +244,7 @@ def test_universal_kepler_safeguards_the_late_c6_phase() -> None:
     position = jnp.array(
         [-0.00017649377360673402, 4.849373129617307e-05, -0.00010764558873455066]
     )
-    velocity = jnp.array(
-        [11.994174801287707, -6.38593588293568, 5.127192500252846]
-    )
+    velocity = jnp.array([11.994174801287707, -6.38593588293568, 5.127192500252846])
     result = universal_kepler_step(
         position,
         velocity,

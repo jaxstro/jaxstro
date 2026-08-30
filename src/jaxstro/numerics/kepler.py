@@ -236,13 +236,16 @@ def universal_kepler_step(
     near_parabolic = jnp.sqrt(jnp.finfo(dtype).eps)
     elliptic = alpha_bar > near_parabolic
     safe_elliptic_alpha = jnp.where(elliptic, alpha_bar, jnp.ones_like(alpha_bar))
-    elliptic_period = 2.0 * jnp.pi / (
-        safe_elliptic_alpha * jnp.sqrt(safe_elliptic_alpha)
+    elliptic_period = (
+        2.0 * jnp.pi / (safe_elliptic_alpha * jnp.sqrt(safe_elliptic_alpha))
     )
-    reduced_tau = jnp.remainder(
-        tau + 0.5 * elliptic_period,
-        elliptic_period,
-    ) - 0.5 * elliptic_period
+    reduced_tau = (
+        jnp.remainder(
+            tau + 0.5 * elliptic_period,
+            elliptic_period,
+        )
+        - 0.5 * elliptic_period
+    )
     tau = jnp.where(elliptic, reduced_tau, tau)
 
     anomaly = _initial_anomaly(alpha_bar, rv_bar, tau)
@@ -356,10 +359,10 @@ def universal_kepler_step(
         half_period_anomaly = 2.0 * jnp.pi / jnp.sqrt(safe_elliptic_alpha)
         lower = -half_period_anomaly
         upper = half_period_anomaly
-        lower_residual, _ = _tof_residual_and_radius(
+        lower_residual, _lower_radius = _tof_residual_and_radius(
             lower, alpha_bar, rv_bar, tau
         )
-        upper_residual, _ = _tof_residual_and_radius(
+        upper_residual, _upper_radius = _tof_residual_and_radius(
             upper, alpha_bar, rv_bar, tau
         )
         bracket_valid = (
@@ -375,7 +378,7 @@ def universal_kepler_step(
         ) -> tuple[tuple[Array, Array], None]:
             low, high = bounds
             midpoint = 0.5 * (low + high)
-            midpoint_residual, _ = _tof_residual_and_radius(
+            midpoint_residual, _midpoint_radius = _tof_residual_and_radius(
                 midpoint, alpha_bar, rv_bar, tau
             )
             return (
@@ -393,9 +396,7 @@ def universal_kepler_step(
             length=56,
         )
         anomaly = 0.5 * (lower + upper)
-        residual, radius = _tof_residual_and_radius(
-            anomaly, alpha_bar, rv_bar, tau
-        )
+        residual, radius = _tof_residual_and_radius(anomaly, alpha_bar, rv_bar, tau)
         finite = (
             bracket_valid
             & jnp.isfinite(anomaly)

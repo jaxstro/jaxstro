@@ -522,8 +522,10 @@ def riccati_bessel_at_order(
         return (s_curr / scale, s_prev / scale, s_saved / scale, s_one / scale), None
 
     seed = (
-        jnp.zeros_like(x), jnp.full_like(x, 1.0e-280),
-        jnp.zeros_like(x), jnp.zeros_like(x),
+        jnp.zeros_like(x),
+        jnp.full_like(x, 1.0e-280),
+        jnp.zeros_like(x),
+        jnp.zeros_like(x),
     )
     (_, s_zero, s_order, s_one), _ = jax.lax.scan(
         s_step, seed, jnp.arange(top, 0, -1, dtype=x.dtype)
