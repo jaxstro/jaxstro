@@ -1,8 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 285" role="img" aria-labelledby="title desc">
   <title id="title">Derivative questions travel through different parts of a measurement chain</title>
   <desc id="desc">A parameter perturbation passes through a Jacobian to a measurement perturbation. A loss gradient travels backward from a scalar objective. The figure distinguishes a JVP from a VJP.</desc>
-  <style>text{font-family:system-ui,sans-serif;fill:#17233b}.box{fill:#f8fafc;stroke:#294a72;stroke-width:2}.forward{stroke:#14877c;stroke-width:4;fill:none;marker-end:url(#f)}.back{stroke:#d65a45;stroke-width:4;fill:none;marker-end:url(#b)}.label{font-size:21px;font-weight:650}.note{font-size:16px;fill:#536277}</style>
-  <defs><marker id="f" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8z" fill="#14877c"/></marker><marker id="b" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8z" fill="#d65a45"/></marker></defs>
+  <style>text{font-family:system-ui,sans-serif;fill:#17233b}.box{fill:#f8fafc;stroke:#294a72;stroke-width:2}.forward{stroke:#14877c;stroke-width:4;fill:none;marker-end:url(#f)}.back{stroke:#6d5bd0;stroke-width:4;fill:none;marker-end:url(#b)}.label{font-size:21px;font-weight:650}.note{font-size:16px;fill:#536277}</style>
+  <defs><marker id="f" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8z" fill="#14877c"/></marker><marker id="b" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8z" fill="#6d5bd0"/></marker></defs>
+  <rect x="1" y="1" width="758" height="283" rx="18" fill="#ffffff" stroke="#dbe4f0"/>
   <rect x="32" y="100" width="165" height="72" rx="12" class="box"/><text x="114" y="130" text-anchor="middle" class="label">delta theta</text><text x="114" y="154" text-anchor="middle" class="note">parameter change</text>
   <rect x="296" y="100" width="165" height="72" rx="12" class="box"/><text x="378" y="130" text-anchor="middle" class="label">delta d</text><text x="378" y="154" text-anchor="middle" class="note">measurement change</text>
   <rect x="563" y="100" width="165" height="72" rx="12" class="box"/><text x="645" y="130" text-anchor="middle" class="label">L(d)</text><text x="645" y="154" text-anchor="middle" class="note">scalar objective</text>

@@ -113,35 +113,46 @@ data. They enter different parts of the chain and cannot be exchanged without
 changing the scientific interpretation.
 :::
 
-## Predict
+:::{admonition} Keep the model chain visible
 
+The physical map, measurement map, and error terms make different assumptions.
+Treating them as one black box hides the source of a mismatch.
+:::
+
+::::{grid} 1 1 3 3
+
+:::{card} Predict
 Name the model type, target observable, assumptions, parameters, state, latent
-quantities, and information intentionally discarded. Predict at least one case
-where the model should fail.
+quantities, and information intentionally discarded. Name one case where the
+model should fail.
+:::
 
-## Compute
-
+:::{card} Compute
 Evaluate the mapping with explicit units and provenance. Keep preparation,
 runtime kernels, and measurement-model operations visible rather than hiding
 them behind one undifferentiated function.
+:::
 
-## Audit
+:::{card} Audit
+Separate implementation, numerical, predictive, residual-structure, and source
+checks. Ask whether a discrepancy diagnoses code, numerics, data, or model
+inadequacy.
+:::
 
-Separate implementation checks, numerical checks, predictive checks, residual
-structure, and source evidence. Ask whether a discrepancy diagnoses code,
-numerics, data, or model inadequacy.
+::::
 
-## State the warranted claim
+:::{important} Claim boundary
+State which mapping was tested, on which domain, and against which evidence.
+Parameter recovery under simulated data does not establish universal
+identifiability, and a small residual does not show that the model is physically
+complete.
+:::
 
-State which mapping was tested, on which domain, against which evidence. Do not
-turn parameter recovery under simulated data into a universal identifiability
-claim or turn a small residual into proof that the model is physically complete.
-
-## Misconception check
-
-> A model is not "the truth with noise added." It is a purposeful representation.
-> More parameters do not guarantee more scientific information, and fewer data
-> columns do not automatically mean less relevant information.
+:::{warning} A common mistake
+A model is a purposeful representation, not "the truth with noise added." More
+parameters do not guarantee more scientific information, and fewer data columns
+do not automatically mean less relevant information.
+:::
 
 Continue to [](../mathematical-objects/linear-algebra-language-of-change.md) and
 [](./models-inference-information.md).

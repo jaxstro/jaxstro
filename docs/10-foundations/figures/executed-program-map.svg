@@ -1,10 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 310" role="img" aria-labelledby="title desc">
   <title id="title">The ideal relation and the executed finite program can expose different derivatives</title>
   <desc id="desc">A smooth ideal solution is compared with finite iterates and a branch-selected output. Ordinary automatic differentiation follows the selected finite path; a certified implicit derivative requires extra assumptions and numerical gates.</desc>
-  <style>text{font-family:system-ui,sans-serif;fill:#17233b}.axis{stroke:#536277;stroke-width:2}.ideal{stroke:#14877c;stroke-width:4;fill:none}.finite{stroke:#294a72;stroke-width:4;fill:none}.branch{stroke:#d65a45;stroke-width:4;fill:none}.label{font-size:19px;font-weight:650}.note{font-size:15px;fill:#536277}</style>
+  <style>text{font-family:system-ui,sans-serif;fill:#17233b}.axis{stroke:#536277;stroke-width:2}.ideal{stroke:#14877c;stroke-width:4;fill:none}.finite{stroke:#294a72;stroke-width:4;fill:none}.branch{stroke:#6d5bd0;stroke-width:4;fill:none}.label{font-size:19px;font-weight:650}.note{font-size:15px;fill:#536277}</style>
+  <rect x="1" y="1" width="758" height="308" rx="18" fill="#ffffff" stroke="#dbe4f0"/>
   <text x="42" y="30" class="label">One parameter crosses a branch boundary</text><path d="M60 255 H720 M92 274 V58" class="axis"/><text x="692" y="280" class="note">theta</text><text x="45" y="75" class="note">solution</text>
   <path d="M110 224 C205 196 270 163 360 145 S535 100 682 75" class="ideal"/><text x="515" y="81" class="note">ideal x star(theta)</text>
   <path d="M110 223 L190 201 L190 195 L280 174 L280 164 L370 150 L370 143 L455 127 L455 119 L548 103 L548 96 L680 77" class="finite"/><text x="425" y="189" class="note">finite x K(theta)</text>
-  <path d="M110 236 H390 M390 236 L392 135 H680" class="branch"/><text x="422" y="252" class="note">selected branch or clamp</text><path d="M390 254 V80" stroke="#d65a45" stroke-dasharray="7 6" stroke-width="2"/><text x="400" y="67" class="note">ordinary AD follows this finite path</text>
-  <rect x="433" y="260" width="260" height="32" rx="8" fill="#fce6df" stroke="#d65a45"/><text x="563" y="282" text-anchor="middle" class="note">implicit sensitivity needs assumptions plus gates</text>
+  <path d="M110 236 H390 M390 236 L392 135 H680" class="branch"/><text x="422" y="252" class="note">selected branch or clamp</text><path d="M390 254 V80" stroke="#6d5bd0" stroke-dasharray="7 6" stroke-width="2"/><text x="400" y="67" class="note">ordinary AD follows this finite path</text>
+  <rect x="433" y="260" width="260" height="32" rx="8" fill="#ede9fe" stroke="#6d5bd0"/><text x="563" y="282" text-anchor="middle" class="note">implicit sensitivity needs assumptions plus gates</text>
 </svg>

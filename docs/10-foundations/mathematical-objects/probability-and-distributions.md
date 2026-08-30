@@ -86,34 +86,44 @@ together when the calibration moves. Reporting two separate error bars loses
 that information.
 :::
 
-## Predict
+:::{admonition} Specify the random experiment
 
+The distribution must name the variable, its allowed values, and the mechanism
+whose variation it represents before sampling or inference begins.
+:::
+
+::::{grid} 1 1 3 3
+
+:::{card} Predict
 Name the random variable, support, units, normalization, expected symmetries,
-limiting cases, and which uncertainty is represented.
+limiting cases, and the uncertainty represented.
+:::
 
-## Compute
-
+:::{card} Compute
 Evaluate density, CDF, quantile, moments, or samples with explicit boundary
 behavior. Use stable limiting kernels and keep random seeds and transformations
 in the evidence record.
+:::
 
-## Audit
-
+:::{card} Audit
 Check normalization, nonnegativity, support boundaries, monotonic CDF behavior,
 CDF/quantile round trips, analytic moments where available, and parameter
 derivatives against an independent method.
+:::
 
-## State the warranted claim
+::::
 
-Numerical normalization and round trips warrant a distribution-implementation
-claim. They do not show that the chosen distribution adequately represents a
+:::{important} Claim boundary
+Numerical normalization and round trips support a distribution-implementation
+claim. They do not show that the selected distribution adequately represents a
 stellar population or measurement process.
+:::
 
-## Misconception check
-
-> A density can exceed one because it is not probability mass. A random draw is
-> not evidence that a model is random "in reality," and a normalized likelihood
-> over data is not automatically a normalized posterior over parameters.
+:::{warning} A common mistake
+A density can exceed one because it is not probability mass. A random draw does
+not establish that a model is random "in reality," and a normalized likelihood
+over data is not automatically a normalized posterior over parameters.
+:::
 
 Continue to [](../models-and-computation/models-inference-information.md) or
 Jaxstro's [](../../20-methods/probability-sampling/distributions.md) chapter.

@@ -88,36 +88,46 @@ Finite iteration and branch selection define an executable map. A certified
 implicit sensitivity is a separate claim with separate assumptions and gates.
 :::
 
-## Predict
+:::{admonition} Name the map that ran
 
-Write the ideal relation, the finite algorithm, static and dynamic values,
-selected branches, expected transforms, and desired derivative semantics. Name
-where the scientific package takes ownership.
+The ideal relation and finite executable program may agree in value while making
+different derivative claims. Record which map each test addresses.
+:::
 
-## Compute
+::::{grid} 1 1 3 3
 
+:::{card} Predict
+Write the ideal relation, finite algorithm, static and dynamic values, selected
+branches, expected transforms, and desired derivative semantics. Name where the
+scientific package takes ownership.
+:::
+
+:::{card} Compute
 Use JAX-compatible arrays and control flow, explicit fixed shapes, typed status,
 and deterministic telemetry. Apply `jit`, `vmap`, scan, JVP, or VJP only where
 the public contract and domain support them.
+:::
 
-## Audit
-
+:::{card} Audit
 Compare values with analytic or independent methods; inspect JAXPR when
 architecture matters; test JIT/VMAP parity; compare derivatives with finite
 differences on smooth branches; and force failure paths to verify fail-closed
 behavior.
+:::
 
-## State the warranted claim
+::::
 
+:::{important} Claim boundary
 Name whether the evidence supports a value, finite-map derivative, certified
-implicit sensitivity, transform compatibility, or physical conclusion. Do not
-let one passing evidence category silently stand in for another.
+implicit sensitivity, transform compatibility, or physical conclusion. One
+passing evidence category cannot silently stand in for another.
+:::
 
-## Misconception check
-
-> "Differentiable" does not mean smooth everywhere, physically correct, or
-> differentiable with respect to every captured value. Compilation is not
-> validation, and a finite gradient is not an implicit function theorem proof.
+:::{warning} A common mistake
+"Differentiable" does not mean smooth everywhere, physically correct, or
+differentiable with respect to every captured value. Compilation is not
+validation, and a finite gradient is not an implicit-function-theorem proof.
+:::
 
 For the concrete implicit-root distinction, see the
 [](../../20-methods/change-constraints-evolution/rootfinding.md) method,

@@ -92,35 +92,45 @@ structure as the observation. Matching a mean while missing the correlation
 leaves the measurement model incomplete.
 :::
 
-## Predict
+:::{admonition} Audit the inferred chain
 
+An inference inherits the source model, measurement operator, selection, and
+prior. Keep those links inspectable before reading the posterior.
+:::
+
+::::{grid} 1 1 3 3
+
+:::{card} Predict
 Draw the generative chain from parameters and state to observable and recorded
 data. Mark nuisance quantities, selection effects, assumed independence, and
-which parameter combinations may be degenerate.
+parameter combinations that may be degenerate.
+:::
 
-## Compute
-
+:::{card} Compute
 Evaluate the forward and measurement models separately before combining them.
 Inspect likelihood geometry, parameterization, prior influence, and numerical
 diagnostics rather than retaining only a posterior summary.
+:::
 
-## Audit
-
+:::{card} Audit
 Use simulated recovery, prior predictive checks, posterior predictive checks,
 held-out observations, residual structure, and alternative parameterizations.
 Test whether conclusions survive scientifically plausible model changes.
+:::
 
-## State the warranted claim
+::::
 
+:::{important} Claim boundary
 State conclusions conditional on the model, measurement process, prior,
 selection, and validated computational procedure. Separate "identified by the
 likelihood" from "constrained after the prior."
+:::
 
-## Misconception check
-
-> Bayes' rule does not validate the likelihood. A narrow posterior need not mean
-> the parameter is physically well determined, and optimization cannot recover
-> information the model or data representation discarded.
+:::{warning} A common mistake
+Bayes' rule does not validate the likelihood. A narrow posterior need not mean
+the parameter is physically well determined, and optimization cannot recover
+information the model or data representation discarded.
+:::
 
 Continue to [](./sensitivity-conditioning-identifiability.md) and
 [](./what-is-a-model.md).

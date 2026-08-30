@@ -214,34 +214,44 @@ The long axis is not a solver failure. It identifies the combination that the
 specified measurements leave weakly constrained.
 :::
 
-## Predict
+:::{admonition} Read the measurement map
 
-Before solving, predict the map's shape, units, rank, visible and null
-directions, and which scaling choices may control its condition number.
+The following three moves describe one argument about a specified observation.
+They are not three independent subjects.
+:::
 
-## Compute
+::::{grid} 1 1 3 3
 
-Use a representation appropriate to the question: matrix-vector products when
-possible, QR for stable least squares, SVD when rank and null directions matter,
-and covariance-aware weights when the measurement model warrants them.
+:::{card} Predict
+Before solving, identify the map's units, rank, visible directions, null
+directions, and the scaling choices that may control its condition number.
+:::
 
-## Audit
+:::{card} Compute
+Use matrix-vector products where possible, QR for stable least squares, SVD
+when rank and null directions matter, and covariance-aware weights only when
+the measurement model warrants them.
+:::
 
+:::{card} Audit
 Check residuals, reconstruction identities, rank assumptions, singular values,
 and sensitivity to rescaling. Compare a structured computation with a small
 explicit dense case.
+:::
 
-## State the warranted claim
+::::
 
-"This solve is stable for the tested matrix and scaling" does not imply that the
-physical parameters are globally identifiable. State the represented map,
+:::{important} Claim boundary
+"This solve is stable for the tested matrix and scaling" does not establish that
+the physical parameters are globally identifiable. State the represented map,
 domain, rank tolerance, and observed conditioning.
+:::
 
-## Misconception check
-
-> A vector need not be an arrow in physical space. A matrix is not automatically
-> a model, and an invertible matrix in floating-point arithmetic is not
-> automatically a well-conditioned scientific inverse.
+:::{warning} A common mistake
+A vector need not be an arrow in physical space. A matrix is not automatically a
+model, and an invertible floating-point matrix need not define a well-conditioned
+scientific inverse.
+:::
 
 Continue to [](./what-is-a-derivative.md). For Jaxstro's numerical helpers, see
 [](../../20-methods/linear-structure/linear-algebra.md).

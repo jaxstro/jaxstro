@@ -94,34 +94,44 @@ Large response, poor conditioning, and weak identifiability can coexist, but
 none implies either of the others. The remedy follows the diagnosis.
 :::
 
-## Predict
+:::{admonition} Diagnose before intervening
 
+Sensitivity, conditioning, and identifiability can point to different remedies.
+Name the failure before changing a solver, parameterization, or experiment.
+:::
+
+::::{grid} 1 1 3 3
+
+:::{card} Predict
 Predict sensitive directions, expected signs and units, possible degeneracies,
-boundary behavior, and which conclusions should change under rescaling or model
+boundary behavior, and conclusions that should change under rescaling or model
 perturbation.
+:::
 
-## Compute
-
+:::{card} Compute
 Evaluate local derivatives and normalized sensitivities; inspect Jacobian or
 Fisher singular directions; record numerical tolerances, parameterization, and
 the experiment defining the observable map.
+:::
 
-## Audit
-
+:::{card} Audit
 Compare AD with analytic or finite-difference results away from nonsmooth
 boundaries. Change scaling and parameterization, probe global alternatives, and
 test whether added observations constrain the predicted null directions.
+:::
 
-## State the warranted claim
+::::
 
+:::{important} Claim boundary
 Distinguish "this derivative is numerically validated," "this inverse is locally
 well-conditioned," and "these parameters are identifiable under this experiment."
 Evidence for one statement does not automatically support the others.
+:::
 
-## Misconception check
-
-> A small gradient can mean insensitivity, a stationary point, poor scaling, or
-> a blocked branch. A large condition number is not fixed by reporting more
-> digits. A prior-constrained parameter is not necessarily data-identified.
+:::{warning} A common mistake
+A small gradient can mean insensitivity, a stationary point, poor scaling, or a
+blocked branch. More reported digits do not repair a large condition number. A
+prior-constrained parameter is not necessarily data-identified.
+:::
 
 Continue to [](./from-relations-to-differentiable-programs.md).

@@ -112,35 +112,45 @@ measurement or loss sensitivity back. They share a map and differ in the
 question asked of it.
 :::
 
-## Predict
+:::{admonition} Attach the derivative to a question
 
+The calculation comes after the map, perturbation, and derivative meaning have
+been fixed.
+:::
+
+::::{grid} 1 1 3 3
+
+:::{card} Predict
 Name the input, output, evaluation point, units, held-fixed quantities, desired
 derivative meaning, smooth branch, and expected sign before invoking AD.
+:::
 
-## Compute
-
+:::{card} Compute
 Choose forward or reverse products from input/output geometry. Retain solver
-certificates and control-flow information. Do not hide a nonsmooth selection
-inside an unqualified gradient claim.
+certificates and control-flow information; make a nonsmooth selection visible in
+the derivative contract.
+:::
 
-## Audit
-
+:::{card} Audit
 Compare with an analytic derivative, central finite differences at several step
 sizes, complex-step where admissible, or an independent implicit calculation.
 Probe both sides of suspected boundaries and monitor conditioning.
+:::
 
-## State the warranted claim
+::::
 
-State "the AD derivative of this represented smooth map agrees with this
-independent check on this domain." Claim an ideal implicit sensitivity only when
-uniqueness and smoothness are independently justified and declared, and the
-runtime convergence, finiteness, residual, width, and slope gates pass.
+:::{important} Claim boundary
+State: "the AD derivative of this represented smooth map agrees with this
+independent check on this domain." An ideal implicit sensitivity requires
+independently justified uniqueness and smoothness, plus runtime convergence,
+finiteness, residual, width, and slope gates.
+:::
 
-## Misconception check
-
-> A derivative is not just a symbolic rule and not just the number produced by
-> `grad`. It is a local linear claim about a specified map. A correct derivative
-> of an inadequate model remains a correct derivative of an inadequate model.
+:::{warning} A common mistake
+A derivative is neither just a symbolic rule nor the number produced by `grad`.
+It is a local linear claim about a specified map. A correct derivative of an
+inadequate model remains a correct derivative of that inadequate model.
+:::
 
 Continue to
 [](../models-and-computation/sensitivity-conditioning-identifiability.md),
