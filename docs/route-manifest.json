@@ -153,6 +153,7 @@
   "60-validation/numerical/quadrature-replay-derivatives.md": "/quadrature-replay-derivatives",
   "60-validation/numerical/rootfinding-performance.md": "/rootfinding-performance",
   "60-validation/validation.md": "/validation",
+  "60-validation/qualified-core.md": "/qualified-core",
   "70-project/bibliography/bibliography.md": "/bibliography",
   "70-project/decisions/0001-thin-foundation-posture.md": "/thin-foundation-posture",
   "70-project/decisions/0002-adopt-equinox-foundation.md": "/adopt-equinox-foundation",

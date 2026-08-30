@@ -63,6 +63,18 @@ def _value_root_contract(name: str, purpose: str) -> CallableContract:
         "The registered solver's JIT/batching, terminal status, trace, and analytic-root behavior.",
     )
     performance = _root_performance_evidence(name)
+    public_validation = (
+        (
+            EvidenceReference(
+                "root.safeguarded_bracketed_root.public-validation",
+                EvidenceKind.VALIDATION_TEST,
+                "tests/validation/test_bracketed_root_algorithms.py",
+                "The public solver converges on analytical roots and returns typed missing-bracket and nonfinite results.",
+            ),
+        )
+        if name == "safeguarded_bracketed_root"
+        else ()
+    )
     return CallableContract(
         id=f"numerics.{name}",
         import_path=f"jaxstro.numerics.{name}",
@@ -87,10 +99,10 @@ def _value_root_contract(name: str, purpose: str) -> CallableContract:
             BoundaryContract(
                 "Missing sign bracket or nonfinite admissible evaluation.",
                 FailureMode.STRUCTURED_RESULT,
-                (evidence.id,),
+                (evidence.id, *(item.id for item in public_validation)),
             ),
         ),
-        evidence=(evidence, performance),
+        evidence=(evidence, *public_validation, performance),
         limitations=("No implicit-root derivative claim.",),
         cost_notes="Use lax.map when physical per-lane skipping of expensive residuals matters.",
     )

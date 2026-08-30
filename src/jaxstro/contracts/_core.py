@@ -1,6 +1,12 @@
 """Contracts for public single-file modules and a local manifest constructor."""
 
-from .schema import ExecutionBoundary, MaturityLevel, ModuleContract
+from .schema import (
+    EvidenceKind,
+    EvidenceReference,
+    ExecutionBoundary,
+    MaturityLevel,
+    ModuleContract,
+)
 
 
 def module_contract(
@@ -12,6 +18,7 @@ def module_contract(
     *,
     boundary: ExecutionBoundary = ExecutionBoundary.RUNTIME,
     maturity: MaturityLevel = MaturityLevel.VALIDATED,
+    evidence: tuple[EvidenceReference, ...] = (),
 ) -> ModuleContract:
     """Construct a module record while keeping ownership text explicit."""
     return ModuleContract(
@@ -23,6 +30,7 @@ def module_contract(
         execution_boundary=boundary,
         dimensional_policy=dimensions,
         maturity=maturity,
+        evidence=evidence,
     )
 
 
@@ -79,6 +87,14 @@ CORE_CONTRACTS = (
         "Explicit conversion among named unit systems.",
         "CGS is canonical; named systems declare mass, length, and time scales.",
         boundary=ExecutionBoundary.STATIC,
+        evidence=(
+            EvidenceReference(
+                "units.scale-conversion-default",
+                EvidenceKind.UNIT_TEST,
+                "tests/unit/test_units.py",
+                "CGS/default identity, named-system scales, and exact to/from-CGS conversion behavior.",
+            ),
+        ),
     ),
     module_contract(
         "contracts",

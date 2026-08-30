@@ -1,5 +1,6 @@
 """Public scientific-contract vocabulary and registry records."""
 
+from .profiles import QUALIFIED_CORE_MODULES_V1, QUALIFIED_CORE_V1
 from .registry import (
     audit_runtime_inventory,
     collect_contracts,
@@ -32,6 +33,8 @@ __all__ = [
     "FailureMode",
     "MaturityLevel",
     "ModuleContract",
+    "QUALIFIED_CORE_MODULES_V1",
+    "QUALIFIED_CORE_V1",
     "SupportLevel",
     "TransformContract",
     "collect_contracts",

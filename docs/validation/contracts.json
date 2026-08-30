@@ -662,7 +662,8 @@
           "boundaries": [
             {
               "evidence_ids": [
-                "root.safeguarded_bracketed_root"
+                "root.safeguarded_bracketed_root",
+                "root.safeguarded_bracketed_root.public-validation"
               ],
               "failure_mode": "structured_result",
               "summary": "Missing sign bracket or nonfinite admissible evaluation."
@@ -691,6 +692,12 @@
               "id": "root.safeguarded_bracketed_root.performance",
               "kind": "benchmark",
               "target": "scripts/benchmark_rootfinding.py"
+            },
+            {
+              "claim": "The public solver converges on analytical roots and returns typed missing-bracket and nonfinite results.",
+              "id": "root.safeguarded_bracketed_root.public-validation",
+              "kind": "validation_test",
+              "target": "tests/validation/test_bracketed_root_algorithms.py"
             }
           ],
           "id": "numerics.safeguarded_bracketed_root",
@@ -1234,7 +1241,14 @@
     {
       "callables": [],
       "dimensional_policy": "CGS is canonical; named systems declare mass, length, and time scales.",
-      "evidence": [],
+      "evidence": [
+        {
+          "claim": "CGS/default identity, named-system scales, and exact to/from-CGS conversion behavior.",
+          "id": "units.scale-conversion-default",
+          "kind": "unit_test",
+          "target": "tests/unit/test_units.py"
+        }
+      ],
       "execution_boundary": "static",
       "id": "units",
       "import_path": "jaxstro.units",
@@ -1248,7 +1262,7 @@
   ],
   "package_version": "0.1.0",
   "schema_version": "1",
-  "source_revision": "sha256:c034b224df4bd17de6594e97b48fabede28ec2106ac8f830eb3a1299aa26e616",
+  "source_revision": "sha256:baa137725087db9dc98f494b6e134b922ada41ba89fa2bd5a367be0d0a373de0",
   "unclassified_callables": [
     "jaxstro.atmospheres.acquisition_rows_to_markdown",
     "jaxstro.atmospheres.build_bosz_index",

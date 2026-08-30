@@ -257,6 +257,7 @@ project:
     - title: Validation and evidence
       children:
         - file: 60-validation/validation.md
+        - file: 60-validation/qualified-core.md
         - file: 60-validation/evidence-index.md
         - file: 60-validation/numerical/rootfinding-performance.md
         - file: 60-validation/numerical/implicit-root-gradients.md
