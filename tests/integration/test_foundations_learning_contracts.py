@@ -61,7 +61,8 @@ def test_landing_route_and_implicit_derivative_evidence_are_explicit() -> None:
         assert relative_path in landing
 
     program_page = (
-        FOUNDATIONS / "models-and-computation/from-relations-to-differentiable-programs.md"
+        FOUNDATIONS
+        / "models-and-computation/from-relations-to-differentiable-programs.md"
     ).read_text(encoding="utf-8")
     for target in (
         "rootfinding.md",

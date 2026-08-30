@@ -5,9 +5,6 @@ description: Distinguish derivative magnitude, numerical stability, and learnabl
 
 # Sensitivity, conditioning, and identifiability
 
-Use this page when a changing output, unstable computation, or parameter
-degeneracy needs to be diagnosed without conflating those problems.
-
 When two source parameters change the same measurements, three different
 questions arise: how strongly the observable responds, whether arithmetic can
 resolve that response, and whether the experiment separates the parameters.

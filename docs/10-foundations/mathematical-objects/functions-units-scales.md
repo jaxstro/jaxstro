@@ -5,9 +5,6 @@ description: Read scientific functions as unit-carrying maps before computing th
 
 # Functions, units, and scales
 
-Use this page when a relation connects physical quantities across a measurement
-or calculation boundary.
-
 A stellar luminosity, a gravitational force, and a detector count become useful
 only after their inputs, outputs, units, and allowed limits are fixed. The same
 algebraic expression can answer different questions when any one of those

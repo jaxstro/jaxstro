@@ -5,9 +5,6 @@ description: Connect physical predictions to measurements, probability, and boun
 
 # Models, inference, and information
 
-Use this page when a path from physical parameters to recorded data and an
-inference claim needs to be audited link by link.
-
 An inference begins with a recorded measurement and asks which source states
 could have produced it through a stated instrument. The answer inherits every
 assumption in that chain.

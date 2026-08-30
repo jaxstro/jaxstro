@@ -68,8 +68,7 @@ def test_foundations_landing_explains_optional_connected_routes() -> None:
         (DOCS / FOUNDATION_PAGES[0]).read_text(encoding="utf-8").lower().split()
     )
     for phrase in (
-        "optional does not mean unimportant",
-        "connected concepts, not prerequisites to pass",
+        "optional connected routes, not prerequisites to complete in order",
         "proceed linearly",
         "enter from any method page",
         "return when an audit exposes a conceptual gap",
@@ -78,11 +77,42 @@ def test_foundations_landing_explains_optional_connected_routes() -> None:
         assert phrase in landing
 
 
-def test_each_foundation_page_opens_with_a_use_sentence() -> None:
-    for page in FOUNDATION_PAGES:
+def test_each_foundation_page_opens_with_its_scientific_problem() -> None:
+    opening_markers = {
+        "10-foundations/foundations.md": "An inference can fail before an algorithm does",
+        (
+            "10-foundations/mathematical-objects/functions-units-scales.md"
+        ): "A stellar luminosity, a gravitational force, and a detector count",
+        (
+            "10-foundations/mathematical-objects/linear-algebra-language-of-change.md"
+        ): "Two source parameters can move two measured channels",
+        (
+            "10-foundations/mathematical-objects/what-is-a-derivative.md"
+        ): "When a source parameter shifts",
+        (
+            "10-foundations/mathematical-objects/probability-and-distributions.md"
+        ): "Recorded measurements vary",
+        "10-foundations/models-and-computation/what-is-a-model.md": (
+            "A source, an instrument, and a recorded datum"
+        ),
+        (
+            "10-foundations/models-and-computation/models-inference-information.md"
+        ): "An inference begins with a recorded measurement",
+        (
+            "10-foundations/models-and-computation/"
+            "sensitivity-conditioning-identifiability.md"
+        ): "When two source parameters change the same measurements",
+        (
+            "10-foundations/models-and-computation/"
+            "from-relations-to-differentiable-programs.md"
+        ): "A root, interpolant, or likelihood begins",
+    }
+    assert set(opening_markers) == set(FOUNDATION_PAGES)
+    for page, marker in opening_markers.items():
         body = _body_after_frontmatter((DOCS / page).read_text(encoding="utf-8"))
         opening = "\n".join(body.strip().splitlines()[:12])
-        assert "Use this page when" in opening, page
+        assert "Use this page when" not in opening, page
+        assert marker in opening, page
 
 
 def test_foundations_source_is_ascii_and_researcher_facing() -> None:

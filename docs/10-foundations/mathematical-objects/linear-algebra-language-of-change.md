@@ -5,9 +5,6 @@ description: Vectors, linear maps, geometry, and conditioning before matrix reci
 
 # Linear algebra as the language of change
 
-Use this page when vectors, matrices, or conditioning need to be interpreted as
-scientific maps rather than calculation recipes.
-
 Two source parameters can move two measured channels at the same time. Treat
 vectors as perturbations, then ask which combinations the data see, which they
 miss, and how numerical coordinates alter that diagnosis. A matrix is a coordinate

@@ -5,9 +5,6 @@ description: What JAX differentiates, how program structure matters, and where s
 
 # From mathematical relations to differentiable programs
 
-Use this page when the derivative of an executed JAX program must be separated
-from the derivative of an ideal mathematical relation.
-
 A root, interpolant, or likelihood begins as a mathematical relation. A program
 evaluates an approximation to that relation with finite precision, control flow,
 iteration counts, branch choices, and transformation rules. JAX differentiates

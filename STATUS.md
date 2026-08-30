@@ -7,8 +7,9 @@ Updated: 2026-08-30
 - Foundations now has white-ground scientific figures, a two-channel running
   measurement, and researcher-facing learning pages. Every leaf page uses native
   MyST cards and semantic callouts for its compact predict-compute-audit practice
-  loop; figure contracts require accessible vector structure, a white ground, and
-  no warm fill panels. The functions, units, and scales page's SI, CGS, and
+  loop; each opens with a concrete scientific problem rather than navigation
+  copy; figure contracts require accessible vector structure, a white ground,
+  and no warm fill panels. The functions, units, and scales page's SI, CGS, and
   solar-scale examples distinguish nominal conversions from Jaxstro's solar-mass
   compatibility scale.
 - Published checkpoint: Python 3.13 runtime floor and the completed Lane–Emden

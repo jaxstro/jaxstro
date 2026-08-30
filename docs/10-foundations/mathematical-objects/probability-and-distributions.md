@@ -5,9 +5,6 @@ description: Support, density, expectation, covariance, conditioning, and uncert
 
 # Probability and distributions
 
-Use this page when probability, uncertainty, or a distribution's support needs
-to be stated before an inference or sampling calculation.
-
 Recorded measurements vary for reasons that belong to the experiment, the
 instrument, and the model. Probability states which variations the analysis
 admits; it does not identify their physical origin by itself.

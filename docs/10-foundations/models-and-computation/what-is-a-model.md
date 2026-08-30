@@ -5,9 +5,6 @@ description: Models as question-dependent representations and information compre
 
 # What is a model?
 
-Use this page when a scientific model's purpose, assumptions, or discarded
-information needs to be made explicit.
-
 A source, an instrument, and a recorded datum do not belong to one undifferentiated
 model. Each representation keeps some structure and leaves other structure out.
 The question is whether the retained structure can answer the observable at

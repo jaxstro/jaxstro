@@ -5,9 +5,6 @@ description: Change, local linear maps, sensitivity, and evidence in differentia
 
 # What is a derivative?
 
-Use this page when a gradient or sensitivity needs a precise mathematical and
-scientific interpretation.
-
 When a source parameter shifts, a derivative names what changes in the
 observable and under which assumptions. It is a **local rate of change**, the
 **best local linear map** approximating a function, and a **scientific

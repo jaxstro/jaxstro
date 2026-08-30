@@ -5,13 +5,11 @@ description: Connected, optional background for evidence-first computational res
 
 # Foundations: the ideas we will not assume
 
-Use this page when a measurement, numerical result, or derivative claim needs a
-clearer scientific connection.
+An inference can fail before an algorithm does: a residual can mix units, a
+derivative can belong to the wrong map, or a likelihood can omit the calibration
+that correlates two measurements. Foundations keeps those connections visible.
 
-Optional does not mean unimportant. These pages provide connected concepts,
-not prerequisites to pass. They keep the scientific standard high while making
-the reasoning behind units, models, derivatives, probability, inference, and
-JAX programs available when it becomes useful.
+These are optional connected routes, not prerequisites to complete in order.
 
 Researchers often encounter calculus, statistics, linear algebra, programming,
 physical modeling, and inference separately. The trouble appears when one
