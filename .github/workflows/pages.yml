@@ -13,6 +13,9 @@ on:
       - "scripts/check_docs.sh"
       - "scripts/check_docs_site.py"
       - "scripts/inject_docs_accessibility.py"
+      - "package.json"
+      - "package-lock.json"
+      - ".nvmrc"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -48,8 +51,8 @@ jobs:
       - name: Install locked documentation dependencies
         run: uv sync --locked --extra dev
 
-      - name: Install pinned MyST
-        run: npm install --global mystmd@1.10.1
+      - name: Install locked documentation CLI
+        run: npm ci --ignore-scripts
 
       - name: Gate and build documentation
         run: bash scripts/check_docs.sh

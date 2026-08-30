@@ -9,11 +9,25 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
+def test_docs_cli_is_lockfile_backed() -> None:
+    package = (REPO_ROOT / "package.json").read_text(encoding="utf-8")
+    docs_gate = (REPO_ROOT / "scripts/check_docs.sh").read_text(encoding="utf-8")
+    assert '"mystmd": "1.10.1"' in package
+    assert (REPO_ROOT / "package-lock.json").is_file()
+    assert "npx --no-install myst build --html --ci --strict" in docs_gate
+    assert "exec npx --no-install myst start" in docs_gate
+    assert "\n  myst build" not in docs_gate
+    assert "\n  exec myst start" not in docs_gate
+
+    gitignore = (REPO_ROOT / ".gitignore").read_text(encoding="utf-8")
+    assert "node_modules/" in gitignore
+
+
 def test_docs_gate_is_reused_by_local_and_full_ci_gates() -> None:
     script = REPO_ROOT / "scripts" / "check_docs.sh"
     assert script.is_file()
     script_text = script.read_text(encoding="utf-8")
-    assert "myst build --html --ci --strict" in script_text
+    assert "npx --no-install myst build --html --ci --strict" in script_text
     assert (
         'uv run --no-sync python "$ROOT_DIR/scripts/check_docs_site.py"' in script_text
     )
@@ -29,8 +43,10 @@ def test_docs_gate_is_reused_by_local_and_full_ci_gates() -> None:
     assert inject_call.group("check") is None
     assert verify_call.group("check") == " --check"
 
-    build_position = script_text.index("myst build --html --ci --strict")
-    start_position = script_text.index("exec myst start")
+    build_position = script_text.index(
+        "npx --no-install myst build --html --ci --strict"
+    )
+    start_position = script_text.index("exec npx --no-install myst start")
     audit_position = script_text.index('"$ROOT_DIR/scripts/check_docs_site.py"')
     stop_position = script_text.rindex("\nstop_docs_server\n")
     success_position = script_text.index('echo "ALL DOCS GATES PASSED"')
@@ -52,13 +68,16 @@ def test_docs_gate_is_reused_by_local_and_full_ci_gates() -> None:
     full_gate = (REPO_ROOT / ".github" / "workflows" / "full-gate.yml").read_text(
         encoding="utf-8"
     )
-    docs_job = full_gate.split("  test-matrix:", maxsplit=1)[0]
     assert "bash scripts/check_docs.sh" in local_gate
-    assert "docs:" in full_gate
-    assert "bash scripts/check_docs.sh" in docs_job
-    assert "mystmd@1.10.1" in docs_job
-    assert "astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b" in docs_job
-    assert "uv sync --locked --extra dev" in docs_job
+    assert "npm ci --ignore-scripts" in local_gate
+    assert local_gate.index("npm ci --ignore-scripts") < local_gate.index(
+        "bash scripts/check_docs.sh"
+    )
+    assert "release-mirror:" in full_gate
+    assert "Run the exact local release mirror" in full_gate
+    assert "run: bash scripts/check.sh" in full_gate
+    assert "scientific-validation:" in full_gate
+    assert "pytest tests/validation -q" in full_gate
 
     pages = (REPO_ROOT / ".github" / "workflows" / "pages.yml").read_text(
         encoding="utf-8"
@@ -68,6 +87,8 @@ def test_docs_gate_is_reused_by_local_and_full_ci_gates() -> None:
     )
     assert "path: docs/_build/html" in pages
     assert '- "scripts/inject_docs_accessibility.py"' in pages
+    assert "npm ci --ignore-scripts" in pages
+    assert "npm install --global" not in pages
 
 
 def test_committed_route_manifest_matches_authored_navigation_routes() -> None:
@@ -85,6 +106,7 @@ def test_committed_route_manifest_matches_authored_navigation_routes() -> None:
     assert manifest["60-validation/validation.md"] == "/validation"
     assert manifest["70-project/project.md"] == "/project"
     assert manifest["70-project/release/checklist.md"] == "/checklist"
+    assert manifest["70-project/release/support.md"] == "/support"
     assert manifest["70-project/bibliography/bibliography.md"] == "/bibliography"
     assert manifest["60-validation/evidence-index.md"] == "/evidence-index"
     assert manifest["60-validation/numerical/rootfinding-performance.md"] == (

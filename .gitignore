@@ -228,3 +228,6 @@ docs/10-theory/figures/*.png
 
 # Isolated execution worktrees created by engineering agents.
 .worktrees/
+
+# Node tooling is installed reproducibly from package-lock.json.
+node_modules/

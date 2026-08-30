@@ -31,6 +31,7 @@ echo "== research workflow registry freshness =="
 $RUN python scripts/build_research_workflow_registry.py --check
 
 echo "== documentation gate =="
+npm ci --ignore-scripts
 bash scripts/check_docs.sh
 
 echo "== test-matrix (current interpreter; supported CI runtime is 3.13) =="

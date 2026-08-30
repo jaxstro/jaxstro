@@ -41,13 +41,13 @@ env -u VIRTUAL_ENV uv run --no-sync python \
 echo "== docs: strict static build =="
 (
   cd "$ROOT_DIR/docs"
-  myst build --html --ci --strict
+  npx --no-install myst build --html --ci --strict
 )
 
 echo "== docs: rendered DOM and route manifest =="
 (
   cd "$ROOT_DIR/docs"
-  exec myst start --port "$APP_PORT" --server-port "$SERVER_PORT"
+  exec npx --no-install myst start --port "$APP_PORT" --server-port "$SERVER_PORT"
 ) >"$LOG_PATH" 2>&1 &
 SERVER_PID=$!
 

@@ -9,6 +9,22 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 SETUP_UV_V8_SHA = "08807647e7069bb48b6ef5acd8ec9567f424441b"
 
 
+def test_full_gate_runs_the_local_release_mirror_on_main_push() -> None:
+    workflow = (REPO_ROOT / ".github/workflows/full-gate.yml").read_text(
+        encoding="utf-8"
+    )
+    assert "push:" in workflow
+    assert "branches: [main]" in workflow
+    assert "release-mirror:" in workflow
+    assert "bash scripts/check.sh" in workflow
+    assert "npm install --global" not in workflow
+    assert 'JAX_ENABLE_X64: "1"' in workflow
+    assert "timeout-minutes: 60" in workflow
+    assert "scientific-validation:" in workflow
+    assert "github.event_name != 'push'" in workflow
+    assert "pytest tests/validation -q" in workflow
+
+
 def test_pages_workflow_uses_the_verified_docs_gate_and_site_output() -> None:
     workflow_path = REPO_ROOT / ".github" / "workflows" / "pages.yml"
     assert workflow_path.is_file()
@@ -25,13 +41,16 @@ def test_pages_workflow_uses_the_verified_docs_gate_and_site_output() -> None:
     assert f"astral-sh/setup-uv@{SETUP_UV_V8_SHA}" in workflow
     assert 'python-version: "3.13"' in workflow
     assert "uv sync --locked --extra dev" in workflow
-    assert "mystmd@1.10.1" in workflow
+    assert "npm ci --ignore-scripts" in workflow
+    assert "npm install --global" not in workflow
     assert "bash scripts/check_docs.sh" in workflow
     assert "actions/upload-pages-artifact@v5" in workflow
     assert "path: docs/_build/html" in workflow
     assert "actions/deploy-pages@v5" in workflow
     assert "environment:" in workflow
     assert "name: github-pages" in workflow
+    for path in ('"package.json"', '"package-lock.json"', '".nvmrc"'):
+        assert path in workflow
 
     docs_gate = (REPO_ROOT / "scripts" / "check_docs.sh").read_text(encoding="utf-8")
     assert 'BASE_PATH="${BASE_URL:-}"' in docs_gate
@@ -66,21 +85,20 @@ def test_active_workflows_use_node24_action_releases() -> None:
             )
 
 
-def test_exhaustive_test_gates_install_benchmark_only_dependencies() -> None:
-    """Fresh exhaustive gates must collect benchmark tests without runtime deps."""
+def test_release_mirror_keeps_benchmark_collection_in_the_local_gate() -> None:
+    """The exact local mirror must prepare benchmark-only collection dependencies."""
     local_gate = (REPO_ROOT / "scripts" / "check.sh").read_text(encoding="utf-8")
     workflow = (REPO_ROOT / ".github" / "workflows" / "full-gate.yml").read_text(
         encoding="utf-8"
     )
-    test_matrix = workflow.split("  test-matrix:", maxsplit=1)[1].split(
-        "  full-validation:", maxsplit=1
-    )[0]
 
     sync = "uv sync --locked --extra dev --group benchmark"
     assert sync in local_gate
     assert local_gate.index(sync) < local_gate.index('pytest -m "not slow"')
-    assert sync in test_matrix
-    assert test_matrix.index(sync) < test_matrix.index('pytest -m "not slow"')
+    assert "release-mirror:" in workflow
+    assert "run: bash scripts/check.sh" in workflow
+    assert "test-matrix:" not in workflow
+    assert "full-validation:" not in workflow
 
 
 def test_release_checklist_preserves_irreversible_stop_gates() -> None:
