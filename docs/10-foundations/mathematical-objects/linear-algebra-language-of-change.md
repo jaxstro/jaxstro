@@ -121,7 +121,7 @@ unchanged to first order.
 
 The number of meaningfully nonzero singular values is the numerical rank. It
 depends on an explicitly stated **rank tolerance**, data precision, and the
-units/scaling of the representation—not a magic count returned by a library.
+units/scaling of the representation, not a magic count returned by a library.
 
 ## Conditioning is a scientific question about scale
 
@@ -184,6 +184,26 @@ corresponding right singular vector names the locally confounded combination.
 The useful response is not automatically to add a numerical regularizer. First
 decide whether a new observable, a justified prior, a reparameterization, or a
 more restricted scientific claim resolves the actual ambiguity.
+
+## Try the running case
+
+Consider two calibrated measurements of one source and two parameter changes.
+Suppose the local map is
+
+```{math}
+J = \begin{bmatrix} 1 & 1 \\ 1 & 1.01 \end{bmatrix}.
+```
+
+Before solving for a parameter update, predict which combination is weakly
+visible: the common change in both parameters or their difference.
+
+## Worked audit
+
+The columns of $J$ are nearly parallel, so their difference is weakly visible:
+one nearly null right-singular direction trades one parameter against the
+other. Solving the square system can still produce a finite answer. The useful
+audit is its singular values and the physical meaning of that weak direction,
+not whether a generic inverse exists.
 
 ## Predict
 

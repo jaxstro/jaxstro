@@ -88,6 +88,21 @@ uncertainty propagation, optimization, control, experimental design, and
 probabilistic inference. Its power comes from composition; its scientific
 validity still comes from model and derivative contracts.
 
+## Try the running case
+
+Consider two calibrated measurements of one source, predicted by a parameter
+vector $\theta$. At a reference point, decide whether the question is about the
+change in predicted measurements $d$ under a proposed $\delta\theta$, or about
+the change in a scalar loss after those measurements are compared with data.
+
+## Worked audit
+
+The first question is a JVP, $J\,\delta\theta$, and retains the direction and
+units of the predicted measurement change. The second is a VJP after a scalar
+objective has supplied an output cotangent. They can share implementation
+machinery, but they answer different scientific questions and should not be
+reported as the same sensitivity.
+
 ## Predict
 
 Name the input, output, evaluation point, units, held-fixed quantities, desired

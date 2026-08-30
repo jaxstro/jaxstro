@@ -28,6 +28,19 @@ adding an array axis. Both preserve particular value semantics under documented
 conditions; neither guarantees that expensive inactive lanes avoid all physical
 work.
 
+For an iterative relation with exact solution $x^\star(\theta)$, a finite
+executed program instead exposes a finite map after $K$ steps:
+
+```{math}
+x_K(\theta) = \Phi_K(\theta),
+\qquad
+\frac{d x_K}{d\theta}.
+```
+
+The derivative on the right is the derivative of the executed finite map. It
+need not equal $d x^\star/d\theta$ unless an additional implicit-derivative
+contract and its assumptions are satisfied.
+
 ## Which derivative is being computed?
 
 A smooth finite algorithm ordinarily has a pathwise derivative of its executed
@@ -51,6 +64,21 @@ contracts. A downstream scientific package owns domain equations, admissibility,
 state acceptance, retry policy, data semantics, and physical validation. An
 astronomy example can motivate a primitive without moving stellar, particle, or
 instrument policy into Jaxstro runtime logic.
+
+## Try the running case
+
+Consider two calibrated measurements of one source whose parameters are found
+by an iterative solve. If a stopping rule, a clamp, or a selected interpolation
+cell changes as the measurements change, predict whether ordinary pathwise AD
+is differentiating an ideal solution or one selected finite program path.
+
+## Worked audit
+
+Ordinary pathwise AD differentiates the selected finite program path. That can
+be exactly the desired finite-map sensitivity, but it does not by itself certify
+the derivative of an ideal root or of a branch-crossing model. Record the branch
+and solver status, then use the derivative contract matching the scientific
+claim.
 
 ## Predict
 
@@ -83,5 +111,10 @@ let one passing evidence category silently stand in for another.
 > differentiable with respect to every captured value. Compilation is not
 > validation, and a finite gradient is not an implicit function theorem proof.
 
-Continue to the [](../../20-methods/methods.md) module chapters and the generated
-[](../../50-api/research-infrastructure/contracts.md) contract registry.
+For the concrete implicit-root distinction, see the
+[](../../20-methods/change-constraints-evolution/rootfinding.md) method,
+the [](../../50-api/change-constraints/rootfinding.md) public contract, and
+the [](../../60-validation/numerical/implicit-root-gradients.md) qualified
+gradient evidence. Continue to the [](../../20-methods/methods.md) module
+chapters and the generated [](../../50-api/research-infrastructure/contracts.md)
+contract registry.

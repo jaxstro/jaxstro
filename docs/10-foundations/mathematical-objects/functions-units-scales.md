@@ -57,6 +57,22 @@ zero, and whether one variable dominates because of physics or merely because
 of its chosen units. Scaling can improve conditioning; it cannot repair an
 incorrect model.
 
+## Try the running case
+
+Consider two calibrated measurements of one source. Let a physical prediction
+$q(\theta)$ have watts, while the first instrument records $d_1=q$ in watts and
+the second records $d_2=cq$ in detector counts for a calibration factor $c$ in
+counts per watt. Before fitting $\theta$, write the units of $q$, $d_1$, $d_2$,
+and $c$. Which two quantities may be subtracted without a conversion?
+
+## Worked audit
+
+$q$ and $d_1$ have the same units, so $d_1-q$ is meaningful. The residual
+$d_2-q$ is not: it mixes counts and watts. Either compare $d_2-cq$ in counts or
+convert $d_2/c$ to watts, carrying the calibration uncertainty with it. Scaling
+the numerical values near one can help a solver, but it cannot make the two
+units compatible by itself.
+
 ## Predict
 
 For a gravity or luminosity calculation, write the expected units, sign,

@@ -26,6 +26,19 @@ data. Bayes' rule combines prior and likelihood into a **posterior**. A
 possible observations. A **nuisance parameter** affects the data model without
 being the main scientific target; ignoring it does not make its effect disappear.
 
+With parameters $\theta$, nuisance quantities $\eta$, and recorded data $d$,
+Bayes' rule has the proportional form
+
+```{math}
+p(\theta, \eta \mid d) \propto p(d \mid \theta, \eta)p(\theta, \eta).
+```
+
+The omitted normalizing constant is the evidence for the stated model. A
+posterior predictive is a distribution for a replicated observation,
+$p(d_{\mathrm{rep}} \mid d)$, after propagating the posterior through the same
+measurement model. It is not merely the forward model evaluated at one fitted
+parameter value.
+
 ## Information has several meanings
 
 Retained scientific detail, stored data volume, **Shannon information**, and
@@ -54,6 +67,21 @@ sensitivity to assumptions ask whether model-generated data resemble relevant
 features of observations. Passing one check supports only the feature and domain
 tested. Failure can identify useful missing structure rather than merely a bad
 fit.
+
+## Try the running case
+
+Consider two calibrated measurements of one source. Write the path from source
+parameters to ideal measurements, then to recorded values. Where does a shared
+calibration offset belong: in the physical model, the measurement model, or the
+prior? What observation would a posterior predictive replicate?
+
+## Worked audit
+
+A shared calibration offset belongs in the measurement model unless a physical
+argument makes it part of the source. The posterior predictive must replicate
+recorded measurements, including its calibration and noise assumptions. If it
+reproduces the fitted mean but misses the correlation between the two calibrated
+measurements, the likelihood is incomplete for that feature.
 
 ## Predict
 

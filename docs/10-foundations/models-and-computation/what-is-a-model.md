@@ -43,6 +43,20 @@ predict luminosity. In an inference problem, luminosity and temperature might
 be observed while radius becomes a parameter. The equation is unchanged; the
 direction of scientific reasoning is not.
 
+One minimal scientific chain makes the distinct model roles visible:
+
+```{math}
+z = f(\theta, s),
+\qquad
+d = h(z, \eta) + \varepsilon.
+```
+
+Here $f$ is a physical model from parameters $\theta$ and state $s$ to an ideal
+observable $z$; $h$ is a measurement model with calibration or selection
+parameters $\eta$; and $\varepsilon$ represents a stated error model. Replacing
+$f$ with a fast approximation changes the computational or surrogate model; it
+does not automatically change the physical question.
+
 ## Models are information compression
 
 A useful model keeps information relevant to a question and discards detail it
@@ -73,6 +87,21 @@ come from a misspecified model.
 A system living in three-dimensional physical space can have enormous state and
 parameter spaces. Conversely, many nominal parameters can collapse into a few
 identifiable combinations.
+
+## Try the running case
+
+Consider two calibrated measurements of one source. List one parameter of the
+physical source, one latent state, one calibration nuisance parameter, and one
+recorded datum. Then ask which of those roles would change if the same source
+were used to validate a simulation rather than infer its parameters.
+
+## Worked audit
+
+The datum is not a parameter merely because it appears in an array, and the
+calibration is not irrelevant merely because it is a nuisance. In a prediction
+task the source parameters may be fixed inputs; in an inference task they become
+unknowns. This role change is why a correct forward calculation is not yet a
+complete statistical model.
 
 ## Predict
 

@@ -18,6 +18,22 @@ perturbation. It can be local or global, dimensional or normalized, and tied to
 a physical parameter, initial state, observation, or numerical control. A large
 derivative may be physically expected rather than numerically problematic.
 
+For a local observable map, the first-order response is
+
+```{math}
+\delta d \approx J\,\delta\theta.
+```
+
+When a covariance $C$ is an appropriate positive-definite measurement-error
+model, the local information geometry is often summarized by
+
+```{math}
+F = J^{\mathsf{T}}C^{-1}J.
+```
+
+This Fisher form is conditional on the local linearization and covariance
+assumptions; it is not a proof of global identifiability.
+
 ## Conditioning
 
 **Conditioning** describes how perturbations in inputs or arithmetic can be
@@ -53,6 +69,21 @@ more convenient answer.
 Use analytic derivatives, JVPs/VJPs, central differences, convergence, singular
 values, and model perturbations as complementary evidence. The correct audit
 depends on branch smoothness and the scientific question.
+
+## Try the running case
+
+Consider two calibrated measurements of one source and two source parameters.
+If the Jacobian columns are nearly parallel, decide which statement follows:
+the code has a bug, the numerical representation is poorly scaled, or the
+measurements weakly distinguish one parameter combination.
+
+## Worked audit
+
+Near-parallel columns establish a local weak direction of the stated observable
+map. They do not by themselves diagnose a code bug or forbid a stable forward
+calculation. Rescaling can improve arithmetic; an additional observable or a
+justified prior can change the inference. Those are different interventions and
+must be evaluated against the scientific question.
 
 ## Predict
 

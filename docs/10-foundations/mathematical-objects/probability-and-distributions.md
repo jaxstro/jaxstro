@@ -25,6 +25,15 @@ power law, the normalization changes smoothly with the exponent and has a
 logarithmic removable limit. A correct formula must preserve values and
 parameter derivatives through that limit.
 
+For a continuous variable on support $\mathcal{X}$, normalization and an
+expectation are explicit operations:
+
+```{math}
+\int_{\mathcal{X}} p(x)\,dx = 1,
+\qquad
+\mathbb{E}[g(X)] = \int_{\mathcal{X}} g(x)p(x)\,dx.
+```
+
 ## Summaries and dependence
 
 An **expectation** is a probability-weighted average under a specified
@@ -51,6 +60,22 @@ generating process. **Epistemic** uncertainty represents limited knowledge about
 models, parameters, or missing structure. The boundary is model-dependent: a
 latent physical variable treated as noise in one analysis may become explicit
 state in another.
+
+## Try the running case
+
+Consider two calibrated measurements of one source, collected in a data vector
+$d$. Suppose their reported errors are centered and have covariance $C$. Before
+calling either error "Gaussian," ask which data values the model admits, whether
+the measurements can co-vary, and what mechanism could make their errors share
+a calibration offset.
+
+## Worked audit
+
+A Gaussian likelihood is a model choice, not a synonym for an error bar. If
+the two calibrated measurements share a calibration offset, the off-diagonal
+entries of $C$ need not vanish. A support restriction or a heavy-tailed error
+model changes the likelihood even if the reported standard deviations are the
+same. The next page makes the forward and measurement maps explicit.
 
 ## Predict
 

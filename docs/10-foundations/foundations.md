@@ -18,7 +18,8 @@ physical modeling, and inference separately. Prior exposure does not guarantee
 that those concepts are active and connected for a new research problem.
 Reconnecting them is substantive scientific work, not remediation.
 
-You may proceed linearly through both groups or enter from any method page.
+You may proceed linearly through the recommended route below or enter from any
+method page.
 Return when an audit exposes a conceptual gap, then rejoin the method or
 workflow that raised the question. Foundations connects mathematical objects,
 executable programs, and warranted scientific claims.
@@ -51,6 +52,23 @@ track.
 | --- | --- | --- |
 | Mathematical objects | Current guidance | Name domains, scales, structures, and uncertainty |
 | Models and computation | Current guidance | Separate scientific relations from executable programs |
+
+## Recommended route through the foundations
+
+For a first pass, use this sequence. It follows one question from a
+unit-carrying relation to a bounded computational claim; it is a recommended
+route, not a prerequisite chain.
+
+| Step | Question answered | Page |
+| --- | --- | --- |
+| 1 | What map, units, and scale are being represented? | [](./mathematical-objects/functions-units-scales.md) |
+| 2 | Which directions of change are visible or hidden? | [](./mathematical-objects/linear-algebra-language-of-change.md) |
+| 3 | Which local change is meant by a derivative? | [](./mathematical-objects/what-is-a-derivative.md) |
+| 4 | What variation and support does the uncertainty model admit? | [](./mathematical-objects/probability-and-distributions.md) |
+| 5 | Which kind of model is answering the question? | [](./models-and-computation/what-is-a-model.md) |
+| 6 | How do parameters become recorded data and a conditional conclusion? | [](./models-and-computation/models-inference-information.md) |
+| 7 | Is a sensitive or weakly constrained direction numerical, physical, or both? | [](./models-and-computation/sensitivity-conditioning-identifiability.md) |
+| 8 | Which map and derivative does the finite JAX program actually expose? | [](./models-and-computation/from-relations-to-differentiable-programs.md) |
 
 ## Mathematical objects
 
