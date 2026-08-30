@@ -34,6 +34,11 @@ dependencies = [
   # (Lane-Emden / Bonnor-Ebert). See docs/plans/2026-07-24-lane-emden-promotion-design.md.
   "diffrax>=0.6",
   "optimistix>=0.0.9",
+  # The equation registry (src/jaxstro/registry/). `latex` is an output EVERY
+  # record emits, including `algorithmic` ones, and rendering it needs sympy.
+  # Core infrastructure, not an add-on -- measured in startrax 2026-08-02:
+  # sympy imports in 175 ms, cheaper than jax at 263 ms, already unconditional.
+  "sympy>=1.12",
 ]
 
 [project.optional-dependencies]
