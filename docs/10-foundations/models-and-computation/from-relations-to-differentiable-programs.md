@@ -8,11 +8,11 @@ description: What JAX differentiates, how program structure matters, and where s
 Use this page when the derivative of an executed JAX program must be separated
 from the derivative of an ideal mathematical relation.
 
-A **mathematical relation** states how ideal quantities are connected. A
-computational method approximates or evaluates that relation. An **executed
-program** additionally contains data representation, finite precision, control
-flow, iteration counts, branch choices, and transformation rules. Differentiable
-programming composes derivatives through that executable structure.
+A root, interpolant, or likelihood begins as a mathematical relation. A program
+evaluates an approximation to that relation with finite precision, control flow,
+iteration counts, branch choices, and transformation rules. JAX differentiates
+that executed structure unless a public contract deliberately defines another
+derivative.
 
 ## Program structure is part of the map
 
@@ -46,7 +46,7 @@ contract and its assumptions are satisfied.
 A smooth finite algorithm ordinarily has a pathwise derivative of its executed
 operations. JAX also permits custom derivative rules: `custom_jvp`, `custom_vjp`,
 and `custom_root` can assign derivative semantics that do not follow the primal
-iteration history. A **value-first** iterative solver promises a robust value
+iteration history. A **value-first** iterative solver promises a converged value
 and telemetry but no ideal-root derivative. Jaxstro's **implicit derivative**
 records caller assertions of uniqueness and smoothness, then checks numerical
 convergence, finite state, residual, width, and conditioning gates before
@@ -67,8 +67,8 @@ instrument policy into Jaxstro runtime logic.
 
 ## Try the running case
 
-Consider two calibrated measurements of one source whose parameters are found
-by an iterative solve. If a stopping rule, a clamp, or a selected interpolation
+For the two-channel measurement, suppose the parameters are found by an
+iterative solve. If a stopping rule, a clamp, or a selected interpolation
 cell changes as the measurements change, predict whether ordinary pathwise AD
 is differentiating an ideal solution or one selected finite program path.
 
@@ -79,6 +79,14 @@ be exactly the desired finite-map sensitivity, but it does not by itself certify
 the derivative of an ideal root or of a branch-crossing model. Record the branch
 and solver status, then use the derivative contract matching the scientific
 claim.
+
+:::{figure} ../figures/executed-program-map.svg
+:name: fig-executed-program-map
+:alt: A smooth ideal solution is compared with finite solver iterates and a branch-selected output. Ordinary automatic differentiation follows the selected finite path, while an implicit derivative needs additional assumptions and numerical gates.
+
+Finite iteration and branch selection define an executable map. A certified
+implicit sensitivity is a separate claim with separate assumptions and gates.
+:::
 
 ## Predict
 

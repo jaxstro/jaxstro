@@ -8,11 +8,11 @@ description: Change, local linear maps, sensitivity, and evidence in differentia
 Use this page when a gradient or sensitivity needs a precise mathematical and
 scientific interpretation.
 
-A derivative is one idea seen from several scientific viewpoints. It is a
-**local rate of change**, the **best local linear map** approximating a function,
-and a **scientific sensitivity** describing how a stated output responds to a
-stated perturbation under stated assumptions. Connecting those views is the
-foundation of differentiable programming.
+When a source parameter shifts, a derivative names what changes in the
+observable and under which assumptions. It is a **local rate of change**, the
+**best local linear map** approximating a function, and a **scientific
+sensitivity**. The object and the perturbation come first; AD supplies a way to
+evaluate the chosen derivative.
 
 ## View 1: local change
 
@@ -90,8 +90,8 @@ validity still comes from model and derivative contracts.
 
 ## Try the running case
 
-Consider two calibrated measurements of one source, predicted by a parameter
-vector $\theta$. At a reference point, decide whether the question is about the
+In the two-channel measurement, a parameter vector $\theta$ predicts the data.
+At a reference point, decide whether the question is about the
 change in predicted measurements $d$ under a proposed $\delta\theta$, or about
 the change in a scalar loss after those measurements are compared with data.
 
@@ -102,6 +102,15 @@ units of the predicted measurement change. The second is a VJP after a scalar
 objective has supplied an output cotangent. They can share implementation
 machinery, but they answer different scientific questions and should not be
 reported as the same sensitivity.
+
+:::{figure} ../figures/derivative-chain.svg
+:name: fig-derivative-chain
+:alt: A parameter perturbation moves forward through a Jacobian into a measurement perturbation, while a scalar loss sends a cotangent backward. The diagram distinguishes a JVP from a VJP.
+
+A JVP carries a proposed physical change forward. A VJP carries the chosen
+measurement or loss sensitivity back. They share a map and differ in the
+question asked of it.
+:::
 
 ## Predict
 

@@ -8,9 +8,9 @@ description: Connect physical predictions to measurements, probability, and boun
 Use this page when a path from physical parameters to recorded data and an
 inference claim needs to be audited link by link.
 
-Inference reasons from observations toward unknown quantities through a chain
-of assumptions. Keeping each link visible prevents a good optimizer from being
-mistaken for a good scientific explanation.
+An inference begins with a recorded measurement and asks which source states
+could have produced it through a stated instrument. The answer inherits every
+assumption in that chain.
 
 ## The generative chain
 
@@ -70,8 +70,8 @@ fit.
 
 ## Try the running case
 
-Consider two calibrated measurements of one source. Write the path from source
-parameters to ideal measurements, then to recorded values. Where does a shared
+For the two-channel measurement, write the path from source parameters to ideal
+measurements, then to recorded values. Where does a shared
 calibration offset belong: in the physical model, the measurement model, or the
 prior? What observation would a posterior predictive replicate?
 
@@ -82,6 +82,15 @@ argument makes it part of the source. The posterior predictive must replicate
 recorded measurements, including its calibration and noise assumptions. If it
 reproduces the fitted mean but misses the correlation between the two calibrated
 measurements, the likelihood is incomplete for that feature.
+
+:::{figure} ../figures/inference-replication.svg
+:name: fig-inference-replication
+:alt: Observed two-channel data show a tilted correlated structure. A posterior predictive model with independent errors misses the tilt, while a shared-calibration model reproduces it.
+
+Posterior prediction asks whether replicated recorded data carry the same
+structure as the observation. Matching a mean while missing the correlation
+leaves the measurement model incomplete.
+:::
 
 ## Predict
 

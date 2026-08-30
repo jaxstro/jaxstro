@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 330" role="img" aria-labelledby="title desc">
+  <title id="title">A nearly null parameter direction</title>
+  <desc id="desc">Two nearly parallel Jacobian columns in parameter space map to a long, narrow uncertainty ellipse. The weak difference direction is labeled as poorly constrained by the measurements.</desc>
+  <style>text{font-family:system-ui,sans-serif;fill:#17233b}.axis{stroke:#536277;stroke-width:2}.strong{stroke:#14877c;stroke-width:5;fill:none;marker-end:url(#a)}.weak{stroke:#d65a45;stroke-width:5;fill:none;marker-end:url(#a)}.ellipse{fill:#fce6df;stroke:#d65a45;stroke-width:3}.label{font-size:21px;font-weight:650}.note{font-size:16px;fill:#536277}</style>
+  <defs><marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8z" fill="#294a72"/></marker></defs>
+  <text x="30" y="34" class="label">Parameter perturbations</text><path d="M90 270 H320 M130 300 V70" class="axis"/><text x="307" y="292" class="note">theta1</text><text x="100" y="85" class="note">theta2</text>
+  <path d="M145 255 L285 105" class="strong"/><path d="M145 255 L300 120" class="strong"/><text x="244" y="92" class="note">nearly parallel columns of J</text>
+  <path d="M145 255 L245 265" class="weak"/><text x="185" y="289" class="note">weak difference direction</text>
+  <path d="M365 175 H445" class="axis" marker-end="url(#a)"/><text x="370" y="157" class="note">J maps changes</text>
+  <text x="500" y="34" class="label">Data-compatible region</text><ellipse cx="612" cy="177" rx="148" ry="38" transform="rotate(-35 612 177)" class="ellipse"/><path d="M510 245 L711 105" class="weak"/><text x="525" y="272" class="note">long axis: data barely distinguish this combination</text><path d="M483 284 H734" class="axis"/><path d="M502 291 V66" class="axis"/><text x="710" y="305" class="note">theta1</text><text x="470" y="81" class="note">theta2</text>
+</svg>

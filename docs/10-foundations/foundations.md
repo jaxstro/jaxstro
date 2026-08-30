@@ -5,8 +5,8 @@ description: Connected, optional background for evidence-first computational res
 
 # Foundations: the ideas we will not assume
 
-Use this page when a method, program, or audit depends on an idea that needs a
-clearer mathematical or scientific connection.
+Use this page when a measurement, numerical result, or derivative claim needs a
+clearer scientific connection.
 
 Optional does not mean unimportant. These pages provide connected concepts,
 not prerequisites to pass. They keep the scientific standard high while making
@@ -14,9 +14,11 @@ the reasoning behind units, models, derivatives, probability, inference, and
 JAX programs available when it becomes useful.
 
 Researchers often encounter calculus, statistics, linear algebra, programming,
-physical modeling, and inference separately. Prior exposure does not guarantee
-that those concepts are active and connected for a new research problem.
-Reconnecting them is substantive scientific work, not remediation.
+physical modeling, and inference separately. The trouble appears when one
+measurement must carry all of them at once: a source produces an observable, an
+instrument calibrates and records it, an inference assigns responsibility for a
+discrepancy, and a program reports a derivative. Reconnecting those steps is
+part of the scientific work.
 
 You may proceed linearly through the recommended route below or enter from any
 method page.
@@ -48,6 +50,34 @@ Methods, Workflows, API, and Validation; it is not a separate prerequisite
 track.
 :::
 
+## Running case: a two-channel measurement
+
+A source is measured in two channels. The channels share a calibration
+uncertainty, and two source parameters can produce nearly the same change in
+the recorded data. This small problem is enough to expose the decisions that
+usually become hidden inside a scientific program: units, covariance, rank,
+priors, model discrepancy, and derivative meaning.
+
+:::{figure} ./figures/two-channel-measurement-overview.png
+:name: fig-two-channel-measurement-overview
+:alt: A luminous source is observed through two instrument channels, combined into a calibrated two-component data vector, and mapped into an elongated parameter-space uncertainty region.
+
+Two channels see one source through different measurement paths. A shared
+calibration can correlate the recorded values, while a long uncertainty region
+marks a parameter combination the data weakly distinguish.
+:::
+
+Run the companion calculation from the repository root:
+
+```bash
+env -u VIRTUAL_ENV uv run --no-sync python \
+  examples/onboarding/two_channel_measurement.py --calibration-sigma 0.2 --separation 0.01
+```
+
+Change `--calibration-sigma` to alter the shared covariance and `--separation`
+to bring the two Jacobian columns together. The calculation prints the
+covariance, singular values, and the narrower claim each configuration supports.
+
 | Family | Status | Primary role |
 | --- | --- | --- |
 | Mathematical objects | Current guidance | Name domains, scales, structures, and uncertainty |
@@ -55,9 +85,9 @@ track.
 
 ## Recommended route through the foundations
 
-For a first pass, use this sequence. It follows one question from a
-unit-carrying relation to a bounded computational claim; it is a recommended
-route, not a prerequisite chain.
+For a first pass, follow the measurement from its physical relation to the
+claim made about it. This is a route through one argument, not a prerequisite
+chain.
 
 | Step | Question answered | Page |
 | --- | --- | --- |

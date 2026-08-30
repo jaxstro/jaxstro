@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 300" role="img" aria-labelledby="title desc">
+  <title id="title">Posterior prediction tests recorded data, including its correlation</title>
+  <desc id="desc">Observed two-channel data form a tilted correlated cloud. A posterior predictive model with independent errors misses that tilt, while a model with shared calibration reproduces it.</desc>
+  <style>text{font-family:system-ui,sans-serif;fill:#17233b}.axis{stroke:#536277;stroke-width:2}.obs{fill:#17233b}.wrong{fill:#e6f4f1;stroke:#14877c;stroke-width:3}.right{fill:#fce6df;stroke:#d65a45;stroke-width:3}.label{font-size:19px;font-weight:650}.note{font-size:15px;fill:#536277}</style>
+  <text x="42" y="30" class="label">Recorded measurements</text><path d="M35 260 H245 M55 278 V63" class="axis"/><g class="obs"><circle cx="91" cy="216" r="5"/><circle cx="113" cy="196" r="5"/><circle cx="135" cy="178" r="5"/><circle cx="155" cy="159" r="5"/><circle cx="177" cy="140" r="5"/><circle cx="199" cy="120" r="5"/></g>
+  <text x="292" y="30" class="label">Independent model</text><path d="M285 260 H495 M305 278 V63" class="axis"/><circle cx="390" cy="166" r="65" class="wrong" opacity=".5"/><text x="328" y="245" class="note">misses correlation</text>
+  <text x="541" y="30" class="label">Shared-calibration model</text><path d="M535 260 H740 M555 278 V63" class="axis"/><ellipse cx="642" cy="166" rx="95" ry="35" transform="rotate(-40 642 166)" class="right" opacity=".55"/><text x="560" y="245" class="note">matches the tilted structure</text>
+</svg>

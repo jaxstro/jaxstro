@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 290" role="img" aria-labelledby="title desc">
+  <title id="title">Sensitivity, conditioning, and identifiability are different failures</title>
+  <desc id="desc">Three panels distinguish a strong observable response, a numerically stretched coordinate system, and a weakly identifiable parameter direction. The diagrams show why one diagnosis does not imply another.</desc>
+  <style>text{font-family:system-ui,sans-serif;fill:#17233b}.axis{stroke:#536277;stroke-width:2}.teal{stroke:#14877c;stroke-width:4;fill:none}.coral{stroke:#d65a45;stroke-width:4;fill:none}.label{font-size:19px;font-weight:650}.note{font-size:15px;fill:#536277}</style>
+  <text x="52" y="31" class="label">Sensitivity</text><path d="M35 245 H230 M52 260 V66" class="axis"/><path d="M65 218 C107 212 130 192 155 143 S193 84 215 76" class="teal"/><text x="47" y="280" class="note">output responds strongly</text>
+  <text x="294" y="31" class="label">Conditioning</text><path d="M282 245 H480 M300 260 V66" class="axis"/><ellipse cx="383" cy="157" rx="85" ry="22" transform="rotate(-25 383 157)" class="coral"/><text x="286" y="280" class="note">representation amplifies error</text>
+  <text x="545" y="31" class="label">Identifiability</text><path d="M530 245 H730 M548 260 V66" class="axis"/><path d="M565 208 L692 101" class="teal"/><path d="M565 208 L699 108" class="teal"/><path d="M566 208 L644 214" class="coral"/><text x="535" y="280" class="note">data miss one combination</text>
+</svg>

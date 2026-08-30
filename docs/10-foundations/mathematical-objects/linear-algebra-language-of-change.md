@@ -8,10 +8,11 @@ description: Vectors, linear maps, geometry, and conditioning before matrix reci
 Use this page when vectors, matrices, or conditioning need to be interpreted as
 scientific maps rather than calculation recipes.
 
-Linear algebra is the language we use to describe many simultaneous changes.
-Begin with **vectors as perturbations** and a **linear map** that transforms
-them. A matrix is the coordinate representation of that map after choosing a
-basis; it is not the underlying idea.
+Two source parameters can move two measured channels at the same time. Treat
+vectors as perturbations, then ask which combinations the data see, which they
+miss, and how numerical coordinates alter that diagnosis. A matrix is a coordinate
+representation of the map after choosing a basis; the map and its visible
+directions are the scientific objects.
 
 ## Vectors, coordinates, and linear maps
 
@@ -187,8 +188,8 @@ more restricted scientific claim resolves the actual ambiguity.
 
 ## Try the running case
 
-Consider two calibrated measurements of one source and two parameter changes.
-Suppose the local map is
+For the two-channel measurement, suppose two parameter changes have the local
+map
 
 ```{math}
 J = \begin{bmatrix} 1 & 1 \\ 1 & 1.01 \end{bmatrix}.
@@ -204,6 +205,14 @@ one nearly null right-singular direction trades one parameter against the
 other. Solving the square system can still produce a finite answer. The useful
 audit is its singular values and the physical meaning of that weak direction,
 not whether a generic inverse exists.
+
+:::{figure} ../figures/linear-weak-direction.svg
+:name: fig-linear-weak-direction
+:alt: Two nearly parallel Jacobian columns map a weak difference direction in parameter space into a long uncertainty region, showing that the two measurements barely distinguish that parameter combination.
+
+The long axis is not a solver failure. It identifies the combination that the
+specified measurements leave weakly constrained.
+:::
 
 ## Predict
 

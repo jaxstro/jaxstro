@@ -22,7 +22,7 @@ def test_every_foundation_leaf_has_a_shared_action_and_a_worked_audit() -> None:
         text = (FOUNDATIONS / relative_path).read_text(encoding="utf-8")
         assert "## Try the running case" in text, relative_path
         assert "## Worked audit" in text, relative_path
-        assert "two calibrated measurements" in text.lower(), relative_path
+        assert "two-channel measurement" in text.lower(), relative_path
 
 
 def test_statistical_and_programming_foundations_teach_their_core_relations() -> None:

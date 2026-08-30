@@ -8,10 +8,9 @@ description: Read scientific functions as unit-carrying maps before computing th
 Use this page when units, scales, or limiting behavior need to be made explicit
 before a scientific calculation.
 
-A scientific function is a promise about a map: which inputs are admitted,
-which output is produced, and how units, signs, and scales transform. The same
-algebraic symbols can describe different physical questions if those promises
-change.
+Before evaluating a relation, fix what varies, what is observed, and which
+units cross the calculation boundary. The same symbols can describe different
+physical questions when those choices change.
 
 ## A function is more than a formula
 
@@ -49,6 +48,10 @@ A quantity may be **dimensionless** without being meaningless. An angle in
 radians, a relative residual, and a probability are dimensionless for different
 reasons and should retain different semantic names.
 
+Writing a physical quantity as $q=q_0\tilde q$ separates a reference scale from
+the dimensionless numerical coordinate $\tilde q$. This can make arithmetic
+well scaled, provided the conversion back to $q$ remains visible at the boundary.
+
 ## Scales guide numerical choices
 
 Before computing, estimate the order of magnitude of every term. Ask whether
@@ -59,7 +62,7 @@ incorrect model.
 
 ## Try the running case
 
-Consider two calibrated measurements of one source. Let a physical prediction
+In the two-channel measurement, let a physical prediction
 $q(\theta)$ have watts, while the first instrument records $d_1=q$ in watts and
 the second records $d_2=cq$ in detector counts for a calibration factor $c$ in
 counts per watt. Before fitting $\theta$, write the units of $q$, $d_1$, $d_2$,
@@ -72,6 +75,14 @@ $d_2-q$ is not: it mixes counts and watts. Either compare $d_2-cq$ in counts or
 convert $d_2/c$ to watts, carrying the calibration uncertainty with it. Scaling
 the numerical values near one can help a solver, but it cannot make the two
 units compatible by itself.
+
+:::{figure} ../figures/units-residual-space.svg
+:name: fig-units-residual-space
+:alt: A prediction in watts reaches one channel measured in watts and one in counts through a calibration factor. Valid residuals compare quantities in the same unit system, while a counts-minus-watts residual is crossed out.
+
+The calibration changes the numerical representation of the same predicted
+signal. It does not authorize a residual that mixes counts with watts.
+:::
 
 ## Predict
 

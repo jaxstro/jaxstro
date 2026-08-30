@@ -8,8 +8,9 @@ description: Distinguish derivative magnitude, numerical stability, and learnabl
 Use this page when a changing output, unstable computation, or parameter
 degeneracy needs to be diagnosed without conflating those problems.
 
-Sensitivity, conditioning, and identifiability all ask how conclusions respond
-to change, but they are not synonyms.
+When two source parameters change the same measurements, three different
+questions arise: how strongly the observable responds, whether arithmetic can
+resolve that response, and whether the experiment separates the parameters.
 
 ## Sensitivity
 
@@ -72,8 +73,8 @@ depends on branch smoothness and the scientific question.
 
 ## Try the running case
 
-Consider two calibrated measurements of one source and two source parameters.
-If the Jacobian columns are nearly parallel, decide which statement follows:
+For the two-channel measurement with two source parameters, if the Jacobian
+columns are nearly parallel, decide which statement follows:
 the code has a bug, the numerical representation is poorly scaled, or the
 measurements weakly distinguish one parameter combination.
 
@@ -84,6 +85,14 @@ map. They do not by themselves diagnose a code bug or forbid a stable forward
 calculation. Rescaling can improve arithmetic; an additional observable or a
 justified prior can change the inference. Those are different interventions and
 must be evaluated against the scientific question.
+
+:::{figure} ../figures/sensitivity-diagnostics.svg
+:name: fig-sensitivity-diagnostics
+:alt: Three panels show a strong observable response, an elongated numerically ill-conditioned coordinate system, and two nearly parallel sensitivity directions that make one parameter combination weakly identifiable.
+
+Large response, poor conditioning, and weak identifiability can coexist, but
+none implies either of the others. The remedy follows the diagnosis.
+:::
 
 ## Predict
 

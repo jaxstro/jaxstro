@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 300" role="img" aria-labelledby="title desc">
+  <title id="title">Residuals must live in one unit system</title>
+  <desc id="desc">A physical prediction in watts reaches one measurement in watts and another in counts through a calibration factor. Valid residuals compare like units; a crossed-out residual mixes counts and watts.</desc>
+  <style>text{font-family:system-ui,sans-serif;fill:#17233b}.box{fill:#f8fafc;stroke:#294a72;stroke-width:2}.good{fill:#e6f4f1;stroke:#14877c;stroke-width:2}.bad{fill:#fff1ed;stroke:#d65a45;stroke-width:2}.arrow{stroke:#294a72;stroke-width:3;fill:none;marker-end:url(#a)}.small{font-size:18px}.label{font-size:22px;font-weight:650}.note{font-size:16px;fill:#536277}</style>
+  <defs><marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8z" fill="#294a72"/></marker></defs>
+  <rect x="35" y="112" width="150" height="76" rx="12" class="box"/><text x="110" y="143" text-anchor="middle" class="label">q(theta)</text><text x="110" y="169" text-anchor="middle" class="note">watts</text>
+  <path d="M185 132 H290" class="arrow"/><path d="M185 168 H290" class="arrow"/><text x="236" y="119" text-anchor="middle" class="note">identity</text><text x="236" y="202" text-anchor="middle" class="note">calibration c</text>
+  <rect x="300" y="65" width="150" height="68" rx="12" class="box"/><text x="375" y="93" text-anchor="middle" class="label">d1</text><text x="375" y="117" text-anchor="middle" class="note">watts</text>
+  <rect x="300" y="170" width="150" height="68" rx="12" class="box"/><text x="375" y="198" text-anchor="middle" class="label">d2</text><text x="375" y="222" text-anchor="middle" class="note">counts</text>
+  <path d="M450 99 H540" class="arrow"/><path d="M450 204 H540" class="arrow"/>
+  <rect x="550" y="55" width="174" height="72" rx="12" class="good"/><text x="637" y="84" text-anchor="middle" class="label">d1 - q</text><text x="637" y="108" text-anchor="middle" class="note">watts</text>
+  <rect x="550" y="151" width="174" height="72" rx="12" class="good"/><text x="637" y="180" text-anchor="middle" class="label">d2 - c q</text><text x="637" y="204" text-anchor="middle" class="note">counts</text>
+  <rect x="550" y="244" width="174" height="40" rx="10" class="bad"/><text x="637" y="270" text-anchor="middle" class="small">d2 - q is undefined</text>
+</svg>

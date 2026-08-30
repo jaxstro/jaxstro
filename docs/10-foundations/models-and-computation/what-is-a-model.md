@@ -8,10 +8,10 @@ description: Models as question-dependent representations and information compre
 Use this page when a scientific model's purpose, assumptions, or discarded
 information needs to be made explicit.
 
-A model is a deliberately incomplete representation that connects assumptions
-and inputs to predictions about selected aspects of a system. Its usefulness is
-question-dependent: omitting microscopic detail may be exactly right for one
-observable and fatal for another.
+A source, an instrument, and a recorded datum do not belong to one undifferentiated
+model. Each representation keeps some structure and leaves other structure out.
+The question is whether the retained structure can answer the observable at
+hand.
 
 ## Several meanings of model
 
@@ -46,16 +46,17 @@ direction of scientific reasoning is not.
 One minimal scientific chain makes the distinct model roles visible:
 
 ```{math}
-z = f(\theta, s),
+z = f(\theta, s) + \delta,
 \qquad
 d = h(z, \eta) + \varepsilon.
 ```
 
 Here $f$ is a physical model from parameters $\theta$ and state $s$ to an ideal
-observable $z$; $h$ is a measurement model with calibration or selection
-parameters $\eta$; and $\varepsilon$ represents a stated error model. Replacing
-$f$ with a fast approximation changes the computational or surrogate model; it
-does not automatically change the physical question.
+observable $z$; $\delta$ represents declared model discrepancy; $h$ is a
+measurement model with calibration or selection parameters $\eta$; and
+$\varepsilon$ represents a stated error model. Replacing $f$ with a fast
+approximation changes the computational or surrogate model; it does not settle
+whether $\delta$ is negligible for the observable.
 
 ## Models are information compression
 
@@ -66,7 +67,7 @@ represent much of its structured variation with a smaller set of physical
 parameters. The discarded information cannot be recovered by a better optimizer.
 
 Sufficiency is model-relative. A compressed statistic can retain all parameter
-information under one likelihood and lose crucial evidence under another.
+information under one likelihood and lose relevant evidence under another.
 Parameter count is not scientific information, and a precise answer can still
 come from a misspecified model.
 
@@ -90,8 +91,8 @@ identifiable combinations.
 
 ## Try the running case
 
-Consider two calibrated measurements of one source. List one parameter of the
-physical source, one latent state, one calibration nuisance parameter, and one
+For the two-channel measurement, list one parameter of the physical source,
+one latent state, one calibration nuisance parameter, and one
 recorded datum. Then ask which of those roles would change if the same source
 were used to validate a simulation rather than infer its parameters.
 
@@ -102,6 +103,15 @@ calibration is not irrelevant merely because it is a nuisance. In a prediction
 task the source parameters may be fixed inputs; in an inference task they become
 unknowns. This role change is why a correct forward calculation is not yet a
 complete statistical model.
+
+:::{figure} ../figures/model-measurement-chain.svg
+:name: fig-model-measurement-chain
+:alt: Source parameters and state enter a physical model, then a measurement model with calibration, before recorded data. Model discrepancy and measurement error enter at different stages.
+
+Model discrepancy, calibration, and measurement error can all alter recorded
+data. They enter different parts of the chain and cannot be exchanged without
+changing the scientific interpretation.
+:::
 
 ## Predict
 

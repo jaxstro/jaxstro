@@ -8,9 +8,9 @@ description: Support, density, expectation, covariance, conditioning, and uncert
 Use this page when probability, uncertainty, or a distribution's support needs
 to be stated before an inference or sampling calculation.
 
-Probability supplies a language for uncertainty and variation. It does not say
-why a system is uncertain until we specify the experiment, model, and state of
-knowledge.
+Recorded measurements vary for reasons that belong to the experiment, the
+instrument, and the model. Probability states which variations the analysis
+admits; it does not identify their physical origin by itself.
 
 ## Mass, density, and support
 
@@ -63,8 +63,8 @@ state in another.
 
 ## Try the running case
 
-Consider two calibrated measurements of one source, collected in a data vector
-$d$. Suppose their reported errors are centered and have covariance $C$. Before
+The two-channel measurement is collected in a data vector $d$. Suppose its
+reported errors are centered and have covariance $C$. Before
 calling either error "Gaussian," ask which data values the model admits, whether
 the measurements can co-vary, and what mechanism could make their errors share
 a calibration offset.
@@ -76,6 +76,15 @@ the two calibrated measurements share a calibration offset, the off-diagonal
 entries of $C$ need not vanish. A support restriction or a heavy-tailed error
 model changes the likelihood even if the reported standard deviations are the
 same. The next page makes the forward and measurement maps explicit.
+
+:::{figure} ../figures/probability-covariance.svg
+:name: fig-probability-covariance
+:alt: Independent error contours are circular in two-channel data space, while a shared calibration uncertainty creates tilted contours through the same observed point.
+
+The tilted cloud encodes a specific measurement mechanism: both channels move
+together when the calibration moves. Reporting two separate error bars loses
+that information.
+:::
 
 ## Predict
 
