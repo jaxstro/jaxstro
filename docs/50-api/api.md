@@ -37,6 +37,8 @@ testing owners.
 :::{note}
 API pages answer what is importable now. Concept pages and ecosystem guides do
 not become runtime promises merely because they are linked from the same site.
+Release-qualified platform support and explicit non-claims are stated in the
+[](../70-project/release/support.md).
 :::
 
 | Surface | Status | Documentation rule |

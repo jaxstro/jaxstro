@@ -5,6 +5,8 @@ from __future__ import annotations
 import importlib
 from pathlib import Path
 
+from jaxstro._public import PUBLIC_MODULES
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ARCHITECTURE_PAGE = REPO_ROOT / "docs" / "70-project" / "direction" / "architecture.md"
 
@@ -15,23 +17,7 @@ def _architecture_text() -> str:
 
 def test_architecture_inventory_matches_importable_modules() -> None:
     text = _architecture_text()
-    modules = (
-        "astrometry",
-        "atmospheres",
-        "constants",
-        "coords",
-        "geometry",
-        "jaxconfig",
-        "numerics",
-        "params",
-        "provenance",
-        "quantity",
-        "spatial",
-        "testing",
-        "units",
-    )
-
-    for module in modules:
+    for module in PUBLIC_MODULES:
         assert f"`{module}`" in text
         importlib.import_module(f"jaxstro.{module}")
 

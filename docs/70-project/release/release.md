@@ -37,6 +37,8 @@ BASE_URL=/jaxstro bash scripts/check_docs.sh
 
 The release note should name any intentionally skipped gate, the reason it was
 skipped, and the narrower command that still covers the changed subsystem.
+The [](./support.md) page is the authoritative platform-support and non-claim
+boundary for this release line.
 
 ## Data packaging policy
 

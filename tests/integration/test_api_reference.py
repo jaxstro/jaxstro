@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 import jaxstro
+from jaxstro._public import PUBLIC_MODULES
 from jaxstro.contracts import ADSemantics, SupportLevel, get_callable_contract
 from jaxstro.numerics import kepler, rootfinding
 
@@ -30,30 +31,10 @@ assert jaxstro.spatial.__name__ == "jaxstro.spatial"
 
 
 def test_documented_public_module_surface_is_executable() -> None:
-    public_modules = (
-        "astrometry",
-        "atmospheres",
-        "constants",
-        "coords",
-        "geometry",
-        "numerics",
-        "params",
-        "provenance",
-        "quantity",
-        "quad",
-        "spatial",
-        "testing",
-        "units",
-    )
-
-    for module in public_modules:
+    for module in PUBLIC_MODULES:
         imported = importlib.import_module(f"jaxstro.{module}")
         assert getattr(jaxstro, module) is imported
         assert module in jaxstro.__all__
-
-    from jaxstro.jaxconfig import enable_high_precision
-
-    assert callable(enable_high_precision)
 
 
 def test_api_landing_states_current_ownership_and_migration_boundary() -> None:

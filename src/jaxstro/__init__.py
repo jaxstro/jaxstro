@@ -14,33 +14,16 @@ The design intent is:
 from importlib import import_module
 from types import ModuleType
 
+from ._public import PUBLIC_MODULES
 from .units import DEFAULT as DEFAULT_UNITS
 
-__all__ = [
-    "DEFAULT_UNITS",
-    "constants",
-    "contracts",
-    "units",
-    "atmospheres",
-    "astrometry",
-    "numerics",
-    "coords",
-    "evidence",
-    "geometry",
-    "params",
-    "provenance",
-    "quantity",
-    "quad",
-    "spatial",
-    "spectra",
-    "testing",
-]
+__all__ = ["DEFAULT_UNITS", *PUBLIC_MODULES]
 __version__ = "0.1.0"
 
 
 def __getattr__(name: str) -> ModuleType:
     """Load public submodules on first attribute access."""
-    if name in __all__ and name != "DEFAULT_UNITS":
+    if name in PUBLIC_MODULES:
         module = import_module(f"{__name__}.{name}")
         globals()[name] = module
         return module

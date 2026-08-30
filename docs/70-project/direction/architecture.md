@@ -15,13 +15,13 @@ this section covers package structure and responsibility.
 ## Foundation boundary
 
 `jaxstro` is the ecosystem foundation. Its directly importable modules are
-`units`, `quantity`, `constants`, `astrometry`, `coords`, `geometry`,
-`numerics`, `spatial`, `params`, `atmospheres`, `provenance`, `testing`, and
-`jaxconfig`. It does not own simulations, survey rendering, stellar evolution,
-or inference workflows. Domain packages depend on `jaxstro`; `jaxstro` never
-imports package-specific code back from them. That one-way rule keeps foundation
-changes auditable before they reach Gravax, Progenax, Fluxax, Startrax, or later
-packages.
+`astrometry`, `atmospheres`, `constants`, `contracts`, `coords`, `evidence`,
+`geometry`, `jaxconfig`, `numerics`, `params`, `provenance`, `quad`, `quantity`,
+`spatial`, `spectra`, `testing`, and `units`. It does not own simulations, survey
+rendering, stellar evolution, or inference workflows. Domain packages depend on
+`jaxstro`; `jaxstro` never imports package-specific code back from them. That
+one-way rule keeps foundation changes auditable before they reach Gravax,
+Progenax, Fluxax, Startrax, or later packages.
 
 :::{figure} ./figures/jaxstro-foundation.webp
 :name: fig-jaxstro-foundation

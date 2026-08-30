@@ -3,11 +3,11 @@
 <h3 align="center">simulate → observe → optimize</h3>
 
 <p align="center">
-  <em>GPU-accelerated • Differentiability-aware • JAX-native</em>
+  <em>JAX-native • Differentiability-aware • Evidence-bounded</em>
 </p>
 
 <p align="center">
-  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.13+-blue.svg" alt="Python 3.13+"></a>
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.13+-blue.svg" alt="Requires Python >=3.13; CPython 3.13 release-qualified"></a>
   <a href="https://github.com/google/jax"><img src="https://img.shields.io/badge/JAX-0.10.1+-green.svg" alt="JAX"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License: Apache-2.0"></a>
   <a href="#"><img src="https://img.shields.io/badge/status-v0.1.0--dev-yellow.svg" alt="Development Status"></a>
@@ -55,14 +55,17 @@ the [validation anchors](docs/60-validation/validation.md).
 1. **Infrastructure only** — No domain-specific physics; just shared building blocks
 2. **JAX-first** — Transform behavior is tested per public contract; discrete
    preprocessing and non-smooth boundaries remain explicit
-3. **Minimal dependencies** — Only `jax`, `jaxlib`, `equinox`, and `jaxtyping`
+3. **Minimal dependencies** — Runtime dependencies are `jax`, `jaxlib`,
+   `equinox`, `jaxtyping`, `diffrax`, `optimistix`, and `sympy`
 4. **One-way arrows** — Higher-level packages depend on jaxstro, not the reverse
 
 ---
 
 ## 📦 Installation
 
-**Requirements:** Python 3.13+ and JAX $\geq$ 0.10.1
+**Requirements:** Python >=3.13 is required; only CPython 3.13 on Ubuntu x86_64
+CPU with JAX_ENABLE_X64=1 is release-qualified. See the [qualified support
+policy](docs/70-project/release/support.md).
 
 ### From source
 

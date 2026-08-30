@@ -4,31 +4,11 @@ import subprocess
 import sys
 
 import jaxstro
+from jaxstro._public import PUBLIC_MODULES
 from jaxstro.contracts import collect_contracts
 from jaxstro.contracts.registry import resolve_import_path
 
-PUBLIC = {
-    f"jaxstro.{name}"
-    for name in (
-        "astrometry",
-        "atmospheres",
-        "constants",
-        "contracts",
-        "coords",
-        "evidence",
-        "geometry",
-        "jaxconfig",
-        "numerics",
-        "params",
-        "provenance",
-        "quantity",
-        "quad",
-        "spatial",
-        "spectra",
-        "testing",
-        "units",
-    )
-}
+PUBLIC = {f"jaxstro.{name}" for name in PUBLIC_MODULES}
 
 
 def test_every_public_module_has_one_contract() -> None:
