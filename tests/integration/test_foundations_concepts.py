@@ -96,14 +96,21 @@ def test_each_foundation_page_has_required_concepts_and_learning_cycle() -> None
         plain = re.sub(r"\s+", " ", text.replace("**", "")).lower()
         for phrase in phrases:
             assert phrase.lower() in plain, f"{filename}: {phrase}"
-        for heading in (
-            "## Predict",
-            "## Compute",
-            "## Audit",
-            "## State the warranted claim",
-            "## Misconception check",
-        ):
-            assert heading in text, f"{filename}: {heading}"
+        if filename == "mathematical-objects/functions-units-scales.md":
+            for card in ("Predict", "Compute", "Audit"):
+                assert f":::{{card}} {card}" in text, f"{filename}: {card}"
+                assert f"## {card}" not in text, f"{filename}: {card} is not a section"
+            assert ":::{important} Claim boundary" in text
+            assert ":::{warning} A common mistake" in text
+        else:
+            for heading in (
+                "## Predict",
+                "## Compute",
+                "## Audit",
+                "## State the warranted claim",
+                "## Misconception check",
+            ):
+                assert heading in text, f"{filename}: {heading}"
 
 
 def test_foundation_pages_are_navigable_without_replacing_module_pages() -> None:
