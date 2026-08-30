@@ -20,3 +20,6 @@ high-confidence gaps and ranks investments into Now, Next, and Later horizons.
 The living [](./future-capabilities-roadmap.md) inventories the implemented
 method families and turns the proposed numerical-methods and scientific-ML
 expansion into ownership-aware build checklists.
+
+For an at-a-glance review of what learners can study, what is implemented, and
+which evidence boundary applies, use the [](./method-coverage.md).

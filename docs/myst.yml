@@ -278,6 +278,7 @@ project:
             - file: 70-project/development/numerical-methods-roadmap.md
             - file: 70-project/development/sota-assessment.md
             - file: 70-project/development/package-assessment-scorecard.md
+            - file: 70-project/development/method-coverage.md
         - title: Decisions
           children:
             - file: 70-project/decisions/decisions.md
