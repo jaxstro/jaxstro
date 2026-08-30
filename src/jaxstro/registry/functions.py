@@ -82,6 +82,18 @@ ALLOWED_FUNCTIONS: dict[str, object] = {
     "Piecewise": sympy.Piecewise,
     "true": sympy.true,
     "True": sympy.true,
+    # --- the identity emitter's vocabulary (hydrax, 2026-08-29) ----------------
+    # A registered DERIVATION is checked by simplifying a residual to zero, and
+    # derivations are written in derivatives and limits rather than in closed
+    # forms. `Function` is already reachable through the parser's constructor
+    # table, so `Derivative(Function('r')(m), m)` completes the vocabulary needed
+    # to state e.g. the mass-coordinate density closure as data rather than as a
+    # Python callable.
+    "Derivative": sympy.Derivative,
+    "Integral": sympy.Integral,
+    "limit": sympy.limit,
+    "pi": sympy.pi,
+    "oo": sympy.oo,
 }
 
 #: How each allowed function is spelled on the JAX code path.

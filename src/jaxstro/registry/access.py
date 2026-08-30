@@ -85,9 +85,7 @@ def coefficient_table(
                 found += 1
         table.append(cells)
     if found == 0:
-        raise KeyError(
-            f"no {prefix}* cells found in {bibkey}; wrong prefix or record"
-        )
+        raise KeyError(f"no {prefix}* cells found in {bibkey}; wrong prefix or record")
     return table
 
 

@@ -103,7 +103,9 @@ def load_atlas_decisions(registry_root: Path) -> dict[str, AtlasDecisionRecord]:
             item, where=f"{ATLAS_DECISIONS_FILENAME} decision[{index}]"
         )
         if record.id in records:
-            raise RegistryError(f"{ATLAS_DECISIONS_FILENAME}: duplicate decision id {record.id!r}")
+            raise RegistryError(
+                f"{ATLAS_DECISIONS_FILENAME}: duplicate decision id {record.id!r}"
+            )
         records[record.id] = record
     if not records:
         raise RegistryError(f"{ATLAS_DECISIONS_FILENAME}: declares no decisions")
@@ -119,7 +121,9 @@ def load_atlas_relations(registry_root: Path) -> dict[str, AtlasRelationRecord]:
             item, where=f"{ATLAS_RELATIONS_FILENAME} relation[{index}]"
         )
         if record.relation_id in records:
-            raise RegistryError(f"{ATLAS_RELATIONS_FILENAME}: duplicate relation {record.relation_id!r}")
+            raise RegistryError(
+                f"{ATLAS_RELATIONS_FILENAME}: duplicate relation {record.relation_id!r}"
+            )
         records[record.relation_id] = record
     if not records:
         raise RegistryError(f"{ATLAS_RELATIONS_FILENAME}: declares no relations")
@@ -203,12 +207,14 @@ def load_source(registry_root: Path, bibkey: str) -> SourceBundle:
     if coefficients_path.exists():
         payload = _read_toml(coefficients_path)
         for index, item in enumerate(payload.get("coefficient", ())):
-            record = CoefficientRecord.from_toml(
+            coefficient = CoefficientRecord.from_toml(
                 item, where=f"{bibkey}/coefficients.toml coefficient[{index}]"
             )
-            if record.id in coefficients:
-                raise RegistryError(f"{bibkey}: duplicate coefficient id {record.id!r}")
-            coefficients[record.id] = record
+            if coefficient.id in coefficients:
+                raise RegistryError(
+                    f"{bibkey}: duplicate coefficient id {coefficient.id!r}"
+                )
+            coefficients[coefficient.id] = coefficient
 
     caveats: list[CaveatRecord] = []
     caveats_path = directory / "caveats.toml"
@@ -224,16 +230,16 @@ def load_source(registry_root: Path, bibkey: str) -> SourceBundle:
     if equations_path.exists():
         payload = _read_toml(equations_path)
         for index, item in enumerate(payload.get("equation", ())):
-            record = EquationRecord.from_toml(
+            equation = EquationRecord.from_toml(
                 item, where=f"{bibkey}/equations.toml equation[{index}]"
             )
-            if record.id in equations:
-                raise RegistryError(f"{bibkey}: duplicate equation id {record.id!r}")
-            if bibkey not in record.source_ids:
+            if equation.id in equations:
+                raise RegistryError(f"{bibkey}: duplicate equation id {equation.id!r}")
+            if bibkey not in equation.source_ids:
                 raise RegistryError(
-                    f"{record.id}: lives in {bibkey}/ but does not cite it in source_ids"
+                    f"{equation.id}: lives in {bibkey}/ but does not cite it in source_ids"
                 )
-            equations[record.id] = record
+            equations[equation.id] = equation
 
     shared = load_symbol_table(registry_root)
     local = load_source_symbols(registry_root, bibkey)

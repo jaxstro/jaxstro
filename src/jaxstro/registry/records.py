@@ -72,7 +72,16 @@ WIND_KINDS = frozenset(
 #: Outputs a record can emit. ``latex`` costs nothing and is never declined;
 #: ``oracle`` is the default for anything expressible because it adds a check
 #: without changing what ships.
-EMITS = frozenset({"latex", "oracle", "kernel", "partials"})
+EMITS = frozenset({"latex", "oracle", "kernel", "partials", "identity"})
+
+#: ``identity`` is a DERIVATION check and is different in kind from ``oracle``.
+#: An oracle proves an implementation matches the expression the registry holds;
+#: an identity proves the expression is *algebraically true* -- that the stated
+#: relation follows from the ones it was derived from. Neither subsumes the
+#: other: an implementation can faithfully realise a wrong derivation, and a
+#: correct derivation can be implemented wrongly. Carried over from hydrax's
+#: registry (ADR-0007) when it merged into this one (ADR-0010), because it was
+#: the one check startrax's design did not have.
 
 #: What was done about a restriction the paper states. A ``deferred`` or
 #: ``rejected`` caveat requires a reason -- that is the field which would have
@@ -143,6 +152,7 @@ def _string_tuple(payload: dict[str, Any], key: str, *, where: str) -> tuple[str
         raise RegistryError(f"{where}: {key} must be an array of non-empty strings")
     return tuple(value)
 
+
 def _reject_unknown_keys(
     payload: dict[str, Any], allowed: frozenset[str], *, where: str
 ) -> None:
@@ -182,10 +192,18 @@ class SourceRecord:
     #: not a second numerical authority: the values remain in this registry.
     source_note_ref: str | None = None
 
-    _KEYS = frozenset({
-        "id", "verification", "source_version", "doi", "reference",
-        "pdf_sha256", "pdf_unavailable", "source_note_ref",
-    })
+    _KEYS = frozenset(
+        {
+            "id",
+            "verification",
+            "source_version",
+            "doi",
+            "reference",
+            "pdf_sha256",
+            "pdf_unavailable",
+            "source_note_ref",
+        }
+    )
 
     @classmethod
     def from_toml(cls, payload: dict[str, Any], *, where: str) -> SourceRecord:
@@ -226,7 +244,17 @@ class AtlasDecisionRecord:
     source_equation_refs: tuple[str, ...]
     rationale: str
 
-    _KEYS = frozenset({"id", "treatment", "route_id", "relation_ids", "expression", "source_equation_refs", "rationale"})
+    _KEYS = frozenset(
+        {
+            "id",
+            "treatment",
+            "route_id",
+            "relation_ids",
+            "expression",
+            "source_equation_refs",
+            "rationale",
+        }
+    )
 
     @classmethod
     def from_toml(cls, payload: dict[str, Any], *, where: str) -> AtlasDecisionRecord:
@@ -247,7 +275,9 @@ class AtlasDecisionRecord:
             route_id=_require(payload, "route_id", where),
             relation_ids=_string_tuple(payload, "relation_ids", where=where),
             expression=_require(payload, "expression", where),
-            source_equation_refs=_string_tuple(payload, "source_equation_refs", where=where),
+            source_equation_refs=_string_tuple(
+                payload, "source_equation_refs", where=where
+            ),
             rationale=_require(payload, "rationale", where),
         )
         # A decision may directly govern a researcher-derived model (for
@@ -270,27 +300,47 @@ class AtlasRelationRecord:
     decision_id: str | None = None
     evaluator: str | None = None
 
-    _KEYS = frozenset({"relation_id", "route_ids", "oracle_kind", "source_equation_refs", "decision_id", "evaluator"})
+    _KEYS = frozenset(
+        {
+            "relation_id",
+            "route_ids",
+            "oracle_kind",
+            "source_equation_refs",
+            "decision_id",
+            "evaluator",
+        }
+    )
 
     @classmethod
     def from_toml(cls, payload: dict[str, Any], *, where: str) -> "AtlasRelationRecord":
         _reject_unknown_keys(payload, cls._KEYS, where=where)
         oracle_kind = _require(payload, "oracle_kind", where)
-        if oracle_kind not in {"source_oracle", "closure_oracle", "stateful_oracle", "algorithmic"}:
+        if oracle_kind not in {
+            "source_oracle",
+            "closure_oracle",
+            "stateful_oracle",
+            "algorithmic",
+        }:
             raise RegistryError(f"{where}: invalid oracle_kind={oracle_kind!r}")
         record = cls(
             relation_id=_require(payload, "relation_id", where),
             route_ids=_string_tuple(payload, "route_ids", where=where),
             oracle_kind=oracle_kind,
-            source_equation_refs=_string_tuple(payload, "source_equation_refs", where=where),
+            source_equation_refs=_string_tuple(
+                payload, "source_equation_refs", where=where
+            ),
             decision_id=_optional_string(payload, "decision_id", where=where),
             evaluator=_optional_string(payload, "evaluator", where=where),
         )
         if not record.route_ids or not record.source_equation_refs:
-            raise RegistryError(f"{where}: route_ids and source_equation_refs must not be empty")
+            raise RegistryError(
+                f"{where}: route_ids and source_equation_refs must not be empty"
+            )
         if oracle_kind == "algorithmic":
             if record.evaluator is not None:
-                raise RegistryError(f"{where}: algorithmic relation must not claim an evaluator")
+                raise RegistryError(
+                    f"{where}: algorithmic relation must not claim an evaluator"
+                )
         elif record.evaluator is None:
             raise RegistryError(f"{where}: executable relation needs evaluator")
         if oracle_kind == "closure_oracle" and record.decision_id is None:
@@ -319,18 +369,32 @@ class DerivedModelRecord:
     # Pauli boundary and asserts on `inputs`/`closure_validity`, reading the
     # file with tomllib directly. They are live schema with readers, so the
     # strictness gate admits them; only genuinely unread keys are refused.
-    _KEYS = frozenset({
-        "id", "status", "route_ids", "relation_ids", "source_authority",
-        "source_support", "researcher_review_status", "source_equation_refs",
-        "source_validity", "closure_validity", "policy",
-        "output", "limitations", "owner", "inputs", "validation",
-        "decision_id", "parameters", "domain",
-    })
+    _KEYS = frozenset(
+        {
+            "id",
+            "status",
+            "route_ids",
+            "relation_ids",
+            "source_authority",
+            "source_support",
+            "researcher_review_status",
+            "source_equation_refs",
+            "source_validity",
+            "closure_validity",
+            "policy",
+            "output",
+            "limitations",
+            "owner",
+            "inputs",
+            "validation",
+            "decision_id",
+            "parameters",
+            "domain",
+        }
+    )
 
     @classmethod
-    def from_toml(
-        cls, payload: dict[str, Any], *, where: str
-    ) -> "DerivedModelRecord":
+    def from_toml(cls, payload: dict[str, Any], *, where: str) -> "DerivedModelRecord":
         _reject_unknown_keys(payload, cls._KEYS, where=where)
         status = _require(payload, "status", where)
         if status not in {"ACTIVE", "APPROVED_NOT_IMPLEMENTED", "RETIRED"}:
@@ -349,7 +413,9 @@ class DerivedModelRecord:
             raise RegistryError(
                 f"{where}: researcher-derived model must declare source_support"
             )
-        review_status = _optional_string(payload, "researcher_review_status", where=where)
+        review_status = _optional_string(
+            payload, "researcher_review_status", where=where
+        )
         if review_status not in {None, "pending", "approved", "verified"}:
             raise RegistryError(
                 f"{where}: invalid derived-model researcher_review_status={review_status!r}"
@@ -443,10 +509,20 @@ class CoefficientRecord:
     note: str | None = None
     source_ids: tuple[str, ...] = ()
 
-    _KEYS = frozenset({
-        "id", "symbol", "name", "value", "unit", "verification", "sigma",
-        "latex", "note", "source_ids",
-    })
+    _KEYS = frozenset(
+        {
+            "id",
+            "symbol",
+            "name",
+            "value",
+            "unit",
+            "verification",
+            "sigma",
+            "latex",
+            "note",
+            "source_ids",
+        }
+    )
 
     @classmethod
     def from_toml(cls, payload: dict[str, Any], *, where: str) -> CoefficientRecord:
@@ -693,7 +769,9 @@ def _parse_symbol_binding(payload: Any, *, symbol: str, where: str) -> SymbolBin
         raise RegistryError(
             f"{where}: binding {symbol!r} has unknown keys {sorted(unknown)}"
         )
-    return DriverBinding(driver=driver, note=_optional_string(payload, "note", where=where))
+    return DriverBinding(
+        driver=driver, note=_optional_string(payload, "note", where=where)
+    )
 
 
 @dataclass(frozen=True)
@@ -726,14 +804,44 @@ class EquationRecord:
     derived_symbols: dict[str, str] = field(default_factory=dict)
     validity: ValidityRecord | None = None
     anchors: tuple[AnchorRecord, ...] = ()
+    #: Expressions that MUST each simplify to zero. Required when ``emits``
+    #: contains ``identity``. A list because one registered relation usually has
+    #: several things worth proving about it -- the core-formation slope has a
+    #: closed form AND two pinned endpoints, and they are the same claim.
+    identity: tuple[str, ...] = ()
+    #: Substitutions applied before simplifying, as ``{expression: replacement}``.
+    #: A derivation often holds only GIVEN a closure -- the mass-coordinate slope
+    #: identity holds given ``Derivative(m(r), r) = 4 pi r^2 rho`` -- and stating
+    #: the hypothesis as data is strictly more informative than burying it in a
+    #: Python callable's ``.subs()`` call, which is where it lived before.
+    identity_given: dict[str, str] = field(default_factory=dict)
     note: str | None = None
 
-    _KEYS = frozenset({
-        "id", "name", "representation", "equation_ref", "emits", "source_ids",
-        "symbol_ids", "coefficient_ids", "implementation_ids", "expression",
-        "returns", "wind_kind", "applies_to", "scatter_dex", "symbol_bindings",
-        "derived_symbols", "validity", "anchor", "note",
-    })
+    _KEYS = frozenset(
+        {
+            "id",
+            "identity",
+            "identity_given",
+            "name",
+            "representation",
+            "equation_ref",
+            "emits",
+            "source_ids",
+            "symbol_ids",
+            "coefficient_ids",
+            "implementation_ids",
+            "expression",
+            "returns",
+            "wind_kind",
+            "applies_to",
+            "scatter_dex",
+            "symbol_bindings",
+            "derived_symbols",
+            "validity",
+            "anchor",
+            "note",
+        }
+    )
 
     @classmethod
     def from_toml(cls, payload: dict[str, Any], *, where: str) -> EquationRecord:
@@ -773,12 +881,29 @@ class EquationRecord:
             raise RegistryError(
                 f"{where}: emits 'oracle' but has no expression to check"
             )
+        identity = tuple(payload.get("identity", ()) or ())
+        if "identity" in emits and not identity:
+            raise RegistryError(
+                f"{where}: emits 'identity' but has no identity residual to check"
+            )
+        if identity and "identity" not in emits:
+            raise RegistryError(
+                f"{where}: carries an identity but does not emit 'identity', so "
+                "nothing would ever check it"
+            )
+        identity_given = payload.get("identity_given", {}) or {}
+        if identity_given and not identity:
+            raise RegistryError(
+                f"{where}: identity_given without an identity to apply it to"
+            )
 
         try:
             scatter_dex = (
                 None
                 if "scatter_dex" not in payload
-                else _finite_number(payload["scatter_dex"], name="scatter_dex", where=where)
+                else _finite_number(
+                    payload["scatter_dex"], name="scatter_dex", where=where
+                )
             )
         except RegistryError as error:
             raise RegistryError(
@@ -814,9 +939,13 @@ class EquationRecord:
             validity=(
                 None
                 if "validity" not in payload
-                else ValidityRecord.from_toml(payload["validity"], where=f"{where}.validity")
+                else ValidityRecord.from_toml(
+                    payload["validity"], where=f"{where}.validity"
+                )
             ),
             anchors=anchors,
+            identity=identity,
+            identity_given=dict(identity_given),
             note=payload.get("note"),
         )
 
@@ -857,7 +986,9 @@ class SourceBundle:
             resolved[record.symbol] = record
         return resolved
 
-    def derived_equations_for(self, equation: EquationRecord) -> dict[str, EquationRecord]:
+    def derived_equations_for(
+        self, equation: EquationRecord
+    ) -> dict[str, EquationRecord]:
         """Registered sub-relations supplying an equation's named inputs."""
         resolved: dict[str, EquationRecord] = {}
         names = {symbol.name for symbol in self.symbols_for(equation).values()}

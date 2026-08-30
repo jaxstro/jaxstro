@@ -355,3 +355,62 @@ def evaluate_oracle(
         *(built.coefficient_values[name] for name in built.coefficient_names),
         *(built.bound_values[name] for name in built.bound_names),
     )
+
+
+def verify_identity(bundle: SourceBundle, equation_id: str) -> tuple[sympy.Expr, ...]:
+    """Return the SIMPLIFIED residuals of a registered derivation. All zero means true.
+
+    A **different check from an oracle**, and neither subsumes the other. An oracle
+    proves an implementation matches the expression the registry holds; an identity
+    proves the expression is *algebraically true* -- that the stated relation follows
+    from the ones it was derived from. An implementation can faithfully realise a wrong
+    derivation, and a correct derivation can be implemented wrongly.
+
+    ``identity_given`` states the hypothesis a derivation holds under, as substitutions
+    applied before simplifying. The mass-coordinate slope identity is true only *given*
+    mass continuity ``Derivative(m(r), r) = 4 pi r^2 rho``; recording that as data is
+    strictly more informative than the ``.subs()`` call inside a Python residual
+    function, where it was invisible to everything except a reader of the source.
+
+    ``doit()`` runs before simplification so unevaluated ``Derivative`` and ``limit``
+    nodes -- which is how a derivation is naturally *written* -- actually evaluate.
+    """
+    record = bundle.equations.get(equation_id)
+    if record is None:
+        raise RegistryError(f"no equation {equation_id!r} in bundle")
+    if not record.identity:
+        raise RegistryError(f"{equation_id}: no identity to verify")
+
+    symbol_records = bundle.symbols_for(record)
+    coefficient_records = bundle.coefficients_for(record)
+    symbols: dict[str, sympy.Symbol] = {
+        name: build_symbol(item) for name, item in symbol_records.items()
+    }
+    for name in coefficient_records:
+        symbols.setdefault(name, sympy.Symbol(name))
+
+    given = [
+        (parse_expression(target, symbols), parse_expression(replacement, symbols))
+        for target, replacement in record.identity_given.items()
+    ]
+
+    residuals = []
+    for text in record.identity:
+        residual = parse_expression(text, symbols)
+        # doit() BEFORE substituting, and again after. A hypothesis is usually
+        # about a derivative that does not exist as a node until the surrounding
+        # expression is evaluated: `Derivative(log(m(r)/r), r)` contains no
+        # `Derivative(m(r), r)` to match until it expands. Substituting only
+        # beforehand would silently no-op, and the identity would then read as
+        # FALSE rather than as unapplied -- a failure mode that looks like a
+        # broken derivation instead of a broken hypothesis.
+        residual = residual.doit()
+        for target, replacement in given:
+            residual = residual.subs(target, replacement)
+        residuals.append(sympy.simplify(residual.doit()))
+    return tuple(residuals)
+
+
+def identity_holds(bundle: SourceBundle, equation_id: str) -> bool:
+    """``True`` when EVERY registered residual simplifies to exactly zero."""
+    return all(residual == 0 for residual in verify_identity(bundle, equation_id))
