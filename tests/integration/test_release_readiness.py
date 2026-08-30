@@ -138,6 +138,30 @@ def test_sdist_excludes_internal_and_nonruntime_workspaces() -> None:
         "/docs/audits",
         "/docs/plans",
         "/docs/superpowers",
+        "/docs/_build",
         "/laboratory",
         "/tests",
+        "/.mypy_cache",
+        "/.pytest_cache",
+        "/**/__pycache__",
     } <= excluded
+
+
+def test_release_gate_checks_wheel_and_sdist_in_clean_interpreters() -> None:
+    pyproject = tomllib.loads(
+        (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    )
+    assert pyproject["build-system"]["requires"] == ["hatchling==1.31.0"]
+
+    local_gate = (REPO_ROOT / "scripts" / "check.sh").read_text(encoding="utf-8")
+    for phrase in (
+        "uv build --python 3.13 -o",
+        "scripts/check_distribution.py",
+        "--wheel",
+        "--sdist",
+        "build-provenance.txt",
+        "uv venv --python 3.13",
+        "WHEEL_VENV",
+        "SDIST_VENV",
+    ):
+        assert phrase in local_gate

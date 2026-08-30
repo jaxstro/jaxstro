@@ -40,11 +40,39 @@ echo "== ml-integration =="
 env -u VIRTUAL_ENV uv sync --locked --extra dev --extra ml
 env -u VIRTUAL_ENV uv run --no-sync --extra ml pytest tests/integration -q
 
-echo "== wheel-smoke =="
-env -u VIRTUAL_ENV uv build --wheel -o dist/
-rm -rf /tmp/jaxstro-clean
-env -u VIRTUAL_ENV uv venv /tmp/jaxstro-clean
-env -u VIRTUAL_ENV uv pip install --python /tmp/jaxstro-clean/bin/python dist/*.whl
-/tmp/jaxstro-clean/bin/python -c "import jaxstro; print(jaxstro.__name__, 'imports clean')"
+echo "== distribution artifacts =="
+ARTIFACT_DIR="$(mktemp -d)"
+WHEEL_VENV="$(mktemp -d)"
+SDIST_VENV="$(mktemp -d)"
+cleanup_distribution_artifacts() {
+  rm -rf "$ARTIFACT_DIR" "$WHEEL_VENV" "$SDIST_VENV"
+}
+trap cleanup_distribution_artifacts EXIT
+
+{
+  env -u VIRTUAL_ENV uv --version
+  $RUN python --version
+  echo "hatchling==1.31.0"
+} >"$ARTIFACT_DIR/build-provenance.txt"
+env -u VIRTUAL_ENV uv build --python 3.13 -o "$ARTIFACT_DIR"
+
+WHEEL_PATH=("$ARTIFACT_DIR"/*.whl)
+SDIST_PATH=("$ARTIFACT_DIR"/*.tar.gz)
+if [[ "${#WHEEL_PATH[@]}" -ne 1 || "${#SDIST_PATH[@]}" -ne 1 ]]; then
+  echo "release gate failed: expected exactly one wheel and one sdist" >&2
+  exit 1
+fi
+
+env -u VIRTUAL_ENV uv venv --python 3.13 "$WHEEL_VENV"
+env -u VIRTUAL_ENV uv pip install --python "$WHEEL_VENV/bin/python" "${WHEEL_PATH[0]}"
+env -u VIRTUAL_ENV uv run --no-sync python scripts/check_distribution.py \
+  --wheel "${WHEEL_PATH[0]}" --sdist "${SDIST_PATH[0]}" \
+  --python "$WHEEL_VENV/bin/python" --provenance "$ARTIFACT_DIR/build-provenance.txt"
+
+env -u VIRTUAL_ENV uv venv --python 3.13 "$SDIST_VENV"
+env -u VIRTUAL_ENV uv pip install --python "$SDIST_VENV/bin/python" "${SDIST_PATH[0]}"
+env -u VIRTUAL_ENV uv run --no-sync python scripts/check_distribution.py \
+  --wheel "${WHEEL_PATH[0]}" --sdist "${SDIST_PATH[0]}" \
+  --python "$SDIST_VENV/bin/python" --provenance "$ARTIFACT_DIR/build-provenance.txt"
 
 echo "ALL LOCAL GATES PASSED"

@@ -82,8 +82,12 @@ exclude = [
   "/docs/audits",
   "/docs/plans",
   "/docs/superpowers",
+  "/docs/_build",
   "/laboratory",
   "/tests",
+  "/.mypy_cache",
+  "/.pytest_cache",
+  "/**/__pycache__",
 ]
 
 # -----------------------
