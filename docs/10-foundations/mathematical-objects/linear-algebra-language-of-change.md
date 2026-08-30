@@ -13,48 +13,177 @@ Begin with **vectors as perturbations** and a **linear map** that transforms
 them. A matrix is the coordinate representation of that map after choosing a
 basis; it is not the underlying idea.
 
-## Vectors and linear maps
+## Vectors, coordinates, and linear maps
 
 A vector can represent a position, but it can also represent a small change in
-stellar parameters, a residual spectrum, a velocity, or a direction through
+model parameters, a residual spectrum, a velocity, or a direction through
 parameter space. A map $A$ is linear when it preserves addition and scaling:
 
 ```{math}
 A(a\,u+b\,v)=a\,A(u)+b\,A(v).
 ```
 
-A **basis** supplies coordinate vectors. Changing basis changes the matrix and
-coordinates, not the abstract vector or map. Units and scaling remain part of
-the scientific interpretation of those coordinates.
+A **basis** supplies coordinates for a vector. In a basis whose vectors are
+the columns of $B$, the same abstract vector has coordinates $[v]_B$ through
+
+```{math}
+v = B[v]_B.
+```
+
+Changing basis changes coordinates and the matrix representing a map, not the
+underlying vector or map. Units and scaling remain part of the scientific
+meaning of those coordinates: a parameter measured in kelvin and one measured
+in dex should not be treated as interchangeable numerical axes simply because
+both appear in one array.
 
 ## Geometry: dot products, norms, and projection
 
-A dot product defines angles and lengths; a norm measures magnitude; a
-projection keeps the component lying in a chosen subspace. These choices are
-not always innocent. Standard Euclidean distance treats every coordinate as
-commensurate, while covariance-weighted geometry accounts for different scales
-and correlated measurement uncertainty.
+The Euclidean dot product and norm are
+
+```{math}
+\langle u, v \rangle = u^{\mathsf{T}}v,
+\qquad
+\lVert v \rVert_2 = \sqrt{v^{\mathsf{T}}v}.
+```
+
+They define the angle through
+
+```{math}
+\cos\phi = \frac{\langle u,v\rangle}
+{\lVert u\rVert_2\lVert v\rVert_2}.
+```
+
+If the columns of $Q$ are an orthonormal basis for a subspace
+$\mathcal{S}$, its Euclidean projection is
+
+```{math}
+P_{\mathcal{S}} = QQ^{\mathsf{T}},
+\qquad
+P_{\mathcal{S}}v \in \mathcal{S}.
+```
+
+This geometry is a choice. When a residual $r$ has covariance $C$ that is
+known, symmetric, and positive-definite, its covariance-weighted squared norm
+is
+
+```{math}
+\lVert r\rVert_{C^{-1}}^2 = r^{\mathsf{T}}C^{-1}r.
+```
+
+It gives less influence to uncertain directions and accounts for correlated
+errors. It is warranted only when $C$ represents the measurement model; it is
+not a generic way to make a fit look better.
+
+## Projection, residuals, and least squares
+
+Suppose a linearized prediction is $X\beta$ for observations $y$. Weighted
+least squares chooses a parameter change by
+
+```{math}
+\widehat\beta = \underset{\beta}{\arg\min}\;
+\lVert X\beta-y\rVert_W^2,
+\qquad
+\lVert r\rVert_W^2 = r^{\mathsf{T}}Wr.
+```
+
+At an interior optimum with appropriate differentiability, the fitted residual
+$\widehat r=X\widehat\beta-y$ is orthogonal to the model's visible directions:
+
+```{math}
+X^{\mathsf{T}}W\widehat r = 0.
+```
+
+This is the geometric content of the normal equations. Do not form the inverse
+of $X^{\mathsf{T}}WX$ merely because it appears in an algebraic derivation:
+QR or SVD reveals rank loss and is usually the more stable computational
+representation. The method page explains the supported numerical routes.
 
 ## Directions a map reveals or hides
 
-Eigenvectors are directions preserved up to scaling by a square map. Singular
-vectors describe input and output directions of any rectangular map. A **null
-space** contains changes the map cannot see. In inference, a null direction can
-represent a parameter combination that leaves predictions unchanged locally.
+For a square map, an eigenpair satisfies
 
-The ratio between strongly and weakly transmitted directions contributes to a
-**condition number**. A large condition number warns that small perturbations in
-data or arithmetic may cause large changes in an inferred solution. It is a
-property of the represented problem and scaling, not merely of the solver.
+```{math}
+Av=\lambda v.
+```
+
+Eigenvectors describe directions preserved up to scaling. For any rectangular
+map, the singular-value decomposition is more broadly useful:
+
+```{math}
+A = U\Sigma V^{\mathsf{T}}.
+```
+
+The right singular vectors in $V$ are input directions; the diagonal entries
+of $\Sigma$ say how strongly $A$ transmits them; $U$ gives the corresponding
+output directions. A **null space** contains changes $v$ for which $Av=0$.
+In inference, it can represent a parameter combination that leaves predictions
+unchanged to first order.
+
+The number of meaningfully nonzero singular values is the numerical rank. It
+depends on an explicitly stated **rank tolerance**, data precision, and the
+units/scaling of the representation—not a magic count returned by a library.
+
+## Conditioning is a scientific question about scale
+
+For a full-rank matrix in the Euclidean norm, the spectral condition number is
+
+```{math}
+\kappa_2(A) = \frac{\sigma_{\max}(A)}{\sigma_{\min}(A)}.
+```
+
+A large value warns that small perturbations in data or arithmetic can produce
+large changes in a solution. Rescaling coordinates replaces $A$ by, for
+example, $AD^{-1}$; it can improve arithmetic but it also changes the metric in
+which parameter steps are described. Report the scaling and condition number
+together. A well-conditioned representation does not remove a physical
+degeneracy; it can only make the numerical consequences easier to see.
 
 ## Jacobians, covariance, and curvature
 
-A Jacobian is the linear map carrying small input perturbations to small output
-perturbations. Covariance describes the second-moment geometry of variation.
-A quadratic form $v^T A v$ assigns a direction-dependent magnitude. A
-**Hessian** describes local second-order curvature of a scalar function. These
-objects connect linear algebra to derivatives, uncertainty, optimization, and
-identifiability.
+A Jacobian is the local linear map from parameter perturbations to prediction
+perturbations:
+
+```{math}
+\delta y \approx J\,\delta\theta + \varepsilon.
+```
+
+Under a local linear model with a fixed covariance for the parameter changes
+and errors, covariance propagation gives
+
+```{math}
+C_y \approx J C_\theta J^{\mathsf{T}} + C_\varepsilon.
+```
+
+This is a local statement. It does not establish that a nonlinear posterior is
+Gaussian, that errors are independent, or that the parameters are globally
+identifiable.
+
+A quadratic form $v^{\mathsf{T}}Av$ assigns a direction-dependent magnitude.
+For a scalar objective $f$, a Hessian $H$ gives the leading curvature term
+near a reference point:
+
+```{math}
+f(\theta+\delta\theta)
+\approx f(\theta) + \nabla f(\theta)^{\mathsf{T}}\delta\theta
++ \tfrac12\delta\theta^{\mathsf{T}}H\delta\theta.
+```
+
+Curvature can diagnose a locally weak direction, but it is not global
+identifiability. Read [](../models-and-computation/sensitivity-conditioning-identifiability.md)
+for the distinction.
+
+## Read a small measurement problem geometrically
+
+Imagine two measured features responding to two parameters. At a reference
+model, the Jacobian $J$ maps a proposed parameter shift into a predicted change
+in those features. Before computing a solve, ask: are its two columns nearly
+parallel? If so, two physically distinct parameter changes create nearly the
+same observable change. The smaller singular value will be small, and the
+corresponding right singular vector names the locally confounded combination.
+
+The useful response is not automatically to add a numerical regularizer. First
+decide whether a new observable, a justified prior, a reparameterization, or a
+more restricted scientific claim resolves the actual ambiguity.
 
 ## Predict
 
