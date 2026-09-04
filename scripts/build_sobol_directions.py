@@ -7,7 +7,6 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
-from pprint import pformat
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "src/jaxstro/quad/data"
@@ -53,6 +52,18 @@ def load_records() -> tuple[tuple[int, int, int, tuple[int, ...]], ...]:
     return records
 
 
+def render_rows(rows: tuple[tuple[int, ...], ...]) -> str:
+    """Render a tuple of int-tuples as one record per line.
+
+    One line per Sobol dimension keeps the artifact diffable: a change to
+    dimension N shows as a single changed line. `pprint.pformat` was used
+    here previously and wrapped each tuple element onto its own line, which
+    inflated the file to 169,208 lines for 21,200 records.
+    """
+    body = "".join(f"    {row!r},\n" for row in rows)
+    return f"(\n{body})"
+
+
 def render_table() -> str:
     """Render the deterministic importable runtime table."""
     records = load_records()
@@ -65,8 +76,8 @@ def render_table() -> str:
         "# fmt: off\n"
         f'SOURCE_SHA256 = "{SOURCE_SHA256}"\n'
         f"MAX_SOBOL_DIMENSION = {MAX_SOBOL_DIMENSION}\n\n"
-        f"SOBOL_POLYNOMIALS = {pformat(polynomials, width=88)}\n\n"
-        f"SOBOL_INITIAL_DIRECTIONS = {pformat(initial, width=88)}\n\n"
+        f"SOBOL_POLYNOMIALS = {render_rows(polynomials)}\n\n"
+        f"SOBOL_INITIAL_DIRECTIONS = {render_rows(initial)}\n\n"
         "__all__ = [\n"
         '    "MAX_SOBOL_DIMENSION",\n'
         '    "SOBOL_INITIAL_DIRECTIONS",\n'
