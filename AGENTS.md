@@ -2,6 +2,13 @@
 
 Guidance for Codex when working in `jaxstro`.
 
+## Writing
+
+Remove all mannered prose. State the rule, the measurement and the mechanism in plain
+sentences. No rhetorical emphasis, no asides, no metaphors, no dramatised failure stories;
+the number, the date and the mechanism carry the point. This applies to chat, docstrings,
+commit messages, `STATUS.md` and everything under `docs/`.
+
 ## Read First
 - `CLAUDE.md`
 - `README.md`
