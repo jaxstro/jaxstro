@@ -90,6 +90,29 @@ $\mu_0$ times the square of the first eigenvector component,
 w_i=\mu_0\left(v_{0i}\right)^2.
 ```
 
+The eigenvector form is accurate to about machine epsilon $\varepsilon$ in
+absolute terms, so a weight far below $\varepsilon$ can be wrong by many
+orders of magnitude. The outermost standard-normal weight at $n=256$ is
+$1.0\times10^{-171}$; the eigenvector form returns $1.3\times10^{-60}$, and
+$\mathbb{E}[e^{6g}]$ computed with that rule is wrong by a factor of
+$10^{18}$. Jaxstro therefore uses the eigenvalues only as starting nodes. Each
+node takes one Newton step on the recurrence polynomial, and each weight is
+the Christoffel function of the orthonormal polynomials $\hat p_k$
+(Gautschi 2004, Thm. 1.46),
+
+```{math}
+:label: eq-gaussian-christoffel-weight
+w_i=\left(\sum_{k=0}^{n-1}\hat p_k(x_i)^2\right)^{-1},
+```
+
+a sum of positive terms that keeps its relative accuracy where $w_i$ is tiny.
+The recurrence is rescaled as it runs, so $\hat p_k(x_i)$ values beyond
+$10^{85}$ do not overflow. Against a 60-digit reference, the relative weight
+error for $n\le128$ is at most about $10n\,\varepsilon$ across the
+standard-normal, Legendre, and Laguerre rules. Tail-dominated integrals such as
+$\mathbb{E}[e^{tg}]$ and $\int_0^\infty x^{30}e^{-x}\,\mathrm{d}x$ stay within
+$10^{-14}$ relative error up to $n=256$.
+
 This single construction produces Gauss-Legendre, Gauss-Jacobi,
 Gauss-Laguerre, generalized Gauss-Laguerre, physicists' Gauss-Hermite, and
 standard-normal Gauss-Hermite rules. An $n$-node Gaussian rule satisfies
@@ -164,8 +187,10 @@ Q_n[f]
 
 #### The standard-normal convention
 
-The legacy compatibility helper begins with the physicists' Hermite rule and
-uses $g=\sqrt{2}z$. The normalized weights are
+`StandardNormalMeasure` uses the recurrence $a_k=0$, $b_k=k$ with mass one,
+so its weights sum to one and the rule computes expectations under
+$\mathcal{N}(0,1)$ directly. It is related to the physicists' rule, weight
+$e^{-z^2}$, by $g=\sqrt{2}z$:
 
 ```{math}
 :label: eq-standard-normal-hermite
@@ -177,8 +202,10 @@ g_i=\sqrt{2}\,z_i,
 \approx\sum_i\widetilde{w}_i f(g_i).
 ```
 
-That helper remains byte-compatible with the earlier public implementation.
-New `GaussianRule` construction uses the shared JAX recurrence engine.
+`gauss_hermite_nodes(n)` returns this rule from the shared recurrence
+engine. Until 2026-09-24 it called NumPy's `hermgauss`; the engine's tail
+weights are more accurate (relative error at $n=256$: $328\,\varepsilon$
+against $572\,\varepsilon$).
 
 ### Finite domains and weighted measures
 

@@ -22,31 +22,14 @@ integrates polynomials **exactly up to degree** :math:`2n-1`:
 - **Clenshaw-Curtis**: interpolatory quadrature on Chebyshev-Lobatto nodes
   :math:`x_i = \cos(i\pi/(n-1))` over :math:`[-1, 1]`.
 
-New Legendre and Laguerre nodes and weights are constructed by the shared
-JAX-native Golub-Welsch engine in :mod:`jaxstro.quad`. This module remains a
-compatibility import lane.
-
-Legacy Hermite exception (sanctioned, setup-only)
--------------------------------------------------
-The probabilists' Hermite helper calls ``numpy.polynomial.hermite.hermgauss``
-and freezes its output to JAX arrays. This narrow exception preserves the
-declared byte-level compatibility contract:
-
-- The nodes/weights are *constants*, computed once at call time (not in a hot
-  loop, not traced). They carry no parameter dependence.
-- Every downstream operation, including evaluating the integrand at the nodes,
-  weighted sum, the Hermite recurrence -- is pure ``jax.numpy`` and fully
-  differentiable. ``jax.grad`` flows through the **integrand values**, never
-  through the constant nodes. This is the only NumPy construction in this
-  compatibility module.
+The Gaussian rules come from the shared Golub-Welsch engine and the
+Clenshaw-Curtis rule from the Chebyshev module of :mod:`jaxstro.quad`. This
+module is a compatibility import lane.
 
 References
 ----------
 - Golub, G. H. & Welsch, J. H. 1969, "Calculation of Gauss Quadrature Rules",
-  Math. Comp. 23, 221 (the eigenvalue construction behind the NumPy routines).
-- NumPy ``numpy.polynomial.hermite.hermgauss`` (physicists' Gauss-Hermite); the
-  probabilists' rule is obtained from the physicists' rule by the substitution
-  :math:`g = \sqrt{2}\, x`, :math:`w \mapsto w / \sqrt{\pi}` (see below).
+  Math. Comp. 23, 221 (the eigenvalue construction of the nodes).
 - Trefethen, L. N. 2008, "Is Gauss quadrature better than Clenshaw-Curtis?",
   SIAM Review 50, 67 (Clenshaw-Curtis context and algorithmic comparison).
 - Probabilists' Hermite ``He_n`` recurrence: Abramowitz & Stegun (1964),

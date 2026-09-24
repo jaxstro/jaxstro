@@ -8,14 +8,14 @@
     "jaxlib": "0.10.1",
     "machine": "arm64",
     "numpy": "2.4.6",
-    "platform": "macOS-26.1-arm64-arm-64bit-Mach-O",
+    "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
     "python": "3.13.7"
   },
   "generator": "scripts/generate_quad_multidim_evidence.py",
   "generator_sha256": "4b66a9e996fa903250efdd345c1f8a4db75e0af5c695140f2c0cd66c7c57fec2",
   "records": [
     {
-      "absolute_error": 4.440892098500626e-16,
+      "absolute_error": 0.0,
       "controls": {
         "epsabs": 1e-09,
         "epsrel": 1e-09,
@@ -29,8 +29,8 @@
       "family": "tensor_polynomial",
       "method": "TensorProduct",
       "method_id": "tensor_gauss_3",
-      "relative_error": 1.3212571532729136e-16,
-      "replay_gradient": 3.3611111111111116,
+      "relative_error": 0.0,
+      "replay_gradient": 3.3611111111111103,
       "status": 7,
       "tolerance": 2e-13,
       "truth": 3.3611111111111107,
@@ -38,7 +38,7 @@
         "formula": "(11/6)^2",
         "kind": "analytic"
       },
-      "value": 3.361111111111111,
+      "value": 3.3611111111111107,
       "work": {
         "active_regions": 0,
         "evaluations": 9,
@@ -154,7 +154,7 @@
       }
     },
     {
-      "absolute_error": 0.0,
+      "absolute_error": 1.1102230246251565e-16,
       "controls": {
         "epsabs": 1e-09,
         "epsrel": 1e-09,
@@ -168,8 +168,8 @@
       "family": "genz_oscillatory",
       "method": "TensorProduct",
       "method_id": "tensor_gauss_12",
-      "relative_error": 0.0,
-      "replay_gradient": -0.8003996581568846,
+      "relative_error": 1.387085830573336e-16,
+      "replay_gradient": -0.8003996581568847,
       "status": 7,
       "tolerance": 5e-05,
       "truth": -0.8003996581568846,
@@ -193,7 +193,7 @@
         "precision_decimal_digits": 80,
         "reference_artifact_sha256": "227f7d9477de44f46a3448000f251e7ebfe885954f1c9e8e6ab87d293c644c30"
       },
-      "value": -0.8003996581568846,
+      "value": -0.8003996581568847,
       "work": {
         "active_regions": 0,
         "evaluations": 144,
@@ -203,7 +203,7 @@
       }
     },
     {
-      "absolute_error": 6.938893903907228e-18,
+      "absolute_error": 1.0408340855860843e-17,
       "controls": {
         "epsabs": 1e-09,
         "epsrel": 1e-09,
@@ -217,8 +217,8 @@
       "family": "genz_product_peak",
       "method": "TensorProduct",
       "method_id": "tensor_gauss_12",
-      "relative_error": 2.226692979293777e-16,
-      "replay_gradient": 0.031162328926496126,
+      "relative_error": 3.340039468940665e-16,
+      "replay_gradient": 0.03116232892649613,
       "status": 7,
       "tolerance": 5e-05,
       "truth": 0.03116232892649612,
@@ -242,7 +242,7 @@
         "precision_decimal_digits": 80,
         "reference_artifact_sha256": "227f7d9477de44f46a3448000f251e7ebfe885954f1c9e8e6ab87d293c644c30"
       },
-      "value": 0.031162328926496126,
+      "value": 0.03116232892649613,
       "work": {
         "active_regions": 0,
         "evaluations": 144,
@@ -252,7 +252,7 @@
       }
     },
     {
-      "absolute_error": 2.220446049250313e-16,
+      "absolute_error": 5.551115123125783e-17,
       "controls": {
         "epsabs": 1e-09,
         "epsrel": 1e-09,
@@ -266,8 +266,8 @@
       "family": "genz_corner_peak",
       "method": "TensorProduct",
       "method_id": "tensor_gauss_12",
-      "relative_error": 5.851849219620737e-16,
-      "replay_gradient": 0.37944348289175855,
+      "relative_error": 1.4629623049051841e-16,
+      "replay_gradient": 0.3794434828917587,
       "status": 7,
       "tolerance": 5e-05,
       "truth": 0.3794434828917588,
@@ -291,7 +291,7 @@
         "precision_decimal_digits": 80,
         "reference_artifact_sha256": "227f7d9477de44f46a3448000f251e7ebfe885954f1c9e8e6ab87d293c644c30"
       },
-      "value": 0.37944348289175855,
+      "value": 0.3794434828917587,
       "work": {
         "active_regions": 0,
         "evaluations": 144,
@@ -483,7 +483,7 @@
       }
     },
     {
-      "absolute_error": 1.3010426069826053e-18,
+      "absolute_error": 3.469446951953614e-18,
       "controls": {
         "epsabs": 1e-09,
         "epsrel": 1e-09,
@@ -497,8 +497,8 @@
       "family": "boundary_layer",
       "method": "TensorProduct",
       "method_id": "tensor_gauss_20",
-      "relative_error": 5.20417044938361e-16,
-      "replay_gradient": 0.002499999989694231,
+      "relative_error": 1.3877787865022961e-15,
+      "replay_gradient": 0.0024999999896942356,
       "status": 7,
       "tolerance": 2e-07,
       "truth": 0.002499999989694232,
@@ -506,7 +506,7 @@
         "formula": "((1-exp(-20))/20)^2",
         "kind": "analytic"
       },
-      "value": 0.002499999989694231,
+      "value": 0.0024999999896942356,
       "work": {
         "active_regions": 0,
         "evaluations": 400,

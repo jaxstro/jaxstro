@@ -138,12 +138,15 @@ The uniform path in `src/jaxstro/quad/sampled.py` sums trapezoids before
 multiplying by scalar `dx`. This dx-outside order is the canonical parity
 contract. Nonuniform spacing keeps `diff(x)` inside the cumulative sum.
 
-### Gauss-Hermite convention
+### Gaussian rule weights
 
-`src/jaxstro/quad/_hermite.py` creates probabilists' standard-normal nodes
-and weights host-side from NumPy's physicists' rule using the documented square-
-root-of-two rescaling. Nodes and weights are setup constants, not differentiated
-inputs.
+`gauss_hermite_nodes` in `src/jaxstro/quad/_hermite.py` is the
+standard-normal rule of the shared Golub-Welsch engine in
+`src/jaxstro/quad/_recurrence.py`. The engine refines each eigenvalue node
+with one Newton step and computes each weight as the Christoffel function
+`1 / sum_k p_k(x_i)**2`, because eigenvector weights are accurate only to
+about eps in absolute terms and fail in the tails. Nodes and weights are setup
+constants, not differentiated inputs.
 
 ### Singular condition number
 

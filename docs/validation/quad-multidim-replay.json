@@ -2,16 +2,16 @@
   "artifact_id": "quad.multidim.replay-and-astro",
   "astro_records": [
     {
-      "absolute_error": 7.771561172376096e-16,
+      "absolute_error": 5.551115123125783e-16,
       "case_id": "projected_plummer_aperture",
       "error_kind": 5,
       "quantity_unit": "1",
-      "quantity_value": 0.8620689655172422,
+      "quantity_value": 0.862068965517242,
       "raw_quantity_absolute_difference": 0.0,
-      "raw_value": 0.8620689655172422,
-      "relative_error": 9.01501095995627e-16,
-      "replay_gradient": -0.19817677368210895,
-      "replay_gradient_absolute_error": 1.5515366769136563e-14,
+      "raw_value": 0.862068965517242,
+      "relative_error": 6.439293542825908e-16,
+      "replay_gradient": -0.19817677368210918,
+      "replay_gradient_absolute_error": 1.529332216421153e-14,
       "replay_gradient_truth": -0.19817677368212447,
       "replay_parameter": "Plummer scale a",
       "specification": {
@@ -34,16 +34,16 @@
       }
     },
     {
-      "absolute_error": 2.2782886688332837e-12,
+      "absolute_error": 2.277511512716046e-12,
       "case_id": "diagonal_gaussian_mass",
       "error_kind": 5,
       "quantity_unit": "1",
-      "quantity_value": 0.9010568438727129,
+      "quantity_value": 0.9010568438727137,
       "raw_quantity_absolute_difference": 0.0,
-      "raw_value": 0.9010568438727129,
-      "relative_error": 2.528462753843046e-12,
-      "replay_gradient": 0.9010568438727129,
-      "replay_gradient_absolute_error": 2.2782886688332837e-12,
+      "raw_value": 0.9010568438727137,
+      "relative_error": 2.5276002598477774e-12,
+      "replay_gradient": 0.9010568438727137,
+      "replay_gradient_absolute_error": 2.277511512716046e-12,
       "replay_gradient_truth": 0.9010568438749912,
       "replay_parameter": "multiplicative amplitude",
       "specification": {
@@ -66,16 +66,16 @@
       }
     },
     {
-      "absolute_error": 2.3864576981225127e-11,
+      "absolute_error": 2.386474351467882e-11,
       "case_id": "diagonal_gaussian_second_moment_axis_0",
       "error_kind": 5,
       "quantity_unit": "pc pc",
-      "quantity_value": 0.36300199067952843,
+      "quantity_value": 0.3630019906795286,
       "raw_quantity_absolute_difference": 0.0,
-      "raw_value": 0.36300199067952843,
-      "relative_error": 6.574227578785531e-11,
-      "replay_gradient": 0.3630019906795284,
-      "replay_gradient_absolute_error": 2.3864521470073896e-11,
+      "raw_value": 0.3630019906795286,
+      "relative_error": 6.574273455518436e-11,
+      "replay_gradient": 0.3630019906795286,
+      "replay_gradient_absolute_error": 2.386474351467882e-11,
       "replay_gradient_truth": 0.36300199065566385,
       "replay_parameter": "multiplicative amplitude",
       "specification": {
@@ -98,16 +98,16 @@
       }
     },
     {
-      "absolute_error": 4.977129819394577e-13,
+      "absolute_error": 4.970468481246826e-13,
       "case_id": "diagonal_gaussian_second_moment_axis_1",
       "error_kind": 5,
       "quantity_unit": "pc pc",
-      "quantity_value": 0.764936814034667,
+      "quantity_value": 0.7649368140346676,
       "raw_quantity_absolute_difference": 0.0,
-      "raw_value": 0.764936814034667,
-      "relative_error": 6.506589469971274e-13,
-      "replay_gradient": 0.764936814034667,
-      "replay_gradient_absolute_error": 4.977129819394577e-13,
+      "raw_value": 0.7649368140346676,
+      "relative_error": 6.497881119130357e-13,
+      "replay_gradient": 0.7649368140346675,
+      "replay_gradient_absolute_error": 4.971578704271451e-13,
       "replay_gradient_truth": 0.7649368140351647,
       "replay_parameter": "multiplicative amplitude",
       "specification": {
@@ -130,16 +130,16 @@
       }
     },
     {
-      "absolute_error": 0.0,
+      "absolute_error": 3.410605131648481e-13,
       "case_id": "population_moment",
       "error_kind": 5,
       "quantity_unit": "Msun^2 Myr pc^2 Msun Myr pc",
-      "quantity_value": 525.6576000000001,
+      "quantity_value": 525.6575999999998,
       "raw_quantity_absolute_difference": 0.0,
-      "raw_value": 525.6576000000001,
-      "relative_error": 0.0,
-      "replay_gradient": 525.6576000000001,
-      "replay_gradient_absolute_error": 0.0,
+      "raw_value": 525.6575999999998,
+      "relative_error": 6.488263713201293e-16,
+      "replay_gradient": 525.6575999999999,
+      "replay_gradient_absolute_error": 2.2737367544323206e-13,
       "replay_gradient_truth": 525.6576000000001,
       "replay_parameter": "multiplicative amplitude",
       "specification": {
@@ -172,8 +172,8 @@
       "raw_quantity_absolute_difference": 0.0,
       "raw_value": 2.5532481309308994,
       "relative_error": 5.251188081058514e-11,
-      "replay_gradient": 2.5532481309308994,
-      "replay_gradient_absolute_error": 1.340758615242521e-10,
+      "replay_gradient": 2.5532481309309003,
+      "replay_gradient_absolute_error": 1.340767497026718e-10,
       "replay_gradient_truth": 2.5532481307968236,
       "replay_parameter": "multiplicative amplitude",
       "specification": {
@@ -204,7 +204,7 @@
     "jaxlib": "0.10.1",
     "machine": "arm64",
     "numpy": "2.4.6",
-    "platform": "macOS-26.1-arm64-arm-64bit-Mach-O",
+    "platform": "macOS-26.6.2-arm64-arm-64bit-Mach-O",
     "python": "3.13.7"
   },
   "generator": "scripts/generate_quad_multidim_evidence.py",
@@ -213,8 +213,8 @@
   "truth_replay_records": [
     {
       "family": "tensor_polynomial",
-      "replay_gradient": 3.3611111111111116,
-      "value": 3.361111111111111
+      "replay_gradient": 3.3611111111111103,
+      "value": 3.3611111111111107
     },
     {
       "family": "beta_product",
@@ -233,18 +233,18 @@
     },
     {
       "family": "genz_oscillatory",
-      "replay_gradient": -0.8003996581568846,
-      "value": -0.8003996581568846
+      "replay_gradient": -0.8003996581568847,
+      "value": -0.8003996581568847
     },
     {
       "family": "genz_product_peak",
-      "replay_gradient": 0.031162328926496126,
-      "value": 0.031162328926496126
+      "replay_gradient": 0.03116232892649613,
+      "value": 0.03116232892649613
     },
     {
       "family": "genz_corner_peak",
-      "replay_gradient": 0.37944348289175855,
-      "value": 0.37944348289175855
+      "replay_gradient": 0.3794434828917587,
+      "value": 0.3794434828917587
     },
     {
       "family": "genz_gaussian",
@@ -268,8 +268,8 @@
     },
     {
       "family": "boundary_layer",
-      "replay_gradient": 0.002499999989694231,
-      "value": 0.002499999989694231
+      "replay_gradient": 0.0024999999896942356,
+      "value": 0.0024999999896942356
     }
   ]
 }

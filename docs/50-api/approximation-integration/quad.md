@@ -522,8 +522,7 @@ miss the same unresolved narrow feature even when the returned status is
 
 `jaxstro.numerics.integration` and `jaxstro.numerics.quadrature` are temporary compatibility
 paths. Their existing public names remain exact aliases and emit
-no deprecation warning. The legacy probabilists' Hermite helper retains its
-byte-compatible NumPy construction until a declared breaking release.
+no deprecation warning.
 
 ## Migrating to `jaxstro.quad`
 

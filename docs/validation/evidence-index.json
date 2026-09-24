@@ -61,7 +61,7 @@
       "target": "docs/validation/quad-multidim-performance-baseline.json"
     },
     {
-      "content_digest": "sha256:f49936410df2b33addf7b7c286c1ff3dcdaa6dcdb8815f12e35ba15827504276",
+      "content_digest": "sha256:40d07e5f862f0d6f30072f291c492fbca48eaceffc0c4b2cfed55925d2176f18",
       "evidence_class": "computational",
       "id": "quad.multidim.replay-and-astro",
       "limitations": [
@@ -73,7 +73,7 @@
       "target": "docs/validation/quad-multidim-replay.json"
     },
     {
-      "content_digest": "sha256:30902fdfcaf29ee32c5d5b86c5fa02041c5af977d0c37fed8f03079c7f9510df",
+      "content_digest": "sha256:87916ef2d939dd5d6826ad722b3e8619023fbd09407a3da6c389464c30369d5e",
       "evidence_class": "computational",
       "id": "quad.multidim.truth",
       "limitations": [
