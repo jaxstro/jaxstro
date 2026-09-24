@@ -14,6 +14,13 @@ GENERATOR = ROOT / "scripts/generate_quad_multidim_evidence.py"
 TRUTH_ARTIFACT = ROOT / "docs/validation/quad-multidim-truth.json"
 REPLAY_ARTIFACT = ROOT / "docs/validation/quad-multidim-replay.json"
 GENZ_ARTIFACT = ROOT / "tests/validation/data/quad-b1-genz-reference.json"
+# |a - b| of other recorded fields; compared on the origin platform only.
+DERIVED_ERROR_FIELDS = (
+    "absolute_error",
+    "relative_error",
+    "raw_quantity_absolute_difference",
+    "replay_gradient_absolute_error",
+)
 
 COMMON_CONTROLS = {
     "epsabs": 1.0e-9,
@@ -235,5 +242,6 @@ def test_committed_artifacts_are_canonical_and_fresh(generated):
             fresh,
             origin=Origin.from_environment(recorded["environment"]),
             ignore=("environment",),
+            derived=DERIVED_ERROR_FIELDS,
         )
     assert json.loads(TRUTH_ARTIFACT.read_text())["environment"]["jax_enable_x64"]

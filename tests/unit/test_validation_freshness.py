@@ -58,6 +58,26 @@ def test_ignored_keys_are_provenance_not_content() -> None:
         assert_fresh(recorded, fresh, origin=HERE)
 
 
+def test_derived_error_fields_are_skipped_only_off_origin() -> None:
+    # Full-gate run 35950495028 (2026-09-24): an absolute error of a value
+    # near 525.66 was 0.0 on macOS and 3.41e-13 on Linux, a last-bit change
+    # of the value it is computed from.
+    recorded = {"value": 525.6576, "absolute_error": 0.0, "passed": True}
+    fresh = {"value": 525.6576000000003, "absolute_error": 3.41e-13, "passed": True}
+    assert_fresh(recorded, fresh, origin=ELSEWHERE, derived=("absolute_error",))
+    with pytest.raises(AssertionError, match=r"\$\.absolute_error"):
+        assert_fresh(recorded, fresh, origin=ELSEWHERE)
+    with pytest.raises(AssertionError, match=r"\$\.value"):
+        assert_fresh(recorded, fresh, origin=HERE, derived=("absolute_error",))
+    with pytest.raises(AssertionError, match=r"\$\.passed"):
+        assert_fresh(
+            recorded,
+            {**fresh, "passed": False},
+            origin=ELSEWHERE,
+            derived=("absolute_error",),
+        )
+
+
 def test_origin_reads_recorded_environment() -> None:
     origin = Origin.from_environment(
         {"platform": "macOS-26.1-arm64-arm-64bit-Mach-O", "machine": "arm64"}
