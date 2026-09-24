@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[2]
 PAGE = ROOT / "docs/70-project/development/method-coverage.md"
 
@@ -13,7 +12,7 @@ def test_method_coverage_matrix_is_navigable_and_claim_calibrated() -> None:
     for phrase in (
         "# Method coverage matrix",
         "38 method-guide pages",
-        "implemented", 
+        "implemented",
         "experimental",
         "planned",
         "unclassified public callables",
