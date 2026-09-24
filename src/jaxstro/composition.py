@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import equinox as eqx
 import jax
+import jax.numpy as jnp
 from jaxtyping import ArrayLike
 
 __all__ = ["Composition", "SUM_TOLERANCE"]
@@ -48,7 +49,7 @@ class Composition(eqx.Module):
         values = (self.X, self.Y, self.Z, self.deuterium_to_hydrogen)
         if any(isinstance(v, jax.core.Tracer) for v in values):
             return
-        x, y, z, d_h = (float(v) for v in values)
+        x, y, z, d_h = (float(jnp.asarray(v)) for v in values)
         for name, value in (("X", x), ("Y", y), ("Z", z)):
             if not 0.0 <= value <= 1.0:
                 raise ValueError(
