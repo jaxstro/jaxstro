@@ -75,10 +75,9 @@ which provide the adaptive ODE and implicit solve behind the Lane-Emden solver
 (added 2026-07-24); and sympy, which renders LaTeX for the equation registry (added
 2026-08-29). It does not depend on astropy or scipy.
 [](../70-project/decisions/0015-solver-dependencies-imported-where-used.md) restricts
-the last three to the modules that use them. Importing `jaxstro.units` or
-`jaxstro.constants` loads none of them; as of 2026-09-24, importing
-`jaxstro.coords`, `jaxstro.numerics`, or `jaxstro.quad` still loads diffrax and
-optimistix. A working knowledge of `jax.numpy` helps but is not assumed.
+the last three to the modules that use them: importing `jaxstro.units`,
+`jaxstro.constants`, `jaxstro.coords`, `jaxstro.numerics`, or `jaxstro.quad` loads
+none of them, and a test enforces that. A working knowledge of `jax.numpy` helps but is not assumed.
 
 ## Install
 

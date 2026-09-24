@@ -68,8 +68,8 @@ import time instead of at install time.
 
 ## Consequences
 
-- `jaxstro.numerics` stops importing `lane_emden` at package import. Callers import
-  `jaxstro.numerics.lane_emden` directly, or `numerics` exposes it lazily; the change
-  is made in the same slice as the enforcement test.
-- The enforcement test imports each lightweight module in a fresh interpreter and
-  asserts that `diffrax`, `optimistix`, and `sympy` are absent from `sys.modules`.
+- `jaxstro.numerics` no longer imports `lane_emden` at package import; the
+  Lane-Emden names stay public and resolve on first access (`0f39bdd`, 2026-09-24).
+- `tests/unit/test_solver_dependency_imports.py` imports each lightweight module in a
+  fresh interpreter and asserts that `diffrax`, `optimistix`, and `sympy` are absent
+  from `sys.modules`.
