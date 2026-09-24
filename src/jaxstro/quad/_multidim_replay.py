@@ -149,12 +149,11 @@ def _multidim_replay_jvp(config, primals, tangents):
         (domain, args),
         (domain_tangent, args_tangent),
     )
+    # A zero-width box is invalid input; its derivative fails closed. The NaN
+    # enters as a multiplicative mask so reverse mode's transpose keeps it (a
+    # jnp.where substitution of a constant is dropped and returned zero).
     zero_width = jnp.any(jnp.asarray(domain.lower) == domain.upper)
-    value_tangent = jnp.where(
-        zero_width,
-        jnp.full_like(value_tangent, jnp.nan),
-        value_tangent,
-    )
+    value_tangent = value_tangent * jnp.where(zero_width, jnp.nan, 1.0)
     value_tangent = _first_order_tangent(value_tangent)
     result = _replay_primal_result(solve.result, domain)
     return result, result_tangent(result, value_tangent)

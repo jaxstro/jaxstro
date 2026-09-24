@@ -88,6 +88,11 @@ def test_coincident_bound_replay_fails_closed():
     assert not jnp.isfinite(tangent.value)
     assert np.asarray(tangent.status).dtype == jax.dtypes.float0
 
+    # Reverse mode must fail closed too; a constant NaN substitution was
+    # dropped by the transpose and returned a zero gradient.
+    gradient = jax.grad(lambda upper: objective(upper).value)(domain.upper)
+    assert not jnp.all(jnp.isfinite(gradient))
+
 
 def test_inactive_padding_cannot_evaluate_a_singular_point():
     domain = quad.Hyperrectangle(jnp.zeros(2), jnp.ones(2))
