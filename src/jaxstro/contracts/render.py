@@ -7,6 +7,8 @@ from dataclasses import fields, is_dataclass
 from enum import Enum
 from typing import Any
 
+from jaxstro._public import REPOSITORY_URL
+
 from .schema import ContractInventory
 
 
@@ -110,7 +112,7 @@ def render_contract_reference(inventory: ContractInventory) -> str:
             )
             evidence = (
                 "; ".join(
-                    f"[`{item.id}`](https://github.com/drannarosen/jaxstro/blob/main/{item.target}) ({item.kind.value})"
+                    f"[`{item.id}`]({REPOSITORY_URL}/blob/main/{item.target}) ({item.kind.value})"
                     + (
                         f" -> [`{item.artifact_id}`](../../60-validation/evidence-index.md)"
                         f" gates `{', '.join(item.artifact_comparison_ids)}`"

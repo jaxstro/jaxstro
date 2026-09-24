@@ -84,7 +84,7 @@ none of them, and a test enforces that. A working knowledge of `jax.numpy` helps
 The project uses uv, which manages the virtual environment for you:
 
 ```bash
-git clone https://github.com/drannarosen/jaxstro
+git clone https://github.com/jaxstro/jaxstro
 cd jaxstro
 uv sync                 # core install
 uv sync --extra dev     # add pytest, ruff, mypy for development

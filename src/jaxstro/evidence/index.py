@@ -9,6 +9,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Mapping
 
+from jaxstro._public import REPOSITORY_URL
+
 from .render import artifact_from_dict
 
 
@@ -235,7 +237,7 @@ def evidence_index_to_markdown(index: EvidenceIndex) -> str:
         "| --- | --- | --- | --- | --- |",
     ]
     for entry in index.entries:
-        source_url = "https://github.com/drannarosen/jaxstro/blob/main/" + entry.target
+        source_url = f"{REPOSITORY_URL}/blob/main/{entry.target}"
         lines.append(
             f"| `{entry.id}` | {entry.evidence_class.value} | "
             f"[artifact source]({source_url}) | `{entry.source_revision}` | "

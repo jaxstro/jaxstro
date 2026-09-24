@@ -6,7 +6,7 @@ project:
     Evidence-first JAX infrastructure for differentiable science: an astro-first,
     science-general foundation for units, constants, coordinates, AD-safe
     numerics, and validation.
-  github: https://github.com/drannarosen/jaxstro
+  github: https://github.com/jaxstro/jaxstro
   keywords:
     - JAX
     - automatic differentiation
@@ -322,5 +322,5 @@ site:
   template: book-theme
   options:
     logo_text: jaxstro
-    github_url: https://github.com/drannarosen/jaxstro
+    github_url: https://github.com/jaxstro/jaxstro
     style: site.css
