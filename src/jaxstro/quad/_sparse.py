@@ -607,13 +607,12 @@ def _jax_is_admissible(
     return jnp.all(jax.vmap(axis_is_admissible)(jnp.arange(dimension)))
 
 
-def _formula_layout(
+def _formula_capacity(
     index: Array,
     tables: _AdaptiveSparseTables,
     max_nodes: int,
 ) -> tuple[Array, Array, Array, Array]:
-    """Materialize one padded hierarchical tensor formula from traced levels."""
-    dimension = index.shape[0]
+    """Return level validity, capped point count, table levels, and counts."""
     max_level = tables.counts.shape[0]
     valid_level = jnp.all((index >= 1) & (index <= max_level))
     safe_levels = jnp.clip(index - 1, 0, max_level - 1)
@@ -627,6 +626,29 @@ def _formula_layout(
         capped_product,
         jnp.asarray(1, dtype=jnp.int32),
         counts,
+    )
+    return valid_level, point_count, safe_levels, counts
+
+
+def _formula_representable(
+    index: Array,
+    tables: _AdaptiveSparseTables,
+    max_nodes: int,
+) -> Array:
+    """Whether the node table and ``max_nodes`` can hold this index's formula."""
+    valid_level, point_count, _, _ = _formula_capacity(index, tables, max_nodes)
+    return valid_level & (point_count <= max_nodes)
+
+
+def _formula_layout(
+    index: Array,
+    tables: _AdaptiveSparseTables,
+    max_nodes: int,
+) -> tuple[Array, Array, Array, Array]:
+    """Materialize one padded hierarchical tensor formula from traced levels."""
+    dimension = index.shape[0]
+    valid_level, point_count, safe_levels, counts = _formula_capacity(
+        index, tables, max_nodes
     )
     slots = jnp.arange(max_nodes, dtype=jnp.int32)
 
@@ -1075,14 +1097,23 @@ def adaptive_sparse_controller(
             epsrel=epsrel,
             norm=error_norm,
         )
-        any_frontier = jnp.any(current.frontier_active)
-        all_roundoff = any_frontier & jnp.all(
+        # A frontier index whose formula exceeds the node table contributes no
+        # surplus, so the frontier error cannot vouch for it: it blocks
+        # convergence and ends the run as a capacity limit.
+        representable = jax.vmap(
+            lambda index: _formula_representable(index, tables, max_nodes)
+        )(current.frontier_indices)
+        blocked = jnp.any(current.frontier_active & ~representable)
+        representable_active = current.frontier_active & representable
+        nothing_to_gain = jnp.all(
             jnp.where(
-                current.frontier_active,
+                representable_active,
                 current.frontier_new_cost == 0,
                 True,
             )
         )
+        all_roundoff = jnp.any(representable_active) & nothing_to_gain & ~blocked
+        capacity_blocked = blocked & ((frontier_error <= tolerance) | nothing_to_gain)
         nonfinite = (
             current.cache.nonfinite
             | ~jnp.all(jnp.isfinite(current.value))
@@ -1093,11 +1124,13 @@ def adaptive_sparse_controller(
         status = sparse_termination_status(
             invalid=False,
             nonfinite=nonfinite,
-            converged=frontier_error <= tolerance,
+            converged=(frontier_error <= tolerance) & ~blocked,
             all_active_roundoff=all_roundoff & (frontier_error > tolerance),
             evaluation_exhausted=current.cache.exhausted,
-            index_exhausted=(current.accepted_count >= max_indices)
-            & (frontier_error > tolerance),
+            index_exhausted=(
+                (current.accepted_count >= max_indices) & (frontier_error > tolerance)
+            )
+            | capacity_blocked,
         )
         return current._replace(
             status=status,

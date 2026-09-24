@@ -215,3 +215,23 @@ def test_status_precedence_and_roundoff_contract():
         )
         == quad.QuadStatus.INVALID_INPUT
     )
+
+
+def test_index_beyond_node_capacity_blocks_convergence() -> None:
+    # cos(100 x0) needs levels whose tensor formulas exceed max_nodes=40.
+    # Those frontier indices contributed zero surplus, so the run reported
+    # CONVERGED with estimate 5.6e-17 at a 4.2% error.
+    result = quad.integrate(
+        lambda x: jnp.cos(100.0 * x[..., 0]),
+        quad.Hyperrectangle(jnp.zeros(2), jnp.ones(2)),
+        method=quad.AdaptiveSmolyak(initial_level=1),
+        epsabs=0.0,
+        epsrel=1e-8,
+        max_evaluations=400,
+        max_indices=16,
+        max_frontier=33,
+        max_nodes=40,
+    )
+    exact = jnp.sin(100.0) / 100.0
+    assert abs(float(result.value) - float(exact)) > 1e-8 * abs(float(exact))
+    assert result.status == quad.QuadStatus.MAX_INDICES

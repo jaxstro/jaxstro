@@ -205,6 +205,10 @@ adaptive = quad.integrate(
 ```
 
 `max_indices`, `max_frontier`, and `max_nodes` are distinct static capacities.
+A frontier index whose tensor formula needs more than `max_nodes` points cannot
+be evaluated, so its surplus is unknown. Such an index blocks `CONVERGED` and ends
+the run with `MAX_INDICES`; before 2026-09-24 it counted as a zero surplus and
+the run could report convergence at a percent-level error.
 `max_evaluations` is the logical integrand-evaluation budget. For adaptive
 integration, the declared frontier capacity must satisfy
 
