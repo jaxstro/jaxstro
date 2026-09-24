@@ -6,6 +6,11 @@ import numpy as np
 import pytest
 
 from jaxstro import quad, quantity
+from tests.validation._freshness import (
+    OFF_ORIGIN_ATOL,
+    OFF_ORIGIN_RTOL,
+    Origin,
+)
 
 
 def _integrate(theta, *, lower=0.0, upper=1.0, gradient="replay"):
@@ -233,6 +238,23 @@ def test_regional_replay_and_stop_have_exact_same_primal_tree(method, domain) ->
     _assert_exact_result_tree(replay, stopped)
 
 
+# The golden error estimates were recorded on macOS arm64. Other platforms'
+# XLA builds round the Kronrod error sum differently in the last bits (2 ULP in
+# full-gate run 36022291100, Linux x86_64); off the origin they are checked
+# with the approved evidence-freshness tolerance.
+GOLDEN_ORIGIN = Origin(system="macOS", machine="arm64")
+
+
+def _assert_golden_error(actual, expected) -> None:
+    actual, expected = np.asarray(actual), np.asarray(expected)
+    if Origin.of_runner() == GOLDEN_ORIGIN:
+        np.testing.assert_array_max_ulp(actual, expected, 1)
+    else:
+        np.testing.assert_allclose(
+            actual, expected, rtol=OFF_ORIGIN_RTOL, atol=OFF_ORIGIN_ATOL
+        )
+
+
 @pytest.mark.parametrize("reverse", [False, True])
 def test_gauss_kronrod_breakpoint_result_matches_pre_a3_golden_tree(reverse) -> None:
     measure = quad.WeightedMeasure(
@@ -267,14 +289,8 @@ def test_gauss_kronrod_breakpoint_result_matches_pre_a3_golden_tree(reverse) -> 
     expected_error = np.asarray([6.973468324349606e-14, 1.2952601953960162e-14])
 
     assert jnp.array_equal(result.value, expected_value)
-    np.testing.assert_array_max_ulp(
-        np.asarray(result.error.estimate), expected_error, 1
-    )
-    np.testing.assert_array_max_ulp(
-        np.asarray(result.error.norm),
-        np.asarray(expected_error[0]),
-        1,
-    )
+    _assert_golden_error(result.error.estimate, expected_error)
+    _assert_golden_error(result.error.norm, expected_error[0])
     assert result.error.kind == quad.ErrorKind.EMBEDDED_RULE
     assert jnp.isnan(result.error.confidence_level)
     assert result.tolerance == 1e-10
