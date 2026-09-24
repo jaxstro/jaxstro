@@ -1,8 +1,7 @@
 import hashlib
+import importlib.util
 import json
 import math
-import subprocess
-import sys
 from pathlib import Path
 
 import jax
@@ -12,9 +11,13 @@ from jaxstro import quad
 from jaxstro.quad._qmc_interval import spent_alpha
 from jaxstro.quad._scramble import scramble_integers
 from jaxstro.quad._sobol import sobol_integer_points, sobol_points
+from tests.validation._freshness import Origin, assert_fresh
 
 ARTIFACT = Path("docs/validation/quad-rqmc-calibration.json")
 GENERATOR = Path("scripts/generate_quad_rqmc_evidence.py")
+# The artifact records no environment. Its subset replays bit-exactly on macOS
+# arm64 (checked 2026-09-23), where it was generated.
+ARTIFACT_ORIGIN = Origin(system="macOS", machine="arm64")
 
 
 def _canonical_sha256(payload) -> str:
@@ -64,14 +67,29 @@ def test_exact_binomial_band_uses_the_frozen_equal_tail_boundary_convention():
     assert 200 * from_upper >= denominator
 
 
+def _load_generator():
+    spec = importlib.util.spec_from_file_location("quad_rqmc_evidence", GENERATOR)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def test_rqmc_artifact_is_fresh_and_reproducible_on_frozen_subset():
-    completed = subprocess.run(
-        [sys.executable, str(GENERATOR), "--check"],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    assert completed.returncode == 0, completed.stderr
+    module = _load_generator()
+    artifact = json.loads(ARTIFACT.read_text())
+    # Digests, frozen campaign, and coverage bands: exact on every platform.
+    module._validate_artifact(artifact)
+    for controls, stored in zip(
+        module.CAMPAIGN["records"], artifact["records"], strict=True
+    ):
+        replay = module._run_case(controls, seed_count=module.SUBSET_SEED_COUNT)
+        fresh = {
+            "seed_count": module.SUBSET_SEED_COUNT,
+            "estimates": replay["estimates"],
+            "half_widths": replay["half_widths"],
+        }
+        assert_fresh(stored["reproducibility_subset"], fresh, origin=ARTIFACT_ORIGIN)
 
 
 def test_every_empirical_coverage_lies_in_exact_binomial_band():

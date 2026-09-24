@@ -25,6 +25,7 @@ from jaxstro.quad import (
     RombergTanhSinh,
     integrate,
 )
+from tests.validation._freshness import Origin, assert_fresh
 
 METHODS = (
     GaussKronrod(pair=21),
@@ -37,6 +38,9 @@ H_ADAPTIVE = METHODS[:3]
 TANH_SINH = (METHODS[2], METHODS[4])
 TOLERANCE_SWEEP = (1e-4, 1e-7, 1e-10)
 EVIDENCE_PATH = Path("docs/validation/quad-adaptive-envelope.json")
+# The artifact records no environment. It replays bit-exactly on macOS arm64
+# (checked 2026-09-23), where it was generated.
+EVIDENCE_ORIGIN = Origin(system="macOS", machine="arm64")
 
 
 def _options(method, tolerance, **overrides):
@@ -54,7 +58,7 @@ def _options(method, tolerance, **overrides):
 
 def test_tolerance_sweep_evidence_matches_fresh_owner_output() -> None:
     recorded = json.loads(EVIDENCE_PATH.read_text(encoding="utf-8"))
-    assert recorded == build_evidence()
+    assert_fresh(recorded, build_evidence(), origin=EVIDENCE_ORIGIN)
     assert len(recorded["records"]) == len(METHODS) * len(TOLERANCE_SWEEP)
 
 

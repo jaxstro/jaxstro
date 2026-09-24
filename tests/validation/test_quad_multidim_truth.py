@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from tests.validation._freshness import Origin, assert_fresh
+
 ROOT = Path(__file__).parents[2]
 GENERATOR = ROOT / "scripts/generate_quad_multidim_evidence.py"
 TRUTH_ARTIFACT = ROOT / "docs/validation/quad-multidim-truth.json"
@@ -224,7 +226,14 @@ def test_astro_fixtures_match_truth_and_quantity_representation(generated):
 
 def test_committed_artifacts_are_canonical_and_fresh(generated):
     module = _load_generator()
-    truth, replay = generated
-    assert TRUTH_ARTIFACT.read_text() == module._canonical_json(truth)
-    assert REPLAY_ARTIFACT.read_text() == module._canonical_json(replay)
+    for path, fresh in zip((TRUTH_ARTIFACT, REPLAY_ARTIFACT), generated, strict=True):
+        text = path.read_text()
+        recorded = json.loads(text)
+        assert text == module._canonical_json(recorded), path
+        assert_fresh(
+            recorded,
+            fresh,
+            origin=Origin.from_environment(recorded["environment"]),
+            ignore=("environment",),
+        )
     assert json.loads(TRUTH_ARTIFACT.read_text())["environment"]["jax_enable_x64"]
