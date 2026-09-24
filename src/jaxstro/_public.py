@@ -3,6 +3,7 @@
 PUBLIC_MODULES: tuple[str, ...] = (
     "astrometry",
     "atmospheres",
+    "composition",
     "constants",
     "contracts",
     "coords",

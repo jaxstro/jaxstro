@@ -17,6 +17,7 @@ DOCS = ROOT / "docs"
 API_ROOT = DOCS / "50-api"
 
 API_OWNERS = {
+    "physical-representations/composition.md": "jaxstro.composition",
     "change-constraints/autodiff.md": "jaxstro.numerics.autodiff",
     "change-constraints/rootfinding.md": "jaxstro.numerics.rootfinding",
     "change-constraints/kepler.md": "jaxstro.numerics.kepler",
@@ -301,7 +302,8 @@ def test_random_reference_documents_zero_weight_and_tracing_boundaries() -> None
 def test_generated_manifest_counts_the_current_api_surface() -> None:
     routes = json.loads((DOCS / "route-manifest.json").read_text(encoding="utf-8"))
 
-    assert len(API_OWNERS) == 38
+    assert len(API_OWNERS) == 39  # + composition (2026-09-23, hydrax F13)
     assert "jaxstro.quad" in API_OWNERS.values()
     # 184: /support (874ef59), /qualified-core (228cac5), /method-coverage (3a1128e).
-    assert len(routes) == 184
+    # 185: /composition (composition record, 2026-09-23).
+    assert len(routes) == 185

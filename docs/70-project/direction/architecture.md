@@ -15,7 +15,8 @@ this section covers package structure and responsibility.
 ## Foundation boundary
 
 `jaxstro` is the ecosystem foundation. Its directly importable modules are
-`astrometry`, `atmospheres`, `constants`, `contracts`, `coords`, `evidence`,
+`astrometry`, `atmospheres`, `composition`, `constants`, `contracts`, `coords`,
+`evidence`,
 `geometry`, `jaxconfig`, `numerics`, `params`, `provenance`, `quad`, `quantity`,
 `spatial`, `spectra`, `testing`, and `units`. It does not own simulations, survey
 rendering, stellar evolution, or inference workflows. Domain packages depend on

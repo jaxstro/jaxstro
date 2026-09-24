@@ -15,6 +15,7 @@ def test_root_exports_the_canonical_public_modules() -> None:
     expected = {
         "astrometry",
         "atmospheres",
+        "composition",
         "constants",
         "contracts",
         "coords",
