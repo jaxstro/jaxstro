@@ -121,3 +121,9 @@ class TestResampling:
         indices = resampler(jrandom.PRNGKey(9), weights, num_samples=12)
         assert indices.shape == (12,)
         assert jnp.all((indices >= 0) & (indices < weights.shape[0]))
+
+    def test_zero_total_fallback_has_a_finite_gradient(self):
+        # weights / total was evaluated in the discarded branch at total = 0,
+        # so the gradient of the uniform fallback was NaN.
+        grad = jax.grad(lambda w: random._normalize_weights(w)[0])(jnp.zeros(3))
+        assert jnp.all(jnp.isfinite(grad))

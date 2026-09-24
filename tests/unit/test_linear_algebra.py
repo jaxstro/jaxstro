@@ -237,6 +237,21 @@ class TestSolveWrappers:
         assert jnp.allclose(A @ result, b, atol=1e-10)
         assert jnp.allclose(result[0], result[1], atol=1e-10)
 
+    def test_svd_solve_gradient_is_finite_at_an_exact_zero_singular_value(self):
+        # 1/s in the discarded branch of jnp.where was inf at s = 0 and made
+        # the gradient 0 * inf = NaN. dA_00 is checked against central FD.
+        A = jnp.array([[2.0, 0.0], [0.0, 0.0]])
+        b = jnp.array([1.0, 1.0])
+
+        def loss(matrix):
+            return jnp.sum(la.svd_solve(matrix, b))
+
+        grad = jax.grad(loss)(A)
+        assert jnp.all(jnp.isfinite(grad))
+        step = jnp.zeros((2, 2)).at[0, 0].set(1e-6)
+        fd = (loss(A + step) - loss(A - step)) / 2e-6
+        assert jnp.abs(grad[0, 0] - fd) < 1e-8
+
 
 class TestCovarianceCorrelation:
     """Tests for covariance and correlation helpers."""

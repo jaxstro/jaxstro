@@ -41,7 +41,10 @@ def seed_manifest(
 def _normalize_weights(weights: Float[Array, "n"]) -> Float[Array, "n"]:
     total = jnp.sum(weights)
     n = weights.shape[0]
-    return jnp.where(total > 0.0, weights / total, jnp.ones_like(weights) / n)
+    positive = total > 0.0
+    # Sanitize before selecting, so the zero-total fallback has a finite gradient.
+    safe_total = jnp.where(positive, total, 1.0)
+    return jnp.where(positive, weights / safe_total, jnp.ones_like(weights) / n)
 
 
 def _validate_resampling_inputs(

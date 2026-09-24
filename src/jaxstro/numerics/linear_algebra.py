@@ -188,7 +188,10 @@ def svd_solve(
     if rcond is None:
         rcond = float(jnp.finfo(A.dtype).eps * max(A.shape))
     cutoff = rcond * jnp.max(s)
-    s_inv = jnp.where(s > cutoff, 1.0 / s, 0.0)
+    # Sanitize before selecting: 1/s in the discarded branch is inf at s = 0 and
+    # makes the gradient 0 * inf = NaN.
+    keep = s > cutoff
+    s_inv = jnp.where(keep, 1.0 / jnp.where(keep, s, 1.0), 0.0)
     rhs = u.T @ b
     if rhs.ndim == 1:
         scaled = s_inv * rhs
