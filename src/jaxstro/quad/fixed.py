@@ -11,7 +11,6 @@ from ._integrand import (
     call_integrand,
     density_values,
     has_explicit_args,
-    infer_payload_zero,
     validate_node_values,
 )
 from ._quantity import validate_raw_domain
@@ -41,7 +40,7 @@ from .rules import (
     GaussianRule,
     TanhSinhRule,
 )
-from .transforms import DomainMapResult, map_domain, map_interval
+from .transforms import DomainMapResult, map_domain, map_interval_replay
 
 Domain = Interval | RightInfinite | LeftInfinite | Infinite
 Measure = (
@@ -67,12 +66,17 @@ def _evaluate_mapped(
     data: FixedRuleData,
     mapped: DomainMapResult,
     measure: Measure,
+    zero_width: Any = False,
 ):
     values = validate_node_values(
         call_integrand(fun, mapped.x, args, has_args),
         data.nodes.shape[0],
         context="fixed quadrature",
     )
+    # A zero-width segment has a zero Jacobian: its value is exactly zero, and
+    # its bound derivative is the integrand value there. Sanitize only the
+    # nonfinite values so 0 * inf cannot poison the result.
+    values = jnp.where(zero_width & ~jnp.isfinite(values), 0.0, values)
     density = density_values(measure, mapped.x, args)
     weights = data.weights * mapped.jacobian * density
     value = mapped.orientation * _weighted_sum(values, weights)
@@ -99,25 +103,18 @@ def _evaluate_interval_segments(
     data: FixedRuleData,
     measure: Measure,
 ):
-    zero = infer_payload_zero(
-        fun,
-        args=args,
-        node_count=data.nodes.shape[0],
-        node_dtype=data.nodes.dtype,
-        context="fixed quadrature",
-    )
-
     def evaluate_segment(bounds):
         segment = Interval(bounds[0], bounds[1])
-        affine = map_interval(segment, data.nodes)
-        mapped = DomainMapResult(*affine)
-        return jax.lax.cond(
-            bounds[0] == bounds[1],
-            lambda _operand: zero,
-            lambda _operand: _evaluate_mapped(
-                fun, args, has_args, data, mapped, measure
-            ),
-            operand=None,
+        # The signed affine map keeps d/d(bound) = +-f(bound) at zero width.
+        mapped = DomainMapResult(*map_interval_replay(segment, data.nodes))
+        return _evaluate_mapped(
+            fun,
+            args,
+            has_args,
+            data,
+            mapped,
+            measure,
+            zero_width=bounds[0] == bounds[1],
         )
 
     values = jax.vmap(evaluate_segment)(_interval_segments(domain))

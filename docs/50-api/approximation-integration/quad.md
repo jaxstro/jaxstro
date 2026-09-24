@@ -362,7 +362,9 @@ so scale selection belongs in the numerical-method record.
 
 Unsupported structural pairings raise eagerly. Value-dependent invalid finite
 domains return `nan` when traced. Zero-width finite intervals return an exact
-zero after static payload-shape inference.
+zero, even for an integrand that is nonfinite at that point, and the derivative
+with respect to the upper (lower) bound is $f(b)$ ($-f(a)$), as for a positive
+width.
 
 `JacobiMeasure(alpha, beta)` means
 $(1-t)^{\alpha}(1+t)^{\beta}\,\mathrm{d}t$ on the reference interval. An

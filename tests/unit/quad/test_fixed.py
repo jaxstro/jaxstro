@@ -219,3 +219,20 @@ def test_value_invalid_interval_returns_nan() -> None:
         rule=GaussianRule(3),
     )
     assert jnp.isnan(got)
+
+
+@pytest.mark.parametrize(
+    "rule", [GaussianRule(8), ClenshawCurtisRule(9), TanhSinhRule(4)]
+)
+def test_bound_derivative_at_zero_width_is_the_integrand_value(rule) -> None:
+    # d/db int_a^b f = f(b), also at b = a. The zero-width branch returned 0.
+    def f(x):
+        return jnp.exp(x) + 1.3
+
+    def integral(upper):
+        return fixed(f, Interval(0.3, upper), rule=rule)
+
+    assert integral(0.3) == 0.0
+    assert jnp.allclose(jax.grad(integral)(0.3), f(0.3), rtol=1e-13)
+    lower_grad = jax.grad(lambda lower: fixed(f, Interval(lower, 0.3), rule=rule))
+    assert jnp.allclose(lower_grad(0.3), -f(0.3), rtol=1e-13)
