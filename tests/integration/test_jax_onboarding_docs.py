@@ -9,6 +9,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[2]
 START_HERE = ROOT / "docs" / "00-start-here"
 
@@ -132,7 +134,7 @@ def test_first_principles_python_cells_run_in_source_order() -> None:
     )
 
 
-def test_why_jax_has_a_rendered_three_way_decision_table() -> None:
+def test_why_jax_source_has_a_three_way_decision_table() -> None:
     source = (START_HERE / "why-jax.md").read_text(encoding="utf-8")
     required = (
         "NumPy-style script",
@@ -158,17 +160,13 @@ def test_why_jax_has_a_rendered_three_way_decision_table() -> None:
     assert "automatic differentiation require other machinery" in normalized_cell
     assert "batching and derivatives are separate implementations" not in source
 
-    # The locked mystmd from package.json, as in scripts/check_docs.sh.
-    subprocess.run(
-        ["npx", "--no-install", "myst", "build", "--html", "--ci", "--strict"],
-        cwd=ROOT / "docs",
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    rendered = (ROOT / "docs" / "_build" / "html" / "why-jax" / "index.html").read_text(
-        encoding="utf-8"
-    )
+
+@pytest.mark.docs_build
+def test_why_jax_renders_the_decision_table() -> None:
+    # Reads the strict build that `scripts/check.sh docs` has just produced.
+    page = ROOT / "docs" / "_build" / "html" / "why-jax" / "index.html"
+    assert page.is_file(), "build the site first: bash scripts/check_docs.sh"
+    rendered = page.read_text(encoding="utf-8")
     assert "<table" in rendered
     for choice in ("NumPy-style script", "Direct JAX", "Jaxstro"):
         assert choice in rendered

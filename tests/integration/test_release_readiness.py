@@ -142,9 +142,10 @@ def test_release_mirror_keeps_benchmark_collection_in_the_local_gate() -> None:
     """The exact local mirror must prepare benchmark-only collection dependencies."""
     local_gate = (REPO_ROOT / "scripts" / "check.sh").read_text(encoding="utf-8")
 
-    sync = "uv sync --locked --extra dev --group benchmark"
-    assert sync in local_gate
-    assert local_gate.index(sync) < local_gate.index('pytest -m "not slow"')
+    sync_dev = local_gate.split("sync_dev() {", 1)[1].split("\n}", 1)[0]
+    assert "--group benchmark" in sync_dev
+    tier_stage = local_gate.split("stage_tests() {", 1)[1].split("\n}", 1)[0]
+    assert tier_stage.index("sync_dev") < tier_stage.index("pytest")
 
 
 def test_release_checklist_preserves_irreversible_stop_gates() -> None:
@@ -229,3 +230,11 @@ def test_release_gate_checks_wheel_and_sdist_in_clean_interpreters() -> None:
         "SDIST_VENV",
     ):
         assert phrase in local_gate
+
+
+def test_rendered_site_tests_run_in_the_docs_stage_only() -> None:
+    script = (REPO_ROOT / "scripts" / "check.sh").read_text(encoding="utf-8")
+    docs_stage = script.split("stage_docs() {", 1)[1].split("\n}", 1)[0]
+    tier_stage = script.split("stage_tests() {", 1)[1].split("\n}", 1)[0]
+    assert docs_stage.index("check_docs.sh") < docs_stage.index("-m docs_build")
+    assert "not docs_build" in tier_stage

@@ -28,11 +28,12 @@ stage_docs() {
   sync_dev
   npm ci --ignore-scripts
   bash scripts/check_docs.sh
+  $RUN pytest -m docs_build -q tests
 }
 
 stage_tests() {
   sync_dev
-  $RUN pytest -m "not slow" -q "tests/$1"
+  $RUN pytest -m "not slow and not docs_build" -q "tests/$1"
 }
 
 # Test files that import a [data] or [viz] package skip in the tier stages,

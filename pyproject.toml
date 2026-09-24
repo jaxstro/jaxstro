@@ -176,4 +176,5 @@ markers = [
     "integration: cross-module / JAX-transform tests (jit, grad, vmap, parity)",
     "validation: scientific validation (FD-vs-AD numerical truth, convergence)",
     "slow: expensive tests excluded from the fast gate",
+    "docs_build: reads the rendered site; runs in the docs stage after the strict build",
 ]
