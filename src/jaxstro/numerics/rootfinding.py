@@ -970,9 +970,11 @@ def newton_ppf(
     The PDF (CDF derivative) is supplied via ``pdf`` if available, else
     obtained automatically as ``jax.grad(cdf)`` (vmapped to handle array
     ``x``). The update is clipped to ``[lo, hi]`` after every step so the
-    iterate never leaves the support. A small ``pdf_floor`` guards the
-    division when the density is near zero (flat-CDF regions), preventing
-    NaNs without biasing well-conditioned steps.
+    iterate never leaves the support. A density floor
+    ``pdf_floor / max(|x_k|, |x0|)`` guards the division when the density is
+    near zero (flat-CDF regions). Because a density has units ``1/x``, the
+    floor scales with ``x``: the result is invariant under a change of the
+    units of ``x`` (for example Msun to g).
 
     This is deliberately decoupled from any specific distribution: callers
     pass their own ``cdf`` (closing over distribution parameters), an
@@ -999,8 +1001,9 @@ def newton_ppf(
         20 gives ample precision for smooth unimodal CDFs from a reasonable
         guess.
     pdf_floor : float
-        Additive floor on the density in the denominator (default 1e-30)
-        guarding against division by ~0 in flat-CDF regions.
+        Dimensionless density floor (default 1e-30). The denominator is
+        ``pdf(x_k) + pdf_floor / max(|x_k|, |x0|)``; if both are zero the
+        floor is ``pdf_floor`` in the units of ``1/x``.
 
     Returns
     -------
@@ -1049,7 +1052,14 @@ def newton_ppf(
     def step(x, _):
         residual = cdf(x) - u
         dens = pdf_fn(x)
-        x_new = x - residual / (dens + pdf_floor)
+        # A density has units 1/x, so the floor scales as 1/|x|; pdf_floor is
+        # dimensionless. The absolute floor is kept only when x_k = x0 = 0.
+        x_scale = jnp.maximum(jnp.abs(x), jnp.abs(x0))
+        has_scale = x_scale > 0.0
+        floor = jnp.where(
+            has_scale, pdf_floor / jnp.where(has_scale, x_scale, 1.0), pdf_floor
+        )
+        x_new = x - residual / (dens + floor)
         x_new = jnp.clip(x_new, lo, hi)
         return x_new, None
 

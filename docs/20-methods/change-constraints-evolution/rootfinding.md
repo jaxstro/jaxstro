@@ -222,8 +222,9 @@ residual, bracket-width, and slope-conditioning gates. Rejection returns NaN
 for the derivative-facing value and attempted gradient while retaining the
 nested primal diagnostics.
 
-`newton_ppf` adds `pdf_floor` to its denominator and clips every iterate to
-`[lo, hi]`. Interior iterates can carry finite executed-map sensitivity with
+`newton_ppf` adds the density floor `pdf_floor / max(|x_k|, |x0|)` to its
+denominator and clips every iterate to `[lo, hi]`. A density has units of $1/x$,
+so the floor scales with $x$ and the quantile does not depend on the units of $x$. Interior iterates can carry finite executed-map sensitivity with
 respect to $u$ and parameters in the CDF. At a clipped support boundary the
 gradient saturates to zero. `monotone_inverse_interp` is linear inside table
 cells and clamps outside the tabulated range.

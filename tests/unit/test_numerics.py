@@ -938,6 +938,40 @@ class TestNewtonPPF:
         expected = self._exp_ppf_true(u, lam)
         assert jnp.allclose(ppf, expected, atol=1e-6, rtol=1e-6)
 
+    def test_converges_at_cgs_scale(self):
+        """The density floor must not dominate a CGS-scale density.
+
+        At x ~ 1e33 g the exponential density is ~5e-34 g^-1; an absolute
+        1e-30 floor shrank every Newton step by ~1e4.
+        """
+        scale = 2.0e33
+        u = jnp.array([0.1, 0.5, 0.9])
+        ppf = rootfinding.newton_ppf(
+            u,
+            lambda x: self._exp_cdf(x, 1.0 / scale),
+            x0=jnp.full_like(u, scale),
+            lo=0.0,
+            hi=100.0 * scale,
+        )
+        assert jnp.allclose(ppf, self._exp_ppf_true(u, 1.0 / scale), rtol=1e-6)
+
+    def test_result_is_invariant_under_rescaling_x(self):
+        u = jnp.linspace(0.05, 0.95, 19)
+
+        def solve(scale):
+            return (
+                rootfinding.newton_ppf(
+                    u,
+                    lambda x: self._exp_cdf(x, 1.7 / scale),
+                    x0=jnp.full_like(u, scale),
+                    lo=0.0,
+                    hi=100.0 * scale,
+                )
+                / scale
+            )
+
+        assert jnp.allclose(solve(1.0), solve(2.0e33), rtol=1e-12, atol=0.0)
+
     def test_jit_vmap_compatible(self):
         """newton_ppf should compose with jit (vectorized over u)."""
         lam = 2.3
