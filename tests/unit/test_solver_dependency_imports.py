@@ -39,3 +39,13 @@ def test_lane_emden_names_stay_public_through_numerics() -> None:
     assert numerics.solve_isothermal is lane_emden.solve_isothermal
     assert numerics.lane_emden is lane_emden
     assert "solve_polytrope" in numerics.__all__
+
+
+def test_quad_does_not_import_numerics() -> None:
+    """The dependency runs numerics -> quad only (numerics.quadrature and
+    numerics.integration re-export quad); quad importing numerics made a cycle."""
+    program = "import sys, jaxstro.quad\nprint('jaxstro.numerics' in sys.modules)"
+    completed = subprocess.run(
+        [sys.executable, "-c", program], capture_output=True, text=True, check=True
+    )
+    assert completed.stdout.strip() == "False"

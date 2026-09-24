@@ -131,7 +131,7 @@ contract. Nonuniform spacing keeps `diff(x)` inside the cumulative sum.
 
 ### Gauss-Hermite convention
 
-`src/jaxstro/numerics/quadrature.py` creates probabilists' standard-normal nodes
+`src/jaxstro/quad/_hermite.py` creates probabilists' standard-normal nodes
 and weights host-side from NumPy's physicists' rule using the documented square-
 root-of-two rescaling. Nodes and weights are setup constants, not differentiated
 inputs.

@@ -7,7 +7,7 @@ import jax
 import jax.numpy as jnp
 from jaxtyping import Array, Float
 
-from jaxstro.numerics.checks import try_concrete_bool
+from jaxstro._tracing import try_concrete_bool
 
 
 @partial(jax.jit, static_argnames="axis")

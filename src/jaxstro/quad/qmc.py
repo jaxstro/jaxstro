@@ -9,7 +9,7 @@ from typing import NamedTuple
 import jax
 import jax.numpy as jnp
 
-from jaxstro.numerics.checks import try_concrete_bool
+from jaxstro._tracing import try_concrete_bool
 from jaxstro.quantity import Quantity
 from jaxstro.quantity.errors import DimensionError
 

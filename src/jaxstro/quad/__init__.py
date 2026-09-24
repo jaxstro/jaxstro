@@ -1,12 +1,7 @@
 """Canonical namespace for current integration foundations and methods."""
 
-from jaxstro.numerics.quadrature import (
-    gauss_hermite_nodes,
-    hermite_coefficients,
-    hermite_e_basis,
-)
-
 from ._chebyshev import clenshaw_curtis_nodes
+from ._hermite import gauss_hermite_nodes, hermite_coefficients, hermite_e_basis
 from ._recurrence import gauss_laguerre_nodes, gauss_legendre_nodes
 from .coordinates import Axis, CoordinatePoint
 from .cubature import AdaptiveCubature, GenzMalik
