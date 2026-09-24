@@ -69,10 +69,14 @@ If you already know part of the route, use
 
 ## Prerequisites
 
-You need Python 3.13 or newer and [uv](https://docs.astral.sh/uv/). jaxstro
-depends only on JAX, jaxlib, jaxtyping, and equinox: no astropy, no scipy, no
-solver libraries (see [](../70-project/decisions/0001-thin-foundation-posture.md)). A
-working knowledge of `jax.numpy` helps but is not assumed.
+You need Python 3.13 or newer and [uv](https://docs.astral.sh/uv/). jaxstro's
+runtime dependencies are JAX, jaxlib, jaxtyping, and equinox; diffrax and optimistix,
+which provide the adaptive ODE and implicit solve behind the Lane-Emden solver
+(added 2026-07-24); and sympy, which renders LaTeX for the equation registry (added
+2026-08-29). It does not depend on astropy or scipy. The original thin-foundation
+decision, [](../70-project/decisions/0001-thin-foundation-posture.md), predates the
+last three dependencies and has not yet been revised to record them. A working
+knowledge of `jax.numpy` helps but is not assumed.
 
 ## Install
 
