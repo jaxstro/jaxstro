@@ -118,6 +118,24 @@ def test_committed_route_manifest_matches_authored_navigation_routes() -> None:
     assert len(manifest.values()) == len(set(manifest.values()))
 
 
+def test_quad_status_map_leads_with_the_registry_maturity() -> None:
+    from jaxstro.contracts.registry import get_module_contract
+
+    api_text = (REPO_ROOT / "docs/50-api/approximation-integration/quad.md").read_text(
+        encoding="utf-8"
+    )
+    section = api_text.split("## Capability status map", 1)[1].split("\n## ", 1)[0]
+    rows = [
+        line.split("|")[1].strip()
+        for line in section.splitlines()
+        if line.startswith("| ") and not line.startswith(("| Status", "| ---"))
+    ]
+    maturity = get_module_contract("jaxstro.quad").maturity.value
+    # The broadest row carries the package maturity; no row claims more.
+    assert rows[0] == maturity
+    assert not {"validated", "ratified", "shipped and validated"} & set(rows)
+
+
 def test_quadrature_comparison_claims_are_routed_and_calibrated() -> None:
     performance_payload = json.loads(
         (REPO_ROOT / "docs/validation/quad-performance.json").read_text(
@@ -144,11 +162,6 @@ def test_quadrature_comparison_claims_are_routed_and_calibrated() -> None:
         "node-matched",
         "family-matched",
         "capability comparison",
-        "shipped and validated",
-        "benchmarking",
-        "alpha",
-        "approved but planned",
-        "intentionally unsupported",
         "Migrating to `jaxstro.quad`",
         "jaxstro.numerics.integration",
     ):

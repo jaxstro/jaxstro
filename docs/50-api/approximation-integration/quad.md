@@ -116,11 +116,15 @@ convergence is required; smaller valid capacities can terminate with
 
 ## Capability status map
 
-The status belongs to a capability, not to the package as a whole.
+The contract registry records `jaxstro.quad` as experimental, and so does this
+map. Each experimental capability has focused tests and the evidence linked
+below; none has yet been qualified for convergence order, derivative accuracy,
+and performance on a frozen benchmark set. Capabilities move to validated one at
+a time as that qualification is recorded.
 
 | Status | Current quadrature scope |
 | --- | --- |
-| shipped and validated | Sampled-data integration; fixed and adaptive one-dimensional rules; typed failure and work evidence; one-dimensional accepted-formula replay; finite-hyperrectangle tensor products, adaptive tensor refinement, Genz-Malik cubature, fixed or dimension-adaptive Smolyak sparse grids, deterministic Sobol integration, and fixed-look or bounded sequential randomized QMC |
+| experimental | Sampled-data integration; fixed and adaptive one-dimensional rules; typed failure and work evidence; one-dimensional accepted-formula replay; finite-hyperrectangle tensor products, adaptive tensor refinement, Genz-Malik cubature, fixed or dimension-adaptive Smolyak sparse grids, deterministic Sobol integration, and fixed-look or bounded sequential randomized QMC |
 | benchmarking | The Apple M2 Max CPU comparison is accepted; additional backends, precisions, batch regimes, and method families remain future benchmarking coverage |
 | alpha | Opt-in quantity normalization through `quad.integrate`; downstream ecosystem adoption is not implied |
 | approved but planned | Later scientific geometries and specializations |
