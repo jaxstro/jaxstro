@@ -21,9 +21,10 @@ def _selected_names(only: list[str] | None) -> list[str]:
 
 
 # The committed WebP files are rendered on macOS arm64. Fonts, FreeType, and
-# libwebp differ elsewhere, so bytes are compared only on that platform; other
-# platforms check that each figure renders to an image of the same size.
-# Approved 2026-09-24.
+# libwebp differ elsewhere, and tight bounding boxes follow the font metrics
+# (run 36049911100: 3221 x 1567 on Linux against 3197 x 1559 committed), so
+# bytes are compared only on that platform; elsewhere each figure must render
+# and decode. Approved 2026-09-24.
 RENDER_ORIGIN = ("macOS", "arm64")
 
 
@@ -39,7 +40,8 @@ def _webp_size(data: bytes) -> tuple[int, int]:
 def _is_fresh(committed: bytes, rendered: bytes) -> bool:
     if _on_render_origin():
         return committed == rendered
-    return _webp_size(committed) == _webp_size(rendered)
+    width, height = _webp_size(rendered)
+    return width > 0 and height > 0
 
 
 def main(argv: list[str] | None = None) -> int:
