@@ -70,8 +70,9 @@ independent audit, and the narrowest warranted scientific claim.
 | Material | Status | Where it belongs |
 | --- | --- | --- |
 | Current numerical primitives | Implemented | Jaxstro method and API pages with executable evidence |
+| Quadrature, cubature, and QMC (`jaxstro.quad`) | Implemented | Method and API pages with executable evidence; the contract registry records the module as experimental and it is outside the [qualified core](../60-validation/qualified-core.md) |
 | Delegated solver families | Ecosystem guide | Canonical external owner plus Jaxstro boundary guidance |
-| QMC and signal foundations | Planned | Concept and evidence requirements, without runtime promises |
+| Signal foundations | Planned | Concept and evidence requirements, without runtime promises |
 
 ## Shared numerical contracts
 
