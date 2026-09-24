@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import time
 from collections import Counter
 from html.parser import HTMLParser
@@ -151,18 +152,47 @@ def development_server_path(route: str, base_path: str = "") -> str:
     return route if route.startswith("/") else "/" + route
 
 
-def _fetch(url: str, *, attempts: int = 120, delay: float = 0.25) -> str:
+def _server_alive(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
+def wait_until_ready(url: str, *, server_pid: int | None, timeout: float) -> None:
+    """Poll ``url`` until it answers, the server exits, or ``timeout`` passes.
+
+    ``myst start`` builds every page before it opens its port, so the wait
+    lasts as long as the server process is alive, up to ``timeout`` seconds.
+    """
+    deadline = time.monotonic() + timeout
     last_error: Exception | None = None
-    for _ in range(attempts):
+    while time.monotonic() < deadline:
         try:
-            with urlopen(url, timeout=10) as response:  # noqa: S310 - localhost gate
-                if response.status != 200:
-                    raise DocsGateError(f"{url}: HTTP {response.status}")
-                return response.read().decode("utf-8")
+            _fetch(url)
+            return
         except (URLError, ConnectionError) as exc:
             last_error = exc
-            time.sleep(delay)
-    raise DocsGateError(f"rendered site did not become ready at {url}: {last_error}")
+        if server_pid is not None and not _server_alive(server_pid):
+            raise DocsGateError(
+                f"docs server (pid {server_pid}) exited before {url} answered: "
+                f"{last_error}"
+            )
+        time.sleep(0.25)
+    raise DocsGateError(
+        f"rendered site did not become ready at {url} within {timeout:g} s: "
+        f"{last_error}"
+    )
+
+
+def _fetch(url: str) -> str:
+    with urlopen(url, timeout=10) as response:  # noqa: S310 - localhost gate
+        if response.status != 200:
+            raise DocsGateError(f"{url}: HTTP {response.status}")
+        return response.read().decode("utf-8")
 
 
 def audit_site(
@@ -171,13 +201,10 @@ def audit_site(
     *,
     base_path: str = "",
 ) -> None:
-    """Fetch and validate every rendered page route."""
-    for index, route in enumerate(sorted(routes)):
+    """Fetch and validate every rendered page route of a ready server."""
+    for route in sorted(routes):
         page_path = development_server_path(route, base_path)
-        html = _fetch(
-            base_url.rstrip("/") + page_path,
-            attempts=120 if index == 0 else 1,
-        )
+        html = _fetch(base_url.rstrip("/") + page_path)
         audit_html(route, html, routes, base_path=base_path)
 
 
@@ -187,6 +214,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--base-url", required=True)
     parser.add_argument("--base-path", default="")
+    parser.add_argument("--server-pid", type=int, default=None)
+    parser.add_argument("--ready-timeout", type=float, default=600.0)
     args = parser.parse_args(argv)
 
     xref_path = args.site / "myst.xref.json"
@@ -195,6 +224,11 @@ def main(argv: list[str] | None = None) -> int:
     actual = extract_page_routes(xref, content_dir, base_path=args.base_path)
     expected = json.loads(args.manifest.read_text(encoding="utf-8"))
     validate_route_manifest(actual, expected)
+    wait_until_ready(
+        args.base_url.rstrip("/") + "/",
+        server_pid=args.server_pid,
+        timeout=args.ready_timeout,
+    )
     audit_site(args.base_url, set(actual.values()), base_path=args.base_path)
     print(
         f"docs gate passed: {len(actual)} unique routes, stable manifest, "

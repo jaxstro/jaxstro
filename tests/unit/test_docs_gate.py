@@ -114,3 +114,71 @@ def test_generated_bibliography_owns_the_references_heading() -> None:
 
     assert "## References" not in text
     assert "```{bibliography}" in text
+
+
+def _serve_after(delay: float):
+    """Start a localhost HTTP server on a free port after ``delay`` seconds."""
+    import http.server
+    import socket
+    import threading
+
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        port = probe.getsockname()[1]
+
+    class Ok(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):  # noqa: N802 - http.server API
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b"ready")
+
+        def log_message(self, *args):
+            pass
+
+    servers = []
+
+    def start():
+        server = http.server.HTTPServer(("127.0.0.1", port), Ok)
+        servers.append(server)
+        server.serve_forever()
+
+    timer = threading.Timer(delay, start)
+    timer.daemon = True
+    timer.start()
+    return f"http://127.0.0.1:{port}/", servers
+
+
+def test_readiness_waits_while_the_server_process_is_alive() -> None:
+    import os
+
+    checker = _load_checker()
+    url, servers = _serve_after(1.0)
+    try:
+        checker.wait_until_ready(url, server_pid=os.getpid(), timeout=10.0)
+    finally:
+        for server in servers:
+            server.shutdown()
+
+
+def test_readiness_fails_at_once_when_the_server_process_has_exited() -> None:
+    import subprocess
+    import sys
+    import time
+
+    checker = _load_checker()
+    exited = subprocess.Popen([sys.executable, "-c", "pass"])
+    exited.wait()
+    url, _ = _serve_after(60.0)
+    start = time.monotonic()
+    with pytest.raises(checker.DocsGateError, match="exited before"):
+        checker.wait_until_ready(url, server_pid=exited.pid, timeout=30.0)
+    assert time.monotonic() - start < 5.0
+
+
+def test_readiness_stops_at_the_timeout() -> None:
+    import os
+
+    checker = _load_checker()
+    url, _ = _serve_after(60.0)
+    with pytest.raises(checker.DocsGateError, match="did not become ready"):
+        checker.wait_until_ready(url, server_pid=os.getpid(), timeout=1.0)

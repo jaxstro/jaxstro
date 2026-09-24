@@ -55,7 +55,8 @@ if ! env -u VIRTUAL_ENV uv run --no-sync python "$ROOT_DIR/scripts/check_docs_si
   --site "$ROOT_DIR/docs/_build/site" \
   --manifest "$ROOT_DIR/docs/route-manifest.json" \
   --base-url "http://localhost:$APP_PORT" \
-  --base-path "$BASE_PATH"; then
+  --base-path "$BASE_PATH" \
+  --server-pid "$SERVER_PID"; then
   echo "== MyST server log ==" >&2
   tail -n 120 "$LOG_PATH" >&2
   exit 1
