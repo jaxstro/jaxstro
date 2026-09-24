@@ -7,7 +7,7 @@
 # Run from repo root. Any failure aborts (set -e).
 set -euo pipefail
 RUN="env -u VIRTUAL_ENV uv run --no-sync"
-STAGES=(static docs tests-unit tests-integration tests-validation ml distribution)
+STAGES=(static docs tests-unit tests-integration tests-validation extras ml distribution)
 
 sync_dev() {
   env -u VIRTUAL_ENV uv sync --locked --extra dev --group benchmark --group reference
@@ -33,6 +33,23 @@ stage_docs() {
 stage_tests() {
   sync_dev
   $RUN pytest -m "not slow" -q "tests/$1"
+}
+
+# Test files that import a [data] or [viz] package skip in the tier stages,
+# which install neither extra. Run them here with both extras installed.
+stage_extras() {
+  env -u VIRTUAL_ENV uv sync --locked --extra dev --extra data --extra viz \
+    --group benchmark --group reference
+  local files=() file
+  while IFS= read -r file; do
+    files+=("$file")
+  done < <(grep -rlE --include='*.py' \
+    'importorskip\("(polars|pyarrow|zarr|numcodecs|matplotlib|seaborn|PIL)"' tests | sort)
+  if ((${#files[@]} == 0)); then
+    echo "extras stage found no test files that need [data] or [viz]" >&2
+    exit 1
+  fi
+  $RUN pytest -q "${files[@]}"
 }
 
 # Only tests that import an [ml] package gain coverage here; the rest of the
@@ -85,6 +102,7 @@ run_stage() {
     tests-unit) stage_tests unit ;;
     tests-integration) stage_tests integration ;;
     tests-validation) stage_tests validation ;;
+    extras) stage_extras ;;
     ml) stage_ml ;;
     distribution) stage_distribution ;;
   esac

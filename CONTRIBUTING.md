@@ -19,8 +19,8 @@ release mirror:
 bash scripts/check.sh
 ```
 
-It runs seven stages in order: `static`, `docs`, `tests-unit`,
-`tests-integration`, `tests-validation`, `ml`, `distribution`. Name stages to
+It runs eight stages in order: `static`, `docs`, `tests-unit`,
+`tests-integration`, `tests-validation`, `extras`, `ml`, `distribution`. Name stages to
 run only those, for example `bash scripts/check.sh static tests-unit`. On each
 push to `main` the full-gate workflow runs every stage as its own parallel job;
 `tests.yml` runs a faster lint, unit, and gradient gate on pushes and pull
