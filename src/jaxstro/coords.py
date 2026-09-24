@@ -389,7 +389,8 @@ def galactic_to_equatorial(
 
     # Convert Equatorial Cartesian to spherical
     ra_rad = jnp.arctan2(y_eq, x_eq)
-    dec_rad = jnp.arcsin(z_eq)
+    # Rounding can push |z| a few ulp past 1 near the pole; clip as in sky_tangent.
+    dec_rad = jnp.arcsin(jnp.clip(z_eq, -1.0, 1.0))
 
     # Convert to degrees and wrap RA to [0, 360)
     ra = jnp.rad2deg(ra_rad) % 360.0
@@ -458,7 +459,8 @@ def equatorial_to_galactic(
 
     # Convert Galactic Cartesian to spherical
     l_rad = jnp.arctan2(y_gal, x_gal)
-    b_rad = jnp.arcsin(z_gal)
+    # Rounding can push |z| a few ulp past 1 near the pole; clip as in sky_tangent.
+    b_rad = jnp.arcsin(jnp.clip(z_gal, -1.0, 1.0))
 
     # Convert to degrees and wrap l to [0, 360)
     l = jnp.rad2deg(l_rad) % 360.0

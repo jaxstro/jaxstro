@@ -175,6 +175,19 @@ class TestGalacticEquatorial:
         assert completed.returncode == 0, completed.stderr
         assert float(completed.stdout.strip()) < 1e-8
 
+    def test_no_nan_at_the_other_frames_pole(self):
+        """Rounding can push the rotated z past 1; arcsin must not return NaN.
+
+        Before the clip, 371 of 3600 directions within 1e-9 deg of the North
+        Galactic Pole returned NaN latitude.
+        """
+        offsets = jnp.linspace(-1e-9, 1e-9, 3600)
+        # North Galactic Pole in ICRS, and the North Celestial Pole in Galactic.
+        _, b = equatorial_to_galactic(jnp.full(3600, 192.85948), 27.12825 + offsets)
+        _, dec = galactic_to_equatorial(jnp.full(3600, 122.93192), 27.12825 + offsets)
+        assert jnp.all(jnp.isfinite(b)) and jnp.all(jnp.abs(b) <= 90.0)
+        assert jnp.all(jnp.isfinite(dec)) and jnp.all(jnp.abs(dec) <= 90.0)
+
     def test_batch_processing(self):
         """Should handle arrays."""
         l = jnp.array([0.0, 90.0, 180.0, 270.0])
