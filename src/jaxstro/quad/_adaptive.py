@@ -57,7 +57,6 @@ class TransformedIntegrand(NamedTuple):
     valid: Array
     nonfinite: Array
     roundoff: Array
-    truncation: Any = 0.0
 
 
 class LocalEstimate(NamedTuple):
@@ -439,65 +438,17 @@ def transformed_integrand(
     midpoint = 0.5 * (upper + lower)
     reference = midpoint + half_width * nodes
     roundoff = jnp.asarray(False)
-    dropped = jnp.zeros(nodes.shape, dtype=bool)
     if open_region:
-        # Tanh-sinh tail nodes are meant to lie within an ulp of the domain
-        # boundary, where the infinite-domain maps are singular. A tail node
-        # that rounds onto the boundary is dropped with zero weight (Bailey's
-        # truncation), not reported as roundoff; stalls are left to the
-        # controller's stagnation counters. A node that rounds onto an interior
-        # split boundary is an ordinary interior point and is kept.
-        dropped = jax.lax.stop_gradient(jnp.abs(reference) >= 1.0)
-        reference = jnp.where(dropped, midpoint, reference)
+        interior_lower = jnp.nextafter(lower, upper)
+        interior_upper = jnp.nextafter(upper, lower)
+        clipped_reference = jnp.clip(reference, interior_lower, interior_upper)
+        roundoff = jnp.any(clipped_reference != reference)
+        reference = clipped_reference
     mapped = (
         map_domain_replay(domain, reference)
         if replay
         else map_domain(domain, reference)
     )
-    if isinstance(domain, Interval):
-        # A node meant to be interior (|t| < 1) can round onto a physical
-        # endpoint once a region is narrower than the endpoint's spacing; an
-        # integrable endpoint singularity then turned the result into NaN.
-        # Such a node cannot be represented: it is evaluated at the region's
-        # midpoint (so no inf or NaN enters the derivative) and dropped with zero
-        # weight, which bounds the error by the integral over that ulp-wide
-        # sliver. Rules whose nodes include t = +-1 (Clenshaw-Curtis) keep
-        # their endpoint nodes.
-        a = jnp.asarray(domain.lower, dtype=mapped.x.dtype)
-        b = jnp.asarray(domain.upper, dtype=mapped.x.dtype)
-        low = jnp.minimum(a, b)
-        high = jnp.maximum(a, b)
-        # XLA on CPU flushes subnormals, so next to zero use the smallest
-        # normal number rather than nextafter (5e-324 flushes back to 0).
-        # The test only decides which nodes to drop, so it carries no derivative.
-        tiny = jnp.finfo(mapped.x.dtype).tiny
-        fixed_low = jax.lax.stop_gradient(low)
-        fixed_high = jax.lax.stop_gradient(high)
-        first_inside = jnp.maximum(
-            jnp.nextafter(fixed_low, fixed_high), fixed_low + tiny
-        )
-        last_inside = jnp.minimum(
-            jnp.nextafter(fixed_high, fixed_low), fixed_high - tiny
-        )
-        x_value = jax.lax.stop_gradient(mapped.x)
-        # A segment with no representable interior point (one ulp wide, as
-        # between adjacent breakpoints) keeps its endpoint evaluations.
-        moved = (
-            (jnp.abs(nodes) < 1.0)
-            & ((x_value < first_inside) | (x_value > last_inside))
-            & (first_inside <= last_inside)
-        )
-        # For tanh-sinh this is the tail design again; for the other rules
-        # a node reaches the endpoint only once the region is ulp-sized.
-        if not open_region:
-            roundoff = roundoff | jnp.any(moved)
-        region_mid = (
-            map_domain_replay(domain, midpoint[None])
-            if replay
-            else map_domain(domain, midpoint[None])
-        ).x[0]
-        mapped = mapped._replace(x=jnp.where(moved, region_mid, mapped.x))
-        dropped = dropped | moved
     has_args = has_explicit_args(args)
     raw_values = validate_node_values(
         call_integrand(fun, mapped.x, args, has_args),
@@ -509,20 +460,7 @@ def transformed_integrand(
     node_factor = expand_node_factor(
         mapped.orientation * density * jacobian, raw_values.ndim
     )
-    # Sanitize before multiplying: a dropped node's value may be inf, and
-    # inf * 0 would put NaN into the derivative.
-    raw_values = jnp.where(
-        expand_node_factor(dropped, raw_values.ndim), 0.0, raw_values
-    )
     values = raw_values * node_factor
-    truncation = _dropped_sliver_bound(
-        domain,
-        mapped.x,
-        raw_values * expand_node_factor(density, raw_values.ndim),
-        dropped,
-    )
-    # A region with no representable node cannot be refined further.
-    roundoff = roundoff | jnp.all(dropped)
     local_valid = (
         jnp.isfinite(lower)
         & jnp.isfinite(upper)
@@ -547,35 +485,7 @@ def transformed_integrand(
         valid=valid,
         nonfinite=nonfinite,
         roundoff=roundoff,
-        truncation=truncation,
     )
-
-
-def _dropped_sliver_bound(domain, x, weighted, dropped) -> Array:
-    """Estimate the integral lost with nodes dropped next to an endpoint.
-
-    For each finite endpoint where nodes were dropped, the kept node nearest
-    that endpoint, ``x_k``, gives ``|f(x_k)| |x_k - endpoint|``: the dropped
-    sliver's mass for a flat integrand and a lower bound for a monotone
-    endpoint singularity. It is about ``1e-16 |f|`` for a smooth integrand and
-    blocks convergence when a singular endpoint hides mass in the sliver.
-    """
-    if not isinstance(domain, Interval):
-        return jnp.asarray(0.0, dtype=x.dtype)
-    x = jax.lax.stop_gradient(x)
-    magnitude = jax.lax.stop_gradient(jnp.abs(weighted))
-    magnitude = jnp.reshape(magnitude, (magnitude.shape[0], -1)).max(axis=1)
-    a = jnp.asarray(domain.lower, dtype=x.dtype)
-    b = jnp.asarray(domain.upper, dtype=x.dtype)
-    total = jnp.asarray(0.0, dtype=x.dtype)
-    for endpoint, other in ((a, b), (b, a)):
-        near = jnp.abs(x - endpoint) < jnp.abs(x - other)
-        distance = jnp.where(~dropped, jnp.abs(x - endpoint), jnp.inf)
-        nearest = jnp.argmin(distance)
-        lost = jnp.any(dropped & near) & jnp.isfinite(distance[nearest])
-        sliver = magnitude[nearest] * jnp.where(lost, distance[nearest], 0.0)
-        total = total + jnp.where(lost, sliver, 0.0)
-    return total
 
 
 def adaptive_controller(

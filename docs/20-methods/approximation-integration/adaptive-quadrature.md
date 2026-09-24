@@ -171,36 +171,6 @@ e_i = \lvert Q_{h/2}-Q_h\rvert
 This open rule avoids evaluating finite endpoints directly. Domain maps and
 their Jacobians extend the same logic to half-infinite and infinite domains.
 
-#### Nodes that round onto an endpoint
-
-Regions are bisected in the reference coordinate $t\in[-1,1]$, so a node
-$x=m+h\,t$ near a finite endpoint $a$ cannot resolve offsets below the spacing
-of $a$: once a region is that narrow, a node meant to be interior rounds onto
-$a$. Before 2026-09-24 an integrable endpoint singularity then returned `nan`
-for every method, for example $\int_1^2(x-1)^{-1/2}\,\mathrm{d}x$.
-
-Such a node is now dropped: it is evaluated at the region midpoint, so no
-infinite value reaches a derivative, and given zero weight. The region's error
-gains the bound $|f(x_k)|\,|x_k-a|$ for the kept node $x_k$ nearest $a$, which
-approximates the dropped sliver's mass from below for a monotone singularity and
-is about $10^{-16}|f|$ for a smooth integrand. When that bound is at least the
-region's rule error, refining the region cannot help and the run reports
-`ROUNDOFF_LIMITED`. For Gauss-Kronrod and Clenshaw-Curtis a dropped node always
-reports roundoff; tanh-sinh tail nodes lie within an ulp of the endpoint by
-design, so for tanh-sinh only the dominance test applies, and a tail node that
-rounds onto an interior split boundary is an ordinary interior point. A segment
-with no representable interior point, such as one ulp between adjacent
-breakpoints, keeps its endpoint evaluations.
-
-| Integrand (epsrel $10^{-10}$) | Method | Relative error | Status |
-| --- | --- | --- | --- |
-| $(x-1)^{-1/2}$ on $[1,2]$ | GK21 / tanh-sinh | $1.8\times10^{-8}$ / $1.4\times10^{-8}$ | `ROUNDOFF_LIMITED` |
-| $x^{-0.9}$ on $[0,1]$ | GK21 / tanh-sinh | $2.4\times10^{-2}$ / $2.3\times10^{-2}$ | `ROUNDOFF_LIMITED` |
-| $1/(10^{-8}+(x-0.3)^2)$ on $[0,1]$ | tanh-sinh level 5 | $6.3\times10^{-14}$ | `CONVERGED` |
-
-Reaching beyond these endpoint limits needs extrapolation (the epsilon
-algorithm of QUADPACK's QAGS), which Jaxstro does not implement yet.
-
 ### Characteristic scales for improper domains
 
 An improper map needs a physical scale $s>0$, not merely a display unit.

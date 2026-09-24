@@ -375,13 +375,9 @@ def _solve_raw(
         estimate = reduce_values(transformed.values)
         return LocalEstimate(
             value=estimate.value,
-            error=estimate.error + transformed.truncation,
+            error=estimate.error,
             nonfinite=transformed.nonfinite | estimate.nonfinite,
-            roundoff=transformed.roundoff
-            | (
-                (transformed.truncation > 0.0)
-                & (transformed.truncation >= jnp.max(jnp.abs(estimate.error)))
-            ),
+            roundoff=transformed.roundoff,
         )
 
     tolerance_valid = (
