@@ -173,7 +173,7 @@ def _computational_metadata(
     """Read one existing computational artifact without normalizing its schema.
 
     The cross-class index has long accepted the generic ``EvidenceArtifact``
-    envelope. Phase B's generated truth, replay, calibration, comparison, and
+    envelope. The multidimensional-quadrature truth, replay, calibration, comparison, and
     baseline records predate that envelope and already have their own checked
     schemas. Indexing them must preserve those owners rather than minting a
     replacement artifact schema solely for the index.

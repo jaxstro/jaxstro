@@ -216,17 +216,23 @@ def _qmc_formula(method, domain, key, *, result=None) -> ReplayFormula:
     )
 
 
-def _method_phase(method) -> str:
-    if isinstance(
-        method,
-        (TensorProduct, AdaptiveTensorClenshawCurtis, AdaptiveCubature),
-    ):
-        return "Phase B1"
-    if isinstance(method, (Smolyak, AdaptiveSmolyak)):
-        return "Phase B2"
-    if isinstance(method, (Sobol, ScrambledSobol, AdaptiveScrambledSobol)):
-        return "Phase B3"
-    raise TypeError(f"{type(method).__name__} is not an implemented Phase B method")
+_MULTIDIM_METHODS = (
+    TensorProduct,
+    AdaptiveTensorClenshawCurtis,
+    AdaptiveCubature,
+    Smolyak,
+    AdaptiveSmolyak,
+    Sobol,
+    ScrambledSobol,
+    AdaptiveScrambledSobol,
+)
+
+
+def _require_multidim_method(method) -> None:
+    if not isinstance(method, _MULTIDIM_METHODS):
+        raise TypeError(
+            f"{type(method).__name__} is not a multidimensional quadrature method"
+        )
 
 
 def _solve_multidim(
@@ -338,7 +344,7 @@ def _solve_multidim(
         result = integrate_tensor(config.fun, domain, **common)
         formula = _fixed_tensor_formula(method, domain)
     else:
-        _method_phase(method)
+        _require_multidim_method(method)
         raise AssertionError("unreachable")
     return MultidimPrimalSolve(result, formula, config, domain, args)
 
@@ -376,7 +382,7 @@ def _prepare_multidim_solve(
 
 def _integrate_hyperrectangle(fun, domain, **kwargs):
     method = kwargs["method"]
-    _method_phase(method)
+    _require_multidim_method(method)
     if kwargs["gradient"] not in ("replay", "stop"):
         raise ValueError('gradient must be "replay" or "stop"')
     if kwargs["gradient"] == "replay":

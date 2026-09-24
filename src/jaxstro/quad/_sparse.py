@@ -53,7 +53,7 @@ class _SparseHostData(NamedTuple):
 
 
 class SparseReplayEvidence(NamedTuple):
-    """Stopped adaptive sparse formula metadata consumed by Phase B4 replay."""
+    """Stopped adaptive sparse formula metadata consumed by replay."""
 
     indices: Array
     active: Array

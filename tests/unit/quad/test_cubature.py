@@ -37,7 +37,7 @@ def test_adaptive_cubature_declaration_is_static_and_requires_genz_malik():
     assert isinstance(method.rule, quad.GenzMalik)
     with pytest.raises(
         TypeError,
-        match="AdaptiveCubature requires GenzMalik in Phase B1",
+        match="AdaptiveCubature requires GenzMalik",
     ):
         quad.AdaptiveCubature(rule=object())
 
@@ -95,7 +95,7 @@ def test_cubature_initial_rule_count_and_dimension_envelope(dimension):
 def test_cubature_rejects_dimensions_outside_b1_envelope(dimension):
     with pytest.raises(
         ValueError,
-        match="Phase B1 deterministic methods require dimension 2 through 8",
+        match="Deterministic tensor and cubature methods require dimension 2 through 8",
     ):
         quad.integrate(
             lambda x: jnp.ones(x.shape[0]),

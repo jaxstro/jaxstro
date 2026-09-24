@@ -399,7 +399,7 @@ def test_tensor_product_rejects_unsupported_rule():
 def test_tensor_product_rejects_dimensions_outside_b1_envelope(dimension):
     with pytest.raises(
         ValueError,
-        match="Phase B1 deterministic methods require dimension 2 through 8",
+        match="Deterministic tensor and cubature methods require dimension 2 through 8",
     ):
         tensor_rule_data(
             quad.TensorProduct(quad.GaussianRule(1)),

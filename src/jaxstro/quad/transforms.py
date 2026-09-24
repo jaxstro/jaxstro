@@ -69,7 +69,7 @@ def map_domain(
     domain: Interval | RightInfinite | LeftInfinite | Infinite,
     reference: Array,
 ) -> DomainMapResult:
-    """Map reference coordinates in ``(-1, 1)`` to a Phase A domain."""
+    """Map reference coordinates in ``(-1, 1)`` to a one-dimensional domain."""
     validate_raw_domain(domain)
     reference = jnp.asarray(reference)
     if isinstance(domain, Interval):

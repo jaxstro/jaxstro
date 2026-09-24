@@ -33,7 +33,7 @@ class TensorRuleData(NamedTuple):
 
 
 class TensorReplayEvidence(NamedTuple):
-    """Stopped accepted-formula metadata consumed by the Phase B4 replay owner."""
+    """Stopped accepted-formula metadata consumed by the replay owner."""
 
     levels: Array
     active_node_ids: Array
@@ -96,7 +96,9 @@ class TensorState(NamedTuple):
 
 def validate_b1_dimension(dimension: int) -> None:
     if dimension < 2 or dimension > 8:
-        raise ValueError("Phase B1 deterministic methods require dimension 2 through 8")
+        raise ValueError(
+            "Deterministic tensor and cubature methods require dimension 2 through 8"
+        )
 
 
 def _reduced_dyadic(index: int, level: int) -> tuple[int, int]:

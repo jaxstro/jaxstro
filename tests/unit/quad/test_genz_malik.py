@@ -656,7 +656,7 @@ def test_local_estimate_composes_with_jit_and_vmap():
 def test_rule_rejects_dimensions_outside_the_validated_envelope(dimension):
     with pytest.raises(
         ValueError,
-        match="Phase B1 deterministic methods require dimension 2 through 8",
+        match="Deterministic tensor and cubature methods require dimension 2 through 8",
     ):
         genz_malik_data(dimension, jnp.float64)
 

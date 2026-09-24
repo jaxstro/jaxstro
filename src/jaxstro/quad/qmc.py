@@ -398,7 +398,7 @@ def _resolve_sequential_estimate_bounds(
         return bounds[0], bounds[1]
     if not isinstance(measure, LebesgueMeasure):
         raise ValueError(
-            "integrand_bounds require LebesgueMeasure in Phase B3; "
+            "integrand_bounds require LebesgueMeasure; "
             "supply direct estimate_bounds for other finite measures"
         )
     absolute_volume = jnp.prod(

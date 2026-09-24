@@ -54,7 +54,7 @@ class AdaptiveCubature:
 
     def __post_init__(self) -> None:
         if not isinstance(self.rule, GenzMalik):
-            raise TypeError("AdaptiveCubature requires GenzMalik in Phase B1")
+            raise TypeError("AdaptiveCubature requires GenzMalik")
 
     def tree_flatten(self):
         return (), self.rule

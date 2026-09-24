@@ -46,7 +46,7 @@ def test_facade_requires_one_dimensional_region_capacity():
 
 
 def test_b0_hyperrectangle_has_no_silent_default_method():
-    with pytest.raises(TypeError, match="Phase B method"):
+    with pytest.raises(TypeError, match="not a multidimensional quadrature method"):
         quad.integrate(
             lambda x: jnp.sum(x, axis=-1),
             quad.Hyperrectangle(jnp.zeros(2), jnp.ones(2)),

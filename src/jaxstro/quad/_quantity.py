@@ -480,7 +480,7 @@ def normalize_multidim_call(
     epsabs,
     epsrel,
 ) -> NormalizedMultidimCall:
-    """Normalize heterogeneous quantity axes onto the raw Phase B engine."""
+    """Normalize heterogeneous quantity axes onto the raw multidimensional engine."""
     units = _multidim_axis_units(domain)
     integrand_unit = _infer_multidim_output_unit(fun, args, units)
     normalized_measure, density_unit = _wrap_multidim_measure(

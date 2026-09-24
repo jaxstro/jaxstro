@@ -494,7 +494,7 @@ def test_array_and_complex_payloads_preserve_value_and_evidence_contracts():
 def test_adaptive_tensor_rejects_dimensions_outside_b1_envelope(dimension):
     with pytest.raises(
         ValueError,
-        match="Phase B1 deterministic methods require dimension 2 through 8",
+        match="Deterministic tensor and cubature methods require dimension 2 through 8",
     ):
         quad.integrate(
             lambda x: jnp.sum(x, axis=-1),
