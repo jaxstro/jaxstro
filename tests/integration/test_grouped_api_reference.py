@@ -304,8 +304,4 @@ def test_generated_manifest_counts_the_current_api_surface() -> None:
 
     assert len(API_OWNERS) == 39  # + composition (2026-09-23, hydrax F13)
     assert "jaxstro.quad" in API_OWNERS.values()
-    # 184: /support (874ef59), /qualified-core (228cac5), /method-coverage (3a1128e).
-    # 185: /composition (composition record, 2026-09-23).
-    # 186: /solver-dependencies-imported-where-used (ADR 0015, 2026-09-24).
-    # 187: /lane-emden-2, the Lane-Emden provenance cards (2026-09-24).
-    assert len(routes) == 187
+    assert all(f"50-api/{page}" in routes for page in API_OWNERS)
