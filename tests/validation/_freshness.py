@@ -18,9 +18,10 @@ The absolute floor does not scale with the magnitude of the quantities an
 error field is computed from: in full-gate run 35950495028 (2026-09-24) the
 absolute error of a value near 525.66 was 0.0 on macOS and 3.41e-13 on
 Linux. Off the origin, fields named in ``derived`` (errors computed as
-differences of other recorded fields) are therefore not compared; the fields
-they are computed from still are, and pass/fail flags stay exact. Approved
-2026-09-24.
+differences of other recorded fields, and finite-difference estimates, whose
+last-bit noise is amplified by the inverse step) are therefore not compared;
+the fields they are checked against still are, and pass/fail flags stay
+exact. Approved 2026-09-24.
 """
 
 from __future__ import annotations

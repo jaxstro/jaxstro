@@ -11,13 +11,17 @@ ROOT = Path(__file__).resolve().parents[2]
 GENERATOR = ROOT / "scripts/generate_quad_replay_evidence.py"
 # The artifact records platform "macOS-26.1-arm64-arm-64bit-Mach-O".
 ARTIFACT_ORIGIN = Origin(system="macOS", machine="arm64")
-# Measured errors computed from other recorded fields; the gates' pass flags
-# and the values they are computed from are still compared everywhere.
+# Measured errors computed from other recorded fields, and central finite
+# differences (step 2e-5), whose last-bit noise is amplified by 1/(2h) = 2.5e4:
+# Linux differed by 5.55e-12 on 0.656 (full-gate run 35956092436). The gates'
+# pass flags and the AD derivatives they check are still compared everywhere.
 DERIVED_ERROR_FIELDS = (
     "observed",
     "observed_primal_error",
     "primal_relative_error",
     "derivative_relative_error",
+    "frozen_formula_fd",
+    "adaptive_rerun_fd",
 )
 
 
