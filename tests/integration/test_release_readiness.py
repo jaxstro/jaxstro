@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 import tomllib
 from pathlib import Path
@@ -81,7 +82,7 @@ def test_pages_workflow_uses_the_verified_docs_gate_and_site_output() -> None:
     assert "id-token: write" in workflow
     assert "actions/checkout@v6" in workflow
     assert "actions/setup-node@v6" in workflow
-    assert 'node-version: "24"' in workflow
+    assert "node-version-file: .nvmrc" in workflow
     assert "package-manager-cache: false" in workflow
     assert f"astral-sh/setup-uv@{SETUP_UV_V8_SHA}" in workflow
     assert 'python-version: "3.13"' in workflow
@@ -103,6 +104,12 @@ def test_pages_workflow_uses_the_verified_docs_gate_and_site_output() -> None:
     assert "docs/_build/html/index.html" in docs_gate
 
 
+def test_node_is_pinned_once_in_nvmrc_and_matches_engines() -> None:
+    nvmrc = (REPO_ROOT / ".nvmrc").read_text(encoding="utf-8").strip()
+    package = json.loads((REPO_ROOT / "package.json").read_text(encoding="utf-8"))
+    assert package["engines"]["node"] == f"{nvmrc}.x"
+
+
 def test_active_workflows_use_node24_action_releases() -> None:
     workflows = tuple((REPO_ROOT / ".github" / "workflows").glob("*.yml"))
     assert workflows
@@ -121,7 +128,8 @@ def test_active_workflows_use_node24_action_releases() -> None:
 
         if "actions/setup-node@" in workflow:
             assert "actions/setup-node@v6" in workflow, workflow_path.name
-            assert 'node-version: "24"' in workflow, workflow_path.name
+            assert "node-version-file: .nvmrc" in workflow, workflow_path.name
+            assert "node-version:" not in workflow, workflow_path.name
             assert "package-manager-cache: false" in workflow, workflow_path.name
 
         if "astral-sh/setup-uv@" in workflow:
