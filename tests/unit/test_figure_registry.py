@@ -114,7 +114,9 @@ def test_interpolation_figure_is_registered_and_uses_public_results() -> None:
 
     assert spec.page == "20-methods/approximation-integration/interpolation.md"
     assert spec.seed == 0
-    assert spec.site_path == "docs/20-methods/figures/interpolation-shape-contracts.webp"
+    assert (
+        spec.site_path == "docs/20-methods/figures/interpolation-shape-contracts.webp"
+    )
 
     from laboratory.jaxtroviz.interpolation import interpolation_results
 
