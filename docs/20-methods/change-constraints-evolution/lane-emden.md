@@ -171,9 +171,12 @@ Compare against the three closed-form polytropes: $n=0$ gives
 $\theta=1-\xi^2/6$ with $\xi_1=\sqrt{6}$; $n=1$ gives $\theta=\sin\xi/\xi$ with
 $\xi_1=\pi$; $n=5$ gives $\theta=(1+\xi^2/3)^{-1/2}$, which never reaches zero
 (infinite extent). Check the origin behavior against the series
-$\psi=\xi^2/6-\xi^4/120$ and $\theta=1-\xi^2/6+n\xi^4/120$, and confirm the
-solver's $\xi^4$ leading error shrinks at the expected rate under grid or
-tolerance refinement. Verify the enclosed mass $m(\xi)$ approaches $\xi^3/3$ near
+$\psi=\xi^2/6-\xi^4/120$ and $\theta=1-\xi^2/6+n\xi^4/120$. The relative
+difference between the solved enclosed mass and its series truncated after
+$\xi^5$ is $\xi^4/105$, so halving $\xi$ must cut it by a factor of 16; this checks
+the solution against the series order, not a grid or tolerance refinement. The
+solver's own accuracy is set separately by its adaptive tolerances
+($\mathrm{rtol}=10^{-8}$, $\mathrm{atol}=10^{-10}$). Verify the enclosed mass $m(\xi)$ approaches $\xi^3/3$ near
 the origin and is monotone where the density is positive. Cross-check
 $\mathrm{d}\xi_1/\mathrm{d}n$ from the event root against a central finite
 difference. The executable audit map is in
