@@ -38,8 +38,10 @@ echo "== test-matrix (current interpreter; supported CI runtime is 3.13) =="
 $RUN pytest -m "not slow" -q
 
 echo "== ml-integration =="
+# Only tests that import an [ml] package gain coverage here; the rest of the
+# integration tier already ran in the test matrix above.
 env -u VIRTUAL_ENV uv sync --locked --extra dev --extra ml
-env -u VIRTUAL_ENV uv run --no-sync --extra ml pytest tests/integration -q
+env -u VIRTUAL_ENV uv run --no-sync --extra ml pytest tests/integration/test_params_optax.py -q
 
 echo "== distribution artifacts =="
 ARTIFACT_DIR="$(mktemp -d)"
