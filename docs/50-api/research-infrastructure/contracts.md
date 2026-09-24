@@ -47,6 +47,7 @@ from jaxstro.contracts import get_callable_contract
 | --- | --- | --- | --- | --- | --- |
 | `jaxstro.astrometry` | validated | runtime | Angles in radians/degrees and proper motion in mas/yr as named. | Astrometric constants. | Survey or population models. |
 | `jaxstro.atmospheres` | validated | mixed | Source coordinates and flux semantics are explicit per product. | Catalog and artifact preparation plus evidence-gated evaluation. | Photometry or model validity. |
+| `jaxstro.composition` | implemented | runtime | Dimensionless mass fractions summing to one; D/H is a number ratio. | The chemical-composition record: X, Y, Z mass fractions and D/H by number. | Equation-of-state, opacity, or abundance-pattern models and their validity ranges. |
 | `jaxstro.constants` | validated | static | CGS unless the symbol explicitly names another unit. | Source-backed physical constants. | Runtime source lookup. |
 | `jaxstro.contracts` | validated | tooling | Metadata only; scientific units are recorded by owned contracts. | Scientific contract vocabulary, validation, and rendering. | Runtime scientific acceptance or automatic certification. |
 | `jaxstro.coords` | validated | runtime | Positions in pc, velocities in km/s, angles in degrees, proper motions in mas/yr, and parallax in mas where documented. | Coordinate transformations. | Domain frame selection. |
@@ -362,6 +363,7 @@ These immutable record or type constructors inherit their module-level contract:
 - `jaxstro.atmospheres.TlustyFluxMetadata`
 - `jaxstro.atmospheres.TopologyKind`
 - `jaxstro.atmospheres.TopologySelection`
+- `jaxstro.composition.Composition`
 - `jaxstro.contracts.ADSemantics`
 - `jaxstro.contracts.BoundaryContract`
 - `jaxstro.contracts.CallableContract`

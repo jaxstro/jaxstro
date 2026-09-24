@@ -30,6 +30,7 @@
     "jaxstro.atmospheres.TlustyFluxMetadata",
     "jaxstro.atmospheres.TopologyKind",
     "jaxstro.atmospheres.TopologySelection",
+    "jaxstro.composition.Composition",
     "jaxstro.contracts.ADSemantics",
     "jaxstro.contracts.BoundaryContract",
     "jaxstro.contracts.CallableContract",
@@ -203,6 +204,20 @@
       "maturity": "validated",
       "non_ownership": "Photometry or model validity.",
       "ownership": "Catalog and artifact preparation plus evidence-gated evaluation."
+    },
+    {
+      "callables": [],
+      "dimensional_policy": "Dimensionless mass fractions summing to one; D/H is a number ratio.",
+      "evidence": [],
+      "execution_boundary": "runtime",
+      "id": "composition",
+      "import_path": "jaxstro.composition",
+      "intended_uses": [
+        "Passing one checked composition to every consumer of a model."
+      ],
+      "maturity": "implemented",
+      "non_ownership": "Equation-of-state, opacity, or abundance-pattern models and their validity ranges.",
+      "ownership": "The chemical-composition record: X, Y, Z mass fractions and D/H by number."
     },
     {
       "callables": [],
@@ -1262,7 +1277,7 @@
   ],
   "package_version": "0.1.0",
   "schema_version": "1",
-  "source_revision": "sha256:baa137725087db9dc98f494b6e134b922ada41ba89fa2bd5a367be0d0a373de0",
+  "source_revision": "sha256:84734cc3d2af7b1261a4416833e6c1b67f133751a55525568df4ddeb0b102ab6",
   "unclassified_callables": [
     "jaxstro.atmospheres.acquisition_rows_to_markdown",
     "jaxstro.atmospheres.build_bosz_index",

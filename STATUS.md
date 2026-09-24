@@ -54,9 +54,9 @@ Updated: 2026-09-23
   `jaxconfig.ensure_jax_compilation_cache` (commit `7b1a116`) had never been
   added to the generated inventory, so `docs/validation/contracts.json` had
   been stale since then. Both that gap and this change are now recorded.
-- The contract inventory records 17 public modules, 18 callable-level
-  contracts, 235 explicitly unclassified callables, and 174 inherited record
-  symbols.
+- The contract inventory records 18 public modules (composition added
+  2026-09-24), 18 callable-level contracts, 235 explicitly unclassified
+  callables, and 175 inherited record symbols.
 
 ## Next
 

@@ -43,6 +43,14 @@ CORE_CONTRACTS = (
         "Angles in radians/degrees and proper motion in mas/yr as named.",
     ),
     module_contract(
+        "composition",
+        "The chemical-composition record: X, Y, Z mass fractions and D/H by number.",
+        "Equation-of-state, opacity, or abundance-pattern models and their validity ranges.",
+        "Passing one checked composition to every consumer of a model.",
+        "Dimensionless mass fractions summing to one; D/H is a number ratio.",
+        maturity=MaturityLevel.IMPLEMENTED,
+    ),
+    module_contract(
         "constants",
         "Source-backed physical constants.",
         "Runtime source lookup.",
