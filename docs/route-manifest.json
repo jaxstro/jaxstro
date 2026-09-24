@@ -170,6 +170,7 @@
   "70-project/decisions/0012-ecosystem-multi-package-maintenance.md": "/ecosystem-multi-package-maintenance",
   "70-project/decisions/0013-distribute-as-siblings-defer-namespace.md": "/distribute-as-siblings-defer-namespace",
   "70-project/decisions/0014-provenance-registry-hoist.md": "/provenance-registry-hoist",
+  "70-project/decisions/0015-solver-dependencies-imported-where-used.md": "/solver-dependencies-imported-where-used",
   "70-project/decisions/decisions.md": "/decisions",
   "70-project/development/development.md": "/development",
   "70-project/development/future-capabilities-roadmap.md": "/future-capabilities-roadmap",

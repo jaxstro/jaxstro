@@ -28,7 +28,7 @@ session logs.
   - Status
 * - [0001](./0001-thin-foundation-posture.md)
   - Thin foundation posture
-  - accepted
+  - superseded by 0015
 * - [0002](./0002-adopt-equinox-foundation.md)
   - Adopt equinox as core dependency
   - accepted
@@ -67,6 +67,9 @@ session logs.
   - accepted
 * - [0014](./0014-provenance-registry-hoist.md)
   - Hoist provenance-card infrastructure into jaxstro
+  - accepted
+* - [0015](./0015-solver-dependencies-imported-where-used.md)
+  - Solver dependencies are required but imported only where used
   - accepted
 ```
 

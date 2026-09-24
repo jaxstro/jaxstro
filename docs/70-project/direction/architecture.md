@@ -37,7 +37,9 @@ differentiable array kernel.
 [](#fig-jaxstro-foundation) is the compact ownership map for the package
 boundaries described in this section.
 
-The keystone decision is [](../decisions/0001-thin-foundation-posture.md).
+The keystone decision is [](../decisions/0001-thin-foundation-posture.md), whose
+dependency rule is now [](../decisions/0015-solver-dependencies-imported-where-used.md):
+diffrax, optimistix, and sympy are required but imported only where used.
 The dependency and packaging decisions are recorded in
 [](../decisions/0002-adopt-equinox-foundation.md),
 [](../decisions/0003-standalone-uv-hatchling-project.md), and

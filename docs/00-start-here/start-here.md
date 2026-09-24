@@ -73,10 +73,12 @@ You need Python 3.13 or newer and [uv](https://docs.astral.sh/uv/). jaxstro's
 runtime dependencies are JAX, jaxlib, jaxtyping, and equinox; diffrax and optimistix,
 which provide the adaptive ODE and implicit solve behind the Lane-Emden solver
 (added 2026-07-24); and sympy, which renders LaTeX for the equation registry (added
-2026-08-29). It does not depend on astropy or scipy. The original thin-foundation
-decision, [](../70-project/decisions/0001-thin-foundation-posture.md), predates the
-last three dependencies and has not yet been revised to record them. A working
-knowledge of `jax.numpy` helps but is not assumed.
+2026-08-29). It does not depend on astropy or scipy.
+[](../70-project/decisions/0015-solver-dependencies-imported-where-used.md) restricts
+the last three to the modules that use them. Importing `jaxstro.units` or
+`jaxstro.constants` loads none of them; as of 2026-09-24, importing
+`jaxstro.coords`, `jaxstro.numerics`, or `jaxstro.quad` still loads diffrax and
+optimistix. A working knowledge of `jax.numpy` helps but is not assumed.
 
 ## Install
 

@@ -3,13 +3,20 @@ title: "ADR 0001 - Thin foundation posture"
 description: "Own generic dependency-free primitives; refuse solver libraries, adopting only jaxtyping + equinox."
 id: 0001
 date: 2026-06-17
-status: accepted
+status: superseded
 supersedes: null
+superseded_by: 0015
 decided_by: user
 last_read: 0
 ---
 
 # 0001 - Thin foundation posture over all-deps facade
+
+:::{important} Superseded
+Superseded by [](./0015-solver-dependencies-imported-where-used.md) on 2026-09-24:
+diffrax, optimistix, and sympy are required dependencies, imported only by the
+modules that use them.
+:::
 
 ## Context
 

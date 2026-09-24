@@ -24,7 +24,7 @@ def _frontmatter(text: str) -> str:
 
 def test_public_adr_numbers_are_contiguous_through_current_decision():
     numbers = [int(path.name[:4]) for path in _adr_paths()]
-    assert numbers == list(range(1, 15))
+    assert numbers == list(range(1, 16))
 
 
 def test_public_adrs_carry_required_metadata_and_matching_heading():

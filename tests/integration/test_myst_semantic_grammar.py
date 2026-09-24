@@ -490,7 +490,8 @@ def test_final_routes_are_semantic_and_internal_sources_are_excluded() -> None:
     assert not (set(manifest.values()) & forbidden_routes)
     # 184: /support (874ef59), /qualified-core (228cac5), /method-coverage (3a1128e).
     # 185: /composition (composition record, 2026-09-23).
-    assert len(manifest) == 185
+    # 186: /solver-dependencies-imported-where-used (ADR 0015, 2026-09-24).
+    assert len(manifest) == 186
     assert set(config["project"]["exclude"]) == {
         "audits/**",
         "plans/**",

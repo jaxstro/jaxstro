@@ -311,6 +311,8 @@ project:
               hidden: true
             - file: 70-project/decisions/0014-provenance-registry-hoist.md
               hidden: true
+            - file: 70-project/decisions/0015-solver-dependencies-imported-where-used.md
+              hidden: true
         - file: 70-project/release/release.md
         - file: 70-project/release/support.md
         - file: 70-project/release/checklist.md
