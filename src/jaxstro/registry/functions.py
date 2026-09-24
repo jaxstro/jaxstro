@@ -28,7 +28,7 @@ class log10(sympy.Function):  # noqa: N801 - the name IS the code-path identifie
     """Base-10 logarithm as a first-class registry function.
 
     The class name is load-bearing twice over: ``sympy.lambdify`` prints the
-    call by ``__name__``, and :func:`startrax.registry.symbolic.lambdify_jax`
+    call by ``__name__``, and :func:`jaxstro.registry.symbolic.lambdify_jax`
     binds that name to ``jnp.log10``.
     """
 

@@ -11,17 +11,17 @@ an equation adds a check without changing what ships, so a registry that turns
 out wrong for some equation costs a red test rather than a regression.
 
 One deliberate exception, added 2026-08-02: a **cited scalar** may be read by
-shipping code through :mod:`startrax.registry.access`. Holding the true number
+shipping code through :mod:`jaxstro.registry.access`. Holding the true number
 here while source holds a hand-copied twin does not remove the divergence
 failure, it relocates it -- measured, when correcting Pauli's Z_sun by hand
 across five sites missed a sixth.
 
 The SymPy-backed oracle and documentation compiler live in
-:mod:`startrax.registry.symbolic` and are deliberately *not* re-exported here.
+:mod:`jaxstro.registry.symbolic` and are deliberately *not* re-exported here.
 Production code can therefore load registry data without importing symbolic
 machinery. Tests and documentation must opt into that layer explicitly.
 
-**This is the ecosystem home** (ADR-0010, 2026-08-29). startrax was the pilot and
+**This is the ecosystem home** (hydrax ADR-0010, 2026-08-29). startrax was the pilot and
 its design is carried here **verbatim** -- the six modules were copied
 byte-identically, because its own note required that the move to ``jaxstro`` be
 a move rather than a rewrite. Two edits were made deliberately and are recorded

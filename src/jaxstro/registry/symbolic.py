@@ -73,7 +73,7 @@ def parse_expression(text: str, symbols: dict[str, sympy.Symbol]) -> sympy.Expr:
     """Parse a registry expression string into sympy.
 
     The name table is closed: only the equation's declared symbols and the
-    functions in :data:`~startrax.registry.functions.ALLOWED_FUNCTIONS` are
+    functions in :data:`~jaxstro.registry.functions.ALLOWED_FUNCTIONS` are
     visible. A registry file ships inside the package, and ``parse_expr`` is
     otherwise a wide door -- an undeclared name must be a load error, not a
     freshly invented symbol.

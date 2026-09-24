@@ -80,7 +80,7 @@ EMITS = frozenset({"latex", "oracle", "kernel", "partials", "identity"})
 #: relation follows from the ones it was derived from. Neither subsumes the
 #: other: an implementation can faithfully realise a wrong derivation, and a
 #: correct derivation can be implemented wrongly. Carried over from hydrax's
-#: registry (ADR-0007) when it merged into this one (ADR-0010), because it was
+#: registry (hydrax ADR-0007) when it merged into this one (hydrax ADR-0010), because it was
 #: the one check startrax's design did not have.
 
 #: What was done about a restriction the paper states. A ``deferred`` or
