@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import io
+import platform
+
+from PIL import Image
 
 from .registry import FIGURES
 from .style import render_webp_bytes, save_figure_formats
@@ -14,6 +18,28 @@ def _selected_names(only: list[str] | None) -> list[str]:
     if unknown:
         raise ValueError(f"unknown figure(s): {', '.join(unknown)}")
     return names
+
+
+# The committed WebP files are rendered on macOS arm64. Fonts, FreeType, and
+# libwebp differ elsewhere, so bytes are compared only on that platform; other
+# platforms check that each figure renders to an image of the same size.
+# Approved 2026-09-24.
+RENDER_ORIGIN = ("macOS", "arm64")
+
+
+def _on_render_origin() -> bool:
+    return (platform.platform().split("-")[0], platform.machine()) == RENDER_ORIGIN
+
+
+def _webp_size(data: bytes) -> tuple[int, int]:
+    with Image.open(io.BytesIO(data)) as image:
+        return image.size
+
+
+def _is_fresh(committed: bytes, rendered: bytes) -> bool:
+    if _on_render_origin():
+        return committed == rendered
+    return _webp_size(committed) == _webp_size(rendered)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -46,8 +72,15 @@ def main(argv: list[str] | None = None) -> int:
         spec = FIGURES[name]
         if args.check:
             expected = render_webp_bytes(spec.builder(), spec=spec.export)
-            if not spec.site_webp.is_file() or spec.site_webp.read_bytes() != expected:
-                print(f"stale {spec.site_webp}")
+            if not spec.site_webp.is_file():
+                print(f"missing {spec.site_webp}")
+                return 1
+            committed = spec.site_webp.read_bytes()
+            if not _is_fresh(committed, expected):
+                print(
+                    f"stale {spec.site_webp}: committed {_webp_size(committed)}, "
+                    f"rendered {_webp_size(expected)}"
+                )
                 return 1
             print(f"fresh {spec.site_webp}")
             continue

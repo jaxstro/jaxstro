@@ -36,6 +36,10 @@ uv run --extra viz python -m laboratory.jaxtroviz --only spectra-runtime-boundar
 uv run --extra viz python -m laboratory.jaxtroviz --check
 ```
 
+`--check` compares the committed WebP bytes on macOS arm64, where the figures are
+rendered. On other platforms fonts, FreeType, and libwebp differ, so it checks
+that each figure renders to an image of the same pixel size.
+
 Every builder uses a fixed configuration and seed recorded in the registry.
 Figure labels that claim numerical membership or status must be derived from the
 public API result, not manually typed to resemble an expected result.

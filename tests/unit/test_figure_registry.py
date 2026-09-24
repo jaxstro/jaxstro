@@ -325,3 +325,22 @@ def test_root_trace_figure_uses_noncolor_visual_encodings() -> None:
 
 def test_old_figure_namespace_is_removed() -> None:
     assert not (Path(__file__).resolve().parents[2] / "laboratory" / "figures").exists()
+
+
+def test_freshness_compares_bytes_on_origin_and_size_elsewhere(monkeypatch) -> None:
+    from laboratory.jaxtroviz import cli
+
+    spec = FIGURES["jaxstro-foundation"]
+    committed = spec.site_webp.read_bytes()
+    rerendered = render_webp_bytes(spec.builder(), spec=spec.export)
+    same_size_other_bytes = committed[:-1] + bytes([committed[-1] ^ 1])
+
+    monkeypatch.setattr(cli, "_on_render_origin", lambda: True)
+    assert cli._is_fresh(committed, committed)
+    assert not cli._is_fresh(committed, same_size_other_bytes)
+
+    monkeypatch.setattr(cli, "_on_render_origin", lambda: False)
+    assert cli._is_fresh(committed, rerendered)
+    other = FIGURES["spatial-neighbor-contracts"].site_webp.read_bytes()
+    assert cli._webp_size(other) != cli._webp_size(committed)
+    assert not cli._is_fresh(committed, other)
