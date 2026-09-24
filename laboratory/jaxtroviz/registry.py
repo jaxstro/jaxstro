@@ -37,7 +37,7 @@ FIGURES: dict[str, FigureSpec] = {
             builder=build_spatial_neighbor_contracts,
             stem="spatial-neighbor-contracts",
             page="20-methods/discrete-space/spatial.md",
-            site_path="docs/10-theory/figures/spatial-neighbor-contracts.webp",
+            site_path="docs/20-methods/figures/spatial-neighbor-contracts.webp",
             seed=0,
             caption=(
                 "A real grid candidate pool compared with exact fixed-radius "
@@ -51,7 +51,7 @@ FIGURES: dict[str, FigureSpec] = {
             builder=build_bspline_local_support,
             stem="bspline-local-support",
             page="20-methods/approximation-integration/bsplines.md",
-            site_path="docs/10-theory/figures/bspline-local-support.webp",
+            site_path="docs/20-methods/figures/bspline-local-support.webp",
             seed=0,
             caption=(
                 "Six cubic basis functions computed by the public API and their "
@@ -65,7 +65,7 @@ FIGURES: dict[str, FigureSpec] = {
             builder=build_interpolation_shape_contracts,
             stem="interpolation-shape-contracts",
             page="20-methods/approximation-integration/interpolation.md",
-            site_path="docs/10-theory/figures/interpolation-shape-contracts.webp",
+            site_path="docs/20-methods/figures/interpolation-shape-contracts.webp",
             seed=0,
             caption=(
                 "Natural cubic and PCHIP interpolation of the same monotone "
@@ -79,7 +79,7 @@ FIGURES: dict[str, FigureSpec] = {
             builder=build_rootfinding_safeguards,
             stem="rootfinding-safeguards",
             page="20-methods/change-constraints-evolution/rootfinding.md",
-            site_path="docs/10-theory/figures/rootfinding-safeguards.webp",
+            site_path="docs/20-methods/figures/rootfinding-safeguards.webp",
             seed=0,
             caption=(
                 "Public solver telemetry showing proposal selection and verified "
@@ -93,7 +93,7 @@ FIGURES: dict[str, FigureSpec] = {
             builder=build_rootfinding_value_versus_ift,
             stem="rootfinding-value-versus-ift",
             page="20-methods/change-constraints-evolution/rootfinding.md",
-            site_path="docs/10-theory/figures/rootfinding-value-versus-ift.webp",
+            site_path="docs/20-methods/figures/rootfinding-value-versus-ift.webp",
             seed=0,
             caption=(
                 "The branch-selected value map and the separately certified "
@@ -107,7 +107,7 @@ FIGURES: dict[str, FigureSpec] = {
             builder=build_regular_grid_contracts,
             stem="regular-grid-contracts",
             page="20-methods/approximation-integration/regular-grid.md",
-            site_path="docs/10-theory/figures/regular-grid-contracts.webp",
+            site_path="docs/20-methods/figures/regular-grid-contracts.webp",
             seed=0,
             caption=(
                 "Bilinear corner weights and clamp/fill boundary behavior "
@@ -121,7 +121,7 @@ FIGURES: dict[str, FigureSpec] = {
             builder=build_linear_algebra_contracts,
             stem="linear-algebra-contracts",
             page="20-methods/linear-structure/linear-algebra.md",
-            site_path="docs/10-theory/figures/linear-algebra-contracts.webp",
+            site_path="docs/20-methods/figures/linear-algebra-contracts.webp",
             seed=0,
             caption=(
                 "Weighted and unweighted regression plus the eigenvalue effect "

@@ -78,7 +78,7 @@ def test_bspline_equations_have_verified_primary_provenance() -> None:
 def test_bspline_page_embeds_the_registered_accessible_figure() -> None:
     text = _page_text()
 
-    assert "../../10-theory/figures/bspline-local-support.webp" in text
+    assert "../figures/bspline-local-support.webp" in text
     assert ":name: fig-bspline-local-support" in text
     assert (
         ":alt: Six cubic B-spline basis curves with local support and their "

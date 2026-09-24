@@ -194,7 +194,7 @@ different contract.
 You just used three ideas without unpacking them: *why nondimensionalization
 improves a solve*, *why fixed iteration does not by itself prove a derivative*,
 and *why `safe_log` guards the analytic check*. These are developed in the
-theory section.
+Methods section.
 
 - Read [](../20-methods/methods.md), the ten-principle thesis on AD-safe numerics.
 - Then [](../20-methods/change-constraints-evolution/rootfinding.md) explains the distinct value and gradient

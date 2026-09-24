@@ -90,7 +90,7 @@ def test_linear_algebra_claims_have_verified_sources() -> None:
 def test_linear_algebra_page_embeds_registered_figure_and_evidence_routes() -> None:
     text = _page_text()
 
-    assert "../../10-theory/figures/linear-algebra-contracts.webp" in text
+    assert "../figures/linear-algebra-contracts.webp" in text
     assert ":name: fig-linear-algebra-contracts" in text
     assert (
         ":alt: Four regression observations with an outlier and measured "

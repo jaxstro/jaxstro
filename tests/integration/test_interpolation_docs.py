@@ -93,7 +93,7 @@ def test_interpolation_equations_have_verified_primary_provenance() -> None:
 def test_interpolation_page_embeds_figure_and_evidence_routes() -> None:
     text = _page_text()
 
-    assert "../../10-theory/figures/interpolation-shape-contracts.webp" in text
+    assert "../figures/interpolation-shape-contracts.webp" in text
     assert ":name: fig-interpolation-shape-contracts" in text
     assert (
         ":alt: Two-panel comparison of natural cubic and PCHIP interpolation "

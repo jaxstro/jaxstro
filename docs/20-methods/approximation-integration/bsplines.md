@@ -197,7 +197,7 @@ against the basis vector and AD with respect to an interior query against both
 the analytic derivative and central finite differences. For a fit, inspect
 design rank, condition, residuals, and sensitivity to knots and regularization.
 
-:::{figure} ../../10-theory/figures/bspline-local-support.webp
+:::{figure} ../figures/bspline-local-support.webp
 :name: fig-bspline-local-support
 :alt: Six cubic B-spline basis curves with local support and their sum equal to one across the active domain
 

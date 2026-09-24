@@ -211,7 +211,7 @@ audit output range and successive increments. For a smooth analytic function,
 refine the grid and compare errors. Compare AD with central finite differences
 only at interior queries whose interval and limiter branch remain fixed.
 
-:::{figure} ../../10-theory/figures/interpolation-shape-contracts.webp
+:::{figure} ../figures/interpolation-shape-contracts.webp
 :name: fig-interpolation-shape-contracts
 :alt: Two-panel comparison of natural cubic and PCHIP interpolation for the same monotone samples, showing natural-spline undershoot and nonnegative PCHIP increments
 

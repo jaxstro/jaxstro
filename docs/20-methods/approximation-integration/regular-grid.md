@@ -173,7 +173,7 @@ affine payload. Within a chosen cell, compare AD coordinate and table-value
 gradients to central finite differences. Test every boundary policy separately,
 including whole-payload fill behavior and eager reject failure.
 
-:::{figure} ../../10-theory/figures/regular-grid-contracts.webp
+:::{figure} ../figures/regular-grid-contracts.webp
 :name: fig-regular-grid-contracts
 :alt: Unit-square interpolation query connected to four corners with measured bilinear weights, beside clamp and fill outputs across the grid boundary
 

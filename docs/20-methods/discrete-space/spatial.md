@@ -170,7 +170,7 @@ configuration. Re-audit capacity when the population or spatial concentration
 changes.
 :::
 
-:::{figure} ../../10-theory/figures/spatial-neighbor-contracts.webp
+:::{figure} ../figures/spatial-neighbor-contracts.webp
 :name: fig-spatial-neighbor-contracts
 :alt: Two-panel spatial-neighbor diagram comparing a grid candidate pool with exact cutoff-filtered neighbors
 

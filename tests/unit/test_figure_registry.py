@@ -57,7 +57,7 @@ def test_spatial_figure_is_registered_for_the_theory_page() -> None:
 
     assert spec.page == "20-methods/discrete-space/spatial.md"
     assert spec.seed == 0
-    assert spec.site_path == "docs/10-theory/figures/spatial-neighbor-contracts.webp"
+    assert spec.site_path == "docs/20-methods/figures/spatial-neighbor-contracts.webp"
     labels = {
         text.get_text()
         for text in spec.builder().findobj(match=lambda item: hasattr(item, "get_text"))
@@ -71,7 +71,7 @@ def test_bspline_figure_is_registered_and_computed_from_public_basis() -> None:
 
     assert spec.page == "20-methods/approximation-integration/bsplines.md"
     assert spec.seed == 0
-    assert spec.site_path == "docs/10-theory/figures/bspline-local-support.webp"
+    assert spec.site_path == "docs/20-methods/figures/bspline-local-support.webp"
 
     from laboratory.jaxtroviz.bsplines import basis_results
 
@@ -114,7 +114,7 @@ def test_interpolation_figure_is_registered_and_uses_public_results() -> None:
 
     assert spec.page == "20-methods/approximation-integration/interpolation.md"
     assert spec.seed == 0
-    assert spec.site_path == "docs/10-theory/figures/interpolation-shape-contracts.webp"
+    assert spec.site_path == "docs/20-methods/figures/interpolation-shape-contracts.webp"
 
     from laboratory.jaxtroviz.interpolation import interpolation_results
 
@@ -140,7 +140,7 @@ def test_regular_grid_figure_is_registered_and_uses_public_results() -> None:
 
     assert spec.page == "20-methods/approximation-integration/regular-grid.md"
     assert spec.seed == 0
-    assert spec.site_path == "docs/10-theory/figures/regular-grid-contracts.webp"
+    assert spec.site_path == "docs/20-methods/figures/regular-grid-contracts.webp"
 
     from laboratory.jaxtroviz.regular_grid import regular_grid_results
 
@@ -165,7 +165,7 @@ def test_linear_algebra_figure_is_registered_and_uses_public_results() -> None:
 
     assert spec.page == "20-methods/linear-structure/linear-algebra.md"
     assert spec.seed == 0
-    assert spec.site_path == "docs/10-theory/figures/linear-algebra-contracts.webp"
+    assert spec.site_path == "docs/20-methods/figures/linear-algebra-contracts.webp"
 
     from laboratory.jaxtroviz.linear_algebra import linear_algebra_results
 
@@ -272,7 +272,7 @@ def test_root_trace_figure_is_registered_and_uses_public_telemetry() -> None:
     x, residual, result = root_trace_results()
 
     assert spec.page == "20-methods/change-constraints-evolution/rootfinding.md"
-    assert spec.site_path == "docs/10-theory/figures/rootfinding-safeguards.webp"
+    assert spec.site_path == "docs/20-methods/figures/rootfinding-safeguards.webp"
     assert x.shape == residual.shape == (801,)
     assert bool(result.converged)
     assert int(result.n_evaluations) == 42

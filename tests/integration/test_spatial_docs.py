@@ -74,7 +74,7 @@ def test_worked_exact_radius_example_matches_documented_neighbors() -> None:
 def test_spatial_chapter_embeds_registered_accessible_figure() -> None:
     text = _page_text()
 
-    assert "../../10-theory/figures/spatial-neighbor-contracts.webp" in text
+    assert "../figures/spatial-neighbor-contracts.webp" in text
     assert ":name: fig-spatial-neighbor-contracts" in text
     assert (
         ":alt: Two-panel spatial-neighbor diagram comparing a grid candidate "

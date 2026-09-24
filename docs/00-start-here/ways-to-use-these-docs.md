@@ -36,7 +36,7 @@ Use this route if JAX or differentiable scientific computing is new to you.
 
 Start from the scientific object you want: a root, integral, interpolation,
 distribution, coordinate transformation, spectrum, or other observable. Use
-the theory section to identify the mathematical and algorithmic contract, the
+the Methods section to identify the mathematical and algorithmic contract, the
 API reference for the callable surface, and validation for executable evidence.
 Return to [](../10-foundations/foundations.md) only when a term or relationship
 is blocking the question.

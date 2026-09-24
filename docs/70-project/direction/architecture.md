@@ -9,7 +9,7 @@ description: >-
 This section explains *why* the software has its current shape: JAX-native
 functional and PyTree design, explicit unit boundaries, one-way package
 dependencies, evidence ownership, and a deliberately thin foundation. Where the
-[theory section](../../20-methods/methods.md) covers mathematical method contracts,
+[Methods section](../../20-methods/methods.md) covers mathematical method contracts,
 this section covers package structure and responsibility.
 
 ## Foundation boundary

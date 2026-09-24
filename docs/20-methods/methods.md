@@ -323,7 +323,7 @@ ecosystem's needs without each package reinventing them.
 
 These ten principles are not style preferences. They separate gradients that can
 support inference from expected-zero, blocked, surrogate, validation-only, and
-discrete paths with narrower claims. The rest of the theory section shows those
+discrete paths with narrower claims. The rest of the Methods section shows those
 boundaries in specific methods. Read on:
 
 - [](./change-constraints-evolution/rootfinding.md) - fixed-iteration solvers, and the `bisect` zero-gradient

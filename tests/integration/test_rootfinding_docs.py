@@ -45,8 +45,8 @@ def test_numerical_pages_expand_implicit_function_theorem_before_ift() -> None:
 def test_rootfinding_page_embeds_accessible_evidence_figures_and_activity() -> None:
     text = ROOTFINDING.read_text(encoding="utf-8")
 
-    assert "../../10-theory/figures/rootfinding-safeguards.webp" in text
-    assert "../../10-theory/figures/rootfinding-value-versus-ift.webp" in text
+    assert "../figures/rootfinding-safeguards.webp" in text
+    assert "../figures/rootfinding-value-versus-ift.webp" in text
     assert text.count(":alt:") >= 2
     assert "Predict -> compute -> audit: which derivative are you asking for?" in text
     assert "Metric identity" in text

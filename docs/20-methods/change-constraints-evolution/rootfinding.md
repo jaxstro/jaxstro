@@ -315,7 +315,7 @@ executed update. Compare the certified AD derivative with the analytic result
 and an independently recomputed central finite difference. Reject the claim if
 uniqueness, smoothness, residual, width, finiteness, or conditioning fails.
 
-:::{figure} ../../10-theory/figures/rootfinding-safeguards.webp
+:::{figure} ../figures/rootfinding-safeguards.webp
 :name: fig-rootfinding-safeguards
 :alt: Two-panel safeguarded root trace showing circle IQI, square secant, and triangle midpoint proposals on a quadratic residual and solid lower endpoint, dashed upper endpoint, and dotted bracket width across executed iterations
 
@@ -330,7 +330,7 @@ is function-evaluation count, not a hardware-dependent timing threshold.
 [](#fig-rootfinding-safeguards) shows the public trace quantities behind that
 value-first audit.
 
-:::{figure} ../../10-theory/figures/rootfinding-value-versus-ift.webp
+:::{figure} ../figures/rootfinding-value-versus-ift.webp
 :name: fig-rootfinding-value-versus-ift
 :alt: Two-panel comparison of a branch-selected quadratic root trace with analytic, certified implicit-function AD, and central finite-difference sensitivities; certification includes uniqueness and smoothness assertions plus convergence, finiteness, residual, width, and slope gates, while a flat-root certificate is rejected
 

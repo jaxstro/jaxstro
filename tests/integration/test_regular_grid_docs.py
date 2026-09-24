@@ -83,7 +83,7 @@ def test_regular_grid_equation_has_primary_provenance() -> None:
 def test_regular_grid_page_embeds_registered_figure_and_evidence_routes() -> None:
     text = _page_text()
 
-    assert "../../10-theory/figures/regular-grid-contracts.webp" in text
+    assert "../figures/regular-grid-contracts.webp" in text
     assert ":name: fig-regular-grid-contracts" in text
     assert (
         ":alt: Unit-square interpolation query connected to four corners with "

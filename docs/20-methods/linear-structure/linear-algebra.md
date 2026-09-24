@@ -202,7 +202,7 @@ Scale columns to comparable numerical ranges before interpreting a condition
 number. Record the scaling so the audit is reproducible.
 :::
 
-:::{figure} ../../10-theory/figures/linear-algebra-contracts.webp
+:::{figure} ../figures/linear-algebra-contracts.webp
 :name: fig-linear-algebra-contracts
 :alt: Four regression observations with an outlier and measured weighted and unweighted fits, beside matrix eigenvalues before and after selected diagonal jitter
 
