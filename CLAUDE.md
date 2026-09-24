@@ -47,6 +47,11 @@ Before substantial changes, inspect:
 - `jaxstro.numerics` — generic interpolation, integration, quadrature,
   rootfinding, distributions, linear algebra, ODE, optimization, operator,
   sampling, and special-function mechanics.
+- `jaxstro.quad` — canonical sampled-data integration, fixed and adaptive
+  one-dimensional quadrature, finite-hyperrectangle tensor, cubature, sparse-grid,
+  and randomized QMC methods, with typed domains, measures, and result evidence.
+- `jaxstro.composition` — the chemical-composition record: X, Y, Z mass fractions
+  and D/H by number; consumers own their validity ranges.
 - `jaxstro.spatial` — discrete spatial indexing, approximate candidates, and
   exact fixed-radius pair mechanics.
 - `jaxstro.spectra` — generic spectral coordinates, semantics, transformations,
@@ -56,6 +61,10 @@ Before substantial changes, inspect:
 - `jaxstro.params` — selective Equinox PyTree/vector parameter bridge; not an
   inference framework.
 - `jaxstro.provenance` — deterministic runtime artifact manifests.
+- `jaxstro.contracts` — scientific-contract vocabulary and the registry of module
+  and callable contracts; not runtime acceptance or certification.
+- `jaxstro.evidence` — portable computational-evidence schemas, validation,
+  rendering, and the evidence index.
 - `jaxstro.testing` — gradient audits, numerical ratchets, reports, and
   source-backed provenance cards; not scientific acceptance policy.
 - `jaxstro.jaxconfig` — explicit float64/highest-matmul configuration.

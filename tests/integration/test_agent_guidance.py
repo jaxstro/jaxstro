@@ -2,22 +2,15 @@
 
 from pathlib import Path
 
+from jaxstro._public import PUBLIC_MODULES
+
 GUIDE = Path(__file__).resolve().parents[2] / "CLAUDE.md"
 
 
 def test_guide_names_current_architecture_and_derivative_targets() -> None:
     text = GUIDE.read_text(encoding="utf-8")
-    for module in (
-        "atmospheres",
-        "numerics",
-        "params",
-        "provenance",
-        "quantity",
-        "spatial",
-        "spectra",
-        "testing",
-    ):
-        assert f"`jaxstro.{module}`" in text
+    missing = [m for m in PUBLIC_MODULES if f"`jaxstro.{m}`" not in text]
+    assert missing == [], f"package map omits public modules: {missing}"
     assert "finite executed iteration" in text
     assert "certified implicit derivative" in text
     assert "Use `newton` / `newton_with_grad` / `newton_ppf`" not in text
