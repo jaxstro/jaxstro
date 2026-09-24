@@ -75,7 +75,15 @@ class AdaptiveTanhSinh(_StaticMethod):
 @jax.tree_util.register_pytree_node_class
 @dataclass(frozen=True)
 class Romberg(_StaticMethod):
-    """Global trapezoid refinement with Richardson extrapolation."""
+    """Global trapezoid refinement with Richardson extrapolation.
+
+    Intended for smooth, non-oscillatory integrands. Every sample lies on a
+    dyadic grid, so content above the grid's Nyquist frequency is aliased into
+    a smooth-looking function that Richardson extrapolation converges to: on
+    ``cos(200 x)`` over ``[0, 1]`` it reports ``CONVERGED`` with a 0.83 error,
+    and ``cos(2 pi 2**k x)`` samples identically on every grid. Use
+    ``GaussKronrod`` for oscillatory integrands.
+    """
 
     initial_level: int = 1
     _field_name = "initial_level"

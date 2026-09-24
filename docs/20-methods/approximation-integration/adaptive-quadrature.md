@@ -265,6 +265,20 @@ result; a smaller valid budget can return `MAX_EVALUATIONS` for an otherwise
 exactly integrated low-degree polynomial.
 :::
 
+:::{warning} Classical Romberg is for smooth, non-oscillatory integrands
+The floor does not make Romberg safe for oscillatory integrands. Every sample
+lies on a dyadic grid, so content above the grid's Nyquist frequency is aliased
+into a smooth-looking function, and Richardson extrapolation converges to the
+aliased integral. For $\cos(200x)$ on $[0,1]$ the Richardson diagonal differs by
+$6\times10^{-7}$, $2.8\times10^{-10}$ and $3\times10^{-14}$ at levels 3-5 while
+tending to $0.8224$; the integral is $-0.004366$, and the result reports
+`CONVERGED` with a $0.83$ relative error. Requiring agreement at two
+consecutive levels does not help, because the aliased sequence agrees at every
+level below Nyquist, and $\cos(2\pi 2^k x)$ samples identically on every dyadic
+grid. Use `GaussKronrod`, whose irrational nodes do not alias this way, for
+oscillatory integrands.
+:::
+
 `RombergTanhSinh` instead compares nested global tanh-sinh levels without using
 the polynomial-error assumption behind Richardson extrapolation. Its reported
 error retains the adjacent-level, summation, and terminal-tail terms:

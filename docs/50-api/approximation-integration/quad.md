@@ -112,6 +112,10 @@ report `CONVERGED` before $2^4+1=17$ logical evaluations, regardless of an
 earlier Richardson estimate. Set `max_evaluations` to at least $17$ when
 convergence is required; smaller valid capacities can terminate with
 `MAX_EVALUATIONS`. This floor does not apply to `RombergTanhSinh`.
+Classical `Romberg` is for smooth, non-oscillatory integrands: undersampled
+oscillation aliases into a smooth sequence that it can accept as `CONVERGED`
+(for $\cos(200x)$ on $[0,1]$, a $0.83$ relative error). Use `GaussKronrod` for
+oscillatory integrands.
 :::
 
 ## Capability status map

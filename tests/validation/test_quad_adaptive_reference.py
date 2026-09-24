@@ -152,6 +152,27 @@ def test_missed_narrow_feature_documents_estimator_false_convergence() -> None:
     assert jnp.abs(result.value - expected) > 100.0 * result.tolerance
 
 
+def test_romberg_aliasing_documents_its_smooth_integrand_scope() -> None:
+    # Documented limit (approved 2026-09-24): below Nyquist the dyadic samples
+    # of cos(200 x) look smooth and Romberg accepts the aliased integral.
+    # GaussKronrod integrates the same case.
+    exact = jnp.sin(200.0) / 200.0
+    romberg = integrate(
+        lambda x: jnp.cos(200.0 * x),
+        Interval(0.0, 1.0),
+        **_options(Romberg(initial_level=1), 1e-8),
+    )
+    kronrod = integrate(
+        lambda x: jnp.cos(200.0 * x),
+        Interval(0.0, 1.0),
+        **_options(GaussKronrod(pair=21), 1e-8),
+    )
+    assert romberg.status == QuadStatus.CONVERGED
+    assert jnp.abs(romberg.value - exact) > 0.5
+    assert kronrod.status == QuadStatus.CONVERGED
+    assert jnp.abs(kronrod.value - exact) <= kronrod.tolerance
+
+
 def test_failure_envelope_nonfinite_budget_and_endpoint_exposure() -> None:
     nonfinite = integrate(
         lambda x: jnp.where(x > 0.0, jnp.nan, x),
