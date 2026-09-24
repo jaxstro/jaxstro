@@ -123,6 +123,24 @@ def _run_docs_gate(tmp_path: Path, script_text: str | None = None) -> GateRun:
             """
         ),
     )
+    # The gate runs the locked mystmd through `npx --no-install myst`. The fake
+    # npx execs the fake myst in place, so the gate's SERVER_PID is the server.
+    _write_executable(
+        fake_bin / "npx",
+        textwrap.dedent(
+            f"""\
+            #!{sys.executable}
+            import os
+            import sys
+
+            args = sys.argv[1:]
+            if args[:2] != ["--no-install", "myst"]:
+                raise SystemExit(f"unexpected fake npx invocation: {{args}}")
+            fake_myst = {str(fake_bin / "myst")!r}
+            os.execv(fake_myst, [fake_myst, *args[2:]])
+            """
+        ),
+    )
     _write_executable(
         fake_bin / "uv",
         textwrap.dedent(
