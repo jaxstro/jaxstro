@@ -47,6 +47,9 @@ def _query(product_id: str, params: AtmosphereParams) -> AtmosphereQuery:
 
 @pytest.fixture(scope="module")
 def library() -> AtmosphereLibrary:
+    # data/atmospheres is gitignored: skip where it was never staged (CI).
+    if not (DATA / "atmospheres").is_dir():
+        pytest.skip(f"local atmosphere data not staged: {DATA / 'atmospheres'}")
     return AtmosphereLibrary.from_local(DATA)
 
 
