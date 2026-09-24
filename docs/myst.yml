@@ -232,6 +232,7 @@ project:
             - file: 50-api/discrete-space/spatial.md
         - title: Physical representations
           children:
+            - file: 50-api/physical-representations/composition.md
             - file: 50-api/physical-representations/constants-api.md
             - file: 50-api/physical-representations/units.md
             - file: 50-api/physical-representations/quantity.md
