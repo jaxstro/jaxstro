@@ -112,9 +112,15 @@ def test_correctness_precedes_performance_interpretation() -> None:
         and record["family"] == "tanh_sinh"
         and record["pair_variant"] == "closest_work"
     )
-    assert conservative["jaxstro"]["semantic_status"] == "roundoff_limited"
+    # Until 2026-09-24 tanh-sinh stopped here at ROUNDOFF_LIMITED because nodes
+    # collapsed onto split boundaries in t; with regions stored by complements
+    # it converges with zero error, so the record warrants timing.
+    assert conservative["jaxstro"]["semantic_status"] == "converged"
     assert conservative["warranted"]["jaxstro"]["passed"]
-    assert not conservative["warranted"]["jaxstro"]["performance_interpretable"]
+    assert conservative["warranted"]["jaxstro"]["classification"] == (
+        "accurate_convergence"
+    )
+    assert conservative["warranted"]["jaxstro"]["performance_interpretable"]
 
 
 def test_timing_record_subprocess_is_fresh_and_complete() -> None:

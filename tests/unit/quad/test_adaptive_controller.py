@@ -14,17 +14,34 @@ from jaxstro.quad._adaptive import (
 )
 
 
+def _pairs(points):
+    # Reference bounds are stored as (1 + t, 1 - t).
+    points = jnp.asarray(points)
+    return jnp.stack((1.0 + points, 1.0 - points), axis=-1)
+
+
+def _t(pairs):
+    pairs = jnp.asarray(pairs)
+    return jnp.where(
+        pairs[..., 0] <= pairs[..., 1], pairs[..., 0] - 1.0, 1.0 - pairs[..., 1]
+    )
+
+
+def _width(lower, upper):
+    return _t(upper) - _t(lower)
+
+
 def _partition(lower=(-1.0,), upper=(1.0,), *, valid=True):
     return ReferencePartition(
-        lower=jnp.asarray(lower),
-        upper=jnp.asarray(upper),
+        lower=_pairs(lower),
+        upper=_pairs(upper),
         segment_id=jnp.arange(len(lower), dtype=jnp.int32),
         valid=jnp.asarray(valid),
     )
 
 
 def _quadratic_error_estimator(lower, upper, _segment_id):
-    width = upper - lower
+    width = _width(lower, upper)
     return LocalEstimate(
         value=width,
         error=width**2,
@@ -66,8 +83,8 @@ def test_controller_uses_lowest_index_ties_and_exact_work_counts() -> None:
     assert result.evaluations == 10
     assert result.refinements == 2
     assert result.active_regions == 3
-    assert jnp.array_equal(result.region_lower, jnp.asarray([-1.0, 0.0, -0.5]))
-    assert jnp.array_equal(result.region_upper, jnp.asarray([-0.5, 1.0, 0.0]))
+    assert jnp.array_equal(_t(result.region_lower), jnp.asarray([-1.0, 0.0, -0.5]))
+    assert jnp.array_equal(_t(result.region_upper), jnp.asarray([-0.5, 1.0, 0.0]))
     assert jnp.array_equal(result.region_active, jnp.asarray([True, True, True]))
     assert jnp.array_equal(result.value, 2.0)
     assert jnp.array_equal(result.error, 1.5)
@@ -92,9 +109,9 @@ def test_controller_stops_before_incomplete_evaluation_batch() -> None:
 
 def test_controller_reduction_recovers_untouched_small_regions() -> None:
     def cancellation_estimator(lower, upper, _segment_id):
-        width = upper - lower
-        large_parent = (lower < 0.0) & (width == 1.0)
-        small_region = (lower >= 0.0) & (width == 1.0)
+        width = _width(lower, upper)
+        large_parent = (_t(lower) < 0.0) & (width == 1.0)
+        small_region = (_t(lower) >= 0.0) & (width == 1.0)
         evidence = jnp.where(
             large_parent,
             jnp.asarray(1.0e8, dtype=jnp.float32),
@@ -119,7 +136,7 @@ def test_controller_reduction_recovers_untouched_small_regions() -> None:
 
 def test_controller_status_precedence_invalid_before_nonfinite() -> None:
     def nonfinite_estimator(lower, upper, _segment_id):
-        width = upper - lower
+        width = _width(lower, upper)
         return LocalEstimate(width, width, jnp.asarray(True))
 
     invalid = adaptive_controller(
@@ -190,7 +207,7 @@ def test_controller_rejects_norm_overflow_after_split() -> None:
     maximum = jnp.finfo(jnp.float32).max
 
     def overflow_after_split(lower, upper, _segment_id):
-        width = upper - lower
+        width = _width(lower, upper)
         child = jnp.asarray([0.3 * maximum, 0.3 * maximum], dtype=jnp.float32)
         initial = jnp.asarray([1.0, 1.0], dtype=jnp.float32)
         error = jnp.where(width < 2.0, child, initial)
@@ -211,11 +228,11 @@ def test_controller_rejects_norm_overflow_after_split() -> None:
 
 def test_controller_rejects_mismatched_or_nonreal_error_payloads() -> None:
     def mismatched(lower, upper, _segment_id):
-        width = upper - lower
+        width = _width(lower, upper)
         return LocalEstimate(jnp.stack((width, width)), width, jnp.asarray(False))
 
     def complex_error(lower, upper, _segment_id):
-        width = upper - lower
+        width = _width(lower, upper)
         return LocalEstimate(width, width + 0j, jnp.asarray(False))
 
     common = dict(
@@ -254,7 +271,34 @@ def test_controller_rejects_invalid_static_capacities(name, value) -> None:
         )
 
 
+def _unit_error_estimator(lower, upper, _segment_id):
+    del lower, upper
+    return LocalEstimate(
+        value=jnp.asarray(1.0),
+        error=jnp.asarray(1.0),
+        nonfinite=jnp.asarray(False),
+    )
+
+
 def test_controller_detects_unrepresentable_midpoint() -> None:
+    # Both complements of t = 0 and t = 1e-300 round to (1, 1): no midpoint.
+    result = adaptive_controller(
+        _partition(lower=(0.0,), upper=(1e-300,)),
+        _unit_error_estimator,
+        node_cost=1,
+        max_evaluations=20,
+        max_regions=4,
+        epsabs=0.0,
+        epsrel=0.0,
+        error_norm=MaxNorm(),
+    )
+    assert result.status == QuadStatus.ROUNDOFF_LIMITED
+    assert result.refinements == 0
+
+
+def test_controller_splits_a_region_one_spacing_from_an_endpoint() -> None:
+    # t in [1 - ulp, 1] had no representable midpoint in t; its complements
+    # 1 - t resolve it, so the controller can keep refining toward the end.
     endpoint = jnp.asarray(1.0)
     neighbor = jnp.nextafter(endpoint, jnp.asarray(0.0))
     result = adaptive_controller(
@@ -267,16 +311,13 @@ def test_controller_detects_unrepresentable_midpoint() -> None:
         epsrel=0.0,
         error_norm=MaxNorm(),
     )
-    assert result.status == QuadStatus.ROUNDOFF_LIMITED
-    assert result.refinements == 0
+    assert result.refinements > 0
 
 
 def test_controller_combined_exit_precedence_is_frozen() -> None:
-    endpoint = jnp.asarray(1.0)
-    neighbor = jnp.nextafter(endpoint, jnp.asarray(0.0))
     all_exhausted = adaptive_controller(
-        _partition(lower=(neighbor,), upper=(endpoint,)),
-        _quadratic_error_estimator,
+        _partition(lower=(0.0,), upper=(1e-300,)),
+        _unit_error_estimator,
         node_cost=1,
         max_evaluations=1,
         max_regions=1,
@@ -300,7 +341,7 @@ def test_controller_combined_exit_precedence_is_frozen() -> None:
 
 def test_controller_payload_error_summation_and_error_norm_policy() -> None:
     def payload_estimator(lower, upper, _segment_id):
-        width = upper - lower
+        width = _width(lower, upper)
         return LocalEstimate(
             value=jnp.stack((width, 2.0 * width)),
             error=jnp.stack((0.6 * width**2, 0.6 * width**2)),
@@ -334,7 +375,7 @@ def test_controller_payload_error_summation_and_error_norm_policy() -> None:
 
 def test_controller_no_improvement_roundoff_threshold_is_exact() -> None:
     def unchanged_estimator(lower, upper, _segment_id):
-        width = upper - lower
+        width = _width(lower, upper)
         return LocalEstimate(width, width, jnp.asarray(False))
 
     below = adaptive_controller(
@@ -365,7 +406,7 @@ def test_controller_no_improvement_roundoff_threshold_is_exact() -> None:
 
 def test_stagnation_adds_child_scalar_priorities_for_disjoint_payloads() -> None:
     def disjoint_estimator(lower, upper, _segment_id):
-        width = upper - lower
+        width = _width(lower, upper)
         parent_error = jnp.asarray([1.5, 0.0])
         child_error = jnp.where(
             lower < 0.0, jnp.asarray([1.0, 0.0]), jnp.asarray([0.0, 1.0])
@@ -393,7 +434,7 @@ def test_stagnation_adds_child_scalar_priorities_for_disjoint_payloads() -> None
 
 def test_controller_error_growth_roundoff_threshold_is_exact() -> None:
     def growing_estimator(lower, upper, _segment_id):
-        width = upper - lower
+        width = _width(lower, upper)
         return LocalEstimate(width + width**2, 1.0 / width, jnp.asarray(False))
 
     below = adaptive_controller(

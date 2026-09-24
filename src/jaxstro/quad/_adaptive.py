@@ -32,14 +32,18 @@ from .result import QuadStatus
 from .rules import ClenshawCurtisRule
 from .tolerance import ErrorNorm
 from .tolerance import error_norm as reduce_error_norm
-from .transforms import map_domain, map_domain_replay
+from .transforms import map_domain_complements
 
 Domain = Interval | RightInfinite | LeftInfinite | Infinite
 AdaptiveMeasure = LebesgueMeasure | WeightedMeasure
 
 
 class ReferencePartition(NamedTuple):
-    """Fixed-shape normalized regions and dynamic domain validity."""
+    """Fixed-shape normalized regions and dynamic domain validity.
+
+    ``lower`` and ``upper`` have shape ``(regions, 2)``: each reference bound
+    ``t`` is stored as ``(1 + t, 1 - t)``.
+    """
 
     lower: Array
     upper: Array
@@ -57,6 +61,7 @@ class TransformedIntegrand(NamedTuple):
     valid: Array
     nonfinite: Array
     roundoff: Array
+    moved: Any = False
 
 
 class LocalEstimate(NamedTuple):
@@ -359,8 +364,8 @@ def reference_partition(domain: Domain) -> ReferencePartition:
         dtype = jnp.result_type(domain.lower, domain.upper, *domain.breakpoints, 0.0)
         count = len(domain.breakpoints) + 1
         return ReferencePartition(
-            lower=-jnp.ones((count,), dtype=dtype),
-            upper=jnp.ones((count,), dtype=dtype),
+            lower=jnp.tile(jnp.asarray([0.0, 2.0], dtype=dtype), (count, 1)),
+            upper=jnp.tile(jnp.asarray([2.0, 0.0], dtype=dtype), (count, 1)),
             segment_id=jnp.arange(count, dtype=jnp.int32),
             valid=interval_is_valid(domain),
         )
@@ -386,8 +391,8 @@ def reference_partition(domain: Domain) -> ReferencePartition:
     else:
         raise TypeError(f"unsupported quadrature domain: {type(domain).__name__}")
     return ReferencePartition(
-        lower=jnp.asarray([-1.0], dtype=dtype),
-        upper=jnp.asarray([1.0], dtype=dtype),
+        lower=jnp.asarray([[0.0, 2.0]], dtype=dtype),
+        upper=jnp.asarray([[2.0, 0.0]], dtype=dtype),
         segment_id=jnp.asarray([0], dtype=jnp.int32),
         valid=valid,
     )
@@ -410,6 +415,19 @@ def select_segment(domain: Domain, segment_id: Array) -> Domain:
     return domain
 
 
+def reference_pair(point, dtype) -> Array:
+    """Return ``(1 + t, 1 - t)`` for a reference point given as ``t`` or as a pair.
+
+    Regions are stored by these complements rather than by ``t``: near
+    ``t = -1`` the value ``1 + t`` keeps relative precision down to the
+    smallest normal number, where ``t`` itself resolves only about ``1e-16``.
+    """
+    point = jnp.asarray(point, dtype=dtype)
+    if point.ndim >= 1 and point.shape[-1] == 2:
+        return point
+    return jnp.stack((1.0 + point, 1.0 - point), axis=-1)
+
+
 def transformed_integrand(
     fun: Callable,
     domain: Domain,
@@ -422,7 +440,13 @@ def transformed_integrand(
     open_region: bool = False,
     replay: bool = False,
 ) -> TransformedIntegrand:
-    """Evaluate one local reference region with every map and density applied."""
+    """Evaluate one local reference region with every map and density applied.
+
+    ``region_lower`` and ``region_upper`` are reference points, each either
+    ``t`` or the pair ``(1 + t, 1 - t)``. Node positions are formed in the
+    complement nearer to the region, so a region next to a domain end keeps
+    its nodes distinct from that end.
+    """
     selected_measure: AdaptiveMeasure = (
         LebesgueMeasure() if measure is None else measure
     )
@@ -432,23 +456,57 @@ def transformed_integrand(
         )
 
     nodes = jnp.asarray(nodes)
-    lower = jnp.asarray(region_lower, dtype=nodes.dtype)
-    upper = jnp.asarray(region_upper, dtype=nodes.dtype)
-    half_width = 0.5 * (upper - lower)
-    midpoint = 0.5 * (upper + lower)
-    reference = midpoint + half_width * nodes
+    lower_minus, lower_plus = jnp.moveaxis(
+        reference_pair(region_lower, nodes.dtype), -1, 0
+    )
+    upper_minus, upper_plus = jnp.moveaxis(
+        reference_pair(region_upper, nodes.dtype), -1, 0
+    )
+    near_lower = lower_minus + upper_minus <= lower_plus + upper_plus
+    half_width = jnp.where(
+        near_lower,
+        0.5 * (upper_minus - lower_minus),
+        0.5 * (lower_plus - upper_plus),
+    )
+    minus = lower_minus + half_width * (1.0 + nodes)
+    plus = upper_plus + half_width * (1.0 - nodes)
     roundoff = jnp.asarray(False)
     if open_region:
-        interior_lower = jnp.nextafter(lower, upper)
-        interior_upper = jnp.nextafter(upper, lower)
-        clipped_reference = jnp.clip(reference, interior_lower, interior_upper)
-        roundoff = jnp.any(clipped_reference != reference)
-        reference = clipped_reference
-    mapped = (
-        map_domain_replay(domain, reference)
-        if replay
-        else map_domain(domain, reference)
-    )
+        # An open rule must not reach the domain's reference boundary, where the
+        # infinite-domain maps are singular. In complements that happens only
+        # when a distance underflows to zero, far below the spacing of t.
+        tiny = jnp.finfo(nodes.dtype).tiny
+        reached = (minus < tiny) | (plus < tiny)
+        roundoff = jnp.any(reached)
+        minus = jnp.maximum(minus, tiny)
+        plus = jnp.maximum(plus, tiny)
+    reference = jnp.where(minus <= plus, minus - 1.0, 1.0 - plus)
+    mapped = map_domain_complements(domain, minus, plus, replay=replay)
+    moved = jnp.zeros(nodes.shape, dtype=bool)
+    if isinstance(domain, Interval):
+        # x cannot lie closer to a finite endpoint a than its spacing, so a node
+        # meant to be interior (|t| < 1) can round onto a, where an integrable
+        # singularity is infinite. Such a node moves to the nearest interior
+        # float (a real point of the domain) and is reported in ``moved``; the
+        # estimator decides whether that limits the region. Rules whose nodes
+        # include t = +-1 (Clenshaw-Curtis) keep their endpoint nodes. XLA on
+        # CPU flushes subnormals, so next to zero the bound is the smallest
+        # normal number rather than nextafter.
+        tiny = jnp.finfo(mapped.x.dtype).tiny
+        a = jax.lax.stop_gradient(jnp.asarray(domain.lower, dtype=mapped.x.dtype))
+        b = jax.lax.stop_gradient(jnp.asarray(domain.upper, dtype=mapped.x.dtype))
+        low = jnp.minimum(a, b)
+        high = jnp.maximum(a, b)
+        first_inside = jnp.maximum(jnp.nextafter(low, high), low + tiny)
+        last_inside = jnp.minimum(jnp.nextafter(high, low), high - tiny)
+        x_value = jax.lax.stop_gradient(mapped.x)
+        moved = (
+            (jnp.abs(nodes) < 1.0)
+            & ((x_value < first_inside) | (x_value > last_inside))
+            & (first_inside <= last_inside)
+        )
+        inside = jnp.clip(x_value, first_inside, last_inside)
+        mapped = mapped._replace(x=jnp.where(moved, inside, mapped.x))
     has_args = has_explicit_args(args)
     raw_values = validate_node_values(
         call_integrand(fun, mapped.x, args, has_args),
@@ -462,11 +520,14 @@ def transformed_integrand(
     )
     values = raw_values * node_factor
     local_valid = (
-        jnp.isfinite(lower)
-        & jnp.isfinite(upper)
-        & (lower >= -1.0)
-        & (upper <= 1.0)
-        & (lower <= upper)
+        jnp.isfinite(lower_minus)
+        & jnp.isfinite(lower_plus)
+        & jnp.isfinite(upper_minus)
+        & jnp.isfinite(upper_plus)
+        & (lower_minus >= 0.0)
+        & (upper_plus >= 0.0)
+        & (lower_minus <= upper_minus)
+        & (upper_plus <= lower_plus)
     )
     valid = mapped.valid & local_valid
     nonfinite = ~(
@@ -485,7 +546,35 @@ def transformed_integrand(
         valid=valid,
         nonfinite=nonfinite,
         roundoff=roundoff,
+        moved=moved,
     )
+
+
+def moved_node_limits_region(
+    transformed: TransformedIntegrand,
+    weights: Array,
+    error: Array,
+    *,
+    open_region: bool,
+) -> Array:
+    """Whether nodes moved off a finite endpoint limit this region.
+
+    For Gauss-Kronrod and Clenshaw-Curtis a node reaches an endpoint only in a
+    region about one float spacing wide, which cannot be refined: any move
+    reports roundoff. Tanh-sinh tail nodes lie within a spacing of the endpoint
+    by design; a move limits the region only when the moved nodes' weighted
+    contribution is at least the region's rule error, as at an endpoint
+    singularity. For a smooth integrand it is about 1e-16 |f|.
+    """
+    moved = jnp.asarray(transformed.moved)
+    if not open_region:
+        return jnp.any(moved)
+    shape = (moved.shape[0],) + (1,) * (transformed.values.ndim - 1)
+    contribution = jnp.abs(transformed.values) * jnp.reshape(jnp.abs(weights), shape)
+    moved_mass = jnp.max(
+        jnp.sum(jnp.where(jnp.reshape(moved, shape), contribution, 0.0), axis=0)
+    )
+    return jnp.any(moved) & (moved_mass >= jnp.max(jnp.abs(error)))
 
 
 def adaptive_controller(
@@ -547,12 +636,12 @@ def adaptive_controller(
         .set(priorities)
     )
     lower = (
-        jnp.zeros((max_regions,), dtype=partition.lower.dtype)
+        jnp.zeros((max_regions, 2), dtype=partition.lower.dtype)
         .at[:initial_regions]
         .set(partition.lower)
     )
     upper = (
-        jnp.zeros((max_regions,), dtype=partition.upper.dtype)
+        jnp.zeros((max_regions, 2), dtype=partition.upper.dtype)
         .at[:initial_regions]
         .set(partition.upper)
     )
@@ -629,8 +718,11 @@ def adaptive_controller(
         region_lower = current.lower[selected]
         region_upper = current.upper[selected]
         region_segment_id = current.segment_id[selected]
+        # Bisect in both complements; the smaller one carries the precision.
         midpoint = 0.5 * (region_lower + region_upper)
-        midpoint_collapsed = (midpoint == region_lower) | (midpoint == region_upper)
+        midpoint_collapsed = jnp.all(midpoint == region_lower) | jnp.all(
+            midpoint == region_upper
+        )
         evaluation_exhausted = current.evaluations + 2 * node_cost > max_evaluations
         region_exhausted = current.active_regions + 1 > max_regions
         can_split = ~(midpoint_collapsed | evaluation_exhausted | region_exhausted)
@@ -768,6 +860,7 @@ def adaptive_controller(
 
 __all__ = [
     "LocalEstimate",
+    "moved_node_limits_region",
     "adaptive_controller",
     "infer_payload_zero",
     "reference_partition",

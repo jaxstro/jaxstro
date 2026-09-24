@@ -24,8 +24,9 @@ from jaxstro.quad._adaptive import (
 def test_reference_partition_is_segment_local_and_preserves_orientation() -> None:
     forward = reference_partition(Interval(0.0, 10.0, breakpoints=(7.0, 2.0)))
     reverse = reference_partition(Interval(10.0, 0.0, breakpoints=(2.0, 7.0)))
-    assert jnp.array_equal(forward.lower, -jnp.ones(3))
-    assert jnp.array_equal(forward.upper, jnp.ones(3))
+    # Reference bounds are (1 + t, 1 - t): t = -1 is (0, 2), t = 1 is (2, 0).
+    assert jnp.array_equal(forward.lower, jnp.tile(jnp.asarray([0.0, 2.0]), (3, 1)))
+    assert jnp.array_equal(forward.upper, jnp.tile(jnp.asarray([2.0, 0.0]), (3, 1)))
     assert jnp.array_equal(forward.segment_id, jnp.arange(3, dtype=jnp.int32))
     assert jnp.array_equal(reverse.lower, forward.lower)
     assert jnp.array_equal(reverse.upper, forward.upper)
@@ -66,8 +67,8 @@ def test_reference_partition_stops_breakpoint_motion() -> None:
 )
 def test_improper_reference_partition_has_one_normalized_region(domain) -> None:
     partition = reference_partition(domain)
-    assert jnp.array_equal(partition.lower, jnp.asarray([-1.0]))
-    assert jnp.array_equal(partition.upper, jnp.asarray([1.0]))
+    assert jnp.array_equal(partition.lower, jnp.asarray([[0.0, 2.0]]))
+    assert jnp.array_equal(partition.upper, jnp.asarray([[2.0, 0.0]]))
     assert jnp.issubdtype(partition.lower.dtype, jnp.inexact)
     assert partition.valid
 

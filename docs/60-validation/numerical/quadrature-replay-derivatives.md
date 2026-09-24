@@ -72,18 +72,18 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
 | adaptive_clenshaw_curtis.invalid_input.status_mismatch | `status_mismatch` | 0.0 | dimensionless | info |
 | adaptive_clenshaw_curtis.nonfinite_integrand.finite_primal_flag | `finite_primal_flag` | 0.0 | dimensionless | info |
 | adaptive_clenshaw_curtis.nonfinite_integrand.status_mismatch | `status_mismatch` | 0.0 | dimensionless | info |
-| adaptive_clenshaw_curtis.smooth_parameter.analytic_derivative_relative_error | `analytic_derivative_relative_error` | 1.6932975239507364e-16 | dimensionless | info |
-| adaptive_clenshaw_curtis.smooth_parameter.frozen_formula_relative_error | `frozen_formula_relative_error` | 4.4662076830225135e-11 | dimensionless | info |
+| adaptive_clenshaw_curtis.smooth_parameter.analytic_derivative_relative_error | `analytic_derivative_relative_error` | 3.386595047901473e-16 | dimensionless | info |
+| adaptive_clenshaw_curtis.smooth_parameter.frozen_formula_relative_error | `frozen_formula_relative_error` | 4.466224615997753e-11 | dimensionless | info |
 | adaptive_clenshaw_curtis.smooth_parameter.primal_relative_error | `primal_relative_error` | 1.8058841370913617e-16 | dimensionless | info |
 | adaptive_clenshaw_curtis.vector_payload.analytic_derivative_relative_error | `analytic_derivative_relative_error` | 1.6932975239507364e-16 | dimensionless | info |
 | adaptive_clenshaw_curtis.vector_payload.frozen_formula_relative_error | `frozen_formula_relative_error` | 4.4661907500472756e-11 | dimensionless | info |
 | adaptive_clenshaw_curtis.vector_payload.primal_relative_error | `primal_relative_error` | 1.8058841370913617e-16 | dimensionless | info |
-| adaptive_tanh_sinh.complex_payload.analytic_derivative_relative_error | `analytic_derivative_relative_error` | 2.230341066060445e-16 | dimensionless | info |
-| adaptive_tanh_sinh.complex_payload.frozen_formula_relative_error | `frozen_formula_relative_error` | 3.552084650016551e-11 | dimensionless | info |
+| adaptive_tanh_sinh.complex_payload.analytic_derivative_relative_error | `analytic_derivative_relative_error` | 2.2989829491299777e-16 | dimensionless | info |
+| adaptive_tanh_sinh.complex_payload.frozen_formula_relative_error | `frozen_formula_relative_error` | 3.5520871523309885e-11 | dimensionless | info |
 | adaptive_tanh_sinh.complex_payload.primal_relative_error | `primal_relative_error` | 1.3970739975089753e-16 | dimensionless | info |
-| adaptive_tanh_sinh.endpoint_singularity.analytic_derivative_relative_error | `analytic_derivative_relative_error` | 5.747414988377386e-09 | dimensionless | info |
-| adaptive_tanh_sinh.endpoint_singularity.frozen_formula_relative_error | `frozen_formula_relative_error` | 2.5403013172514397e-12 | dimensionless | info |
-| adaptive_tanh_sinh.endpoint_singularity.primal_relative_error | `primal_relative_error` | 5.747414766332781e-09 | dimensionless | info |
+| adaptive_tanh_sinh.endpoint_singularity.analytic_derivative_relative_error | `analytic_derivative_relative_error` | 4.937358522028035e-09 | dimensionless | info |
+| adaptive_tanh_sinh.endpoint_singularity.frozen_formula_relative_error | `frozen_formula_relative_error` | 3.417155464353814e-12 | dimensionless | info |
+| adaptive_tanh_sinh.endpoint_singularity.primal_relative_error | `primal_relative_error` | 4.937358617190008e-09 | dimensionless | info |
 | adaptive_tanh_sinh.improper_tail.analytic_derivative_relative_error | `analytic_derivative_relative_error` | 0.0 | dimensionless | info |
 | adaptive_tanh_sinh.improper_tail.frozen_formula_relative_error | `frozen_formula_relative_error` | 2.3356420347882404e-10 | dimensionless | info |
 | adaptive_tanh_sinh.improper_tail.primal_relative_error | `primal_relative_error` | 1.4432899320127036e-16 | dimensionless | info |
@@ -92,8 +92,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
 | adaptive_tanh_sinh.nonfinite_integrand.finite_primal_flag | `finite_primal_flag` | 0.0 | dimensionless | info |
 | adaptive_tanh_sinh.nonfinite_integrand.status_mismatch | `status_mismatch` | 0.0 | dimensionless | info |
 | adaptive_tanh_sinh.semi_infinite_bound.left.analytic_derivative_absolute_error | `analytic_derivative_absolute_error` | 2.220446049250313e-16 | dimensionless | info |
-| adaptive_tanh_sinh.semi_infinite_bound.left.frozen_formula_absolute_error | `frozen_formula_absolute_error` | 8.450218302868961e-11 | dimensionless | info |
-| adaptive_tanh_sinh.semi_infinite_bound.left.primal_absolute_error | `primal_absolute_error` | 0.0 | dimensionless | info |
+| adaptive_tanh_sinh.semi_infinite_bound.left.frozen_formula_absolute_error | `frozen_formula_absolute_error` | 7.895106790556383e-11 | dimensionless | info |
+| adaptive_tanh_sinh.semi_infinite_bound.left.primal_absolute_error | `primal_absolute_error` | 2.220446049250313e-16 | dimensionless | info |
 | adaptive_tanh_sinh.semi_infinite_bound.right.analytic_derivative_absolute_error | `analytic_derivative_absolute_error` | 0.0 | dimensionless | info |
 | adaptive_tanh_sinh.semi_infinite_bound.right.frozen_formula_absolute_error | `frozen_formula_absolute_error` | 5.4675153293715084e-11 | dimensionless | info |
 | adaptive_tanh_sinh.semi_infinite_bound.right.primal_absolute_error | `primal_absolute_error` | 1.1102230246251565e-16 | dimensionless | info |
@@ -116,20 +116,20 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
 | gauss_kronrod.invalid_input.finite_primal_flag | `finite_primal_flag` | 0.0 | dimensionless | info |
 | gauss_kronrod.invalid_input.status_mismatch | `status_mismatch` | 0.0 | dimensionless | info |
 | gauss_kronrod.moving_bounds.analytic_derivative_absolute_error | `analytic_derivative_absolute_error` | 0.0 | dimensionless | info |
-| gauss_kronrod.moving_bounds.frozen_formula_absolute_error | `frozen_formula_absolute_error` | 3.5754732508053166e-12 | dimensionless | info |
-| gauss_kronrod.moving_bounds.primal_absolute_error | `primal_absolute_error` | 1.1102230246251565e-16 | dimensionless | info |
+| gauss_kronrod.moving_bounds.frozen_formula_absolute_error | `frozen_formula_absolute_error` | 2.187694470023871e-12 | dimensionless | info |
+| gauss_kronrod.moving_bounds.primal_absolute_error | `primal_absolute_error` | 5.551115123125783e-17 | dimensionless | info |
 | gauss_kronrod.nonfinite_integrand.finite_primal_flag | `finite_primal_flag` | 0.0 | dimensionless | info |
 | gauss_kronrod.nonfinite_integrand.status_mismatch | `status_mismatch` | 0.0 | dimensionless | info |
-| gauss_kronrod.quantity_rescaling.physical_derivative_absolute_error_cm2_per_cm | `physical_derivative_absolute_error_cm2_per_cm` | 2.842170943040401e-14 | cm^2/cm | info |
+| gauss_kronrod.quantity_rescaling.physical_derivative_absolute_error_cm2_per_cm | `physical_derivative_absolute_error_cm2_per_cm` | 5.684341886080802e-14 | cm^2/cm | info |
 | gauss_kronrod.quantity_rescaling.physical_value_absolute_error_cm2 | `physical_value_absolute_error_cm2` | 7.275957614183426e-12 | cm^2 | info |
 | gauss_kronrod.reversed_bounds.analytic_derivative_absolute_error | `analytic_derivative_absolute_error` | 0.0 | dimensionless | info |
 | gauss_kronrod.reversed_bounds.frozen_formula_absolute_error | `frozen_formula_absolute_error` | 2.187694470023871e-12 | dimensionless | info |
-| gauss_kronrod.reversed_bounds.primal_absolute_error | `primal_absolute_error` | 1.1102230246251565e-16 | dimensionless | info |
-| gauss_kronrod.smooth_parameter.analytic_derivative_relative_error | `analytic_derivative_relative_error` | 3.386595047901473e-16 | dimensionless | info |
-| gauss_kronrod.smooth_parameter.frozen_formula_relative_error | `frozen_formula_relative_error` | 3.619575854090842e-11 | dimensionless | info |
+| gauss_kronrod.reversed_bounds.primal_absolute_error | `primal_absolute_error` | 5.551115123125783e-17 | dimensionless | info |
+| gauss_kronrod.smooth_parameter.analytic_derivative_relative_error | `analytic_derivative_relative_error` | 1.6932975239507364e-16 | dimensionless | info |
+| gauss_kronrod.smooth_parameter.frozen_formula_relative_error | `frozen_formula_relative_error` | 3.619558921115604e-11 | dimensionless | info |
 | gauss_kronrod.smooth_parameter.primal_relative_error | `primal_relative_error` | 1.8058841370913617e-16 | dimensionless | info |
-| gauss_kronrod.vector_payload.analytic_derivative_relative_error | `analytic_derivative_relative_error` | 3.386595047901473e-16 | dimensionless | info |
-| gauss_kronrod.vector_payload.frozen_formula_relative_error | `frozen_formula_relative_error` | 2.7729101591943573e-11 | dimensionless | info |
+| gauss_kronrod.vector_payload.analytic_derivative_relative_error | `analytic_derivative_relative_error` | 1.6932975239507364e-16 | dimensionless | info |
+| gauss_kronrod.vector_payload.frozen_formula_relative_error | `frozen_formula_relative_error` | 2.7728932262191185e-11 | dimensionless | info |
 | gauss_kronrod.vector_payload.primal_relative_error | `primal_relative_error` | 1.8058841370913617e-16 | dimensionless | info |
 | gauss_kronrod.weighted_density.analytic_derivative_relative_error | `analytic_derivative_relative_error` | 0.0 | dimensionless | info |
 | gauss_kronrod.weighted_density.frozen_formula_relative_error | `frozen_formula_relative_error` | 1.555022777208561e-12 | dimensionless | info |
@@ -299,14 +299,14 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
         },
         {
           "name": "analytic_derivative_relative_error",
-          "observed": 3.386595047901473e-16,
+          "observed": 1.6932975239507364e-16,
           "passed": true,
           "threshold": 1e-08,
           "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_relative_error",
-          "observed": 3.619575854090842e-11,
+          "observed": 3.619558921115604e-11,
           "passed": true,
           "threshold": 1e-08,
           "unit": "dimensionless"
@@ -318,7 +318,7 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "observed_primal_error": 2.220446049250313e-16,
       "parameter_unit": "dimensionless",
       "primal_value": 1.2295617441031759,
-      "replay_ad_derivative": 0.6556573838452363,
+      "replay_ad_derivative": 0.6556573838452364,
       "reported_primal_error": 1.3650877585016106e-14,
       "status": 0,
       "status_name": "CONVERGED"
@@ -343,7 +343,7 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "family": "vector_payload",
       "frozen_formula_fd": [
         0.6556573838634171,
-        0.4999999999998061
+        0.4999999999991122
       ],
       "gates": [
         {
@@ -355,14 +355,14 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
         },
         {
           "name": "analytic_derivative_relative_error",
-          "observed": 3.386595047901473e-16,
+          "observed": 1.6932975239507364e-16,
           "passed": true,
           "threshold": 1e-08,
           "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_relative_error",
-          "observed": 2.7729101591943573e-11,
+          "observed": 2.7728932262191185e-11,
           "passed": true,
           "threshold": 1e-08,
           "unit": "dimensionless"
@@ -378,8 +378,8 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
         0.20000000000000004
       ],
       "replay_ad_derivative": [
-        0.6556573838452363,
-        0.49999999999999994
+        0.6556573838452364,
+        0.5
       ],
       "reported_primal_error": 1.3650877585016106e-14,
       "status": 0,
@@ -467,14 +467,14 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
         },
         {
           "name": "analytic_derivative_relative_error",
-          "observed": 1.6932975239507364e-16,
+          "observed": 3.386595047901473e-16,
           "passed": true,
           "threshold": 1e-08,
           "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_relative_error",
-          "observed": 4.4662076830225135e-11,
+          "observed": 4.466224615997753e-11,
           "passed": true,
           "threshold": 1e-08,
           "unit": "dimensionless"
@@ -486,7 +486,7 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "observed_primal_error": 2.220446049250313e-16,
       "parameter_unit": "dimensionless",
       "primal_value": 1.2295617441031759,
-      "replay_ad_derivative": 0.6556573838452364,
+      "replay_ad_derivative": 0.6556573838452363,
       "reported_primal_error": 1.3650877585016106e-14,
       "status": 0,
       "status_name": "CONVERGED"
@@ -511,7 +511,7 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "family": "vector_payload",
       "frozen_formula_fd": [
         0.6556573838745193,
-        0.4999999999991122
+        0.4999999999998061
       ],
       "gates": [
         {
@@ -753,14 +753,14 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
         },
         {
           "name": "analytic_derivative_relative_error",
-          "observed": 2.230341066060445e-16,
+          "observed": 2.2989829491299777e-16,
           "passed": true,
           "threshold": 1e-08,
           "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_relative_error",
-          "observed": 3.552084650016551e-11,
+          "observed": 3.5520871523309885e-11,
           "passed": true,
           "threshold": 1e-08,
           "unit": "dimensionless"
@@ -777,9 +777,9 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       },
       "replay_ad_derivative": {
         "imag": 0.4801770682896581,
-        "real": -0.13121215442185286
+        "real": -0.13121215442185288
       },
-      "reported_primal_error": 5.670983335888175e-14,
+      "reported_primal_error": 5.672448452929753e-14,
       "status": 0,
       "status_name": "CONVERGED"
     },
@@ -1000,7 +1000,7 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "accepted_regions": 1,
       "adaptive_rerun_fd": [
         0.6556573838634171,
-        0.5000000000004999
+        0.4999999999998061
       ],
       "analytic_derivative": [
         0.6556573838452365,
@@ -1015,7 +1015,7 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "family": "vector_payload",
       "frozen_formula_fd": [
         0.6556573838634171,
-        0.5000000000004999
+        0.4999999999998061
       ],
       "gates": [
         {
@@ -1122,17 +1122,17 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
     {
       "accepted_level": 0,
       "accepted_regions": 1,
-      "adaptive_rerun_fd": 0.8000000000035755,
+      "adaptive_rerun_fd": 0.8000000000021877,
       "analytic_derivative": 0.8,
       "analytic_value": 0.32000000000000006,
       "derivative_unit": "coordinate",
       "dtype": "float64",
       "family": "moving_bounds",
-      "frozen_formula_fd": 0.8000000000035755,
+      "frozen_formula_fd": 0.8000000000021877,
       "gates": [
         {
           "name": "primal_absolute_error",
-          "observed": 1.1102230246251565e-16,
+          "observed": 5.551115123125783e-17,
           "passed": true,
           "threshold": 2e-09,
           "unit": "dimensionless"
@@ -1146,7 +1146,7 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
         },
         {
           "name": "frozen_formula_absolute_error",
-          "observed": 3.5754732508053166e-12,
+          "observed": 2.187694470023871e-12,
           "passed": true,
           "threshold": 2e-08,
           "unit": "dimensionless"
@@ -1155,18 +1155,18 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "integral_unit": "coordinate^2",
       "method": "gauss_kronrod",
       "name": "gauss_kronrod.moving_bounds",
-      "observed_primal_error": 1.1102230246251565e-16,
+      "observed_primal_error": 5.551115123125783e-17,
       "parameter_unit": "coordinate",
-      "primal_value": 0.31999999999999995,
+      "primal_value": 0.32,
       "replay_ad_derivative": 0.8,
-      "reported_primal_error": 3.5527136788005005e-15,
+      "reported_primal_error": 3.552713678800501e-15,
       "status": 0,
       "status_name": "CONVERGED"
     },
     {
       "accepted_level": 0,
       "accepted_regions": 1,
-      "adaptive_rerun_fd": -0.8000000000035755,
+      "adaptive_rerun_fd": -0.8000000000021877,
       "analytic_derivative": -0.8,
       "analytic_value": -0.32000000000000006,
       "derivative_unit": "coordinate",
@@ -1176,7 +1176,7 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "gates": [
         {
           "name": "primal_absolute_error",
-          "observed": 1.1102230246251565e-16,
+          "observed": 5.551115123125783e-17,
           "passed": true,
           "threshold": 2e-09,
           "unit": "dimensionless"
@@ -1199,11 +1199,11 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "integral_unit": "coordinate^2",
       "method": "gauss_kronrod",
       "name": "gauss_kronrod.reversed_bounds",
-      "observed_primal_error": 1.1102230246251565e-16,
+      "observed_primal_error": 5.551115123125783e-17,
       "parameter_unit": "coordinate",
-      "primal_value": -0.31999999999999995,
+      "primal_value": -0.32,
       "replay_ad_derivative": -0.8,
-      "reported_primal_error": 3.5527136788005005e-15,
+      "reported_primal_error": 3.552713678800501e-15,
       "status": 0,
       "status_name": "CONVERGED"
     },
@@ -1291,38 +1291,38 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "parameter_unit": "dimensionless",
       "primal_value": 0.769230769230769,
       "replay_ad_derivative": -0.5917159763313609,
-      "reported_primal_error": 4.600634126666863e-12,
+      "reported_primal_error": 4.600660147519003e-12,
       "status": 0,
       "status_name": "CONVERGED"
     },
     {
       "accepted_level": 0,
       "accepted_regions": 3,
-      "adaptive_rerun_fd": 1.9999999885000894,
+      "adaptive_rerun_fd": 1.9999999901321173,
       "analytic_derivative": 2.0,
       "analytic_value": 1.4,
       "derivative_unit": "dimensionless",
       "dtype": "float64",
       "family": "endpoint_singularity",
-      "frozen_formula_fd": 1.9999999885000894,
+      "frozen_formula_fd": 1.9999999901321173,
       "gates": [
         {
           "name": "primal_relative_error",
-          "observed": 5.747414766332781e-09,
+          "observed": 4.937358617190008e-09,
           "passed": true,
           "threshold": 1e-08,
           "unit": "dimensionless"
         },
         {
           "name": "analytic_derivative_relative_error",
-          "observed": 5.747414988377386e-09,
+          "observed": 4.937358522028035e-09,
           "passed": true,
           "threshold": 1e-08,
           "unit": "dimensionless"
         },
         {
           "name": "frozen_formula_relative_error",
-          "observed": 2.5403013172514397e-12,
+          "observed": 3.417155464353814e-12,
           "passed": true,
           "threshold": 1e-08,
           "unit": "dimensionless"
@@ -1331,11 +1331,11 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "integral_unit": "dimensionless",
       "method": "adaptive_tanh_sinh",
       "name": "adaptive_tanh_sinh.endpoint_singularity",
-      "observed_primal_error": 8.046380672865894e-09,
+      "observed_primal_error": 6.9123020640660116e-09,
       "parameter_unit": "dimensionless",
-      "primal_value": 1.3999999919536192,
-      "replay_ad_derivative": 1.99999998850517,
-      "reported_primal_error": 1.898970151784915e-07,
+      "primal_value": 1.3999999930876978,
+      "replay_ad_derivative": 1.999999990125283,
+      "reported_primal_error": 2.220667437729739e-07,
       "status": 1,
       "status_name": "MAX_EVALUATIONS"
     },
@@ -1474,7 +1474,7 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "parameter_unit": "coordinate",
       "primal_value": 0.8187307530779817,
       "replay_ad_derivative": -0.8187307530779818,
-      "reported_primal_error": 1.8605701986428846e-11,
+      "reported_primal_error": 1.8605695047534943e-11,
       "status": 0,
       "status_name": "CONVERGED",
       "variant": "right"
@@ -1482,17 +1482,17 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
     {
       "accepted_level": 0,
       "accepted_regions": 3,
-      "adaptive_rerun_fd": 1.2214027582446718,
+      "adaptive_rerun_fd": 1.2214027582391207,
       "analytic_derivative": 1.2214027581601699,
       "analytic_value": 1.2214027581601699,
       "derivative_unit": "integrand",
       "dtype": "float64",
       "family": "semi_infinite_bound",
-      "frozen_formula_fd": 1.2214027582446718,
+      "frozen_formula_fd": 1.2214027582391207,
       "gates": [
         {
           "name": "primal_absolute_error",
-          "observed": 0.0,
+          "observed": 2.220446049250313e-16,
           "passed": true,
           "threshold": 2e-09,
           "unit": "dimensionless"
@@ -1506,7 +1506,7 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
         },
         {
           "name": "frozen_formula_absolute_error",
-          "observed": 8.450218302868961e-11,
+          "observed": 7.895106790556383e-11,
           "passed": true,
           "threshold": 2e-08,
           "unit": "dimensionless"
@@ -1515,9 +1515,9 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       "integral_unit": "coordinate times integrand",
       "method": "adaptive_tanh_sinh",
       "name": "adaptive_tanh_sinh.semi_infinite_bound.left",
-      "observed_primal_error": 0.0,
+      "observed_primal_error": 2.220446049250313e-16,
       "parameter_unit": "coordinate",
-      "primal_value": 1.2214027581601699,
+      "primal_value": 1.2214027581601696,
       "replay_ad_derivative": 1.2214027581601696,
       "reported_primal_error": 2.775660435363415e-11,
       "status": 0,
@@ -1637,7 +1637,7 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
         },
         {
           "name": "physical_derivative_absolute_error_cm2_per_cm",
-          "observed": 2.842170943040401e-14,
+          "observed": 5.684341886080802e-14,
           "passed": true,
           "threshold": 2e-08,
           "unit": "cm^2/cm"
@@ -1654,7 +1654,7 @@ The case map is the researcher-facing summary. Complete numerical gates and the 
       },
       "replay_ad_derivative": {
         "cm2_per_cm": 199.99999999999997,
-        "cm2_per_m": 20000.0
+        "cm2_per_m": 20000.000000000004
       },
       "reported_primal_error": "see raw method cases",
       "status": 0,

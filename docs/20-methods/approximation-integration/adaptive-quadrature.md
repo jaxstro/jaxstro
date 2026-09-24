@@ -171,6 +171,42 @@ e_i = \lvert Q_{h/2}-Q_h\rvert
 This open rule avoids evaluating finite endpoints directly. Domain maps and
 their Jacobians extend the same logic to half-infinite and infinite domains.
 
+#### Regions near an endpoint
+
+Regions are bisected in the reference coordinate $t\in[-1,1]$, but each bound is
+stored as the pair $(1+t,\,1-t)$ rather than as $t$. Near $t=-1$ the complement
+$1+t$ keeps relative precision down to the smallest normal number, where $t$
+itself resolves only about $10^{-16}$; likewise $1-t$ near $t=+1$. Nodes and the
+domain maps are formed in the smaller complement, for example
+$x=a+h\,(1+t)$ near $a$ and $x=\mathtt{lower}+s\,(1+t)/(1-t)$ on
+`RightInfinite(lower)`, so a region can be refined toward an endpoint at zero or
+toward an infinite end until the distance underflows.
+
+A physical coordinate $x$ still cannot lie closer to a finite endpoint $a\ne0$
+than the spacing of $a$ ($2.2\times10^{-16}$ at $a=1$). A node meant to be
+interior that rounds onto $a$ moves to the nearest interior float, a real point
+of the domain. For Gauss-Kronrod and Clenshaw-Curtis that happens only in a
+region about one spacing wide, which reports `ROUNDOFF_LIMITED`. Tanh-sinh tail
+nodes lie within a spacing of the endpoint by design; a move reports roundoff
+only when the moved nodes' weighted contribution is at least the region's rule
+error, as at an endpoint singularity. Clenshaw-Curtis nodes at $t=\pm1$ remain
+endpoint evaluations by construction.
+
+| Integrand, $\epsilon_\mathrm{rel}=10^{-10}$ | Method | Relative error | Status |
+| --- | --- | --- | --- |
+| $x^{-0.9}$ on $[0,1]$ | GK21 | $7.6\times10^{-11}$ | `CONVERGED` |
+| $(x-1)^{-1/2}$ on $[1,2]$ | GK21 / tanh-sinh | $8.4\times10^{-9}$ / $7.8\times10^{-9}$ | `ROUNDOFF_LIMITED` |
+| $x^{-1/2}e^{-x}$ on $[0,\infty)$ | tanh-sinh | $2.7\times10^{-12}$ | `CONVERGED` |
+| $x^{-3/2}$ on $[1,\infty)$ | tanh-sinh | $2.4\times10^{-12}$ | `CONVERGED` |
+| $1/(10^{-8}+(x-0.3)^2)$ on $[0,1]$ | tanh-sinh level 5 | $2.9\times10^{-15}$ | `CONVERGED` |
+
+Before 2026-09-24 the finite-endpoint rows returned `nan` and the improper-domain
+rows stopped at `ROUNDOFF_LIMITED`. Embedded-rule error estimates still cannot
+see some weak singularities: for $1/(x\ln^2x)$ on $[0,1/2]$ at
+$\epsilon_\mathrm{rel}=10^{-3}$, GK21 reports `CONVERGED` with an
+$8.3\times10^{-3}$ error, as do SciPy's QAGS ($6.1\times10^{-3}$) and
+`quad_vec` ($3.0\times10^{-3}$).
+
 ### Characteristic scales for improper domains
 
 An improper map needs a physical scale $s>0$, not merely a display unit.

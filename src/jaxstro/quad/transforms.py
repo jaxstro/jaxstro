@@ -125,6 +125,76 @@ def map_domain(
     raise TypeError(f"unsupported quadrature domain: {type(domain).__name__}")
 
 
+def map_domain_complements(
+    domain: Interval | RightInfinite | LeftInfinite | Infinite,
+    minus: Array,
+    plus: Array,
+    *,
+    replay: bool = False,
+) -> DomainMapResult:
+    """Map reference points given as complements ``1 + t`` and ``1 - t``.
+
+    Near ``t = -1`` the complement ``1 + t`` keeps relative precision far below
+    the spacing of ``t`` itself (down to the smallest normal number), and
+    likewise ``1 - t`` near ``t = +1``. Each map is written in whichever
+    complement is smaller, so nodes next to a finite endpoint at zero or next
+    to an infinite end keep their distance from it. ``replay`` selects the
+    signed finite-interval map used for replay derivatives.
+    """
+    validate_raw_domain(domain)
+    minus = jnp.asarray(minus)
+    plus = jnp.asarray(plus)
+    near_lower = minus <= plus
+    if isinstance(domain, Interval):
+        lower = jnp.asarray(domain.lower)
+        upper = jnp.asarray(domain.upper)
+        if replay:
+            half_width = 0.5 * (upper - lower)
+            start, end = lower, upper
+            orientation = jnp.asarray(1.0, dtype=half_width.dtype)
+        else:
+            start = jnp.minimum(lower, upper)
+            end = jnp.maximum(lower, upper)
+            half_width = 0.5 * (end - start)
+            orientation = interval_orientation(domain)
+        x = jnp.where(near_lower, start + half_width * minus, end - half_width * plus)
+        return DomainMapResult(
+            x=x,
+            jacobian=half_width,
+            orientation=orientation,
+            valid=interval_is_valid(domain),
+        )
+    if isinstance(domain, RightInfinite):
+        lower = jnp.asarray(domain.lower)
+        scale = improper_scale_value(domain)
+        return DomainMapResult(
+            x=lower + scale * (minus / plus),
+            jacobian=2.0 * scale / plus**2,
+            orientation=jnp.asarray(1.0),
+            valid=jnp.isfinite(lower) & improper_scale_is_valid(domain),
+        )
+    if isinstance(domain, LeftInfinite):
+        upper = jnp.asarray(domain.upper)
+        scale = improper_scale_value(domain)
+        return DomainMapResult(
+            x=upper - scale * (plus / minus),
+            jacobian=2.0 * scale / minus**2,
+            orientation=jnp.asarray(1.0),
+            valid=jnp.isfinite(upper) & improper_scale_is_valid(domain),
+        )
+    if isinstance(domain, Infinite):
+        scale = improper_scale_value(domain)
+        reference = jnp.where(near_lower, minus - 1.0, 1.0 - plus)
+        denominator = minus * plus
+        return DomainMapResult(
+            x=scale * reference / denominator,
+            jacobian=scale * (1.0 + reference**2) / denominator**2,
+            orientation=jnp.asarray(1.0),
+            valid=improper_scale_is_valid(domain),
+        )
+    raise TypeError(f"unsupported quadrature domain: {type(domain).__name__}")
+
+
 def map_domain_replay(
     domain: Interval | RightInfinite | LeftInfinite | Infinite,
     reference: Array,
@@ -140,6 +210,7 @@ __all__ = [
     "AffineMapResult",
     "DomainMapResult",
     "map_domain",
+    "map_domain_complements",
     "map_domain_replay",
     "map_interval",
     "map_interval_replay",

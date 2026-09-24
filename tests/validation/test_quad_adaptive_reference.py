@@ -120,16 +120,23 @@ def test_improper_tail_analytic_oracles(method) -> None:
         assert jnp.allclose(result.value, expected, rtol=2e-7, atol=2e-9)
 
 
-def test_endpoint_singularity_has_an_honest_representability_exit() -> None:
+def test_endpoint_singularity_has_an_honest_exit() -> None:
+    # Before regions were stored by complements, both tanh-sinh methods stopped
+    # at ROUNDOFF_LIMITED here. AdaptiveTanhSinh now converges (1.7e-8 against
+    # a 3.1e-8 tolerance); whichever exit, the status must be honest.
     for method in TANH_SINH:
         result = integrate(
             lambda x: (1.0 - x**2) ** (-0.5),
             Interval(-1.0, 1.0),
             **_options(method, 1e-8),
         )
-        assert result.status == QuadStatus.ROUNDOFF_LIMITED
-        assert result.error.norm > result.tolerance
-        assert jnp.abs(result.value - jnp.pi) <= 2e-7
+        error = jnp.abs(result.value - jnp.pi)
+        assert result.status in (QuadStatus.CONVERGED, QuadStatus.ROUNDOFF_LIMITED)
+        if result.status == QuadStatus.CONVERGED:
+            assert error <= result.tolerance
+        else:
+            assert result.error.norm > result.tolerance
+        assert error <= 2e-7
 
 
 def test_missed_narrow_feature_documents_estimator_false_convergence() -> None:

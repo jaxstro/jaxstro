@@ -11,6 +11,7 @@ from ._adaptive import (
     adaptive_controller,
     clenshaw_curtis_pair_data,
     infer_payload_zero,
+    moved_node_limits_region,
     nested_rule_estimate_values,
     reference_partition,
     select_segment,
@@ -315,6 +316,7 @@ def _solve_raw(
     if isinstance(method, GaussKronrod):
         data = gauss_kronrod_data(method, dtype=dtype)
         rule_nodes = data.nodes
+        rule_weights = data.kronrod_weights
         error_kind = ErrorKind.EMBEDDED_RULE
 
         def reduce_values(values):
@@ -323,6 +325,7 @@ def _solve_raw(
     elif isinstance(method, AdaptiveClenshawCurtis):
         pair = clenshaw_curtis_pair_data(method, dtype=dtype)
         rule_nodes = pair.nodes
+        rule_weights = pair.high_weights
         error_kind = ErrorKind.REFINEMENT_DIFFERENCE
 
         def reduce_values(values):
@@ -331,6 +334,7 @@ def _solve_raw(
     else:
         tanh_sinh_pair = tanh_sinh_pair_data(method, dtype=dtype)
         rule_nodes = tanh_sinh_pair.nodes
+        rule_weights = tanh_sinh_pair.high_weights
         node_cost = rule_nodes.shape[0]
         error_kind = ErrorKind.REFINEMENT_DIFFERENCE
         validate_adaptive_capacities(
@@ -360,6 +364,8 @@ def _solve_raw(
         zero_dtype = rule_nodes.dtype
     zero_value = inferred_zero.astype(zero_dtype)
 
+    open_region = isinstance(method, AdaptiveTanhSinh)
+
     def local_estimator(lower, upper, segment_id):
         segment_domain = select_segment(domain, segment_id)
         transformed = transformed_integrand(
@@ -370,14 +376,17 @@ def _solve_raw(
             region_upper=upper,
             args=args,
             measure=selected_measure,
-            open_region=isinstance(method, AdaptiveTanhSinh),
+            open_region=open_region,
         )
         estimate = reduce_values(transformed.values)
         return LocalEstimate(
             value=estimate.value,
             error=estimate.error,
             nonfinite=transformed.nonfinite | estimate.nonfinite,
-            roundoff=transformed.roundoff,
+            roundoff=transformed.roundoff
+            | moved_node_limits_region(
+                transformed, rule_weights, estimate.error, open_region=open_region
+            ),
         )
 
     tolerance_valid = (
@@ -415,8 +424,17 @@ def _solve_raw(
         )
 
     def zero_controller(_operand):
-        lower = jnp.zeros((max_regions,), dtype=partition.lower.dtype).at[0].set(-1.0)
-        upper = jnp.zeros((max_regions,), dtype=partition.upper.dtype).at[0].set(1.0)
+        # Reference bounds are (1 + t, 1 - t) pairs; region 0 spans t in [-1, 1].
+        lower = (
+            jnp.zeros((max_regions, 2), dtype=partition.lower.dtype)
+            .at[0]
+            .set(jnp.asarray([0.0, 2.0], dtype=partition.lower.dtype))
+        )
+        upper = (
+            jnp.zeros((max_regions, 2), dtype=partition.upper.dtype)
+            .at[0]
+            .set(jnp.asarray([2.0, 0.0], dtype=partition.upper.dtype))
+        )
         segment_id = jnp.zeros((max_regions,), dtype=jnp.int32)
         active = jnp.zeros((max_regions,), dtype=jnp.bool_).at[0].set(True)
         return PrimalSolve(
