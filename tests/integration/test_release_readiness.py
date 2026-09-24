@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import tomllib
 from pathlib import Path
 
@@ -15,23 +16,58 @@ def _steps_run(job: dict) -> list[str]:
     return [step["run"] for step in job["steps"] if "run" in step]
 
 
-def test_full_gate_runs_the_local_release_mirror_on_main_push() -> None:
-    """Owner of the full-gate workflow structure (parsed, not text-matched)."""
-    workflow = yaml.safe_load(
-        (REPO_ROOT / ".github/workflows/full-gate.yml").read_text(encoding="utf-8")
+def _check_sh_stages() -> list[str]:
+    script = (REPO_ROOT / "scripts" / "check.sh").read_text(encoding="utf-8")
+    match = re.search(r"^STAGES=\(([^)]*)\)$", script, flags=re.MULTILINE)
+    assert match, "scripts/check.sh must declare STAGES=(...)"
+    return match.group(1).split()
+
+
+def _workflow(name: str) -> dict:
+    return yaml.safe_load(
+        (REPO_ROOT / ".github" / "workflows" / name).read_text(encoding="utf-8")
     )
+
+
+def test_full_gate_runs_every_local_stage_as_a_parallel_job() -> None:
+    """Owner of the full-gate workflow structure (parsed, not text-matched)."""
+    workflow = _workflow("full-gate.yml")
     triggers = workflow[True]  # YAML 1.1 reads the key `on` as True
     assert triggers["push"]["branches"] == ["main"]
     assert workflow["env"]["JAX_ENABLE_X64"] == "1"
-    assert set(workflow["jobs"]) == {"release-mirror", "scientific-validation"}
+    assert set(workflow["jobs"]) == {"stage", "full-gate", "scientific-validation"}
 
-    mirror = workflow["jobs"]["release-mirror"]
-    assert mirror["timeout-minutes"] == 60
-    assert _steps_run(mirror) == ["bash scripts/check.sh"]
+    stage = workflow["jobs"]["stage"]
+    assert stage["strategy"]["fail-fast"] is False
+    assert stage["strategy"]["matrix"]["stage"] == _check_sh_stages()
+    # Earlier steps only record the runner; the gate work is check.sh alone.
+    assert _steps_run(stage)[-1] == "bash scripts/check.sh ${{ matrix.stage }}"
+    assert sum("check.sh" in run for run in _steps_run(stage)) == 1
+    assert stage["timeout-minutes"] <= 30
+
+    summary = workflow["jobs"]["full-gate"]
+    assert summary["needs"] == ["stage"]
+    assert summary["if"] == "always()"
 
     validation = workflow["jobs"]["scientific-validation"]
     assert validation["if"] == "github.event_name != 'push'"
     assert "uv run --no-sync pytest tests/validation -q" in _steps_run(validation)
+
+
+def test_check_sh_test_stages_cover_every_test_tier() -> None:
+    tiers = {
+        path.name
+        for path in (REPO_ROOT / "tests").iterdir()
+        if path.is_dir() and any(path.rglob("test_*.py"))
+    }
+    stages = _check_sh_stages()
+    assert {f"tests-{tier}" for tier in tiers} <= set(stages)
+
+
+def test_fast_gate_runs_on_pushes_to_main_and_on_pull_requests() -> None:
+    triggers = _workflow("tests.yml")[True]
+    assert triggers["push"]["branches"] == ["main"]
+    assert "pull_request" in triggers
 
 
 def test_pages_workflow_uses_the_verified_docs_gate_and_site_output() -> None:

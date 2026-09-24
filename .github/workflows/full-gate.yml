@@ -21,9 +21,14 @@ env:
   OMP_NUM_THREADS: "1"
 
 jobs:
-  release-mirror:
+  stage:
+    name: ${{ matrix.stage }}
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        stage: [static, docs, tests-unit, tests-integration, tests-validation, ml, distribution]
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -35,8 +40,20 @@ jobs:
           python-version: "3.13"
           enable-cache: true
           cache-dependency-glob: uv.lock
-      - name: Run the exact local release mirror
-        run: bash scripts/check.sh
+      - name: Record the runner CPU (XLA compiles for it)
+        run: lscpu | grep -E 'Model name|Flags' | cut -c1-200
+      - run: bash scripts/check.sh ${{ matrix.stage }}
+
+  full-gate:
+    if: always()
+    needs: [stage]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Every stage succeeded
+        run: |
+          echo "stage=${{ needs.stage.result }}"
+          test "${{ needs.stage.result }}" = "success"
 
   scientific-validation:
     if: github.event_name != 'push'
