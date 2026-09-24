@@ -5,7 +5,7 @@ description: >-
   Anchor tables, FD-vs-AD grad audits, and convergence checks.
 ---
 
-This section is where the docs earn trust. The table records
+This section links each documented claim to the test that checks it. The table records
 `Property | Tolerance | Measured | Anchor`: the bounded property, the comparison
 policy, what is measured, and the tests that enforce the claim. It includes the
 FD-vs-AD gradient audit (principle

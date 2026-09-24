@@ -184,7 +184,7 @@ answer, AD, and FD is the evidence that this smooth path is working.
 :::{important} Fixed iteration is necessary, not sufficient
 `newton` uses a fixed number of JAX-traceable iterations, but that alone does not
 guarantee a scientifically meaningful derivative. The update must also remain on
-a smooth path, and the initial guess must not smuggle the analytic answer's
+a smooth path, and the initial guess must not carry the analytic answer's
 parameter dependence into the result. Branch-selected solvers such as bisection
 remain excellent forward-value tools, but their root sensitivities need a
 different contract.

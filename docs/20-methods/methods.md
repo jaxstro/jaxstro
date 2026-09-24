@@ -79,8 +79,8 @@ independent audit, and the narrowest warranted scientific claim.
 A function can return the right number and still be wrong. When a gradient is
 part of its contract, a silently zero, `NaN`, or detached derivative can break
 the science even though the value "worked." When the operation is deliberately
-discrete, pretending it has a useful gradient is equally wrong. *It ran* is not
-*it is correct*. Elegant nonsense is still nonsense.
+discrete, pretending it has a useful gradient is equally wrong. A result that runs
+is not thereby correct.
 
 jaxstro therefore requires every public numerical path to name its transform
 contract. Smooth pathwise gradients receive independent finite-difference
@@ -95,9 +95,10 @@ models, limiting distributions, spatial interactions, and provenance to the
 relevant module and evidence.
 
 :::{tip} Already fluent in differentiable programming?
-Skip to the principle that bites you most often - most people's is
-[](#p3-guard-singularities) (the `where`-trap) or [](#p4-saturation) (the silent
-gradient killer) - or go straight to the method pages:
+The two principles most often violated are [](#p3-guard-singularities), where an
+inactive `where` branch makes the gradient `NaN`, and [](#p4-saturation), where a
+clip or floor sets a gradient to zero without an error. Otherwise go straight to the
+method pages:
 [](./change-constraints-evolution/rootfinding.md), [](./approximation-integration/cumulative-trapz.md), [](./approximation-integration/quadrature.md),
 [](./approximation-integration/interpolation.md), [](./approximation-integration/regular-grid.md), and [](./approximation-integration/bsplines.md).
 The dense helper layer for small fits and covariance diagnostics is
@@ -234,7 +235,7 @@ division, then select the intended value. `safe_div` and `safe_log` implement
 that policy for their documented domains.
 
 (p4-saturation)=
-## 4. Saturation is a silent gradient killer
+## 4. Saturation sets gradients to zero without an error
 
 `clip`, `min`, `max`, and `floor` are piecewise or discrete operations. They can
 zero, route, or make a gradient convention-dependent at their boundaries.
@@ -297,7 +298,7 @@ coefficients and interior coordinates for fixed knots.
 Float32 carries about 7 decimal digits; one bad subtraction can spend all of them.
 Enable float64 with `jaxconfig.enable_high_precision()` before creating any array,
 and request the highest matmul precision so reductions are not silently downcast on
-accelerators. This is cheap insurance and the default posture for everything here.
+accelerators. Every example on these pages assumes this setting.
 
 (p9-correctness)=
 ## 9. Correctness over comfort
