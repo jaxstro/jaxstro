@@ -166,15 +166,20 @@ At inspection $k$, the overall error probability $\alpha$ is allocated as
 ```
 
 Given certified replicate-estimate bounds $A\leq\widehat{I}_{N,r}\leq B$, the
-empirical-Bernstein half-width is
+two-sided empirical-Bernstein half-width is
 
 ```{math}
 :label: eq-rqmc-bernstein
 
 h_k
-=\sqrt{\frac{2s_k^2\log(2/\alpha_k)}{R_k}}
-+\frac{7(B-A)\log(2/\alpha_k)}{3(R_k-1)}.
+=\sqrt{\frac{2s_k^2\log(4/\alpha_k)}{R_k}}
++\frac{7(B-A)\log(4/\alpha_k)}{3(R_k-1)}.
 ```
+
+Maurer and Pontil's bound (2009, Theorem 4) is one-sided with
+$\log(2/\delta)$; each tail of the interval receives $\alpha_k/2$, which gives
+$\log(4/\alpha_k)$. Before 2026-09-24 Jaxstro used $\log(2/\alpha_k)$, which
+guarantees two-sided coverage only $1-2\alpha$.
 
 The union bound preserves the overall confidence claim even though the reused
 prefixes make inspections dependent.

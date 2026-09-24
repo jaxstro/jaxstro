@@ -155,7 +155,11 @@ def empirical_bernstein_half_width(
     upper,
     alpha,
 ) -> Array:
-    """Return the bounded empirical-Bernstein half-width for one inspection."""
+    """Return the two-sided empirical-Bernstein half-width for one inspection.
+
+    With probability at least ``1 - alpha`` the mean of the replicate
+    distribution lies within the returned half-width of the sample mean.
+    """
     estimates = jnp.asarray(estimates)
     if estimates.ndim != 1:
         raise ValueError("empirical-Bernstein estimates must be one-dimensional")
@@ -175,7 +179,9 @@ def empirical_bernstein_half_width(
     replicate_count = estimates.shape[0]
     mean = jnp.mean(estimates)
     variance = jnp.sum((estimates - mean) ** 2) / (replicate_count - 1)
-    log_term = jnp.log(2.0 / alpha)
+    # Maurer & Pontil (2009), Theorem 4, bounds one tail with ln(2 / delta).
+    # The interval is two-sided, so each tail gets alpha / 2: ln(4 / alpha).
+    log_term = jnp.log(4.0 / alpha)
     variance_term = jnp.sqrt(2.0 * variance * log_term / replicate_count)
     range_term = 7.0 * (upper - lower) * log_term / (3.0 * (replicate_count - 1))
     valid = (

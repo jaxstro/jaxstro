@@ -131,6 +131,8 @@ def test_empirical_bernstein_uses_unbiased_variance_and_exact_range_term():
     )
     mean = jnp.mean(estimates)
     variance = jnp.sum((estimates - mean) ** 2) / 7
-    log_term = jnp.log(2.0 / alpha)
+    # Maurer & Pontil (2009) Thm 4 is one-sided with ln(2/delta); the two-sided
+    # interval spends alpha/2 per tail, so ln(4/alpha). Approved 2026-09-24.
+    log_term = jnp.log(4.0 / alpha)
     expected = jnp.sqrt(2.0 * variance * log_term / 8) + (7.0 * log_term / (3.0 * 7))
     assert jnp.allclose(actual, expected)

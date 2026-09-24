@@ -116,7 +116,7 @@
       "target": "docs/validation/quad-replay-derivatives.json"
     },
     {
-      "content_digest": "sha256:566f1867e2aae49c12d3a1bcdde63f282ff1a3378f0a9f9784c7cb9a7b58bdff",
+      "content_digest": "sha256:b37f436a3357d6be2a78be3309def5627ed044e1a30e43ebac3d1d6b095b7395",
       "evidence_class": "computational",
       "id": "quad.rqmc-calibration",
       "limitations": [
