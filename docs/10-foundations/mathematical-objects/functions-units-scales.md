@@ -94,25 +94,26 @@ unidentified parameter direction.
 
 ## Try the running case
 
-In the two-channel measurement, let a physical prediction $q(\theta)$ have
-watts. The first instrument records $d_1=q$ in watts; the second records
-$d_2=cq$ in detector counts for a calibration factor $c$ in counts per watt.
+In the two-channel measurement, let a physical prediction $q(\theta)$ have units
+of erg s$^{-1}$. The first instrument records $d_1=q$ in erg s$^{-1}$; the second
+records $d_2=cq$ in detector counts for a calibration factor $c$ in counts per
+(erg s$^{-1}$).
 Before fitting $\theta$, write the units of $q$, $d_1$, $d_2$, and $c$. Which two
 quantities may be subtracted without a conversion?
 
 ## Worked audit
 
 $q$ and $d_1$ have the same units, so $d_1-q$ is meaningful. The residual
-$d_2-q$ mixes counts and watts. Compare $d_2-cq$ in counts, or convert $d_2/c$
-to watts while carrying the calibration uncertainty. Scaling numerical values
+$d_2-q$ mixes counts and erg s$^{-1}$. Compare $d_2-cq$ in counts, or convert
+$d_2/c$ to erg s$^{-1}$ while carrying the calibration uncertainty. Scaling numerical values
 near one can help a solver; it cannot make the residual dimensionally valid.
 
 :::{figure} ../figures/units-residual-space.svg
 :name: fig-units-residual-space
-:alt: A prediction in watts reaches one channel measured in watts and one in counts through a calibration factor. Valid residuals compare quantities in the same unit system, while a counts-minus-watts residual is crossed out.
+:alt: A prediction in erg per second reaches one channel measured in erg per second and one in counts through a calibration factor. Valid residuals compare quantities in the same unit system, while a counts-minus-power residual is crossed out.
 
 The calibration changes the numerical representation of the same predicted
-signal. It does not authorize a residual that mixes counts with watts.
+signal. It does not authorize a residual that mixes counts with erg s$^{-1}$.
 :::
 
 In [](#fig-units-residual-space), check which residual compares quantities in the
