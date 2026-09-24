@@ -532,9 +532,12 @@ def test_reviewed_runtime_boundaries_are_stated_explicitly() -> None:
     integration = " ".join(
         _page("approximation-integration/cumulative-trapz.md").split()
     )
-    assert "supported default-last-axis paths" in integration
-    assert "nondefault `trapezoid` axes are not currently supported" in integration
-    assert "nonuniform multidimensional cumulative integration" in integration
+    assert "The integrated axis (the last axis by default)" in integration
+    assert "`axis` is a static argument" in integration
+    assert "A nonuniform `x` is supported only on the last axis" in integration
+    assert "Nonuniform multidimensional integration on a selected non-last axis" in (
+        integration
+    )
     assert "direct width broadcasting" in integration
 
     interpolation = " ".join(

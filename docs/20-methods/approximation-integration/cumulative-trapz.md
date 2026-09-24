@@ -21,9 +21,8 @@ output match the problem.
 
 ## Before computation: what should be true?
 
-The supported default-last-axis paths require the last sample axis to contain
-the intended ordered values. If `x` is provided it must be one-dimensional and
-match that last-axis length. A meaningful integral also requires coordinate
+The integrated axis (the last axis by default) must contain the intended ordered
+values. If `x` is provided it must be one-dimensional and match that axis length. A meaningful integral also requires coordinate
 units, value units, and enough resolution for the unresolved curvature. Simpson
 rules additionally require at least three, an odd number of samples, and
 uniform spacing.
@@ -85,16 +84,13 @@ last bits differ.
 
 ## What the algorithm actually does
 
-`trapezoid(y, x=None)` returns a total over the default last axis. With no `x`, it
-uses unit spacing; with `x`, each panel carries `diff(x)` inside the reduction.
-The function signature exposes `axis=-1`, but nondefault `trapezoid` axes are not
-currently supported. Passing `axis` explicitly, even as `axis=-1`, traces
-that argument through plain `jax.jit` and raises
-`TracerIntegerConversionError` when Python indexes the shape.
+`trapezoid(y, x=None, *, dx=1.0, axis=-1)` returns the total along `axis`. With no
+`x`, it uses the scalar spacing `dx`; with `x`, each panel carries `diff(x)` inside
+the reduction and `dx` is ignored. `axis` is a static argument, so any axis is
+supported for uniform spacing. A nonuniform `x` is supported only on the last axis.
 
-`cumulative_trapezoid(y, x=None, dx=1.0)` returns the same shape as `y` with a
-leading zero on the default last axis. Its supported multidimensional paths
-likewise keep the integration coordinate last.
+`cumulative_trapezoid(y, x=None, *, dx=1.0, axis=-1)` returns the same shape as `y`
+with a leading zero along `axis`, under the same spacing rules.
 
 The canonical uniform path is dx-outside: it accumulates
 `0.5 * (y_left + y_right)` first and multiplies by scalar `dx` once afterward.
@@ -102,10 +98,10 @@ This is the ecosystem parity contract. The mathematically equivalent dx-inside
 ordering can differ by about one unit in the last place because the multiply is
 rounded at a different stage. On a nonuniform grid, every `diff(x)` must remain
 inside its panel before the cumulative sum and the scalar `dx` argument is
-ignored. Nonuniform multidimensional cumulative integration on a selected
-non-last axis is a current limitation: direct width broadcasting between
+ignored. Nonuniform multidimensional integration on a selected non-last axis,
+total or cumulative, is a current limitation: direct width broadcasting between
 `diff(x)` and panel values is incompatible for shapes such as `(2,)` and
-`(2, 4)`.
+`(2, 4)`, and raises `ValueError`.
 
 `simpson` returns the total of uniform two-interval quadratic panels.
 `cumulative_simpson` returns only panel endpoints: input length $n$ becomes
@@ -121,10 +117,8 @@ the grid ordering and shape stay fixed. That coordinate derivative represents
 motion of the sampled abscissae, not automatic differentiation of an underlying
 continuous function between them.
 
-Sample count and Simpson panel count are shape choices. The present public
-trapezoid contract is deliberately narrower than the signatures: use the
-default last axis, and do not pass `axis` to `trapezoid` until its static-argument
-handling is repaired.
+Sample count and Simpson panel count are shape choices. `axis` is static and
+selects which array dimension is integrated; it is not a differentiable input.
 
 :::{warning}
 Concrete shape errors raise, but a value-dependent uniform-spacing check is
@@ -159,11 +153,11 @@ Integrate constants and linear functions, which trapezoids reproduce exactly.
 For a smooth curved function, compare grids with spacing $h$, $h/2$, and $h/4$;
 the error ratio should approach four when the global $O(h^2)$ regime is reached.
 Check cumulative shape, leading zero, final-value parity with the total, both
-spacing modes on the default last axis, and dx-outside byte parity. Compare AD
-in sample values with independently computed trapezoid weights. Keep explicit
-failure probes for `trapezoid(..., axis=-1)` and for nonuniform multidimensional
-cumulative integration on a non-last axis so that these current limitations
-cannot be mistaken for supported negative or selected axes.
+spacing modes on the default last axis, uniform spacing on an explicit axis, and
+dx-outside byte parity. Compare AD in sample values with independently computed
+trapezoid weights. Keep an explicit failure probe for nonuniform multidimensional
+integration on a non-last axis so that this limitation cannot be mistaken for a
+supported path.
 
 The package evidence index is [](../../60-validation/validation.md).
 
