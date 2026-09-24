@@ -12,9 +12,9 @@ echo "== sync: development, benchmark, and reference gates =="
 env -u VIRTUAL_ENV uv sync --locked --extra dev --group benchmark --group reference
 
 echo "== lint: ruff check =="
-$RUN ruff check src/ tests/
+$RUN ruff check src/ tests/ scripts/ laboratory/
 echo "== lint: ruff format --check =="
-$RUN ruff format --check src/ tests/
+$RUN ruff format --check src/ tests/ scripts/ laboratory/
 echo "== lint: mypy =="
 $RUN mypy src/jaxstro
 

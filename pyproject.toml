@@ -120,7 +120,7 @@ reference = [
 target-version = "py311"
 line-length = 88
 src = ["src", "tests"]
-fix = true
+fix = false
 
 [tool.ruff.lint]
 # Start light; you can tighten later.
