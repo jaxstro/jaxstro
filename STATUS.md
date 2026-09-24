@@ -1,9 +1,23 @@
 # jaxstro — status
 
-Updated: 2026-09-23
+Updated: 2026-09-24
 
 ## Current checkpoint
 
+- 2026-09-24: cleanup and quad hardening, `main` at `3de93bc`, full gate green
+  on all 8 parallel stages (run 36063431163). Task list:
+  `docs/plans/2026-09-24-cleanup-ledger.md` (110 tasks: 62 done, 6 doing,
+  42 todo). Handoff: `docs/plans/2026-09-24-handoff-quad-sota.md`.
+- quad fixes measured on 2026-09-24: Gaussian tail weights (normal n=256,
+  E[exp(6g)] error 1.3e18 -> 1.1e-16; NumPy hermgauss removed; rules cached,
+  warm jit n=256 6.0 -> 0.029 ms); Gauss-Chebyshev NaN fixed; adaptive regions
+  stored as (1+t, 1-t) so GK integrates x^-0.9 on [0,1] to 7.6e-11 where it
+  returned NaN; sampled trapezoid on non-last axes and nonuniform Simpson;
+  AdaptiveSmolyak no longer converges past its node capacity; replay fails
+  closed at zero width in reverse mode; RQMC two-sided interval uses
+  ln(4/alpha). Romberg is documented as smooth-integrand only.
+- CI: the full gate runs `scripts/check.sh <stage>` as 8 parallel jobs (about
+  22 min instead of about 50); `tests.yml` runs on every push to `main`.
 - 2026-09-23: the ten integration tests that failed on `main` pass (55 owner
   tests). Causes: the docs-gate lifecycle harness faked `myst` after the gate
   moved to `npx --no-install myst`; nine Foundations figures lacked prose
@@ -60,9 +74,15 @@ Updated: 2026-09-23
 
 ## Next
 
-1. Run the Phase B observed process/device-memory campaign when that scientific
+next: QD-11 QAGS-style extrapolation (`GaussKronrodExtrapolated`, design approved 2026-09-24) — see `docs/plans/2026-09-24-handoff-quad-sota.md`
+blocker: fluxax `0321bcc` and progenax `cc3a0e1` are committed but unpushed, alongside other sessions' commits; Anna to decide the push
+
+1. QD-11 extrapolation, Phase 1 (`gradient="stop"`).
+2. ARC-03/ARC-09: remove the flat `numerics` re-exports and compatibility
+   modules (gravax migrated on its feature branch `551d4238`).
+3. Run the Phase B observed process/device-memory campaign when that scientific
    performance decision is scheduled.
-2. Use the single consolidated checkpoint review to decide Phase B release
+4. Use the single consolidated checkpoint review to decide Phase B release
    closure without broadening the method or geometry scope.
 
 ## Scientific boundary
