@@ -7,6 +7,7 @@ import jax.numpy as jnp
 from jaxtyping import Array
 
 from ._gk_data import GK_POSITIVE_DATA
+from ._integrand import node_weighted_sum, payload_dtype
 from .methods import GaussKronrod
 
 _DEGREES = {
@@ -74,11 +75,6 @@ def gauss_kronrod_data(method: GaussKronrod, *, dtype=None) -> GaussKronrodData:
     )
 
 
-def _weighted_sum(values: Array, weights: Array) -> Array:
-    shape = (weights.shape[0],) + (1,) * (values.ndim - 1)
-    return jnp.sum(values * jnp.reshape(weights, shape), axis=0)
-
-
 def gauss_kronrod_estimate(
     fun: Callable[[Array], Array],
     method: GaussKronrod,
@@ -98,20 +94,15 @@ def gauss_kronrod_estimate_values(
     values = jnp.asarray(values)
     if values.ndim == 0 or values.shape[0] != data.nodes.shape[0]:
         raise ValueError("Gauss-Kronrod integrand output must have a leading node axis")
-    if jnp.issubdtype(values.dtype, jnp.complexfloating):
-        target_dtype = (
-            jnp.complex64 if data.nodes.dtype == jnp.float32 else jnp.complex128
-        )
-    else:
-        target_dtype = data.nodes.dtype
+    target_dtype = payload_dtype(values.dtype, data.nodes.dtype)
     values = values.astype(target_dtype)
 
-    value = _weighted_sum(values, data.kronrod_weights)
-    gauss_value = _weighted_sum(values, data.gauss_weights)
+    value = node_weighted_sum(values, data.kronrod_weights)
+    gauss_value = node_weighted_sum(values, data.gauss_weights)
     magnitudes = jnp.abs(values)
-    resabs = _weighted_sum(magnitudes, data.kronrod_weights)
+    resabs = node_weighted_sum(magnitudes, data.kronrod_weights)
     mean = value / 2.0
-    resasc = _weighted_sum(jnp.abs(values - mean), data.kronrod_weights)
+    resasc = node_weighted_sum(jnp.abs(values - mean), data.kronrod_weights)
     raw_error = jnp.abs(value - gauss_value)
     safe_resasc = jnp.where(resasc != 0.0, resasc, 1.0)
     rescaled = resasc * jnp.minimum(1.0, (200.0 * raw_error / safe_resasc) ** 1.5)

@@ -16,6 +16,19 @@ _QUANTITY_ACTIVATION_MESSAGE = (
 )
 
 
+def node_weighted_sum(values, weights):
+    """Sum ``weights[i] * values[i]`` over the leading node axis of a payload."""
+    shape = (weights.shape[0],) + (1,) * (values.ndim - 1)
+    return jnp.sum(values * jnp.reshape(weights, shape), axis=0)
+
+
+def payload_dtype(values_dtype, node_dtype):
+    """Real node dtype, or its complex counterpart for a complex payload."""
+    if jnp.issubdtype(values_dtype, jnp.complexfloating):
+        return jnp.complex64 if node_dtype == jnp.float32 else jnp.complex128
+    return node_dtype
+
+
 def has_explicit_args(args: Any) -> bool:
     return not (isinstance(args, tuple) and len(args) == 0)
 
@@ -78,6 +91,8 @@ def density_values(measure, nodes, args: Any):
 
 __all__ = [
     "call_integrand",
+    "node_weighted_sum",
+    "payload_dtype",
     "density_values",
     "expand_node_factor",
     "has_explicit_args",

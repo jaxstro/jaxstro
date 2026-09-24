@@ -11,6 +11,7 @@ from ._integrand import (
     call_integrand,
     density_values,
     has_explicit_args,
+    node_weighted_sum,
     validate_node_values,
 )
 from ._quantity import validate_raw_domain
@@ -54,11 +55,6 @@ Measure = (
 Rule = GaussianRule | ClenshawCurtisRule | FejerIRule | FejerIIRule | TanhSinhRule
 
 
-def _weighted_sum(values, weights):
-    shape = (weights.shape[0],) + (1,) * (values.ndim - 1)
-    return jnp.sum(values * jnp.reshape(weights, shape), axis=0)
-
-
 def _evaluate_mapped(
     fun: Callable,
     args: Any,
@@ -79,7 +75,7 @@ def _evaluate_mapped(
     values = jnp.where(zero_width & ~jnp.isfinite(values), 0.0, values)
     density = density_values(measure, mapped.x, args)
     weights = data.weights * mapped.jacobian * density
-    value = mapped.orientation * _weighted_sum(values, weights)
+    value = mapped.orientation * node_weighted_sum(values, weights)
     return jnp.where(mapped.valid, value, jnp.full_like(value, jnp.nan))
 
 

@@ -14,6 +14,8 @@ from ._integrand import (
     expand_node_factor,
     has_explicit_args,
     infer_payload_zero,
+    node_weighted_sum,
+    payload_dtype,
     validate_node_values,
 )
 from ._tanh_sinh import _tanh_sinh_lattice_data
@@ -170,11 +172,6 @@ def clenshaw_curtis_pair_data(
     )
 
 
-def _node_weighted_sum(values: Array, weights: Array) -> Array:
-    shape = (weights.shape[0],) + (1,) * (values.ndim - 1)
-    return jnp.sum(values * jnp.reshape(weights, shape), axis=0)
-
-
 def nested_rule_estimate_values(
     values: Array, pair: NestedRulePair
 ) -> NestedRuleEstimate:
@@ -182,17 +179,12 @@ def nested_rule_estimate_values(
     values = validate_node_values(
         values, pair.nodes.shape[0], context="nested quadrature"
     )
-    if jnp.issubdtype(values.dtype, jnp.complexfloating):
-        target_dtype = (
-            jnp.complex64 if pair.nodes.dtype == jnp.float32 else jnp.complex128
-        )
-    else:
-        target_dtype = pair.nodes.dtype
+    target_dtype = payload_dtype(values.dtype, pair.nodes.dtype)
     values = values.astype(target_dtype)
-    high_value = _node_weighted_sum(values, pair.high_weights)
-    low_value = _node_weighted_sum(values[pair.low_indices], pair.low_weights)
+    high_value = node_weighted_sum(values, pair.high_weights)
+    low_value = node_weighted_sum(values[pair.low_indices], pair.low_weights)
     raw_error = jnp.abs(high_value - low_value)
-    resabs = _node_weighted_sum(jnp.abs(values), pair.high_weights)
+    resabs = node_weighted_sum(jnp.abs(values), pair.high_weights)
     machine = jnp.finfo(pair.nodes.dtype)
     floor = jnp.where(
         resabs > machine.tiny / (50.0 * machine.eps),
@@ -250,19 +242,14 @@ def tanh_sinh_estimate_values(values: Array, pair: TanhSinhPair) -> TanhSinhEsti
     values = validate_node_values(
         values, pair.nodes.shape[0], context="adaptive tanh-sinh"
     )
-    if jnp.issubdtype(values.dtype, jnp.complexfloating):
-        target_dtype = (
-            jnp.complex64 if pair.nodes.dtype == jnp.float32 else jnp.complex128
-        )
-    else:
-        target_dtype = pair.nodes.dtype
+    target_dtype = payload_dtype(values.dtype, pair.nodes.dtype)
     values = values.astype(target_dtype)
-    high_value = _node_weighted_sum(values, pair.high_weights)
+    high_value = node_weighted_sum(values, pair.high_weights)
     low_values = values[pair.low_indices]
-    low_value = _node_weighted_sum(low_values, pair.low_weights)
+    low_value = node_weighted_sum(low_values, pair.low_weights)
     discretization = jnp.abs(high_value - low_value)
-    high_resabs = _node_weighted_sum(jnp.abs(values), pair.high_weights)
-    low_resabs = _node_weighted_sum(jnp.abs(low_values), pair.low_weights)
+    high_resabs = node_weighted_sum(jnp.abs(values), pair.high_weights)
+    low_resabs = node_weighted_sum(jnp.abs(low_values), pair.low_weights)
     summation = (
         _summation_gamma(pair.nodes.shape[0], pair.nodes.dtype) * high_resabs
         + _summation_gamma(pair.low_indices.shape[0], pair.nodes.dtype) * low_resabs

@@ -21,6 +21,7 @@ from ._adaptive import (
     validate_adaptive_capacities,
 )
 from ._gk import gauss_kronrod_data, gauss_kronrod_estimate_values
+from ._integrand import payload_dtype
 from ._quantity import normalize_call, quantity_mode, restore_result
 from ._replay import (
     GlobalReplayEvidence,
@@ -214,10 +215,7 @@ def _solve_raw(
             node_dtype=dtype,
             context="global quadrature",
         )
-        if jnp.issubdtype(inferred_zero.dtype, jnp.complexfloating):
-            value_dtype = jnp.complex64 if dtype == jnp.float32 else jnp.complex128
-        else:
-            value_dtype = dtype
+        value_dtype = payload_dtype(inferred_zero.dtype, dtype)
         zero_value = inferred_zero.astype(value_dtype)
 
         def evaluate_one(reference):
@@ -356,12 +354,7 @@ def _solve_raw(
         node_count=node_cost,
         node_dtype=rule_nodes.dtype,
     )
-    if jnp.issubdtype(inferred_zero.dtype, jnp.complexfloating):
-        zero_dtype = (
-            jnp.complex64 if rule_nodes.dtype == jnp.float32 else jnp.complex128
-        )
-    else:
-        zero_dtype = rule_nodes.dtype
+    zero_dtype = payload_dtype(inferred_zero.dtype, rule_nodes.dtype)
     zero_value = inferred_zero.astype(zero_dtype)
 
     open_region = isinstance(method, AdaptiveTanhSinh)
