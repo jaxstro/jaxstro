@@ -9,7 +9,13 @@ from __future__ import annotations
 import argparse
 from collections.abc import Mapping
 
-import jax.numpy as jnp
+from jaxstro.jaxconfig import enable_high_precision
+
+enable_high_precision()
+
+import jax.numpy as jnp  # noqa: E402
+
+from jaxstro.numerics.linear_algebra import condition_number  # noqa: E402
 
 
 def two_channel_measurement(
@@ -30,14 +36,49 @@ def two_channel_measurement(
     shared_variance = calibration_sigma**2
     covariance = jnp.eye(2) + shared_variance * jnp.ones((2, 2))
     jacobian = jnp.array([[1.0, 1.0], [1.0, 1.0 + separation]])
-    singular_values = jnp.linalg.svd(jacobian, compute_uv=False)
+    _, singular_values, directions = jnp.linalg.svd(jacobian)
     correlation = covariance[0, 1] / jnp.sqrt(covariance[0, 0] * covariance[1, 1])
     return {
         "covariance": covariance,
         "jacobian": jacobian,
         "singular_values": singular_values,
+        "parameter_directions": directions,
+        "condition_number": condition_number(jacobian),
         "correlation": correlation,
     }
+
+
+def _combination(direction: jnp.ndarray) -> str:
+    a, b = (float(v) for v in direction)
+    return f"({a:+.2f} theta_1 {b:+.2f} theta_2)"
+
+
+def warranted_claim(case: Mapping[str, jnp.ndarray]) -> str:
+    """State what this configuration's local geometry supports, from its numbers."""
+    singular_values = case["singular_values"]
+    strong = _combination(case["parameter_directions"][0])
+    weak = _combination(case["parameter_directions"][-1])
+    # Numerical rank as in numpy.linalg.matrix_rank: sigma_min <= sigma_max * n * eps.
+    rank_floor = (
+        float(singular_values[0]) * 2 * float(jnp.finfo(singular_values.dtype).eps)
+    )
+    if float(singular_values[-1]) <= rank_floor:
+        geometry = f"This local map does not constrain the combination {weak} at all."
+    else:
+        ratio = float(case["condition_number"])
+        geometry = (
+            f"This local map constrains {strong} about {ratio:.3g} times more "
+            f"tightly than {weak}."
+        )
+    rho = float(case["correlation"])
+    if rho > 0.0:
+        noise = (
+            f"The shared calibration makes the channels correlated (rho = {rho:.3g}); "
+            "two independent error bars would omit that correlation."
+        )
+    else:
+        noise = "Under this covariance the channels are uncorrelated."
+    return f"{geometry} {noise}"
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -50,9 +91,6 @@ def _parser() -> argparse.ArgumentParser:
 def main() -> None:
     args = _parser().parse_args()
     case = two_channel_measurement(args.calibration_sigma, args.separation)
-    smallest = case["singular_values"][-1]
-    largest = case["singular_values"][0]
-    condition = jnp.where(smallest > 0.0, largest / smallest, jnp.inf)
 
     print("Two-channel measurement")
     print(f"shared calibration sigma = {args.calibration_sigma:g}")
@@ -63,12 +101,8 @@ def main() -> None:
     print("Jacobian =")
     print(case["jacobian"])
     print(f"singular values = {case['singular_values']}")
-    print(f"local condition number = {float(condition):.6g}")
-    print(
-        "Interpretation: covariance records the shared calibration assumption; "
-        "the smaller singular value records how weakly this local measurement "
-        "map separates one parameter combination."
-    )
+    print(f"local condition number = {float(case['condition_number']):.6g}")
+    print(f"Warranted claim: {warranted_claim(case)}")
 
 
 if __name__ == "__main__":

@@ -2,7 +2,10 @@
 
 import jax.numpy as jnp
 import pytest
-from examples.onboarding.two_channel_measurement import two_channel_measurement
+from examples.onboarding.two_channel_measurement import (
+    two_channel_measurement,
+    warranted_claim,
+)
 
 
 def test_shared_calibration_creates_positive_channel_correlation() -> None:
@@ -25,3 +28,18 @@ def test_case_rejects_negative_controls(keyword: str) -> None:
     kwargs = {keyword: -0.1}
     with pytest.raises(ValueError, match=keyword):
         two_channel_measurement(**kwargs)
+
+
+def test_claim_reports_the_measured_geometry_of_each_configuration() -> None:
+    near = warranted_claim(two_channel_measurement(0.2, separation=0.01))
+    far = warranted_claim(two_channel_measurement(0.0, separation=1.0))
+
+    assert near != far
+    assert "correlated" in near and "uncorrelated" in far
+    ratio = float(two_channel_measurement(0.2, 0.01)["condition_number"])
+    assert f"{ratio:.3g}" in near
+
+
+def test_zero_separation_claim_states_an_unconstrained_combination() -> None:
+    claim = warranted_claim(two_channel_measurement(separation=0.0))
+    assert "does not constrain" in claim
