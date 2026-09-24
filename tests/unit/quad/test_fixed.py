@@ -236,3 +236,12 @@ def test_bound_derivative_at_zero_width_is_the_integrand_value(rule) -> None:
     assert jnp.allclose(jax.grad(integral)(0.3), f(0.3), rtol=1e-13)
     lower_grad = jax.grad(lambda lower: fixed(f, Interval(lower, 0.3), rule=rule))
     assert jnp.allclose(lower_grad(0.3), -f(0.3), rtol=1e-13)
+
+
+def test_zero_width_derivative_fails_loudly_at_an_infinite_slope() -> None:
+    # d/db int_0^b sqrt(x) at b = 0 is 0, but f'(0) is infinite and the zero
+    # Jacobian multiplies it; the documented result is nan, not a silent value.
+    gradient = jax.grad(
+        lambda upper: fixed(jnp.sqrt, Interval(0.0, upper), rule=GaussianRule(8))
+    )(0.0)
+    assert jnp.isnan(gradient)
