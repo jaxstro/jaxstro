@@ -7,7 +7,12 @@ import jax
 import jax.numpy as jnp
 from jaxtyping import Array, Float
 
-from jaxstro._tracing import try_concrete_bool
+
+def _along(values: Array, axis: int, ndim: int) -> Array:
+    """Reshape a 1D per-sample vector to broadcast along ``axis`` of an array."""
+    shape = [1] * ndim
+    shape[axis] = values.shape[0]
+    return values.reshape(shape)
 
 
 @partial(jax.jit, static_argnames="axis")
@@ -33,7 +38,8 @@ def trapezoid(
         raise ValueError(
             "x and y must have matching lengths along the integration axis"
         )
-    return jnp.sum(0.5 * (y_left + y_right) * jnp.diff(x), axis=axis)
+    widths = _along(jnp.diff(x), axis, y.ndim)
+    return jnp.sum(0.5 * (y_left + y_right) * widths, axis=axis)
 
 
 @partial(jax.jit, static_argnames="axis")
@@ -60,7 +66,8 @@ def cumulative_trapezoid(
             raise ValueError(
                 "x and y must have matching lengths along the integration axis"
             )
-        cumsum = jnp.cumsum(0.5 * (y_left + y_right) * jnp.diff(x), axis=axis)
+        widths = _along(jnp.diff(x), axis, y.ndim)
+        cumsum = jnp.cumsum(0.5 * (y_left + y_right) * widths, axis=axis)
     pad_shape = list(cumsum.shape)
     pad_shape[axis] = 1
     zeros = jnp.zeros(pad_shape, dtype=cumsum.dtype)
@@ -74,19 +81,13 @@ def simpson(
     dx: float = 1.0,
     axis: int = -1,
 ) -> Float[Array, "..."]:
-    """Integrate uniformly sampled values with the composite Simpson rule."""
-    if x is not None:
-        x = jnp.asarray(x)
-        n = jnp.asarray(y).shape[axis]
-        if x.ndim == 1 and x.shape[0] == n:
-            step = (x[-1] - x[0]) / (n - 1)
-            is_uniform = try_concrete_bool(jnp.allclose(jnp.diff(x), step))
-            if is_uniform is False:
-                raise ValueError(
-                    "simpson assumes uniform spacing in x; got a non-uniform "
-                    "grid. Resample to a uniform grid or use trapezoid for "
-                    "arbitrary spacing."
-                )
+    """Integrate sampled values with the composite Simpson rule.
+
+    With ``x``, each two-interval panel uses the nonuniform Simpson weights,
+    exact for quadratics on any grid; on a uniform grid they reduce to
+    ``h / 3 * (y0 + 4 y1 + y2)``. Without ``x``, the scalar spacing ``dx`` is
+    used. The number of samples along ``axis`` must be odd and at least 3.
+    """
     return _simpson_core(y, x, dx=dx, axis=axis)
 
 
@@ -97,27 +98,41 @@ def cumulative_simpson(
     dx: float = 1.0,
     axis: int = -1,
 ) -> Float[Array, "..."]:
-    """Return cumulative Simpson sums at panel endpoints."""
-    y = jnp.asarray(y)
+    """Return cumulative Simpson sums at panel endpoints.
+
+    The panel weights are those of :func:`simpson`, so nonuniform ``x`` is
+    supported on any axis.
+    """
+    return _cumulative_simpson_core(y, x, dx=dx, axis=axis)
+
+
+def _simpson_panels(y: Array, x: Optional[Array], dx: float, axis: int) -> Array:
+    """Integral of each two-interval panel along ``axis``."""
     n = y.shape[axis]
     if n < 3 or (n % 2) == 0:
-        raise ValueError("cumulative_simpson requires an odd number of points >= 3")
-    if x is not None:
-        x = jnp.asarray(x)
-        if x.ndim != 1:
-            raise ValueError("x must be 1D if provided")
-        if x.shape[0] != n:
-            raise ValueError(
-                "x and y must have matching lengths along the integration axis"
-            )
-        step = (x[-1] - x[0]) / (n - 1)
-        is_uniform = try_concrete_bool(jnp.allclose(jnp.diff(x), step))
-        if is_uniform is False:
-            raise ValueError(
-                "cumulative_simpson assumes uniform spacing in x; got a "
-                "non-uniform grid."
-            )
-    return _cumulative_simpson_core(y, x, dx=dx, axis=axis)
+        raise ValueError("simpson requires an odd number of points >= 3")
+    idx = jnp.arange(n)
+    y0 = jnp.take(y, idx[0:-2:2], axis=axis)
+    y1 = jnp.take(y, idx[1:-1:2], axis=axis)
+    y2 = jnp.take(y, idx[2::2], axis=axis)
+    if x is None:
+        return (jnp.asarray(dx) / 3.0) * (y0 + 4.0 * y1 + y2)
+    x = jnp.asarray(x)
+    if x.ndim != 1:
+        raise ValueError("x must be 1D if provided")
+    if x.shape[0] != n:
+        raise ValueError(
+            "x and y must have matching lengths along the integration axis"
+        )
+    widths = jnp.diff(x)
+    h0 = _along(widths[0::2], axis, y.ndim)
+    h1 = _along(widths[1::2], axis, y.ndim)
+    total = h0 + h1
+    # Composite Simpson on a nonuniform grid (the quadratic through the three
+    # samples, integrated exactly over [x0, x2]).
+    return (total / 6.0) * (
+        (2.0 - h1 / h0) * y0 + (total * total / (h0 * h1)) * y1 + (2.0 - h0 / h1) * y2
+    )
 
 
 @partial(jax.jit, static_argnames="axis")
@@ -129,26 +144,7 @@ def _cumulative_simpson_core(
     axis: int = -1,
 ) -> Float[Array, "..."]:
     y = jnp.asarray(y)
-    n = y.shape[axis]
-    if n < 3 or (n % 2) == 0:
-        raise ValueError("cumulative_simpson requires an odd number of points >= 3")
-    if x is None:
-        step = jnp.asarray(dx)
-    else:
-        x = jnp.asarray(x)
-        if x.ndim != 1:
-            raise ValueError("x must be 1D if provided")
-        if x.shape[0] != n:
-            raise ValueError(
-                "x and y must have matching lengths along the integration axis"
-            )
-        step = (x[-1] - x[0]) / (n - 1)
-    idx = jnp.arange(n)
-    y0 = jnp.take(y, idx[0:-2:2], axis=axis)
-    y1 = jnp.take(y, idx[1:-1:2], axis=axis)
-    y2 = jnp.take(y, idx[2::2], axis=axis)
-    panels = (step / 3.0) * (y0 + 4.0 * y1 + y2)
-    cumsum = jnp.cumsum(panels, axis=axis)
+    cumsum = jnp.cumsum(_simpson_panels(y, x, dx, axis), axis=axis)
     pad_shape = list(cumsum.shape)
     pad_shape[axis] = 1
     zeros = jnp.zeros(pad_shape, dtype=cumsum.dtype)
@@ -164,25 +160,7 @@ def _simpson_core(
     axis: int = -1,
 ) -> Float[Array, "..."]:
     y = jnp.asarray(y)
-    n = y.shape[axis]
-    if n < 3 or (n % 2) == 0:
-        raise ValueError("simpson requires an odd number of points >= 3")
-    if x is None:
-        step: Float[Array, ""] = jnp.asarray(dx)
-    else:
-        x = jnp.asarray(x)
-        if x.ndim != 1:
-            raise ValueError("x must be 1D if provided")
-        if x.shape[0] != n:
-            raise ValueError(
-                "x and y must have matching lengths along the integration axis"
-            )
-        step = (x[-1] - x[0]) / (n - 1)
-    idx = jnp.arange(n)
-    y0 = jnp.take(y, idx[0:-2:2], axis=axis)
-    y1 = jnp.take(y, idx[1:-1:2], axis=axis)
-    y2 = jnp.take(y, idx[2::2], axis=axis)
-    return (step / 3.0) * jnp.sum(y0 + 4.0 * y1 + y2, axis=axis)
+    return jnp.sum(_simpson_panels(y, x, dx, axis), axis=axis)
 
 
 trapz = trapezoid

@@ -86,8 +86,9 @@ last bits differ.
 
 `trapezoid(y, x=None, *, dx=1.0, axis=-1)` returns the total along `axis`. With no
 `x`, it uses the scalar spacing `dx`; with `x`, each panel carries `diff(x)` inside
-the reduction and `dx` is ignored. `axis` is a static argument, so any axis is
-supported for uniform spacing. A nonuniform `x` is supported only on the last axis.
+the reduction and `dx` is ignored. `axis` is a static argument; uniform and
+nonuniform spacing are supported on any axis, with `diff(x)` broadcast along
+`axis`.
 
 `cumulative_trapezoid(y, x=None, *, dx=1.0, axis=-1)` returns the same shape as `y`
 with a leading zero along `axis`, under the same spacing rules.
@@ -98,15 +99,25 @@ This is the ecosystem parity contract. The mathematically equivalent dx-inside
 ordering can differ by about one unit in the last place because the multiply is
 rounded at a different stage. On a nonuniform grid, every `diff(x)` must remain
 inside its panel before the cumulative sum and the scalar `dx` argument is
-ignored. Nonuniform multidimensional integration on a selected non-last axis,
-total or cumulative, is a current limitation: direct width broadcasting between
-`diff(x)` and panel values is incompatible for shapes such as `(2,)` and
-`(2, 4)`, and raises `ValueError`.
+ignored. Until 2026-09-24 the widths were broadcast along the last axis
+regardless of `axis`; for a shape such as `(7, 4)` with `axis=0` that returned
+wrong values without an error.
 
-`simpson` returns the total of uniform two-interval quadratic panels.
+`simpson` returns the total of two-interval quadratic panels. With `x`, each
+panel $[x_0,x_2]$ with widths $h_0$, $h_1$ uses
+
+```{math}
+:label: eq-nonuniform-simpson
+\int_{x_0}^{x_2}y\,\mathrm{d}x\approx\frac{h_0+h_1}{6}\left[
+\left(2-\frac{h_1}{h_0}\right)y_0+\frac{(h_0+h_1)^2}{h_0h_1}y_1
++\left(2-\frac{h_0}{h_1}\right)y_2\right],
+```
+
+which is exact for quadratics on any grid and reduces to $h(y_0+4y_1+y_2)/3$
+when $h_0=h_1=h$. Before 2026-09-24 a nonuniform `x` raised only when concrete;
+under `jit` the uniform formula was applied to it silently.
 `cumulative_simpson` returns only panel endpoints: input length $n$ becomes
-$(n+1)/2$ along the integration axis. Concrete nonuniform `x` raises in the
-wrapper, but traced value-dependent uniformity validation cannot raise.
+$(n+1)/2$ along the integration axis.
 
 ## What JAX differentiates
 

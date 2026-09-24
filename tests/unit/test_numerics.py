@@ -273,13 +273,6 @@ class TestCumulativeSimpson:
         with pytest.raises(ValueError, match="odd number"):
             integration.cumulative_simpson(jnp.ones(4))
 
-    def test_cumulative_simpson_rejects_nonuniform_x(self):
-        with pytest.raises(ValueError, match="uniform spacing"):
-            integration.cumulative_simpson(
-                jnp.ones(5),
-                jnp.array([0.0, 0.5, 1.5, 2.0, 3.0]),
-            )
-
 
 class TestBisect:
     """Tests for bisect rootfinding."""
@@ -1191,13 +1184,9 @@ class TestSimpson:
         with pytest.raises(ValueError, match="odd number"):
             integration.simpson(jnp.ones(1))
 
-    def test_nonuniform_spacing_raises(self):
-        # Simpson assumes uniform spacing; a non-uniform x must be rejected
-        # (eager/host-side debug check) rather than silently mis-integrate.
+    def test_nonuniform_spacing_is_exact_for_quadratics(self):
         x = jnp.array([0.0, 1.0, 3.0])  # spacings 1.0 and 2.0 differ
-        y = x**2
-        with pytest.raises(ValueError, match="uniform"):
-            integration.simpson(y, x)
+        assert jnp.allclose(integration.simpson(x**2, x), 9.0, rtol=1e-13)
 
     def test_uniform_spacing_ok(self):
         x = jnp.array([0.0, 1.0, 2.0])  # uniform

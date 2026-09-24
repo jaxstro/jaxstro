@@ -534,11 +534,7 @@ def test_reviewed_runtime_boundaries_are_stated_explicitly() -> None:
     )
     assert "The integrated axis (the last axis by default)" in integration
     assert "`axis` is a static argument" in integration
-    assert "A nonuniform `x` is supported only on the last axis" in integration
-    assert "Nonuniform multidimensional integration on a selected non-last axis" in (
-        integration
-    )
-    assert "direct width broadcasting" in integration
+    assert "nonuniform spacing are supported on any axis" in integration
 
     interpolation = " ".join(
         _page("approximation-integration/interpolation.md").split()
@@ -733,8 +729,10 @@ def _run_runtime_shape_status_and_failure_probes() -> None:
         natural_cubic_spline_coeffs(grid, payload)
 
     assert jnp.array_equal(quad.trapezoid(jnp.ones((3, 4)), axis=-1), jnp.full(3, 3.0))
-    with pytest.raises(ValueError, match="Incompatible shapes for broadcasting"):
-        quad.cumulative_trapezoid(jnp.ones((3, 4)), grid, axis=0)
+    assert jnp.array_equal(
+        quad.cumulative_trapezoid(jnp.ones((3, 4)), grid, axis=0)[-1],
+        jnp.full(4, 2.0),
+    )
 
     with pytest.raises(ValueError, match="outside query points"):
         regular_grid_interp(
