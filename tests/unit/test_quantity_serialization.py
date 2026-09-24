@@ -51,3 +51,27 @@ def test_quantity_methods_delegate_to_serialization_helpers():
 
     assert quantity.to_dict() == {"value": 3.0, "unit": "km/s"}
     assert q.Quantity.from_dict(quantity.to_dict()).unit == q.km / q.s
+
+
+def test_unit_to_dict_does_not_hide_unrelated_errors(monkeypatch):
+    """Only parse and registry failures fall back to the structured form."""
+    from jaxstro.quantity import serialization
+
+    def broken(symbol):
+        raise TypeError("bug inside the parser")
+
+    monkeypatch.setattr(serialization, "parse_unit", broken)
+    with pytest.raises(TypeError, match="bug inside the parser"):
+        serialization.unit_to_dict(q.parse_unit("cm"))
+
+
+def test_unit_to_dict_falls_back_when_the_symbol_does_not_parse(monkeypatch):
+    from jaxstro.quantity import serialization
+    from jaxstro.quantity.errors import UnitParseError
+
+    def unparseable(symbol):
+        raise UnitParseError("unknown symbol")
+
+    monkeypatch.setattr(serialization, "parse_unit", unparseable)
+    payload = serialization.unit_to_dict(q.parse_unit("cm"))
+    assert isinstance(payload, dict) and payload["scale_cgs"] == 1.0

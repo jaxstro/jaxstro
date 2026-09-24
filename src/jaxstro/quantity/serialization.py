@@ -8,6 +8,7 @@ from typing import Any
 import jax.numpy as jnp
 
 from . import dimensions as d
+from .errors import UnitParseError, UnitRegistryError
 from .parser import format_unit, parse_unit
 from .quantity import Quantity
 from .unit import Unit
@@ -35,8 +36,8 @@ def unit_to_dict(unit: Unit) -> str | dict[str, Any]:
     try:
         if parse_unit(symbol) == unit:
             return symbol
-    except Exception:
-        pass
+    except (UnitParseError, UnitRegistryError):
+        pass  # the structured form below is lossless
     return {
         "symbol": unit.symbol,
         "scale_cgs": unit.scale_to_cgs,
