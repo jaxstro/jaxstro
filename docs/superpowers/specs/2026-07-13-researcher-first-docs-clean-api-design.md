@@ -513,8 +513,9 @@ clearly labeled dropdown.
 
 MyST elements carry consistent meaning throughout the site:
 
-- Cards and grids appear on section landing pages, not throughout narrative
-  pages.
+- Cards and grids are required on section landing pages. Other pages may use
+  them where they carry parallel content, such as the Foundations
+  predict-compute-audit loop; no test restricts them there (2026-09-23).
 - LaTeX equations use KaTeX rendering, equation labels, and cross-references.
 - Definitions and algorithms identify formal objects and procedures.
 - `tip` explains how to choose among methods.

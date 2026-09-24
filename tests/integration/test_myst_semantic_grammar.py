@@ -488,22 +488,14 @@ def test_final_routes_are_semantic_and_internal_sources_are_excluded() -> None:
         "/teaching-with-jaxstro",
     }
     assert not (set(manifest.values()) & forbidden_routes)
-    assert len(manifest) == 181
+    # 184: /support (874ef59), /qualified-core (228cac5), /method-coverage (3a1128e).
+    assert len(manifest) == 184
     assert set(config["project"]["exclude"]) == {
         "audits/**",
         "plans/**",
         "superpowers/**",
         "_build/**",
     }
-
-
-def test_cards_and_grids_are_restricted_to_explicit_landing_pages() -> None:
-    for relative, document in _routed_documents().items():
-        has_choice_ui = any(
-            node.name in {"grid", "card"} for node in document.directives
-        )
-        if has_choice_ui:
-            assert relative in LANDING_PAGES, relative
 
 
 def test_section_landings_share_choice_note_and_status_contracts() -> None:

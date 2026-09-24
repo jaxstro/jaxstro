@@ -303,4 +303,5 @@ def test_generated_manifest_counts_the_current_api_surface() -> None:
 
     assert len(API_OWNERS) == 38
     assert "jaxstro.quad" in API_OWNERS.values()
-    assert len(routes) == 181
+    # 184: /support (874ef59), /qualified-core (228cac5), /method-coverage (3a1128e).
+    assert len(routes) == 184
