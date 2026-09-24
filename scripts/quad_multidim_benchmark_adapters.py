@@ -172,10 +172,15 @@ def _run_isolated(project: Path, code: str) -> dict[str, object]:
     completed = subprocess.run(
         command,
         cwd=ROOT,
-        check=True,
+        check=False,
         text=True,
         capture_output=True,
     )
+    if completed.returncode != 0:
+        raise RuntimeError(
+            f"isolated comparator in {project.name} exited "
+            f"{completed.returncode}:\n{completed.stderr}"
+        )
     return json.loads(completed.stdout.strip().splitlines()[-1])
 
 
@@ -183,14 +188,17 @@ def tasmanian_sparse_record() -> ComparisonRecord:
     """Run one node-matched-purpose sparse polynomial moment in isolation."""
     project = ROOT / "laboratory/quad-multidim-comparison/tasmanian"
     code = r"""
-import importlib.metadata as metadata, json, time
+import importlib.metadata as metadata, json, sys, time
 from pathlib import Path
 import numpy as np
 import TasmanianConfig as config
+# The source build records its temporary build directory; point at the
+# installed shared libraries instead (.dylib on macOS, .so on Linux).
 lib = Path(config.__file__).resolve().parents[2]
-config.__path_libsparsegrid__ = str(lib / "libtasmaniansparsegrid.dylib")
-config.__path_libdream__ = str(lib / "libtasmaniandream.dylib")
-config.__path_libcaddons__ = str(lib / "libtasmaniancaddons.dylib")
+suffix = ".dylib" if sys.platform == "darwin" else ".so"
+config.__path_libsparsegrid__ = str(lib / f"libtasmaniansparsegrid{suffix}")
+config.__path_libdream__ = str(lib / f"libtasmaniandream{suffix}")
+config.__path_libcaddons__ = str(lib / f"libtasmaniancaddons{suffix}")
 import Tasmanian
 started = time.perf_counter()
 grid = Tasmanian.SparseGrid()
