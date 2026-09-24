@@ -145,6 +145,20 @@ def test_rendered_doi_preserves_the_canonical_resolver():
     assert 'href="https://doi.org/10.1234/example"' in rendered
 
 
+def test_rendered_citation_without_a_url_is_plain_text():
+    # A pre-DOI citation used to become an href, which the docs gate reports
+    # as an unresolved internal link.
+    citation = "Ebert, R. (1955), Zeitschrift fuer Astrophysik 37, 217"
+    raw = _card(
+        sources=[{"reference": citation, "locator": "p. 1", "supports": "the claim"}]
+    )
+
+    rendered = provenance_cards.render_card(raw)
+
+    assert "href" not in rendered.split("### Sources", 1)[1].split("###", 1)[0]
+    assert f"- {citation} - the claim." in rendered
+
+
 def test_installed_module_has_no_yaml_import():
     tree = ast.parse(inspect.getsource(provenance_cards))
     imported = {

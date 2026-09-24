@@ -29,8 +29,8 @@ solve_isothermal on its documented domain, including the origin series start and
 
 ### Sources
 
-- <a href="Bonnor, W. B. (1956), Monthly Notices of the Royal Astronomical Society 116, 351">source</a> - the Bonnor-Ebert sphere as a pressure-truncated isothermal Lane-Emden solution (the isothermal ODE and profile this module integrates; the critical mass is not computed here). *Locator:* `the pressure-bounded isothermal gas sphere`
-- <a href="Ebert, R. (1955), Zeitschrift fuer Astrophysik 37, 217">source</a> - the isothermal self-gravitating sphere confined by external pressure. *Locator:* `the isothermal self-gravitating sphere embedded in a pressured medium`
+- <a href="https://doi.org/10.1093/mnras/116.3.351">source</a> - the Bonnor-Ebert sphere as a pressure-truncated isothermal Lane-Emden solution (the isothermal ODE and profile this module integrates; the critical mass is not computed here). *Locator:* `the pressure-bounded isothermal gas sphere`
+- Ebert, R. (1955), Zeitschrift fuer Astrophysik 37, 217 - the isothermal self-gravitating sphere confined by external pressure. *Locator:* `the isothermal self-gravitating sphere embedded in a pressured medium`
 
 ### Code & validation
 
@@ -63,7 +63,7 @@ solve_polytrope and polytrope_xi1 on n < 5 (finite radius), including the origin
 
 ### Sources
 
-- <a href="Chandrasekhar, S. (1939), An Introduction to the Study of Stellar Structure, Univ. of Chicago Press">source</a> - the polytropic Lane-Emden equation and its three exact closed-form solutions. *Locator:* `Chapter IV, the Lane-Emden equation and its solutions for n = 0, 1, 5`
+- Chandrasekhar, S. (1939), An Introduction to the Study of Stellar Structure, Univ. of Chicago Press - the polytropic Lane-Emden equation and its three exact closed-form solutions. *Locator:* `Chapter IV, the Lane-Emden equation and its solutions for n = 0, 1, 5`
 
 ### Code & validation
 

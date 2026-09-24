@@ -255,6 +255,7 @@ project:
             - file: 50-api/research-infrastructure/source-provenance/constants.md
             - file: 50-api/research-infrastructure/source-provenance/transforms.md
             - file: 50-api/research-infrastructure/source-provenance/atmospheres.md
+            - file: 50-api/research-infrastructure/source-provenance/lane_emden.md
     - title: Validation and evidence
       children:
         - file: 60-validation/validation.md

@@ -138,6 +138,7 @@
   "50-api/research-infrastructure/jaxconfig.md": "/jaxconfig",
   "50-api/research-infrastructure/provenance.md": "/provenance-1",
   "50-api/research-infrastructure/source-provenance/atmospheres.md": "/atmospheres",
+  "50-api/research-infrastructure/source-provenance/lane_emden.md": "/lane-emden-2",
   "50-api/research-infrastructure/source-provenance/constants.md": "/constants",
   "50-api/research-infrastructure/source-provenance/source-provenance.md": "/source-provenance",
   "50-api/research-infrastructure/source-provenance/transforms.md": "/transforms",

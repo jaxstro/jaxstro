@@ -225,11 +225,12 @@ def render_card(card: Mapping[str, object] | ProvenanceCard) -> str:
 
     lines.extend(["", "### Sources", ""])
     for source in item.sources:
-        reference = _render_reference(source.reference)
-        lines.append(
-            f'- <a href="{reference}">source</a> - {source.supports}. '
-            f"*Locator:* `{source.locator}`"
-        )
+        if source.reference.startswith(("https://", "http://")):
+            cited = f'<a href="{_render_reference(source.reference)}">source</a>'
+        else:
+            # A citation without a resolvable URL (pre-DOI literature) is text.
+            cited = source.reference
+        lines.append(f"- {cited} - {source.supports}. *Locator:* `{source.locator}`")
     if not item.sources:
         lines.append("- none recorded")
 

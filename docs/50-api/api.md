@@ -71,7 +71,8 @@ This reference does not change runtime exports.
 
 - **Change and constraints:** [](./change-constraints/autodiff.md),
   [](./change-constraints/rootfinding.md), [](./change-constraints/kepler.md),
-  [](./change-constraints/optimization.md), and [](./change-constraints/ode.md).
+  [](./change-constraints/lane-emden.md), [](./change-constraints/optimization.md),
+  and [](./change-constraints/ode.md).
 - **Approximation and integration:**
   [](./approximation-integration/interpolation.md),
   [](./approximation-integration/regular-grid.md),
