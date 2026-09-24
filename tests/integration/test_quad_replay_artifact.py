@@ -1,6 +1,5 @@
 import importlib.util
 import json
-import subprocess
 import sys
 from pathlib import Path
 
@@ -47,12 +46,4 @@ def test_quad_replay_derivative_artifact_is_fresh():
         artifact_to_dict(current)["method_payload"],
         origin=ARTIFACT_ORIGIN,
         derived=DERIVED_ERROR_FIELDS,
-    )
-
-
-def test_evidence_index_is_fresh_with_quad_replay_artifact():
-    subprocess.run(
-        [sys.executable, "scripts/build_evidence_index.py", "--check"],
-        cwd=ROOT,
-        check=True,
     )

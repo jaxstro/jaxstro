@@ -21,15 +21,8 @@ $RUN mypy src/jaxstro
 echo "== provenance registry freshness =="
 $RUN python scripts/build_provenance_registry.py --check
 
-echo "== scientific contract registry freshness =="
-$RUN python scripts/build_contract_registry.py --check
-
-echo "== scientific evidence index freshness =="
-$RUN python scripts/build_evidence_index.py --check
-
-echo "== research workflow registry freshness =="
-$RUN python scripts/build_research_workflow_registry.py --check
-
+# The contract, evidence-index, and workflow registry freshness checks run
+# inside check_docs.sh, which Pages also runs on its own.
 echo "== documentation gate =="
 npm ci --ignore-scripts
 bash scripts/check_docs.sh
