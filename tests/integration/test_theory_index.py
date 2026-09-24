@@ -59,7 +59,8 @@ def test_theory_index_does_not_claim_universal_differentiability() -> None:
     assert "classify the transform contract first" in text
     assert "Fixed iteration is necessary, not sufficient" in text
     assert "bisection is a branch-selected forward solve" in text
-    assert "Newton can carry a `smooth_pathwise` contract" in text
+    assert "Newton's automatic derivative is the derivative of its executed" in text
+    assert "```{list-table} Registry derivative semantics" in text
 
 
 def test_theory_index_routes_discrete_and_validation_contracts() -> None:

@@ -156,6 +156,41 @@ the audit gate interprets each one differently.
   - Not an inference, Fisher, or OED gradient.
 ```
 
+The contract registry classifies public callables with a wider vocabulary, the
+`ADSemantics` values in `jaxstro.contracts`. Five of them are the audit contracts
+above; the other four describe solvers and unclassified surfaces.
+
+```{list-table} Registry derivative semantics
+:header-rows: 1
+:label: tbl-registry-ad-semantics
+
+* - Value
+  - Meaning
+  - Registered examples
+* - `smooth_pathwise`
+  - The derivative of a smooth executed map, audited against central FD as above.
+  - `interp1d`, `powerlaw_ppf`, `universal_kepler_step`, `quad.integrate`
+* - `known_zero`, `known_blocked`, `surrogate`, `validation_only`
+  - As in the audit-contract table above.
+  - `compare_gradients` (`validation_only`)
+* - `value_first`
+  - The returned value is the contract. The solve is branch-selected and makes no
+    derivative claim.
+  - `safeguarded_bracketed_root`, `propose_bracketed`, `update_bracket`
+* - `certified_implicit`
+  - The implicit-function-theorem sensitivity of the root, returned only when the
+    uniqueness, convergence, residual, bracket-width, and conditioning gates pass;
+    `NaN` otherwise.
+  - `implicit_bracketed_root`
+* - `not_applicable`
+  - The output is not a differentiable quantity. No callable uses it yet.
+  - none
+* - `unverified`
+  - No derivative claim has been established. No callable uses it yet; the 235
+    unclassified callables have no value at all.
+  - none
+```
+
 (p1-differentiability)=
 ## 1. Classify the transform contract first
 
@@ -175,8 +210,11 @@ A fixed-step solver can still contain branch-selected intervals, clips, or
 singular derivatives.
 
 For a smooth function with a nonzero derivative and a parameter-independent
-initial guess, Newton can carry a `smooth_pathwise` contract after AD-FD
-verification. In contrast, bisection is a branch-selected forward solve: it can
+initial guess, Newton's automatic derivative is the derivative of its executed
+finite iteration, and AD-FD agreement verifies that executed map. It approximates
+the sensitivity of the mathematical root only once the iterations have converged.
+`newton` has no registry classification; the certified root sensitivity is
+`implicit_bracketed_root` (`certified_implicit`). In contrast, bisection is a branch-selected forward solve: it can
 deliver an accurate root value without providing the smooth inverse sensitivity
 needed for inference. Iteration count and gradient contract are separate facts.
 
