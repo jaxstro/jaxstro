@@ -2,8 +2,13 @@ from __future__ import annotations
 
 import jax
 import jax.numpy as jnp
-from scripts.quad_benchmark_adapters import RawBenchmarkResult
-from scripts.quad_benchmark_timing import (
+import pytest
+
+# The [benchmark] group supplies quadax; `uv sync` without it removes it.
+pytest.importorskip("quadax")
+
+from scripts.quad_benchmark_adapters import RawBenchmarkResult  # noqa: E402
+from scripts.quad_benchmark_timing import (  # noqa: E402
     make_grad_kernel,
     make_jvp_kernel,
     make_vmap_kernel,

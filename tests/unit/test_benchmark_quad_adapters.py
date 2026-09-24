@@ -4,7 +4,12 @@ import math
 
 import jax
 import jax.numpy as jnp
-from scripts.quad_benchmark_adapters import (
+import pytest
+
+# The [benchmark] group supplies quadax; `uv sync` without it removes it.
+pytest.importorskip("quadax")
+
+from scripts.quad_benchmark_adapters import (  # noqa: E402
     RunControls,
     matched_capacities,
     normalize_quadax_evaluations,
@@ -13,7 +18,7 @@ from scripts.quad_benchmark_adapters import (
     raw_jaxstro,
     raw_quadax,
 )
-from scripts.quad_benchmark_cases import CASES, LibraryMethod
+from scripts.quad_benchmark_cases import CASES, LibraryMethod  # noqa: E402
 
 
 def _case(name: str):

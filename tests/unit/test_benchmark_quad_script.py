@@ -6,9 +6,14 @@ import subprocess
 import sys
 from pathlib import Path
 
-from scripts import benchmark_quad
+import pytest
 
-from jaxstro.evidence import artifact_from_dict, artifact_to_json
+# The [benchmark] group supplies quadax; `uv sync` without it removes it.
+pytest.importorskip("quadax")
+
+from scripts import benchmark_quad  # noqa: E402
+
+from jaxstro.evidence import artifact_from_dict, artifact_to_json  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 
