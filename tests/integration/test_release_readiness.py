@@ -5,24 +5,33 @@ from __future__ import annotations
 import tomllib
 from pathlib import Path
 
+import yaml
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SETUP_UV_V8_SHA = "08807647e7069bb48b6ef5acd8ec9567f424441b"
 
 
+def _steps_run(job: dict) -> list[str]:
+    return [step["run"] for step in job["steps"] if "run" in step]
+
+
 def test_full_gate_runs_the_local_release_mirror_on_main_push() -> None:
-    workflow = (REPO_ROOT / ".github/workflows/full-gate.yml").read_text(
-        encoding="utf-8"
+    """Owner of the full-gate workflow structure (parsed, not text-matched)."""
+    workflow = yaml.safe_load(
+        (REPO_ROOT / ".github/workflows/full-gate.yml").read_text(encoding="utf-8")
     )
-    assert "push:" in workflow
-    assert "branches: [main]" in workflow
-    assert "release-mirror:" in workflow
-    assert "bash scripts/check.sh" in workflow
-    assert "npm install --global" not in workflow
-    assert 'JAX_ENABLE_X64: "1"' in workflow
-    assert "timeout-minutes: 60" in workflow
-    assert "scientific-validation:" in workflow
-    assert "github.event_name != 'push'" in workflow
-    assert "pytest tests/validation -q" in workflow
+    triggers = workflow[True]  # YAML 1.1 reads the key `on` as True
+    assert triggers["push"]["branches"] == ["main"]
+    assert workflow["env"]["JAX_ENABLE_X64"] == "1"
+    assert set(workflow["jobs"]) == {"release-mirror", "scientific-validation"}
+
+    mirror = workflow["jobs"]["release-mirror"]
+    assert mirror["timeout-minutes"] == 60
+    assert _steps_run(mirror) == ["bash scripts/check.sh"]
+
+    validation = workflow["jobs"]["scientific-validation"]
+    assert validation["if"] == "github.event_name != 'push'"
+    assert "uv run --no-sync pytest tests/validation -q" in _steps_run(validation)
 
 
 def test_pages_workflow_uses_the_verified_docs_gate_and_site_output() -> None:
@@ -88,17 +97,10 @@ def test_active_workflows_use_node24_action_releases() -> None:
 def test_release_mirror_keeps_benchmark_collection_in_the_local_gate() -> None:
     """The exact local mirror must prepare benchmark-only collection dependencies."""
     local_gate = (REPO_ROOT / "scripts" / "check.sh").read_text(encoding="utf-8")
-    workflow = (REPO_ROOT / ".github" / "workflows" / "full-gate.yml").read_text(
-        encoding="utf-8"
-    )
 
     sync = "uv sync --locked --extra dev --group benchmark"
     assert sync in local_gate
     assert local_gate.index(sync) < local_gate.index('pytest -m "not slow"')
-    assert "release-mirror:" in workflow
-    assert "run: bash scripts/check.sh" in workflow
-    assert "test-matrix:" not in workflow
-    assert "full-validation:" not in workflow
 
 
 def test_release_checklist_preserves_irreversible_stop_gates() -> None:

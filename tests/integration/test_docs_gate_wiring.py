@@ -64,20 +64,14 @@ def test_docs_gate_is_reused_by_local_and_full_ci_gates() -> None:
     assert "myst build" not in final_artifact_lane
     assert "myst start" not in final_artifact_lane
 
+    # Workflow structure is owned by test_release_readiness.py; this test keeps
+    # only the docs-gate ordering and path filter.
     local_gate = (REPO_ROOT / "scripts" / "check.sh").read_text(encoding="utf-8")
-    full_gate = (REPO_ROOT / ".github" / "workflows" / "full-gate.yml").read_text(
-        encoding="utf-8"
-    )
     assert "bash scripts/check_docs.sh" in local_gate
     assert "npm ci --ignore-scripts" in local_gate
     assert local_gate.index("npm ci --ignore-scripts") < local_gate.index(
         "bash scripts/check_docs.sh"
     )
-    assert "release-mirror:" in full_gate
-    assert "Run the exact local release mirror" in full_gate
-    assert "run: bash scripts/check.sh" in full_gate
-    assert "scientific-validation:" in full_gate
-    assert "pytest tests/validation -q" in full_gate
 
     pages = (REPO_ROOT / ".github" / "workflows" / "pages.yml").read_text(
         encoding="utf-8"
@@ -85,10 +79,7 @@ def test_docs_gate_is_reused_by_local_and_full_ci_gates() -> None:
     assert pages.index("run: bash scripts/check_docs.sh") < pages.index(
         "uses: actions/upload-pages-artifact@v5"
     )
-    assert "path: docs/_build/html" in pages
     assert '- "scripts/inject_docs_accessibility.py"' in pages
-    assert "npm ci --ignore-scripts" in pages
-    assert "npm install --global" not in pages
 
 
 def test_committed_route_manifest_matches_authored_navigation_routes() -> None:

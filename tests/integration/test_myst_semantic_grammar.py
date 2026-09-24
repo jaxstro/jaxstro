@@ -352,15 +352,6 @@ def _manifest() -> dict[str, str]:
     return json.loads((DOCS / "route-manifest.json").read_text(encoding="utf-8"))
 
 
-def _toc_files(node: object) -> set[str]:
-    if isinstance(node, list):
-        return {path for item in node for path in _toc_files(item)}
-    if not isinstance(node, dict):
-        return set()
-    own = {node["file"]} if "file" in node else set()
-    return own | _toc_files(node.get("children", []))
-
-
 def _toc_page_descendants(node: object) -> int:
     if isinstance(node, list):
         return sum(_toc_page_descendants(item) for item in node)
@@ -497,9 +488,6 @@ def test_final_routes_are_semantic_and_internal_sources_are_excluded() -> None:
         "/teaching-with-jaxstro",
     }
     assert not (set(manifest.values()) & forbidden_routes)
-    # Every toc page is routed and nothing else is; the docs gate checks the
-    # manifest against the rendered site.
-    assert set(manifest) == _toc_files(config["project"]["toc"])
     assert set(config["project"]["exclude"]) == {
         "audits/**",
         "plans/**",
