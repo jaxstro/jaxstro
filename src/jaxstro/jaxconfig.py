@@ -131,7 +131,8 @@ def ensure_jax_compilation_cache(base_dir: str | None = None) -> str:
     real backend work on a hit).
 
     If ``JAX_COMPILATION_CACHE_DIR`` is already set, respects the user's
-    choice and returns the existing path. Otherwise creates a cache
+    choice: applies it to the JAX config (JAX reads the variable only at
+    import) and returns it. Otherwise creates a cache
     directory under *base_dir* (defaulting to ``~/.cache/jaxstro/jax``).
 
     Moved here 2026-07-31 from ``stellax.solver._jax_cache`` so that
@@ -148,6 +149,9 @@ def ensure_jax_compilation_cache(base_dir: str | None = None) -> str:
 
     existing = os.environ.get("JAX_COMPILATION_CACHE_DIR")
     if existing:
+        # JAX reads the variable only at import; apply it in case it was set
+        # afterwards, or the cache stays off.
+        jax_config.update("jax_compilation_cache_dir", existing)
         _CACHE_INITIALIZED = existing
         return existing
 
