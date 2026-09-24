@@ -1,10 +1,12 @@
 """Shared classical recurrence engine for Gaussian quadrature rules."""
 
+import functools
 import math
 from typing import Any
 
 import jax
 import jax.numpy as jnp
+import numpy as np  # host-side cache of setup constants
 
 from .measures import (
     JacobiMeasure,
@@ -158,23 +160,55 @@ def _standard_normal(order: int):
 
 
 def gaussian_rule_data(rule: GaussianRule, measure: Any) -> FixedRuleData:
-    """Construct a Gaussian rule matched to a declared classical measure."""
+    """Construct a Gaussian rule matched to a declared classical measure.
+
+    Nodes and weights depend only on the order, the measure, and the default
+    float dtype, so each rule is built once with concrete values and memoized.
+    Inside ``jit`` the cached arrays enter as constants instead of a traced
+    eigensolve and recurrence sweep.
+    """
+    dtype_name = jnp.asarray(0.0).dtype.name
+    try:
+        nodes, weights = _cached_rule(rule.order, measure, dtype_name)
+    except TypeError:  # an unhashable measure is built without the cache
+        with jax.ensure_compile_time_eval():
+            data = _build_rule(rule.order, measure)
+        return data
+    return FixedRuleData(
+        nodes=jnp.asarray(nodes),
+        weights=jnp.asarray(weights),
+        degree=2 * rule.order - 1,
+        nested=False,
+    )
+
+
+@functools.lru_cache(maxsize=256)
+def _cached_rule(
+    order: int, measure: Any, dtype_name: str
+) -> tuple[np.ndarray, np.ndarray]:
+    del dtype_name  # part of the key: the build uses the default float dtype
+    with jax.ensure_compile_time_eval():
+        data = _build_rule(order, measure)
+    return np.asarray(data.nodes), np.asarray(data.weights)
+
+
+def _build_rule(order: int, measure: Any) -> FixedRuleData:
     if isinstance(measure, LebesgueMeasure):
-        diagonal, off_diagonal, mass = _legendre(rule.order)
+        diagonal, off_diagonal, mass = _legendre(order)
     elif isinstance(measure, JacobiMeasure):
-        diagonal, off_diagonal, mass = _jacobi(rule.order, measure.alpha, measure.beta)
+        diagonal, off_diagonal, mass = _jacobi(order, measure.alpha, measure.beta)
         if measure.normalized:
             mass = 1.0
     elif isinstance(measure, LaguerreMeasure):
-        diagonal, off_diagonal, mass = _laguerre(rule.order, measure.alpha)
+        diagonal, off_diagonal, mass = _laguerre(order, measure.alpha)
         if measure.normalized:
             mass = 1.0
     elif isinstance(measure, PhysicistsHermiteMeasure):
-        diagonal, off_diagonal, mass = _physicists_hermite(rule.order)
+        diagonal, off_diagonal, mass = _physicists_hermite(order)
         if measure.normalized:
             mass = 1.0
     elif isinstance(measure, StandardNormalMeasure):
-        diagonal, off_diagonal, mass = _standard_normal(rule.order)
+        diagonal, off_diagonal, mass = _standard_normal(order)
     else:
         raise TypeError("GaussianRule requires a supported classical measure")
     return _golub_welsch(diagonal, off_diagonal, mass)

@@ -172,8 +172,8 @@
       "raw_quantity_absolute_difference": 0.0,
       "raw_value": 2.5532481309308994,
       "relative_error": 5.251188081058514e-11,
-      "replay_gradient": 2.5532481309309003,
-      "replay_gradient_absolute_error": 1.340767497026718e-10,
+      "replay_gradient": 2.553248130930899,
+      "replay_gradient_absolute_error": 1.3407541743504225e-10,
       "replay_gradient_truth": 2.5532481307968236,
       "replay_parameter": "multiplicative amplitude",
       "specification": {

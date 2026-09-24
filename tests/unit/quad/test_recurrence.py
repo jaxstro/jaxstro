@@ -76,3 +76,24 @@ def test_gaussian_rule_rejects_nonclassical_weight() -> None:
     )
     with pytest.raises(TypeError, match="classical measure"):
         gaussian_rule_data(GaussianRule(4), measure)
+
+
+def test_gaussian_rules_are_built_once_and_enter_jit_as_constants() -> None:
+    # Rebuilding the rule on every call cost ~93 ms eagerly and put an
+    # eigensolve and two recurrence scans into every compiled integrand.
+    import jax
+
+    from jaxstro import quad
+    from jaxstro.quad._recurrence import _cached_rule, gaussian_rule_data
+
+    rule, measure = quad.GaussianRule(37), quad.StandardNormalMeasure()
+    gaussian_rule_data(rule, measure)
+    hits = _cached_rule.cache_info().hits
+    gaussian_rule_data(rule, measure)
+    assert _cached_rule.cache_info().hits == hits + 1
+
+    graph = jax.make_jaxpr(
+        lambda b: quad.fixed(jnp.exp, quad.Interval(0.0, b), rule=quad.GaussianRule(37))
+    )(1.0)
+    primitives = {eqn.primitive.name for eqn in graph.jaxpr.eqns}
+    assert not {"eigh", "scan"} & primitives
