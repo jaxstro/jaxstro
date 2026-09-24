@@ -20,6 +20,25 @@ class TestVectorGeometry:
         y = jnp.array([0.0, 1.0, 0.0])
         assert jnp.allclose(geometry.angular_distance(x, y), 0.5 * jnp.pi)
 
+    def test_angular_distance_resolves_small_separations(self):
+        # arccos(dot) returns 0 here: dot rounds to 1 below ~1e-8 rad.
+        a = jnp.array([1.0, 0.0, 0.0])
+        b = jnp.array([1.0, 1.0e-9, 0.0])
+        angle = geometry.angular_distance(a, b)
+        assert jnp.abs(angle - 1.0e-9) <= 1.0e-12 * 1.0e-9
+
+    def test_angular_distance_resolves_near_antipodal_separations(self):
+        a = jnp.array([1.0, 0.0, 0.0])
+        b = jnp.array([-1.0, 1.0e-9, 0.0])
+        angle = geometry.angular_distance(a, b)
+        assert jnp.abs(angle - (jnp.pi - 1.0e-9)) <= 1.0e-15
+
+    def test_angular_distance_gradient_is_zero_at_coincident_vectors(self):
+        # The angle is a cone at zero separation; 0 is in its subdifferential.
+        a = jnp.array([0.3, -0.4, 1.2])
+        grad = jax.grad(lambda v: geometry.angular_distance(v, a))(a)
+        assert jnp.all(grad == 0.0)
+
 
 class TestRotations:
     """Tests for rotation matrices and quaternions."""

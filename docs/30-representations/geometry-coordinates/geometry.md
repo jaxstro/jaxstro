@@ -28,18 +28,25 @@ helpers implemented with JAX arrays.
 ## Vectors and angles
 
 `normalize(vectors, axis=..., return_norm=...)` returns unit vectors and optionally
-their original norms. `angular_distance(a, b)` normalizes both inputs and evaluates
+their original norms. `angular_distance(a, b)` normalizes both inputs to
+$\hat{\mathbf{a}}$ and $\hat{\mathbf{b}}$ and evaluates
 
 ```{math}
 :label: eq-geometry-angular-distance
 
 \alpha
 =
-\arccos\left(
-\frac{\mathbf{a}\cdot\mathbf{b}}
-     {\lVert\mathbf{a}\rVert\lVert\mathbf{b}\rVert}
-\right).
+2\,\operatorname{atan2}\!\left(
+\lVert\hat{\mathbf{a}}-\hat{\mathbf{b}}\rVert,\;
+\lVert\hat{\mathbf{a}}+\hat{\mathbf{b}}\rVert
+\right),
 ```
+
+which equals $\arccos(\hat{\mathbf{a}}\cdot\hat{\mathbf{b}})$ but keeps full relative
+precision at small angles and near $\pi$. In float64 the arccos form returns 0 for
+separations below about $10^{-8}$ rad, because the dot product rounds to 1. The angle
+is not differentiable at exact coincidence or opposition; there the returned gradient
+is 0, an element of the subdifferential, rather than NaN.
 
 Inputs may have leading batch dimensions. `axis` identifies the component dimension.
 Angles are returned in radians and do not carry a runtime unit object.

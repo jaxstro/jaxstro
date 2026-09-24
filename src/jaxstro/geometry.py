@@ -37,11 +37,29 @@ def angular_distance(
     *,
     axis: int = -1,
 ) -> Float[Array, "..."]:
-    """Return the angle between vectors in radians."""
+    """Return the angle between vectors in radians.
+
+    Uses ``2 * atan2(|a_hat - b_hat|, |a_hat + b_hat|)``, which keeps full
+    relative precision at small angles and near pi in any dimension;
+    ``arccos(a_hat . b_hat)`` returns 0 below about 1e-8 rad in float64.
+
+    The angle is not differentiable at exact coincidence (0) or opposition
+    (pi). There the gradient is 0, an element of the subdifferential, rather
+    than NaN. Zero-length inputs are undefined, as in ``normalize``.
+    """
     a_unit = _unit_vector(a, axis=axis)
     b_unit = _unit_vector(b, axis=axis)
-    dot = jnp.sum(a_unit * b_unit, axis=axis)
-    return jnp.arccos(jnp.clip(dot, -1.0, 1.0))
+    return 2.0 * jnp.arctan2(
+        _safe_norm(a_unit - b_unit, axis=axis),
+        _safe_norm(a_unit + b_unit, axis=axis),
+    )
+
+
+def _safe_norm(vector: Float[Array, "..."], *, axis: int) -> Float[Array, "..."]:
+    """Euclidean norm whose gradient at the zero vector is 0, not NaN."""
+    squared = jnp.sum(vector * vector, axis=axis)
+    positive = squared > 0.0
+    return jnp.where(positive, jnp.sqrt(jnp.where(positive, squared, 1.0)), 0.0)
 
 
 def rotation_matrix(
