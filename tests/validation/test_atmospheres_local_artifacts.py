@@ -19,6 +19,12 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 ATMOSPHERES_ROOT = REPO_ROOT / "data" / "atmospheres"
 
 
+def _require_local_data(processed_dir: Path) -> None:
+    """data/atmospheres is gitignored: skip where it was never staged."""
+    if not processed_dir.is_dir():
+        pytest.skip(f"local atmosphere data not staged: {processed_dir}")
+
+
 @pytest.mark.slow
 def test_local_sonora_2024_processed_artifact_is_validated():
     import polars as pl
@@ -26,6 +32,7 @@ def test_local_sonora_2024_processed_artifact_is_validated():
 
     raw_zip = ATMOSPHERES_ROOT / "sonora" / "2024" / "raw" / "spectra.zip"
     processed_dir = ATMOSPHERES_ROOT / "sonora" / "2024" / "processed"
+    _require_local_data(processed_dir)
     catalog_path = processed_dir / "catalog.parquet"
     zarr_path = processed_dir / "sonora_2024.zarr"
     validation_path = processed_dir / "validation" / "spectra.json"
@@ -102,6 +109,7 @@ def test_local_tlusty_processed_artifacts_are_validated():
         },
     }
     processed_dir = ATMOSPHERES_ROOT / "tlusty" / "processed"
+    _require_local_data(processed_dir)
     catalog_path = processed_dir / "catalog.parquet"
     zarr_path = processed_dir / "tlusty_flux.zarr"
 
