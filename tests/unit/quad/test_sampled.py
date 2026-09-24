@@ -80,3 +80,14 @@ def test_simpson_is_exact_for_quadratics_on_nonuniform_grids() -> None:
         jnp.asarray([exact, 2.0 * exact]),
         rtol=ROUNDING_RTOL,
     )
+
+
+def test_simpson_repeated_abscissa_uses_the_trapezoid_on_that_panel() -> None:
+    import jax
+
+    # h0 = 0 divided by zero and returned NaN for the value and the gradient.
+    x = jnp.asarray([0.0, 0.0, 1.0, 2.0, 3.0])
+    y = 2.0 * x + 1.0  # linear: the trapezoid panel is exact
+    assert jnp.allclose(quad.simpson(y, x=x), 12.0, rtol=ROUNDING_RTOL)
+    grad = jax.grad(lambda scale: quad.simpson(scale * y, x=x))(1.0)
+    assert jnp.allclose(grad, 12.0, rtol=ROUNDING_RTOL)

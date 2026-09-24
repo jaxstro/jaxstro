@@ -127,12 +127,23 @@ def _simpson_panels(y: Array, x: Optional[Array], dx: float, axis: int) -> Array
     widths = jnp.diff(x)
     h0 = _along(widths[0::2], axis, y.ndim)
     h1 = _along(widths[1::2], axis, y.ndim)
-    total = h0 + h1
+    # A repeated abscissa leaves no quadratic through three distinct points;
+    # that panel is the trapezoid over its nonzero sub-interval, exact for
+    # linear data. Sanitize the widths before the select so the unused Simpson
+    # branch cannot put NaN into a derivative.
+    degenerate = (h0 == 0.0) | (h1 == 0.0)
+    safe_h0 = jnp.where(degenerate, 1.0, h0)
+    safe_h1 = jnp.where(degenerate, 1.0, h1)
+    total = safe_h0 + safe_h1
     # Composite Simpson on a nonuniform grid (the quadratic through the three
     # samples, integrated exactly over [x0, x2]).
-    return (total / 6.0) * (
-        (2.0 - h1 / h0) * y0 + (total * total / (h0 * h1)) * y1 + (2.0 - h0 / h1) * y2
+    simpson = (total / 6.0) * (
+        (2.0 - safe_h1 / safe_h0) * y0
+        + (total * total / (safe_h0 * safe_h1)) * y1
+        + (2.0 - safe_h0 / safe_h1) * y2
     )
+    trapezoid = 0.5 * (y0 + y1) * h0 + 0.5 * (y1 + y2) * h1
+    return jnp.where(degenerate, trapezoid, simpson)
 
 
 @partial(jax.jit, static_argnames="axis")
