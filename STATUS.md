@@ -1,9 +1,14 @@
 # jaxstro — status
 
-Updated: 2026-08-30
+Updated: 2026-09-23
 
 ## Current checkpoint
 
+- 2026-09-23: the ten integration tests that failed on `main` pass (55 owner
+  tests). Causes: the docs-gate lifecycle harness faked `myst` after the gate
+  moved to `npx --no-install myst`; nine Foundations figures lacked prose
+  references; two route pins stayed at 181 after three pages were added (184);
+  the landing-only card rule is removed so leaf pages may use cards.
 - Foundations now has white-ground scientific figures, a two-channel running
   measurement, and researcher-facing learning pages. Every leaf page uses native
   MyST cards and semantic callouts for its compact predict-compute-audit practice
