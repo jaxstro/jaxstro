@@ -117,7 +117,7 @@ reference = [
 # Ruff configuration
 # -----------------------
 [tool.ruff]
-target-version = "py311"
+target-version = "py313"
 line-length = 88
 src = ["src", "tests"]
 fix = false
@@ -130,8 +130,18 @@ ignore = [
   "E501",  # line length – rely on formatter / your judgment
   "E741",  # ambiguous variable name (l is standard for galactic longitude)
   "F722",  # syntax error in forward annotation (jaxtyping uses "N 3" patterns)
-  "F821",  # undefined name (jaxtyping pattern variables like N, Array)
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# F821 (undefined name) only where jaxtyping dimension names appear in string
+# annotations; everywhere else an undefined name is a bug.
+"src/jaxstro/coords.py" = ["F821"]
+"src/jaxstro/numerics/meshes.py" = ["F821"]
+"src/jaxstro/numerics/operators.py" = ["F821"]
+"src/jaxstro/numerics/random.py" = ["F821"]
+"src/jaxstro/spatial/grid.py" = ["F821"]
+"src/jaxstro/spatial/morton.py" = ["F821"]
+"src/jaxstro/spatial/neighbor.py" = ["F821"]
 
 [tool.ruff.format]
 quote-style = "double"
