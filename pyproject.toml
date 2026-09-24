@@ -69,6 +69,10 @@ Issues = "https://github.com/jaxstro/jaxstro/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/jaxstro"]
+# The raw Joe-Kuo direction file (1.9 MB) is read only by
+# scripts/build_sobol_directions.py; the runtime uses the generated
+# _sobol_data.py. The sdist keeps it so the table can be regenerated.
+exclude = ["src/jaxstro/quad/data/new-joe-kuo-6.21201"]
 
 [tool.hatch.build.targets.sdist]
 # Keep the source archive focused on redistributable package, metadata, public
