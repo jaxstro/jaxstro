@@ -115,6 +115,9 @@ The calibration changes the numerical representation of the same predicted
 signal. It does not authorize a residual that mixes counts with watts.
 :::
 
+In [](#fig-units-residual-space), check which residual compares quantities in the
+same units before any fit is attempted.
+
 :::{admonition} A compact practice loop
 
 Use this sequence as one piece of scientific work attached to the relation and

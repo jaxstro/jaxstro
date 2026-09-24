@@ -211,6 +211,9 @@ The long axis is not a solver failure. It identifies the combination that the
 specified measurements leave weakly constrained.
 :::
 
+In [](#fig-linear-weak-direction), compare the angle between the two Jacobian
+columns with the length of the uncertainty region.
+
 :::{admonition} Read the measurement map
 
 The following three moves describe one argument about a specified observation.

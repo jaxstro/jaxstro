@@ -65,6 +65,9 @@ calibration can correlate the recorded values, while a long uncertainty region
 marks a parameter combination the data weakly distinguish.
 :::
 
+[](#fig-two-channel-measurement-overview) shows the running case: two channels, one
+shared calibration, and the long uncertainty region that the later pages explain.
+
 Run the companion calculation from the repository root:
 
 ```bash

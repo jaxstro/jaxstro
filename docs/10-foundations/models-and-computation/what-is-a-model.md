@@ -110,6 +110,9 @@ data. They enter different parts of the chain and cannot be exchanged without
 changing the scientific interpretation.
 :::
 
+In [](#fig-model-measurement-chain), locate where model discrepancy and
+measurement error each enter the chain.
+
 :::{admonition} Keep the model chain visible
 
 The physical map, measurement map, and error terms make different assumptions.

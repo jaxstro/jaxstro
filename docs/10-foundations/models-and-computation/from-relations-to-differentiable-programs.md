@@ -85,6 +85,9 @@ Finite iteration and branch selection define an executable map. A certified
 implicit sensitivity is a separate claim with separate assumptions and gates.
 :::
 
+In [](#fig-executed-program-map), trace which path ordinary automatic
+differentiation follows and which claim needs the implicit-derivative gates.
+
 :::{admonition} Name the map that ran
 
 The ideal relation and finite executable program may agree in value while making

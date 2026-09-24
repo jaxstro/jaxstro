@@ -83,6 +83,9 @@ together when the calibration moves. Reporting two separate error bars loses
 that information.
 :::
 
+In [](#fig-probability-covariance), compare the circular and tilted contours; the
+tilt is the shared calibration.
+
 :::{admonition} Specify the random experiment
 
 The distribution must name the variable, its allowed values, and the mechanism

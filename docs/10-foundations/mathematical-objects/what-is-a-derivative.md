@@ -109,6 +109,9 @@ measurement or loss sensitivity back. They share a map and differ in the
 question asked of it.
 :::
 
+In [](#fig-derivative-chain), follow the forward arrow for the JVP and the backward
+arrow for the VJP through the same Jacobian.
+
 :::{admonition} Attach the derivative to a question
 
 The calculation comes after the map, perturbation, and derivative meaning have

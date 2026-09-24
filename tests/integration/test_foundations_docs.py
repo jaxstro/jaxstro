@@ -15,7 +15,7 @@ def test_foundations_and_usage_router_explain_the_evidence_first_structure() -> 
     text = f"{landing}\n{router}"
     for phrase in (
         "# Foundations: the ideas we will not assume",
-        "Optional does not mean unimportant",
+        "These are optional connected routes, not prerequisites to complete in order",
         "predict -> compute -> audit -> state the warranted claim",
         "post-hoc storytelling",
         "The API reference records the exact supported surface",
@@ -25,11 +25,10 @@ def test_foundations_and_usage_router_explain_the_evidence_first_structure() -> 
 
     landing_prose = " ".join(landing.split())
     for phrase in (
-        "Prior exposure does not guarantee that those concepts are active and "
-        "connected for a new research problem",
+        "The trouble appears when one measurement must carry all of them at once",
         "calculus, statistics, linear algebra, programming, physical modeling, "
         "and inference separately",
-        "Reconnecting them is substantive scientific work, not remediation",
+        "Reconnecting those steps is part of the scientific work",
     ):
         assert phrase in landing_prose
 

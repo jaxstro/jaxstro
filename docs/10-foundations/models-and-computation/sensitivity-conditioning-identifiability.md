@@ -91,6 +91,9 @@ Large response, poor conditioning, and weak identifiability can coexist, but
 none implies either of the others. The remedy follows the diagnosis.
 :::
 
+[](#fig-sensitivity-diagnostics) separates the three diagnoses; read each panel
+as a different question about the same map.
+
 :::{admonition} Diagnose before intervening
 
 Sensitivity, conditioning, and identifiability can point to different remedies.

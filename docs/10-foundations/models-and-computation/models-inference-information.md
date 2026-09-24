@@ -89,6 +89,9 @@ structure as the observation. Matching a mean while missing the correlation
 leaves the measurement model incomplete.
 :::
 
+In [](#fig-inference-replication), check whether each replicated data set
+reproduces the tilt of the observed data, not only its center.
+
 :::{admonition} Audit the inferred chain
 
 An inference inherits the source model, measurement operator, selection, and
