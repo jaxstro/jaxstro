@@ -610,22 +610,40 @@ def zenith_parallactic(
     -------------------
     ``tan_z`` diverges at the horizon. The parallactic angle is undefined at
     the zenith and nadir because the local vertical has no unique position
-    angle there. Values or derivatives at those geometries are not an
-    inference contract.
+    angle there. By convention ``q = 0`` there, as in SOFA ``iauHd2pa``,
+    with a gradient of 0: when both atan2 arguments are within
+    ``8 * eps`` of zero (about 2e-15 rad from the zenith in float64). Without
+    this, rounding returned 0 or pi depending on the platform. Values or
+    derivatives at those geometries are not an inference contract.
 
     References
     ----------
     Smart, W. M. (1977), *Textbook on Spherical Astronomy*, 6th ed., Ch. II
     (the spherical triangle pole-zenith-source).
+    IAU SOFA, ``iauHd2pa`` (parallactic angle, zero at the zenith),
+    https://www.iausofa.org/s/manual_c.pdf
     """
     sin_alt = jnp.sin(lat) * jnp.sin(dec) + jnp.cos(lat) * jnp.cos(dec) * jnp.cos(
         hour_angle
     )
     alt = jnp.arcsin(jnp.clip(sin_alt, -1.0, 1.0))
     tan_z = jnp.tan(0.5 * jnp.pi - alt)
-    q = jnp.arctan2(
-        jnp.sin(hour_angle),
-        jnp.tan(lat) * jnp.cos(dec) - jnp.sin(dec) * jnp.cos(hour_angle),
+    # SOFA iauHd2pa form: both atan2 arguments are the tan(phi) form times
+    # cos(phi) >= 0, which leaves q unchanged and avoids tan(phi) at the poles.
+    sin_q = jnp.cos(lat) * jnp.sin(hour_angle)
+    cos_q = jnp.sin(lat) * jnp.cos(dec) - jnp.cos(lat) * jnp.sin(dec) * jnp.cos(
+        hour_angle
+    )
+    # At the zenith or nadir both arguments vanish and q is undefined; their
+    # rounding residue (+/-1 ulp) picked 0 or pi depending on the platform.
+    # Convention: q = 0 there. Arguments are sanitized before the selection so
+    # the gradient stays finite.
+    tiny = 8.0 * jnp.finfo(jnp.result_type(sin_q, cos_q)).eps
+    undefined = (jnp.abs(sin_q) <= tiny) & (jnp.abs(cos_q) <= tiny)
+    q = jnp.where(
+        undefined,
+        0.0,
+        jnp.arctan2(jnp.where(undefined, 0.0, sin_q), jnp.where(undefined, 1.0, cos_q)),
     )
     return tan_z, q
 

@@ -539,6 +539,19 @@ class TestZenithParallactic:
         assert jnp.abs(tan_z) < 1e-6
         assert jnp.abs(q) < 1e-6
 
+    @pytest.mark.parametrize("lat_deg", (-30.2446, -60.0, 19.8, 45.0, 89.0))
+    def test_parallactic_angle_is_exactly_zero_at_the_zenith(self, lat_deg):
+        """q is undefined at the zenith; the convention returns 0 on every platform.
+
+        Unguarded, the atan2 denominator rounds to +/-1 ulp: Linux x86_64 CI
+        returned pi and macOS arm64 returned 0 (full-gate run 35950495028).
+        """
+        lat = jnp.deg2rad(lat_deg)
+        _, q = zenith_parallactic(0.0, lat, lat)
+        assert q == 0.0
+        g = jax.grad(lambda h: zenith_parallactic(h, lat, lat)[1])(0.0)
+        assert jnp.isfinite(g)
+
     def test_transit_zenith_distance_equals_dec_minus_lat(self):
         """At transit, zenith distance = |dec - lat| (meridian geometry)."""
         lat = jnp.deg2rad(-30.0)
