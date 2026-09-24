@@ -11,10 +11,11 @@ Jaxstro's documentation does not ask you to trust an answer because the code
 ran or because automatic differentiation returned a finite number. Instead,
 every substantial example can be read as a recurring cycle:
 
-```{math}
-\text{predict} \longrightarrow \text{compute} \longrightarrow \text{audit}
-\longrightarrow \text{new prediction}.
+```text
+predict -> compute -> audit -> state the warranted claim
 ```
+
+A warranted claim then sets up the next prediction.
 
 This order is deliberate. Prediction prevents post-hoc storytelling. Computing
 connects a mathematical model to the algorithm that actually executed. Auditing
