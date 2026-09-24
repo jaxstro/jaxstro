@@ -79,7 +79,7 @@ def test_rootfinding_derivative_guidance_separates_executed_and_implicit_maps() 
     assert "unique smooth mathematical root" in text
     assert "not a generic implicit-root" in text
     assert "opposite-sign endpoint" in text
-    assert "invariant is checked" in text
+    assert "invariant holds at every" in text
     assert "finite executed-map sensitivity" in text
     assert "certified mathematical-root sensitivity" in text
-    assert "smooth iterates, finite-map gradients" in text
+    assert "finite executed-map gradients" in text

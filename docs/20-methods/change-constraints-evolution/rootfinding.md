@@ -208,7 +208,8 @@ sign and acceptance predicates. Their parameter gradients are branch-selected
 finite-program artifacts, not root sensitivities; bisection is structurally
 zero with respect to parameters captured only inside $f$.
 
-`newton` and `newton_with_grad` use smooth iterates, finite-map gradients.
+`newton` and `newton_with_grad` run smooth Newton iterates, and their gradients are
+finite executed-map gradients.
 Their caller-selected fixed update count has default `max_steps=30`. JAX can
 expose a finite executed-map sensitivity through those updates, but that is not
 automatically [](#eq-root-implicit-derivative). The zero-derivative operand is
@@ -309,7 +310,7 @@ algorithm, or a unique smooth mathematical root. Derive the expected sensitivity
 **Compute.** Retain signed endpoint residuals, trace, status, final bracket,
 local slope, and every certificate predicate.
 
-**Audit.** Check the opposite-sign endpoint invariant is checked at every
+**Audit.** Check that the opposite-sign endpoint invariant holds at every
 executed update. Compare the certified AD derivative with the analytic result
 and an independently recomputed central finite difference. Reject the claim if
 uniqueness, smoothness, residual, width, finiteness, or conditioning fails.
@@ -340,6 +341,10 @@ rejection, not an estimate.
 
 [](#fig-rootfinding-value-versus-ift) keeps the executed-map and certified-root
 derivative questions visually separate.
+
+The measured case is $G(x, \theta) = x^2 - \theta$ at $\theta = 2$, whose root is
+$x^\star = \sqrt{2}$ and whose analytic sensitivity is
+$dx^\star/d\theta = 1/(2\sqrt{\theta}) \approx 0.35355339$.
 
 ```{list-table} Measured quadratic implicit-root evidence
 :header-rows: 1
