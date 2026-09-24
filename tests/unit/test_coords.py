@@ -4,6 +4,10 @@ Tests for jaxstro.coords module.
 TDD: Write tests FIRST, verify they FAIL, then implement.
 """
 
+import subprocess
+import sys
+import textwrap
+
 import jax
 import jax.numpy as jnp
 import pytest
@@ -141,6 +145,35 @@ class TestGalacticEquatorial:
         l_diff = jnp.minimum(jnp.abs(l_back - l_orig), 360 - jnp.abs(l_back - l_orig))
         assert jnp.all(l_diff < 1e-8)
         assert jnp.allclose(b_back, b_orig, atol=1e-8)
+
+    def test_roundtrip_is_float64_when_imported_before_x64(self):
+        """The rotation must not freeze in float32 at import time.
+
+        The test session enables x64 before importing jaxstro, so the
+        import-order case runs in a fresh interpreter.
+        """
+        program = textwrap.dedent(
+            """
+            import jax
+            jax.config.update("jax_enable_x64", False)
+            from jaxstro.coords import equatorial_to_galactic, galactic_to_equatorial
+            jax.config.update("jax_enable_x64", True)
+            import jax.numpy as jnp
+            l = jnp.array([45.0, 180.0, 270.0])
+            b = jnp.array([30.0, -45.0, 60.0])
+            l_back, b_back = equatorial_to_galactic(*galactic_to_equatorial(l, b))
+            dl = jnp.minimum(jnp.abs(l_back - l), 360.0 - jnp.abs(l_back - l))
+            print(float(jnp.max(jnp.maximum(dl, jnp.abs(b_back - b)))))
+            """
+        )
+        completed = subprocess.run(
+            [sys.executable, "-c", program],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        assert completed.returncode == 0, completed.stderr
+        assert float(completed.stdout.strip()) < 1e-8
 
     def test_batch_processing(self):
         """Should handle arrays."""

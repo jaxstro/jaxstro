@@ -305,16 +305,17 @@ def cluster_to_galactic_cartesian(
 # Coefficients follow the IAU SOFA iauG2icrs convention; Astropy is used only
 # as a regression oracle, not as the source authority. See the SOFA manual:
 # https://www.iausofa.org/s/manual_c.pdf
-_GALACTIC_TO_ICRS = jnp.array(
-    [
-        [-0.0548755604162154, +0.4941094278755837, -0.8676661490190047],
-        [-0.8734370902348850, -0.4448296299600112, -0.1980763734312015],
-        [-0.4838350155487132, +0.7469822444972189, +0.4559837761750669],
-    ]
+# The coefficients are Python floats, not a module-level jnp array: an array
+# built at import takes float32 if x64 is enabled after this import. Python
+# floats are weakly typed and take the dtype of the coordinates they multiply.
+_GALACTIC_TO_ICRS = (
+    (-0.0548755604162154, +0.4941094278755837, -0.8676661490190047),
+    (-0.8734370902348850, -0.4448296299600112, -0.1980763734312015),
+    (-0.4838350155487132, +0.7469822444972189, +0.4559837761750669),
 )
 
 # Inverse: Galactic = R^T @ ICRS
-_ICRS_TO_GALACTIC = _GALACTIC_TO_ICRS.T
+_ICRS_TO_GALACTIC = tuple(zip(*_GALACTIC_TO_ICRS, strict=True))
 
 
 def galactic_to_equatorial(
@@ -382,9 +383,9 @@ def galactic_to_equatorial(
 
     # Apply rotation: ICRS = R @ Galactic
     R = _GALACTIC_TO_ICRS
-    x_eq = R[0, 0] * x_gal + R[0, 1] * y_gal + R[0, 2] * z_gal
-    y_eq = R[1, 0] * x_gal + R[1, 1] * y_gal + R[1, 2] * z_gal
-    z_eq = R[2, 0] * x_gal + R[2, 1] * y_gal + R[2, 2] * z_gal
+    x_eq = R[0][0] * x_gal + R[0][1] * y_gal + R[0][2] * z_gal
+    y_eq = R[1][0] * x_gal + R[1][1] * y_gal + R[1][2] * z_gal
+    z_eq = R[2][0] * x_gal + R[2][1] * y_gal + R[2][2] * z_gal
 
     # Convert Equatorial Cartesian to spherical
     ra_rad = jnp.arctan2(y_eq, x_eq)
@@ -451,9 +452,9 @@ def equatorial_to_galactic(
 
     # Apply inverse rotation: Galactic = R^T @ ICRS
     R_T = _ICRS_TO_GALACTIC
-    x_gal = R_T[0, 0] * x_eq + R_T[0, 1] * y_eq + R_T[0, 2] * z_eq
-    y_gal = R_T[1, 0] * x_eq + R_T[1, 1] * y_eq + R_T[1, 2] * z_eq
-    z_gal = R_T[2, 0] * x_eq + R_T[2, 1] * y_eq + R_T[2, 2] * z_eq
+    x_gal = R_T[0][0] * x_eq + R_T[0][1] * y_eq + R_T[0][2] * z_eq
+    y_gal = R_T[1][0] * x_eq + R_T[1][1] * y_eq + R_T[1][2] * z_eq
+    z_gal = R_T[2][0] * x_eq + R_T[2][1] * y_eq + R_T[2][2] * z_eq
 
     # Convert Galactic Cartesian to spherical
     l_rad = jnp.arctan2(y_gal, x_gal)
