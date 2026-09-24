@@ -189,7 +189,7 @@ method = quad.AdaptiveScrambledSobol(
 Direct `estimate_bounds` apply to replicate estimates and may certify a signed
 finite measure. `integrand_bounds` are derived automatically only for
 `LebesgueMeasure`, including reversed orientation. Weighted-measure derivation
-is rejected in Phase B3 because a pointwise integrand bound does not determine
+is rejected because a pointwise integrand bound does not determine
 a weighted integral bound without certified measure information.
 
 :::{caution} Tight bounds matter
@@ -227,9 +227,11 @@ domains. Float32 coordinates retain at most $24$ digital bits, and float64
 coordinates retain at most $53$. Float64 and integer operations above $32$
 bits fail eagerly unless `jax_enable_x64=True`.
 
-All B3 methods require `gradient="stop"`. Replay derivatives, multidimensional
-quantity certification, and final backend/memory optimization remain Phase B4
-work.
+Deterministic and randomized Sobol methods support `gradient="replay"`, the
+first-order derivative of the accepted formula; controller decisions and the
+confidence construction are not differentiated. Replay through the scrambled
+methods is validated in `tests/validation/test_quad_multidim_replay_derivatives.py`.
+Quantity-aware integration is alpha and opt-in; see [](../../50-api/approximation-integration/quad.md).
 
 ## Where the claim stops
 

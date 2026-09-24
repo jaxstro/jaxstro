@@ -102,7 +102,7 @@ Supported finite-hyperrectangle declarations are:
 - `Smolyak`
 - `AdaptiveSmolyak`
 
-All Phase B methods support `gradient="replay"` for first-order
+All multidimensional methods support `gradient="replay"` for first-order
 accepted-formula derivatives and `gradient="stop"` for an explicitly stopped
 result.
 
@@ -123,7 +123,7 @@ The status belongs to a capability, not to the package as a whole.
 | shipped and validated | Sampled-data integration; fixed and adaptive one-dimensional rules; typed failure and work evidence; one-dimensional accepted-formula replay; finite-hyperrectangle tensor products, adaptive tensor refinement, Genz-Malik cubature, fixed or dimension-adaptive Smolyak sparse grids, deterministic Sobol integration, and fixed-look or bounded sequential randomized QMC |
 | benchmarking | The Apple M2 Max CPU comparison is accepted; additional backends, precisions, batch regimes, and method families remain future benchmarking coverage |
 | alpha | Opt-in quantity normalization through `quad.integrate`; downstream ecosystem adoption is not implied |
-| approved but planned | Later scientific geometries and Phase C specializations |
+| approved but planned | Later scientific geometries and specializations |
 | intentionally unsupported | Posterior inference, experimental-design policy, general Monte Carlo inference, and domain-specific scientific acceptance |
 
 ### Reading comparison labels
@@ -287,14 +287,14 @@ domain = quad.Hyperrectangle(
     jnp.array([0.0, 0.0]),
     jnp.array([1.0, 2.0]),
 )
-# x passed to a Phase B integrand has shape (point_count, dimension).
+# x passed to a multidimensional integrand has shape (point_count, dimension).
 ```
 
-This domain is $[0,1]\times[0,2]$. Phase B multidimensional integrands use a
+This domain is $[0,1]\times[0,2]$. Multidimensional integrands use a
 coordinate-last point array with shape `(point_count, dimension)` and return an
 array whose leading axis is `point_count`.
 
-## Phase B dispatcher boundary
+## Multidimensional dispatcher boundary
 
 `quad.integrate` is the sole public family dispatcher. One-dimensional domains
 continue to delegate to the existing adaptive owner with complete
@@ -302,11 +302,11 @@ continue to delegate to the existing adaptive owner with complete
 `max_nodes`, and `key` reserve explicit capacity and random-state boundaries
 for later multidimensional families; one-dimensional calls reject them.
 
-The B1 deterministic families, B2 sparse-grid families, and B3 Sobol and
-randomized-QMC families have passed their family validation gates. Randomized
-methods require scalar real payloads and explicit keys. B4 adds first-order
-accepted-formula replay and heterogeneous quantity-coordinate normalization
-across all Phase B families.
+The deterministic tensor and cubature families, the sparse-grid families, and the
+Sobol and randomized-QMC families have passed their family validation gates.
+Randomized methods require scalar real payloads and explicit keys. All of these
+families support first-order accepted-formula replay and heterogeneous
+quantity-coordinate normalization.
 
 ## Quantity activation
 
@@ -354,7 +354,7 @@ so scale selection belongs in the numerical-method record.
 | `GaussianRule` | `RightInfinite` | `LaguerreMeasure` |
 | `GaussianRule` | `Infinite` | `PhysicistsHermiteMeasure` or `StandardNormalMeasure` |
 | `ClenshawCurtisRule`, `FejerIRule`, `FejerIIRule` | `Interval` | `LebesgueMeasure` or `WeightedMeasure` |
-| `TanhSinhRule` | Any Phase A domain | `LebesgueMeasure` or `WeightedMeasure` |
+| `TanhSinhRule` | Any one-dimensional domain | `LebesgueMeasure` or `WeightedMeasure` |
 
 Unsupported structural pairings raise eagerly. Value-dependent invalid finite
 domains return `nan` when traced. Zero-width finite intervals return an exact
@@ -456,7 +456,7 @@ derives replay, moving-bound, complex, and unit contracts. The
 connects geometry and estimator meaning to the grouped
 [tensor/cubature](./quad-tensor-cubature.md),
 [sparse-grid](./quad-sparse.md), and [QMC](./quad-qmc.md) API pages. The
-[Phase B validation page](../../60-validation/numerical/quadrature-multidimensional.md)
+[multidimensional quadrature validation page](../../60-validation/numerical/quadrature-multidimensional.md)
 separates truth, replay, calibration, comparison, and performance claims. The
 [validation index](../../60-validation/validation.md) names the executable
 envelopes,

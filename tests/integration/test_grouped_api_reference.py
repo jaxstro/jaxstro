@@ -137,7 +137,7 @@ def test_api_landing_teaches_route_first_owner_qualified_imports() -> None:
     text = (API_ROOT / "api.md").read_text(encoding="utf-8")
     assert "from jaxstro.numerics import rootfinding" in text
     assert "from jaxstro.numerics.rootfinding import safeguarded_bracketed_root" in text
-    assert "legacy inventory awaiting Project 2" in text
+    assert "are legacy inventory" in text
     assert "not the canonical documentation path" in text
     assert "Planned Jaxstro capability" not in text
 

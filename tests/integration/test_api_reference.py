@@ -44,7 +44,7 @@ def test_api_landing_states_current_ownership_and_migration_boundary() -> None:
     assert "## Method owners" in text
     assert "## Representation and data owners" in text
     assert "## Research infrastructure owners" in text
-    assert "legacy inventory awaiting" in text
+    assert "are legacy inventory" in text
     assert "This reference does not change runtime exports" in text
     assert "Only current importable surfaces appear here" in text
 
@@ -82,12 +82,12 @@ def test_interpolation_reference_does_not_duplicate_symbol_descriptions() -> Non
     assert text.count("`monotone_cubic_interp(...)`") == 1
 
 
-def test_quad_quantity_activation_is_not_nested_under_phase_b_dispatcher() -> None:
+def test_quad_quantity_activation_is_not_nested_under_the_dispatcher() -> None:
     text = _page("approximation-integration/quad.md")
     headings = text.splitlines()
 
     assert "## Quantity activation" in headings
-    assert text.index("## Phase B dispatcher boundary") < text.index(
+    assert text.index("## Multidimensional dispatcher boundary") < text.index(
         "## Quantity activation"
     )
 

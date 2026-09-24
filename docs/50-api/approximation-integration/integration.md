@@ -16,5 +16,5 @@ temporary compatibility path retained while sibling packages migrate.
 | `jaxstro.numerics.integration.simpson` | `jaxstro.quad.simpson` |
 | `jaxstro.numerics.integration.cumulative_simpson` | `jaxstro.quad.cumulative_simpson` |
 
-Phase A0 preserves exact callable identity and emits no deprecation warning.
+The old names are the same callable objects and emit no deprecation warning.
 Use the [Jaxstro quadrature foundation](./quad.md) for the current API.

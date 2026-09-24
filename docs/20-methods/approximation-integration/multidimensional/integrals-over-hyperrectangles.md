@@ -8,7 +8,7 @@ description: Geometry, orientation, units, and the common interface for multidim
 ## Scientific question
 
 How do we turn a scientific integral with several bounded coordinates into a
-problem that numerical methods can share? Jaxstro's Phase B methods integrate
+problem that numerical methods can share? Jaxstro's multidimensional methods integrate
 over a finite Cartesian product
 
 ```{math}
@@ -115,5 +115,5 @@ capacities, status, work, and an independent truth or refinement check.
 ## Warranted claim
 
 Jaxstro supports differentiable finite hyperrectangles with homogeneous raw
-coordinates or heterogeneous opt-in quantity axes. Phase C geometries remain
-future work.
+coordinates or heterogeneous opt-in quantity axes. Simplexes, spheres, and other
+geometries are not implemented.

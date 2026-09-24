@@ -78,7 +78,7 @@ intervals have different meanings and must not be interchanged.
 
 - [Randomized QMC derivation](../../20-methods/approximation-integration/multidimensional/multidimensional-randomized-qmc.md)
 - [Differentiating accepted formulas](../../20-methods/approximation-integration/multidimensional/differentiating-multidimensional-integrals.md)
-- [Phase B validation](../../60-validation/numerical/quadrature-multidimensional.md)
+- [Multidimensional quadrature validation](../../60-validation/numerical/quadrature-multidimensional.md)
 - [RQMC calibration artifact](../../validation/quad-rqmc-calibration.json)
 - [Replay artifact](../../validation/quad-multidim-replay.json)
 

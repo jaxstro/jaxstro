@@ -237,21 +237,21 @@ every tensor direction equally.
 :::{note}
 The method is domain agnostic. An astrophysical interpretation, physical
 units, and an acceptance threshold remain the caller's responsibility.
-Quantity-mode multidimensional certification is deferred to Phase B4.
+Quantity-aware multidimensional integration is alpha and opt-in.
 :::
 
 ## What has been validated
 
-The B2 gate checks analytic product, exponential, rotated-quadratic, localized
+The validation gate checks analytic product, exponential, rotated-quadratic, localized
 Gaussian, and strongly anisotropic integrands. Fixed-grid truth checks cover
 dimensions \(2\), \(4\), \(8\), and \(16\) where declared by each case.
 Adaptive dimension-\(16\) evidence is deliberately anisotropic; it is not a
 claim that every smooth sixteen-dimensional integral is cheap.
 
-The current methods support eager execution, `jax.jit`, and `jax.vmap` in
-`gradient="stop"` mode for real, array, and complex payloads. Replay
-derivatives, quantity certification, backend-wide performance claims, and
-cross-method memory optimization remain Phase B4 work.
+The methods support eager execution, `jax.jit`, and `jax.vmap` for real, array,
+and complex payloads. `gradient="replay"` gives the first-order derivative of the
+accepted formula, validated in `tests/validation/test_quad_multidim_replay_derivatives.py`.
+Backend-wide performance claims are not made.
 
 :::{warning}
 The level-\(5\), dimension-\(16\) fixed construction is excluded from the B2

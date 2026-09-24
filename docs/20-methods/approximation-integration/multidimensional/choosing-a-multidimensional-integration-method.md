@@ -91,7 +91,7 @@ I=\int p(M,Z,t,D)\,S(M,Z,t,D)\,g(M,Z,t,D)\,dM\,dZ\,dt\,dD.
 :::{warning}
 Do not interpret a faster method as a better scientific method unless domain,
 nodes or family, tolerances, work, truth error, derivative error, and hardware
-are calibrated. The B4 benchmark warrants no universal superiority claim.
+are calibrated. The multidimensional benchmark warrants no universal superiority claim.
 :::
 
 ## Audit recipe
@@ -103,5 +103,5 @@ truth check, and the fallback method.
 ## Warranted claim
 
 Jaxstro now spans four complementary finite-hyperrectangle strategies. Method
-choice remains a scientific modeling decision, and Phase C geometries are
-outside this guide.
+choice remains a scientific modeling decision, and geometries other than
+hyperrectangles are outside this guide.

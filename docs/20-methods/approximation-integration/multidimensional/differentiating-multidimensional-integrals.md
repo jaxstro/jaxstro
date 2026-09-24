@@ -96,7 +96,7 @@ F(R,a)=\frac{R^2}{R^2+a^2},
 =-\frac{2R^2a}{(R^2+a^2)^2}.
 ```
 
-The B4 artifact compares the measured replay derivative with this analytic
+The replay-derivative validation artifact compares the measured derivative with this analytic
 result.
 
 ## Failure modes
@@ -115,6 +115,6 @@ dtype, and formula owner.
 
 ## Warranted claim
 
-All Phase B multidimensional methods support first-order accepted-formula
+All multidimensional methods support first-order accepted-formula
 replay for explicit parameters and smooth finite bounds. Controller derivatives
 and higher derivatives are intentionally unsupported.

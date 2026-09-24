@@ -1,17 +1,18 @@
 ---
 title: Multidimensional quadrature evidence
-description: Truth, replay, randomized calibration, comparison, and performance boundaries for Phase B.
+description: Truth, replay, randomized calibration, comparison, and performance boundaries for multidimensional quadrature.
 ---
 
 # Multidimensional quadrature evidence
 
-This page connects each public Phase B claim to the artifact that owns it.
+This page connects each public multidimensional-quadrature claim to the artifact
+that owns it.
 Passing one row does not promote the other rows, and none establishes universal
 superiority over another library.
 
 :::{important}
 The validated geometry is a finite hyperrectangle. Simplexes, spheres,
-manifolds, and domain-specific scientific acceptance are Phase C work.
+manifolds, and domain-specific scientific acceptance are not implemented.
 :::
 
 ## Evidence map
@@ -75,7 +76,7 @@ and 16. Its largest matched replay increment was 45,973,504 bytes (43.8 MiB),
 for scalar eight-replicate scrambled Sobol at dimension 16 and level 16. That
 is below the predeclared 10 GiB materiality threshold, so it authorizes no
 runtime optimization. The remaining 24 randomized array-payload cases are an
-intentional Phase B rejection: calibrated randomized intervals are real-scalar
+intentional rejection: calibrated randomized intervals are real-scalar
 only. The active CPU backend exposes no reliable separate device-memory metric.
 
 ## Reproduce the focused evidence

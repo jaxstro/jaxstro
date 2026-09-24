@@ -33,7 +33,7 @@ accepted formulas, units, and assertion-bearing numerical anchors.
 :link: ./numerical/quadrature-multidimensional.md
 
 Separate truth, accepted-formula replay, randomized calibration, comparison,
-and performance evidence across the Phase B method families.
+and performance evidence across the multidimensional quadrature methods.
 :::
 
 :::{card} Does the scientific data path preserve meaning?

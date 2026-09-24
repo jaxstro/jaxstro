@@ -44,7 +44,7 @@ Release-qualified platform support and explicit non-claims are stated in the
 | Surface | Status | Documentation rule |
 | --- | --- | --- |
 | Owner-qualified module APIs | Current | Canonical reference path |
-| Flat `jaxstro.numerics` callable re-exports | Current legacy inventory | Remain importable until the Project 2 hard cut |
+| Flat `jaxstro.numerics` callable re-exports | Current legacy inventory | Remain importable; no removal is scheduled |
 | Proposed or delegated capabilities | Planned or ecosystem-owned | Remain outside API reference until an owner and contracts exist |
 
 ## Canonical import policy
@@ -63,7 +63,7 @@ Or import a symbol directly from the module that owns it:
 from jaxstro.numerics.rootfinding import safeguarded_bracketed_root
 ```
 
-Flat callable re-exports from `jaxstro.numerics` are legacy inventory awaiting Project 2.
+Flat callable re-exports from `jaxstro.numerics` are legacy inventory.
 They remain importable for now, but they are not the canonical documentation path.
 This reference does not change runtime exports.
 
