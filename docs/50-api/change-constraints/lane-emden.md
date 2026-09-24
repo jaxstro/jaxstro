@@ -25,15 +25,17 @@ zero of `theta` -- the polytrope's outer edge -- as a differentiable event root.
 
 Every `LaneEmdenSolution` field is a length-`n_points` floating array on a strictly
 increasing dimensionless-radius grid that starts just off the origin at `XI_0 = 1e-6`.
-The polytropic index `n` is a traced scalar; `xi_max` and `n_points` are static (they
-size the output grid).
+The polytropic index `n` and the truncation radius `xi_max` are traced scalars;
+`n_points` and an explicit `xi_out` grid are static (they size or fix the output grid).
 
 ## JAX transforms and AD classification
 
 `jit`, `vmap`, and `grad` are supported. The gradient in `n` flows through the
 adaptive diffrax solve, and through `polytrope_xi1` via the implicit function theorem
-on the `diffrax.Event` root -- not through a grid `argmin`. `xi_max` and `n_points`
-are static and must not be differentiated.
+on the `diffrax.Event` root -- not through a grid `argmin`. The gradient in `xi_max`
+is the edge density term $\xi^2 e^{-\psi}$ (isothermal) or $\xi^2\theta^n$
+(polytropic) evaluated at `xi_max`. `n_points` and `xi_out` are static and must not be
+differentiated.
 
 ## Failure behavior
 

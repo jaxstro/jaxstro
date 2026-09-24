@@ -32,8 +32,8 @@ boundary condition. For the isothermal branch, substituting
 
 and the polytropic branch has the analogous ``theta = 1 - xi^2/6 + n xi^4/120``.
 
-JAX-native and differentiable in ``n``; ``xi_max`` and ``n_points`` are STATIC (they
-size the output grid).
+JAX-native and differentiable in ``n`` and in ``xi_max``; ``n_points`` and ``xi_out``
+are STATIC (they size or fix the output grid).
 
 Promoted to jaxstro from progenax's gravoturb profiles so hydrax and progenax share one
 canonical implementation. See docs/plans/2026-07-24-lane-emden-promotion-design.md and

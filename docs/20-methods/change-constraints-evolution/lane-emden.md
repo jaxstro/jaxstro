@@ -125,8 +125,9 @@ NaN); that floored continuation is not physical.
 flows through the adaptive solve and through the `polytrope_xi1` event root via the
 implicit function theorem, so $\mathrm{d}\xi_1/\mathrm{d}n$ is well defined. On the
 isothermal branch the truncation radius `xi_max` is a real physical input, and the
-edge mass is differentiable in it. `xi_max` and `n_points` are static and must not
-be differentiated.
+edge mass is differentiable in it: the gradient of the edge mass in `xi_max` matches
+the closed-form $\mathrm{d}m/\mathrm{d}\xi = \xi^2 e^{-\psi}$ to the solver tolerance.
+`n_points` and an explicit `xi_out` grid are static and must not be differentiated.
 
 :::{warning}
 Differentiating `solve_polytrope` in `n` with `xi_max` fixed **beyond** $\xi_1(n)$
@@ -160,8 +161,8 @@ grad_xi1 = jax.grad(lambda n: polytrope_xi1(n))(1.5)
 assert jnp.isfinite(grad_xi1)
 ```
 
-`n` is a traced scalar and may be differentiated; `xi_max` and `n_points` size the
-output grid and are static. Enable the intended precision before creating arrays,
+`n` and `xi_max` are traced scalars and may be differentiated; `n_points` sizes the
+output grid and is static. Enable the intended precision before creating arrays,
 since the adaptive tolerances are tight.
 
 ## How to audit the result

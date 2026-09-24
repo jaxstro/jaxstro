@@ -65,7 +65,7 @@ def test_solve_isothermal_edge_mass_gradient_matches_finite_difference():
 def test_solve_polytrope_edge_mass_gradient_matches_finite_difference():
     """The integrated enclosed mass at the edge is differentiable in n."""
     n0 = 1.5
-    xi_max = float(polytrope_xi1(n0))  # static bound; differentiate the solve in n only
+    xi_max = float(polytrope_xi1(n0))  # fixed bound; differentiate the solve in n only
 
     def edge_mass(n):
         return solve_polytrope(n, xi_max=xi_max, n_points=400).m[-1]
@@ -74,3 +74,18 @@ def test_solve_polytrope_edge_mass_gradient_matches_finite_difference():
     g_fd = float(_central_fd(edge_mass, n0, 1e-4))
     assert jnp.isfinite(g_ad)
     assert abs(g_ad - g_fd) <= 1e-3 * max(1.0, abs(g_fd))
+
+
+def test_solve_polytrope_edge_mass_gradient_in_xi_max_is_the_edge_density():
+    """xi_max is a traced input: d m(xi_max) / d xi_max = xi_max^2 theta^n there.
+
+    Inside the surface the closed form is the returned ``dm`` field. The bound is
+    the solver's relative tolerance (1e-8); measured 3.3e-12 (n = 1.5) and 1.2e-12
+    (n = 3) on 2026-09-24.
+    """
+    for n, xi_max in ((1.5, 2.0), (3.0, 5.0)):
+        solution = solve_polytrope(n, xi_max=xi_max, n_points=64)
+        g_ad = jax.grad(lambda x: solve_polytrope(n, xi_max=x, n_points=64).m[-1])(
+            xi_max
+        )
+        assert jnp.abs(g_ad / solution.dm[-1] - 1.0) <= 1e-8
