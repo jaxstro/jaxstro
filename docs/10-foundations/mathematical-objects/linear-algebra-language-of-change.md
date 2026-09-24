@@ -145,8 +145,9 @@ perturbations:
 \delta y \approx J\,\delta\theta + \varepsilon.
 ```
 
-Under a local linear model with a fixed covariance for the parameter changes
-and errors, covariance propagation gives
+Under a local linear model with fixed covariances for the parameter changes and
+the errors, and with the parameter changes uncorrelated with the errors,
+covariance propagation gives
 
 ```{math}
 C_y \approx J C_\theta J^{\mathsf{T}} + C_\varepsilon.
