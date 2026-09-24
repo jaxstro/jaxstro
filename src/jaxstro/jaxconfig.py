@@ -6,7 +6,7 @@ Shared JAX configuration helpers for the jaxstro ecosystem.
 This module does **not** change any JAX settings on import.
 
 Instead, it provides a small helper that top-level packages
-(e.g., gravax, startrax, stellax, nebulax) can call at the very
+(e.g., gravax, startrax, stellax, hydrax) can call at the very
 start of their import path to enable high-precision JAX behavior.
 
 Why this exists
@@ -30,9 +30,9 @@ Each *application-level* package should call this once, as early
 as possible, before importing modules that create JAX arrays or
 define JIT-compiled functions.
 
-Example: gravax
-~~~~~~~~~~~~~~~
-In ``gravax/__init__.py``::
+Example: a package ``__init__.py``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+::
 
     # Configure JAX precision for the entire process
     from jaxstro.jaxconfig import enable_high_precision as _enable_jax_hp
@@ -40,19 +40,8 @@ In ``gravax/__init__.py``::
     _enable_jax_hp()
     del _enable_jax_hp  # avoid leaking into public API
 
-    # Now it is safe to import the rest of gravax
-    from . import units, dynamics, stellax  # noqa: E402
-
-Example: startrax
-~~~~~~~~~~~~~~~~~
-In ``startrax/__init__.py``::
-
-    from jaxstro.jaxconfig import enable_high_precision as _enable_jax_hp
-
-    _enable_jax_hp()
-    del _enable_jax_hp
-
-    from . import sse, bse  # noqa: E402
+    # Now it is safe to import the package's own submodules
+    from . import core  # noqa: E402
 
 Example: scripts and CLIs
 ~~~~~~~~~~~~~~~~~~~~~~~~~

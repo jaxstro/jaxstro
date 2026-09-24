@@ -134,7 +134,7 @@ Re-read the cited source before changing or repeating these claims.
 
 ### Cumulative trapezoid ordering
 
-The uniform path in `src/jaxstro/numerics/integration.py` sums trapezoids before
+The uniform path in `src/jaxstro/quad/sampled.py` sums trapezoids before
 multiplying by scalar `dx`. This dx-outside order is the canonical parity
 contract. Nonuniform spacing keeps `diff(x)` inside the cumulative sum.
 

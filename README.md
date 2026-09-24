@@ -43,12 +43,17 @@ the [validation anchors](docs/60-validation/validation.md).
 
 | Package | Description | Status |
 |---------|-------------|--------|
-| **gravax** | $N$-body dynamics and star cluster evolution | 🚧 Active dev |
-| **progenax** | Initial conditions and population synthesis | 🚧 Active dev |
-| **fluxax** | Synthetic observables and survey rendering | 🚧 Active dev |
-| **startrax** | Rapid stellar evolution (SSE/BSE fits) | 🚧 Active dev |
-| **stellax** | 1D stellar structure (MESA-like) | 📋 Planned |
-| **nebulax** | Feedback bubbles & ISM response | 📋 Planned |
+| **gravax** | $N$-body dynamics and star cluster evolution | Implemented |
+| **stellax** | 1D stellar structure and evolution (MESA-on-JAX) | Implemented |
+| **startrax** | Stellar tracks from Hurley et al. (2000) SSE (single stars; no BSE) | Implemented |
+| **progenax** | Initial conditions and population synthesis | Implemented |
+| **fluxax** | Photometry, synthetic observables, and rendering | Implemented |
+| **hydrax** | Compressible hydrodynamics for stellar feedback | Implemented |
+| **informax** | Inference, information geometry, and experimental design | Implemented |
+| **radax** | Monte Carlo radiative transfer | Implemented |
+| **swindlax** | Density-PDF predictions with Bayesian model comparison | Implemented |
+| **jaxstroviz** | Analysis and visualization | Implemented |
+| **chemax** | Chemical evolution of star clusters | Skeleton |
 
 ### Design Principles
 

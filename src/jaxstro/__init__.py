@@ -2,8 +2,8 @@
 jaxstro: core utilities for differentiable astrophysics in JAX.
 
 This package provides shared physical constants, unit systems, and
-small utilities used across the jaxstro ecosystem (gravax, startrax,
-stellax, nebulax, nucleax, etc.).
+differentiable numerical methods used across the jaxstro ecosystem
+(gravax, stellax, startrax, progenax, fluxax, hydrax, and others).
 
 The design intent is:
 - centralize physical constants and unit definitions,
