@@ -25,8 +25,9 @@ def test_reference_partition_is_local_to_each_original_segment() -> None:
     domain = Interval(0.0, 4.0, breakpoints=(1.0, 3.0))
     partition = reference_partition(domain)
 
-    assert jnp.array_equal(partition.lower, -jnp.ones(3))
-    assert jnp.array_equal(partition.upper, jnp.ones(3))
+    # Reference bounds are (1 + t, 1 - t): t = -1 is (0, 2), t = 1 is (2, 0).
+    assert jnp.array_equal(partition.lower, jnp.tile(jnp.asarray([0.0, 2.0]), (3, 1)))
+    assert jnp.array_equal(partition.upper, jnp.tile(jnp.asarray([2.0, 0.0]), (3, 1)))
     assert jnp.array_equal(
         partition.segment_id,
         jnp.arange(3, dtype=jnp.int32),
@@ -56,7 +57,7 @@ def test_controller_propagates_parent_segment_identity() -> None:
     partition = reference_partition(Interval(0.0, 2.0, breakpoints=(1.0,)))
 
     def estimate(lower, upper, _segment_id):
-        width = upper - lower
+        width = upper[0] - lower[0]  # (1 + t) difference is the width in t
         return LocalEstimate(
             value=width,
             error=jnp.asarray(1.0),
