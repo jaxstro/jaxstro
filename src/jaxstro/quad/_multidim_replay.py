@@ -139,21 +139,33 @@ def _multidim_replay_jvp(config, primals, tangents):
         raise ValueError("multidimensional replay supports first derivatives only")
     solve = _solve_multidim(config, domain, args, key, epsabs, epsrel)
     formula = jax.tree.map(jax.lax.stop_gradient, solve.formula)
+    # A zero-width box is invalid input and its derivative fails closed. The
+    # NaN multiplies the input tangents, so it reaches every input in reverse
+    # mode too: a mask on the output alone is lost when the accepted formula
+    # has no active node, and a jnp.where constant is dropped by the transpose.
+    zero_width = jnp.any(jnp.asarray(domain.lower) == domain.upper)
+    fail_closed = jnp.where(zero_width, jnp.nan, 1.0)
+
+    def _mask(tangent):
+        if jnp.issubdtype(jnp.result_type(tangent), jnp.inexact):
+            return tangent * fail_closed
+        return tangent
+
+    # Differentiate with respect to the raw bound arrays: a Hyperrectangle
+    # rebuilt around NaN tangents would fail its finite-bounds check.
+    domain_leaves, domain_tree = jax.tree.flatten(domain)
+    tangent_leaves = jax.tree.leaves(domain_tangent)
     _, value_tangent = jax.jvp(
-        lambda live_domain, live_args: replay_formula_value(
+        lambda live_leaves, live_args: replay_formula_value(
             config,
-            live_domain,
+            jax.tree.unflatten(domain_tree, live_leaves),
             live_args,
             formula,
         ),
-        (domain, args),
-        (domain_tangent, args_tangent),
+        (domain_leaves, args),
+        ([_mask(leaf) for leaf in tangent_leaves], jax.tree.map(_mask, args_tangent)),
     )
-    # A zero-width box is invalid input; its derivative fails closed. The NaN
-    # enters as a multiplicative mask so reverse mode's transpose keeps it (a
-    # jnp.where substitution of a constant is dropped and returned zero).
-    zero_width = jnp.any(jnp.asarray(domain.lower) == domain.upper)
-    value_tangent = value_tangent * jnp.where(zero_width, jnp.nan, 1.0)
+    value_tangent = value_tangent * fail_closed
     value_tangent = _first_order_tangent(value_tangent)
     result = _replay_primal_result(solve.result, domain)
     return result, result_tangent(result, value_tangent)

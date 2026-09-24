@@ -299,3 +299,21 @@ def test_nested_forward_and_reverse_derivatives_fail_explicitly():
             (jnp.asarray(2.0),),
             (jnp.asarray(1.0),),
         )
+
+
+@pytest.mark.parametrize("method", METHODS)
+def test_zero_width_replay_gradient_fails_closed_in_reverse_mode(method) -> None:
+    # A zero-width box is invalid input; reverse mode returned 0.0 for the
+    # adaptive methods, whose replay formula has no active node there.
+    def objective(upper, scale):
+        return quad.integrate(
+            lambda x, live_scale: live_scale * jnp.exp(jnp.sum(x, axis=-1)),
+            quad.Hyperrectangle(jnp.zeros(2), jnp.stack((jnp.asarray(1.0), upper))),
+            args=scale,
+            method=method,
+            **_controls(method),
+        ).value
+
+    upper_grad, scale_grad = jax.grad(objective, argnums=(0, 1))(0.0, 2.0)
+    assert not jnp.isfinite(upper_grad)
+    assert not jnp.isfinite(scale_grad)
