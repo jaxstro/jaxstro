@@ -52,6 +52,9 @@ rng
     PRNG key management helpers for JAX.
 """
 
+import importlib
+from typing import TYPE_CHECKING, Any
+
 from . import (
     autodiff,
     checks,
@@ -61,7 +64,6 @@ from . import (
     integration,
     interpolation,
     kepler,
-    lane_emden,
     linear_algebra,
     meshes,
     ode,
@@ -120,12 +122,6 @@ from .kepler import (
     KEPLER_STATUS_SINGULAR_RADIUS,
     UniversalKeplerResult,
     universal_kepler_step,
-)
-from .lane_emden import (
-    LaneEmdenSolution,
-    polytrope_xi1,
-    solve_isothermal,
-    solve_polytrope,
 )
 from .linear_algebra import (
     add_diagonal_jitter,
@@ -482,3 +478,25 @@ __all__ = [
     "rng",
 ]
 __version__ = "0.1.0"
+
+# ADR 0015: lane_emden imports diffrax and optimistix, so it is loaded on first
+# access rather than at package import.
+_LAZY_LANE_EMDEN = frozenset(
+    {"LaneEmdenSolution", "polytrope_xi1", "solve_isothermal", "solve_polytrope"}
+)
+
+if TYPE_CHECKING:
+    from . import lane_emden
+    from .lane_emden import (
+        LaneEmdenSolution,
+        polytrope_xi1,
+        solve_isothermal,
+        solve_polytrope,
+    )
+
+
+def __getattr__(name: str) -> Any:
+    if name == "lane_emden" or name in _LAZY_LANE_EMDEN:
+        module = importlib.import_module(f"{__name__}.lane_emden")
+        return module if name == "lane_emden" else getattr(module, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
