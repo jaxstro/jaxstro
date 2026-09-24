@@ -1,8 +1,8 @@
 ---
-title: Rootfinding
+title: Root-finding
 ---
 
-# Rootfinding
+# Root-finding
 
 ## Owner import path
 

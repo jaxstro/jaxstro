@@ -140,10 +140,11 @@ $\theta^{n}$ has an undefined derivative where $\theta=0$. Differentiate with
 ## Using it in Jaxstro
 
 ```python
+from jaxstro.jaxconfig import enable_high_precision
+
+enable_high_precision()
+
 import jax
-
-jax.config.update("jax_enable_x64", True)
-
 import jax.numpy as jnp
 
 from jaxstro.numerics.lane_emden import polytrope_xi1, solve_polytrope

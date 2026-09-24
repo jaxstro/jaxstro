@@ -48,7 +48,7 @@ session logs.
   - CGS as default unit system
   - accepted
 * - [0008](./0008-reject-ift-from-core.md)
-  - Reject IFT from core
+  - Reject Information Field Theory (IFT) from core
   - accepted
 * - [0009](./0009-jaxstro-params-selective-inference.md)
   - jaxstro.params: selective inference (Equinox-only, not Zodiax)

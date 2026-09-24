@@ -8,8 +8,7 @@ description: >-
 Use this page when you need to set up Jaxstro and identify what belongs in its
 foundation layer before beginning a research calculation.
 
-This is the page you open first. By the end of it you will have jaxstro
-installed, float64 enabled, and one small example running that exercises the two
+By the end of this page you will have jaxstro installed, float64 enabled, and one small example running that exercises the two
 habits everything else in the package depends on: **guard your arithmetic** and
 **verify solver gradients independently**.
 

@@ -163,5 +163,6 @@ variables near one can improve a computation, but it neither supplies missing
 physics nor identifies an ill-posed inverse problem.
 :::
 
-Continue to [](../models-and-computation/what-is-a-model.md) or the numerical
+Continue to [](./linear-algebra-language-of-change.md), the next step of the
+recommended route, or the numerical
 [](../../30-representations/units-quantities/quantities.md) module page.

@@ -1,5 +1,5 @@
 ---
-title: "ADR 0008 - Reject IFT from core"
+title: "ADR 0008 - Reject Information Field Theory (IFT) from core"
 description: "Reject Information Field Theory from core; adopt NIFTy.re at the inference layer if ever needed."
 id: 0008
 date: 2026-06-17
