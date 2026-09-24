@@ -158,8 +158,9 @@ def test_why_jax_has_a_rendered_three_way_decision_table() -> None:
     assert "automatic differentiation require other machinery" in normalized_cell
     assert "batching and derivatives are separate implementations" not in source
 
+    # The locked mystmd from package.json, as in scripts/check_docs.sh.
     subprocess.run(
-        ["myst", "build", "--html", "--ci", "--strict"],
+        ["npx", "--no-install", "myst", "build", "--html", "--ci", "--strict"],
         cwd=ROOT / "docs",
         check=True,
         capture_output=True,
