@@ -155,34 +155,9 @@ def _host_lattice(level: int, dtype_name: str) -> _HostLattice:
     )
     endpoint = np.nextafter(scalar(1.0), scalar(0.0), dtype=dtype)
 
-    if previous is None:
-        retained = [0]
-        reserved = {0}
-    else:
-        previous_positive = [index for index in previous.compact_indices if index >= 0]
-        reserved = {2 * index for index in previous_positive}
-        retained = sorted(reserved)
-
-    valid = (
-        np.isfinite(positive_nodes)
-        & (positive_nodes >= scalar(0.0))
-        & (positive_nodes < scalar(1.0))
-        & np.isfinite(positive_density)
-        & (positive_density > scalar(0.0))
-    )
-    for index in range(1, cap + 1):
-        if index in reserved or not bool(valid[index]):
-            continue
-        position = bisect_left(retained, index)
-        if position > 0:
-            left = retained[position - 1]
-            if not bool(positive_nodes[index] > positive_nodes[left]):
-                continue
-        if position < len(retained):
-            right = retained[position]
-            if not bool(positive_nodes[index] < positive_nodes[right]):
-                continue
-        retained.insert(position, index)
+    # The retained set comes from _retained_positive_indices, which evaluates
+    # the same candidates one at a time.
+    retained = list(_retained_positive_indices(level, dtype_name))
 
     positive_nonzero = retained[1:]
     compact_indices = tuple([-index for index in reversed(positive_nonzero)] + retained)
