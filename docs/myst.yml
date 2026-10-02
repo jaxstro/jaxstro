@@ -250,6 +250,7 @@ project:
             - file: 50-api/research-infrastructure/contracts.md
             - file: 50-api/research-infrastructure/evidence.md
             - file: 50-api/research-infrastructure/provenance.md
+            - file: 50-api/research-infrastructure/equation-registry.md
             - file: 50-api/research-infrastructure/testing.md
             - file: 50-api/research-infrastructure/source-provenance/source-provenance.md
             - file: 50-api/research-infrastructure/source-provenance/constants.md
