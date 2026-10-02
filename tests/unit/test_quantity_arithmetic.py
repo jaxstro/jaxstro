@@ -65,6 +65,39 @@ def test_raw_scalar_rules():
         length + 1.0
 
 
+def test_raw_scalar_arithmetic_uses_canonical_dimensionless_value():
+    percent = q.Unit("percent", 0.01, q.dimensionless.dimensions)
+    half = 50.0 * percent
+
+    assert (half + 1.0).to_value(q.dimensionless) == pytest.approx(1.5)
+    assert (1.0 + half).to_value(q.dimensionless) == pytest.approx(1.5)
+    assert (half - 1.0).to_value(q.dimensionless) == pytest.approx(-0.5)
+    assert (1.0 - half).to_value(q.dimensionless) == pytest.approx(0.5)
+
+
+def test_angle_and_plain_dimensionless_cannot_mix_implicitly():
+    angle = 90.0 * q.deg
+    plain = 1.0 * q.dimensionless
+
+    with pytest.raises(DimensionError):
+        angle + plain
+    with pytest.raises(DimensionError):
+        plain - angle
+    with pytest.raises(DimensionError):
+        angle + 1.0
+    with pytest.raises(DimensionError):
+        1.0 - angle
+    with pytest.raises(DimensionError):
+        angle.to(q.dimensionless)
+    with pytest.raises(DimensionError):
+        plain.to(q.rad)
+
+    assert (angle + (jnp.pi / 2) * q.rad).to_value(q.deg) == pytest.approx(180.0)
+    assert angle.to(q.rad).value == pytest.approx(jnp.pi / 2)
+    assert angle.to_cgs().unit is q.rad
+    assert angle.to_cgs().value == pytest.approx(jnp.pi / 2)
+
+
 def test_conversion_helpers_and_one_unit_per_array():
     values = jnp.array([100.0, 250.0]) * q.cm
     meters = values.to(q.m)

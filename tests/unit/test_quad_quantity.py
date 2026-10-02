@@ -61,6 +61,22 @@ def test_fully_infinite_quantity_domain_requires_static_unit():
     assert domain.unit == q.cm
 
 
+def test_angle_coordinate_rejects_plain_dimensionless_bounds_and_scale():
+    with pytest.raises(DimensionError, match="compatible units"):
+        quad.Axis(0.0 * q.rad, 1.0 * q.dimensionless)
+    with pytest.raises(TypeError, match="explicit Quantity scale"):
+        quad.integrate(
+            lambda x: q.math.cos(x),
+            quad.Infinite(unit=q.rad, scale=2.0),
+            method=quad.AdaptiveTanhSinh(3),
+            epsabs=1e-4 * q.rad,
+            epsrel=1e-4,
+            max_evaluations=45,
+            max_regions=2,
+            gradient="stop",
+        )
+
+
 def test_fully_infinite_quantity_domain_runs_through_adaptive_boundary():
     scale = 2.0 * q.cm
     result = quad.integrate(

@@ -15,7 +15,7 @@ conversion, serialization, constants, and equivalencies.
 
 ## Public records and callables
 
-`Quantity`, `Unit`, `Dimension`, `UnitRegistry`, their typed errors, concrete
+`Quantity`, `Unit`, `Dimension`, `UnitRegistry`, `grad`, their typed errors, concrete
 units and dimensions, `get_unit`, `format_unit`, `parse_unit`, serialization
 helpers, and the public `constants`, `equivalencies`, `astro`, `bases`, and
 `units` modules.

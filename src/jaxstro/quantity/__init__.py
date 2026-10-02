@@ -25,7 +25,7 @@ from .errors import (
     UnitRegistryError,
 )
 from .parser import format_unit, parse_unit
-from .quantity import Quantity
+from .quantity import Quantity, grad
 from .registry import UnitRegistry
 from .serialization import from_dict, to_dict, unit_from_dict, unit_to_dict
 from .unit import Unit
@@ -118,6 +118,7 @@ __all__ = [
     "velocity",
     "yr",
     "get_unit",
+    "grad",
     "format_unit",
     "parse_unit",
     "register_global_unit",

@@ -32,6 +32,43 @@ def test_derived_and_angle_units():
     assert q.deg.scale_to_cgs == pytest.approx(3.141592653589793 / 180.0)
 
 
+def test_angle_semantics_are_part_of_unit_identity():
+    assert q.rad != q.dimensionless
+    assert len({q.rad, q.dimensionless}) == 2
+    assert q.rad.is_compatible_with(q.deg)
+    assert not q.rad.is_compatible_with(q.dimensionless)
+    with pytest.raises(TypeError):
+        q.rad.metadata["semantic"] = "other"
+    with pytest.raises(TypeError, match="JSON scalar"):
+        q.Unit("mutable", 1.0, d.dimensionless, metadata={"semantic": []})
+    with pytest.raises(ValueError, match="Angle units"):
+        q.Unit("bad_angle", 1.0, d.length, metadata={"semantic": "angle"})
+
+
+def test_canonicalization_preserves_near_unity_scales():
+    near_one = q.Unit("near_one", 1.0000000001, d.dimensionless)
+    near_erg = q.Unit("near_erg", 1.0000000001, d.energy)
+
+    assert (near_one / q.dimensionless).scale_to_cgs == near_one.scale_to_cgs
+    assert (near_erg * q.dimensionless).scale_to_cgs == near_erg.scale_to_cgs
+
+
+def test_angle_algebra_preserves_tag_only_under_dimensionless_scaling():
+    percent = q.Unit("percent", 0.01, d.dimensionless)
+
+    for unit in (q.rad * percent, percent * q.rad, q.rad / percent, q.rad**1):
+        assert unit.metadata.get("semantic") == "angle"
+    for unit in (q.rad * q.rad, q.rad / q.rad, q.rad**2, q.rad**0):
+        assert unit.metadata.get("semantic") is None
+    assert (q.rad * q.dimensionless) != q.dimensionless
+
+
+@pytest.mark.parametrize("scale", [0.0, -1.0, float("nan"), float("inf")])
+def test_unit_scale_must_be_finite_and_positive(scale):
+    with pytest.raises(ValueError, match="finite and positive"):
+        q.Unit("invalid", scale, d.length)
+
+
 def test_documented_wavelength_and_astro_units():
     assert q.nm.scale_to_cgs == pytest.approx(1.0e-7)
     assert q.micron.scale_to_cgs == pytest.approx(1.0e-4)
@@ -72,13 +109,3 @@ def test_strict_symbols_and_repr_are_stable():
 def test_float_powers_are_rejected_until_rationalized():
     with pytest.raises(DimensionError, match="exact rational"):
         q.cm**0.5
-
-
-def test_scalar_times_unit_is_forward_compatible_with_quantity_task():
-    if hasattr(q, "Quantity"):
-        quantity = 3 * q.cm
-        assert quantity.value == 3
-        assert quantity.unit is q.cm
-    else:
-        with pytest.raises(TypeError):
-            3 * q.cm

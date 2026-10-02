@@ -30,6 +30,15 @@ def test_structured_custom_unit_fallback_round_trips():
     assert q.unit_from_dict(payload) == unit
 
 
+def test_structured_custom_semantic_unit_round_trips():
+    unit = q.Unit("custom_angle", 1.0, q.rad.dimensions, metadata={"semantic": "angle"})
+    payload = q.unit_to_dict(unit)
+
+    assert payload["metadata"] == {"semantic": "angle"}
+    assert json.loads(json.dumps(payload)) == payload
+    assert q.unit_from_dict(payload) == unit
+
+
 def test_serialization_is_deterministic_and_json_safe_for_scalars():
     quantity = q.Quantity(2.0, q.parse_unit("cm^0.5"))
     first = q.to_dict(quantity)

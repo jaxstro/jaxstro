@@ -38,11 +38,14 @@ def unit_to_dict(unit: Unit) -> str | dict[str, Any]:
             return symbol
     except (UnitParseError, UnitRegistryError):
         pass  # the structured form below is lossless
-    return {
+    payload = {
         "symbol": unit.symbol,
         "scale_cgs": unit.scale_to_cgs,
         "dimensions": dimensions_to_dict(unit.dimensions),
     }
+    if unit.metadata:
+        payload["metadata"] = dict(unit.metadata)
+    return payload
 
 
 def unit_from_dict(payload: str | dict[str, Any]) -> Unit:
@@ -54,6 +57,7 @@ def unit_from_dict(payload: str | dict[str, Any]) -> Unit:
         payload["symbol"],
         payload["scale_cgs"],
         dimensions_from_dict(payload["dimensions"]),
+        metadata=payload.get("metadata", {}),
     )
 
 

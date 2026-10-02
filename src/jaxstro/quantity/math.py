@@ -29,14 +29,14 @@ def log(x: Quantity) -> Quantity:
     """Natural log of a dimensionless quantity."""
 
     _require_dimensionless(x, "log")
-    return Quantity(jnp.log(x.value), units.dimensionless)
+    return Quantity(jnp.log(x.to_value(units.dimensionless)), units.dimensionless)
 
 
 def exp(x: Quantity) -> Quantity:
     """Exponential of a dimensionless quantity."""
 
     _require_dimensionless(x, "exp")
-    return Quantity(jnp.exp(x.value), units.dimensionless)
+    return Quantity(jnp.exp(x.to_value(units.dimensionless)), units.dimensionless)
 
 
 def sin(x: Quantity) -> Quantity:
@@ -81,12 +81,12 @@ def _require_quantity(x, operation: str) -> None:
 
 def _require_dimensionless(x: Quantity, operation: str) -> None:
     _require_quantity(x, operation)
-    if not x.unit.is_dimensionless:
+    if not x.unit.is_compatible_with(units.dimensionless):
         raise DimensionError(
-            f"{operation} requires dimensionless input, got {x.unit}.",
+            f"{operation} requires untagged dimensionless input, got {x.unit}.",
             operation=operation,
-            expected=units.dimensionless.dimensions,
-            actual=x.unit.dimensions,
+            expected="untagged dimensionless",
+            actual=x.unit.metadata.get("semantic") or x.unit.dimensions,
         )
 
 

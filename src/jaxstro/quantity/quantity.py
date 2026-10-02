@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from fractions import Fraction
+from functools import wraps
 from typing import Any
 
 import jax
+import jax.numpy as jnp
 
 from . import dimensions as d
 from .errors import DimensionError, EquivalencyError
@@ -20,11 +23,21 @@ def _is_scalar_like(value: Any) -> bool:
 
 def _conversion_factor(source: Unit, target: Unit) -> float:
     if not source.is_compatible_with(target):
+        same_dimensions = source.dimensions == target.dimensions
         raise DimensionError(
-            f"Cannot convert from {source} to {target}: incompatible dimensions.",
+            f"Cannot convert from {source} to {target}: incompatible dimensions "
+            "or semantic tags.",
             operation="convert",
-            expected=target.dimensions,
-            actual=source.dimensions,
+            expected=(
+                target.metadata.get("semantic")
+                if same_dimensions
+                else target.dimensions
+            ),
+            actual=(
+                source.metadata.get("semantic")
+                if same_dimensions
+                else source.dimensions
+            ),
         )
     return source.scale_to_cgs / target.scale_to_cgs
 
@@ -92,12 +105,21 @@ class Quantity:
 
     def _require_compatible(self, other: "Quantity", operation: str) -> None:
         if not self.unit.is_compatible_with(other.unit):
+            same_dimensions = self.unit.dimensions == other.unit.dimensions
             raise DimensionError(
                 f"Cannot {operation} {self.unit} and {other.unit}: "
-                "incompatible dimensions.",
+                "incompatible dimensions or semantic tags.",
                 operation=operation,
-                expected=self.unit.dimensions,
-                actual=other.unit.dimensions,
+                expected=(
+                    self.unit.metadata.get("semantic")
+                    if same_dimensions
+                    else self.unit.dimensions
+                ),
+                actual=(
+                    other.unit.metadata.get("semantic")
+                    if same_dimensions
+                    else other.unit.dimensions
+                ),
             )
 
     def __add__(self, other):
@@ -105,14 +127,17 @@ class Quantity:
             self._require_compatible(other, "add")
             return Quantity(self.value + other.to_value(self.unit), self.unit)
         if _is_scalar_like(other):
-            if not self.unit.is_dimensionless:
+            if not self.unit.is_compatible_with(dimensionless_unit):
                 raise DimensionError(
-                    f"Cannot add raw scalar to dimensional quantity {self.unit}.",
+                    f"Cannot add raw scalar to tagged or dimensional quantity {self.unit}.",
                     operation="add",
-                    expected=self.unit.dimensions,
-                    actual=d.dimensionless,
+                    expected=self.unit.metadata.get("semantic") or self.unit.dimensions,
+                    actual=(None if self.unit.is_dimensionless else d.dimensionless),
                 )
-            return Quantity(self.value + other, self.unit)
+            return Quantity(
+                self.value + other * _conversion_factor(dimensionless_unit, self.unit),
+                self.unit,
+            )
         return NotImplemented
 
     def __radd__(self, other):
@@ -123,26 +148,32 @@ class Quantity:
             self._require_compatible(other, "subtract")
             return Quantity(self.value - other.to_value(self.unit), self.unit)
         if _is_scalar_like(other):
-            if not self.unit.is_dimensionless:
+            if not self.unit.is_compatible_with(dimensionless_unit):
                 raise DimensionError(
-                    f"Cannot subtract raw scalar from dimensional quantity {self.unit}.",
+                    f"Cannot subtract raw scalar from tagged or dimensional quantity {self.unit}.",
                     operation="subtract",
-                    expected=self.unit.dimensions,
-                    actual=d.dimensionless,
+                    expected=self.unit.metadata.get("semantic") or self.unit.dimensions,
+                    actual=(None if self.unit.is_dimensionless else d.dimensionless),
                 )
-            return Quantity(self.value - other, self.unit)
+            return Quantity(
+                self.value - other * _conversion_factor(dimensionless_unit, self.unit),
+                self.unit,
+            )
         return NotImplemented
 
     def __rsub__(self, other):
         if _is_scalar_like(other):
-            if not self.unit.is_dimensionless:
+            if not self.unit.is_compatible_with(dimensionless_unit):
                 raise DimensionError(
-                    f"Cannot subtract dimensional quantity {self.unit} from raw scalar.",
+                    f"Cannot subtract tagged or dimensional quantity {self.unit} from raw scalar.",
                     operation="subtract",
                     expected=d.dimensionless,
-                    actual=self.unit.dimensions,
+                    actual=self.unit.metadata.get("semantic") or self.unit.dimensions,
                 )
-            return Quantity(other - self.value, self.unit)
+            return Quantity(
+                other * _conversion_factor(dimensionless_unit, self.unit) - self.value,
+                self.unit,
+            )
         return NotImplemented
 
     def __mul__(self, other):
@@ -175,10 +206,38 @@ class Quantity:
         return Quantity(self.value**power, self.unit**power)
 
 
+def grad(fun: Callable[[Quantity], Quantity]) -> Callable[[Quantity], Quantity]:
+    """Differentiate a scalar Quantity output with respect to one Quantity input."""
+
+    @wraps(fun)
+    def differentiated(x: Quantity) -> Quantity:
+        if not isinstance(x, Quantity):
+            raise TypeError("quantity.grad requires a Quantity input.")
+
+        def scalar_value(value):
+            output = fun(Quantity(value, x.unit))
+            if not isinstance(output, Quantity):
+                raise TypeError("quantity.grad requires a Quantity output.")
+            if jnp.shape(output.value) != ():
+                raise ValueError("quantity.grad requires a scalar Quantity output.")
+            return output.value, output
+
+        (_, output), derivative = jax.value_and_grad(scalar_value, has_aux=True)(
+            x.value
+        )
+        return Quantity(derivative, output.unit / x.unit)
+
+    return differentiated
+
+
 def _cgs_unit_for(unit: Unit) -> Unit:
     from . import units
 
     if unit.dimensions == d.dimensionless:
+        if unit.metadata.get("semantic") == "angle":
+            return units.rad
+        if unit.metadata.get("semantic") is not None:
+            return Unit(f"cgs({unit})", 1.0, unit.dimensions, metadata=unit.metadata)
         return dimensionless_unit
     if unit.dimensions == d.mass:
         return units.g
@@ -195,4 +254,4 @@ def _cgs_unit_for(unit: Unit) -> Unit:
     return Unit(f"cgs({unit})", 1.0, unit.dimensions)
 
 
-__all__ = ["Quantity"]
+__all__ = ["Quantity", "grad"]

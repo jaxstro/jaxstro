@@ -2,8 +2,10 @@
 
 import jax
 import jax.numpy as jnp
+import pytest
 
 from jaxstro import quantity as q
+from jaxstro.quantity.errors import DimensionError
 
 
 def test_jit_through_unit_construction_and_conversion():
@@ -26,9 +28,47 @@ def test_grad_through_arithmetic_and_scale_factors():
     assert jax.grad(loss)(2.0) == 400.0
 
 
-def test_unit_metadata_is_static_auxiliary_data():
-    leaves, treedef = jax.tree_util.tree_flatten(jnp.array([1.0, 2.0]) * q.cm)
+@pytest.mark.parametrize("first", [q.rad, q.dimensionless])
+def test_jit_sin_rechecks_angle_semantics_for_each_static_unit(first):
+    sin = jax.jit(q.math.sin)
+    second = q.dimensionless if first is q.rad else q.rad
 
-    assert len(leaves) == 1
-    assert jnp.all(leaves[0] == jnp.array([1.0, 2.0]))
-    assert "cm" in str(treedef)
+    for unit in (first, second):
+        if unit is q.rad:
+            assert jnp.allclose(sin(1.0 * unit).value, jnp.sin(1.0))
+        else:
+            with pytest.raises(DimensionError, match="tagged angle"):
+                sin(1.0 * unit)
+
+
+def test_jit_scaled_dimensionless_log_uses_canonical_magnitude():
+    percent = q.Unit("percent", 0.01, q.dimensionless.dimensions)
+
+    result = jax.jit(q.math.log)(50.0 * percent)
+    assert jnp.allclose(result.value, jnp.log(0.5))
+
+
+@pytest.mark.parametrize("first", [q.rad, q.dimensionless])
+def test_jit_log_rejects_angle_after_either_cache_order(first):
+    log = jax.jit(q.math.log)
+    second = q.dimensionless if first is q.rad else q.rad
+
+    for unit in (first, second):
+        if unit is q.dimensionless:
+            assert jnp.allclose(log(1.0 * unit).value, 0.0)
+        else:
+            with pytest.raises(DimensionError, match="untagged dimensionless"):
+                log(1.0 * unit)
+
+
+@pytest.mark.parametrize("first", [q.rad, q.dimensionless])
+def test_jit_conversion_rejects_implicit_angle_retagging_in_both_orders(first):
+    to_radians = jax.jit(lambda value: value.to_value(q.rad))
+    second = q.dimensionless if first is q.rad else q.rad
+
+    for unit in (first, second):
+        if unit is q.rad:
+            assert jnp.allclose(to_radians(1.0 * unit), 1.0)
+        else:
+            with pytest.raises(DimensionError):
+                to_radians(1.0 * unit)

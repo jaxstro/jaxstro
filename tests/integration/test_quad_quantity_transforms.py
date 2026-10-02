@@ -100,12 +100,14 @@ def test_inverse_length_density_converts_with_coordinate_representation():
     assert jnp.allclose(metres, centimetres, rtol=2e-8)
 
 
-def test_quantity_replay_composes_with_jit_and_vmap():
+def test_quantity_replay_returns_unit_bearing_gradient_under_jit_and_vmap():
     derivative = jax.jit(
-        jax.grad(lambda value: _length_integral(value, q.cm).to_value(q.cm**2))
+        jax.vmap(q.grad(lambda bound: _length_integral(bound.value, bound.unit)))
     )
-    bounds = jnp.asarray([50.0, 100.0, 200.0])
-    assert jnp.allclose(jax.vmap(derivative)(bounds), bounds, rtol=2e-10)
+    bounds = jnp.asarray([50.0, 100.0, 200.0]) * q.cm
+    result = derivative(bounds)
+    assert result.unit == q.cm
+    assert jnp.allclose(result.value, bounds.value, rtol=2e-10)
 
 
 def _improper_quantity_integral(kind, unit, physical_scale):

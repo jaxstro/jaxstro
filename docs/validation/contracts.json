@@ -1277,7 +1277,7 @@
   ],
   "package_version": "0.1.0",
   "schema_version": "1",
-  "source_revision": "sha256:84734cc3d2af7b1261a4416833e6c1b67f133751a55525568df4ddeb0b102ab6",
+  "source_revision": "sha256:479dff547c8235b0e34e6eed24b131cac1dcbe6bd7c4881f25a92d7d1c5d9322",
   "unclassified_callables": [
     "jaxstro.atmospheres.acquisition_rows_to_markdown",
     "jaxstro.atmospheres.build_bosz_index",
@@ -1463,6 +1463,7 @@
     "jaxstro.quantity.format_unit",
     "jaxstro.quantity.from_dict",
     "jaxstro.quantity.get_unit",
+    "jaxstro.quantity.grad",
     "jaxstro.quantity.parse_unit",
     "jaxstro.quantity.register_global_unit",
     "jaxstro.quantity.to_dict",

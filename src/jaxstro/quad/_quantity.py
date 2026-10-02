@@ -121,9 +121,9 @@ def _coordinate_unit(domain, epsabs) -> Unit:
 def _coordinate_value(value, unit: Unit):
     if isinstance(value, Quantity):
         return value.to_value(unit)
-    if not unit.is_dimensionless:
+    if not unit.is_compatible_with(q_units.dimensionless):
         raise DimensionError(
-            "Dimensional quadrature coordinates must all be quantities.",
+            "Tagged or dimensional quadrature coordinates must all be quantities.",
             operation="quad-coordinate-normalization",
             expected=unit.dimensions,
         )
@@ -412,11 +412,11 @@ def normalize_call(fun, domain, args, measure, epsabs, epsrel) -> NormalizedCall
     coordinate_unit = _coordinate_unit(domain, epsabs)
     if (
         isinstance(domain, (RightInfinite, LeftInfinite, Infinite))
-        and not coordinate_unit.is_dimensionless
+        and not coordinate_unit.is_compatible_with(q_units.dimensionless)
         and not isinstance(domain.scale, Quantity)
     ):
         raise TypeError(
-            "dimensional improper quadrature requires an explicit Quantity scale"
+            "tagged or dimensional improper quadrature requires an explicit Quantity scale"
         )
     normalized_domain = _normalize_domain(domain, coordinate_unit)
     integrand_unit = _infer_output_unit(fun, args, coordinate_unit)
