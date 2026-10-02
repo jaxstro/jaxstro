@@ -1,0 +1,5 @@
+[[claim]]
+id = "CLAIM-ALPHA"
+statement = "The alpha scheme is second order."
+status = "substantiated"
+evidence_ids = ["EVID-ALPHA"]

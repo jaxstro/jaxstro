@@ -28,12 +28,17 @@ from .records import (
     SourceRecord,
     SymbolRecord,
 )
+from .tables import ClaimRecord, EvidenceRecord, ImplementationRecord, MethodRecord
 
 SOURCES_DIRNAME = "sources"
 SYMBOLS_FILENAME = "symbols.toml"
 ATLAS_DECISIONS_FILENAME = "atlas_decisions.toml"
 ATLAS_RELATIONS_FILENAME = "atlas_relations.toml"
 DERIVED_MODELS_FILENAME = "derived_models.toml"
+IMPLEMENTATIONS_FILENAME = "implementations.toml"
+EVIDENCE_FILENAME = "evidence.toml"
+METHODS_FILENAME = "methods.toml"
+CLAIMS_FILENAME = "claims.toml"
 
 
 def default_registry_root() -> Path:
@@ -147,6 +152,50 @@ def load_derived_models(registry_root: Path) -> dict[str, DerivedModelRecord]:
     if not records:
         raise RegistryError(f"{DERIVED_MODELS_FILENAME}: declares no derived models")
     return records
+
+
+def _load_table(
+    registry_root: Path, filename: str, table: str, record_type: Any
+) -> dict[str, Any]:
+    """One registry-level table, keyed by id: duplicates and an empty file refused."""
+    payload = _read_toml(Path(registry_root) / filename)
+    unknown = set(payload) - {table}
+    if unknown:
+        raise RegistryError(
+            f"{filename}: unknown top-level keys {sorted(unknown)}; "
+            f"rows are [[{table}]] tables"
+        )
+    records: dict[str, Any] = {}
+    for index, item in enumerate(payload.get(table, ())):
+        record = record_type.from_toml(item, where=f"{filename} {table}[{index}]")
+        if record.id in records:
+            raise RegistryError(f"{filename}: duplicate {table} id {record.id!r}")
+        records[record.id] = record
+    if not records:
+        raise RegistryError(f"{filename}: declares no {table} rows")
+    return records
+
+
+def load_implementations(registry_root: Path) -> dict[str, ImplementationRecord]:
+    """The code that realises registered equations (``implementations.toml``)."""
+    return _load_table(
+        registry_root, IMPLEMENTATIONS_FILENAME, "implementation", ImplementationRecord
+    )
+
+
+def load_evidence(registry_root: Path) -> dict[str, EvidenceRecord]:
+    """The gates that measured equations and methods (``evidence.toml``)."""
+    return _load_table(registry_root, EVIDENCE_FILENAME, "evidence", EvidenceRecord)
+
+
+def load_methods(registry_root: Path) -> dict[str, MethodRecord]:
+    """Named numerical schemes (``methods.toml``)."""
+    return _load_table(registry_root, METHODS_FILENAME, "method", MethodRecord)
+
+
+def load_claims(registry_root: Path) -> dict[str, ClaimRecord]:
+    """Documentation claims and their evidence (``claims.toml``)."""
+    return _load_table(registry_root, CLAIMS_FILENAME, "claim", ClaimRecord)
 
 
 def load_source_symbols(registry_root: Path, bibkey: str) -> dict[str, SymbolRecord]:

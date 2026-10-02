@@ -53,6 +53,7 @@ API_OWNERS = {
     "research-infrastructure/types.md": "jaxstro.numerics.types",
     "research-infrastructure/jaxconfig.md": "jaxstro.jaxconfig",
     "research-infrastructure/contracts.md": "jaxstro.contracts",
+    "research-infrastructure/equation-registry.md": "jaxstro.registry",
     "research-infrastructure/evidence.md": "jaxstro.evidence",
     "research-infrastructure/provenance.md": "jaxstro.provenance",
     "research-infrastructure/testing.md": "jaxstro.testing",
@@ -302,6 +303,7 @@ def test_random_reference_documents_zero_weight_and_tracing_boundaries() -> None
 def test_generated_manifest_counts_the_current_api_surface() -> None:
     routes = json.loads((DOCS / "route-manifest.json").read_text(encoding="utf-8"))
 
-    assert len(API_OWNERS) == 39  # + composition (2026-09-23, hydrax F13)
+    # + composition (2026-09-23, hydrax F13), + registry (2026-10-02)
+    assert len(API_OWNERS) == 40
     assert "jaxstro.quad" in API_OWNERS.values()
     assert all(f"50-api/{page}" in routes for page in API_OWNERS)

@@ -109,7 +109,8 @@ See [](./research-infrastructure/checks.md),
 [](./research-infrastructure/jaxconfig.md),
 [](./research-infrastructure/contracts.md),
 [](./research-infrastructure/evidence.md),
-[](./research-infrastructure/provenance.md), and
+[](./research-infrastructure/provenance.md),
+[](./research-infrastructure/equation-registry.md), and
 [](./research-infrastructure/testing.md).
 
 Only current importable surfaces appear here. Proposed capabilities remain in

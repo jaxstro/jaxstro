@@ -95,6 +95,36 @@ CAVEAT_STATUSES = frozenset({"enforced", "deferred", "rejected"})
 #: this relation?" while caveats retain the paper's qualifications and reasons.
 VALIDITY_STATUSES = frozenset({"enforced", "reported", "quarantined"})
 
+#: BibTeX entry types a source may declare. Closed, so a typo fails at load
+#: rather than as an unknown entry type in a consumer's bibliography build.
+BIB_TYPES = frozenset(
+    {
+        "article",
+        "book",
+        "incollection",
+        "inproceedings",
+        "misc",
+        "phdthesis",
+        "techreport",
+        "unpublished",
+    }
+)
+
+#: The bibliographic fields of a source. All-or-nothing: a source that declares
+#: any of them must declare ``BIB_REQUIRED`` too, so "this source has a
+#: bibliography entry" is decided at load, not discovered when a citation fails.
+BIB_FIELDS = (
+    "bib_type",
+    "authors",
+    "title",
+    "journal",
+    "volume",
+    "pages",
+    "year",
+    "arxiv",
+)
+BIB_REQUIRED = ("bib_type", "authors", "title", "year")
+
 
 class RegistryError(ValueError):
     """A malformed registry raises.
@@ -191,6 +221,17 @@ class SourceRecord:
     #: Stable pointer to the human-readable source note.  The URI is a join,
     #: not a second numerical authority: the values remain in this registry.
     source_note_ref: str | None = None
+    #: Bibliographic fields, rendered by :mod:`jaxstro.registry.bibtex`. Strings
+    #: verbatim as BibTeX wants them (``authors`` joined by `` and ``; ``year``
+    #: ``"1969"``). See ``BIB_FIELDS`` for the all-or-nothing rule.
+    bib_type: str | None = None
+    authors: str | None = None
+    title: str | None = None
+    journal: str | None = None
+    volume: str | None = None
+    pages: str | None = None
+    year: str | None = None
+    arxiv: str | None = None
 
     _KEYS = frozenset(
         {
@@ -202,12 +243,38 @@ class SourceRecord:
             "pdf_sha256",
             "pdf_unavailable",
             "source_note_ref",
+            *BIB_FIELDS,
         }
     )
+
+    @property
+    def has_bibliography(self) -> bool:
+        """Whether this source declares a bibliography entry."""
+        return self.bib_type is not None
 
     @classmethod
     def from_toml(cls, payload: dict[str, Any], *, where: str) -> SourceRecord:
         _reject_unknown_keys(payload, cls._KEYS, where=where)
+        bib = {key: _optional_string(payload, key, where=where) for key in BIB_FIELDS}
+        if any(value is not None for value in bib.values()):
+            missing = [key for key in BIB_REQUIRED if not bib[key]]
+            if missing:
+                raise RegistryError(
+                    f"{where}: a source with bibliographic fields needs {missing}"
+                )
+            _check_member(str(bib["bib_type"]), BIB_TYPES, "bib_type", where)
+            if not _is_year(bib["year"]):
+                raise RegistryError(
+                    f"{where}: year={bib['year']!r} must be four digits, "
+                    "optionally with one letter suffix"
+                )
+            _optional_string(payload, "doi", where=where)  # rendered, so a string
+            for key, value in bib.items():
+                if value is not None and not _balanced_braces(value):
+                    raise RegistryError(
+                        f"{where}: {key} has unbalanced braces, which would end "
+                        "the BibTeX field early"
+                    )
         record = cls(
             id=_require(payload, "id", where),
             verification=_check_member(
@@ -222,8 +289,32 @@ class SourceRecord:
             pdf_sha256=payload.get("pdf_sha256"),
             pdf_unavailable=payload.get("pdf_unavailable"),
             source_note_ref=payload.get("source_note_ref"),
+            **bib,
         )
         return record
+
+
+def _is_year(value: str | None) -> bool:
+    if value is None:
+        return False
+    digits, suffix = value[:4], value[4:]
+    return (
+        len(digits) == 4
+        and digits.isdigit()
+        and (suffix == "" or (len(suffix) == 1 and suffix.isalpha()))
+    )
+
+
+def _balanced_braces(text: str) -> bool:
+    depth = 0
+    for character in text:
+        if character == "{":
+            depth += 1
+        elif character == "}":
+            depth -= 1
+            if depth < 0:
+                return False
+    return depth == 0
 
 
 @dataclass(frozen=True)

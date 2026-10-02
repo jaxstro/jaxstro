@@ -1,0 +1,12 @@
+[source]
+id = "alpha2001"
+verification = "agent-verified"
+doi = "10.0000/alpha.2001"
+pdf_unavailable = "fixture"
+bib_type = "article"
+authors = "Alpha, A. and Gamma, G."
+title = "{An} Alpha Paper"
+journal = "The Fixture Journal"
+volume = "1"
+pages = "2"
+year = "2001"

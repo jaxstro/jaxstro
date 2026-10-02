@@ -1,0 +1,8 @@
+[[equation]]
+id = "EQ-BETA-001"
+name = "Beta relation"
+representation = "algorithmic"
+equation_ref = "Table 2"
+emits = ["latex"]
+source_ids = ["beta2002", "alpha2001"]
+implementation_ids = ["IMPL-ALPHA", "IMPL-RETIRED"]

@@ -1,0 +1,7 @@
+[[equation]]
+id = "EQ-DERIV-001"
+name = "A derived relation"
+representation = "algorithmic"
+equation_ref = "Sect. 2 of the method page"
+emits = ["latex"]
+source_ids = ["derivations"]

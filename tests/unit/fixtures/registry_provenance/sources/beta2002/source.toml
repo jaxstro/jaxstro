@@ -1,0 +1,9 @@
+[source]
+id = "beta2002"
+verification = "needs-source-verification"
+pdf_unavailable = "fixture"
+bib_type = "misc"
+authors = "Beta, B."
+title = "A Beta Data Release"
+year = "2002a"
+arxiv = "0201.00001"

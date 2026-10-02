@@ -34,18 +34,31 @@ which now refuses rather than returning a data-less directory.
 
 ``startrax.registry`` is **frozen**: it keeps working, and schema changes land
 here only. Its 109 import sites across 76 files migrate as their own task.
+
+**Registry-level tables** (2026-10-02). Beside the source bundles a registry root
+may hold ``implementations.toml``, ``evidence.toml``, ``methods.toml`` and
+``claims.toml`` (:mod:`jaxstro.registry.tables`); :func:`load_registry` loads the
+whole root and refuses any reference that resolves to nothing
+(:mod:`jaxstro.registry.links`). A source may carry BibTeX fields, rendered by
+:mod:`jaxstro.registry.bibtex`.
 """
 
 from __future__ import annotations
 
 from .access import binding_value, coefficient_value
+from .bibtex import bibliography, bibtex_entry
+from .links import Registry, load_registry, missing_files, unresolved_implementations
 from .loader import (
     ResolvedSource,
     available_bibkeys,
     default_registry_root,
     load_atlas_decisions,
     load_atlas_relations,
+    load_claims,
     load_derived_models,
+    load_evidence,
+    load_implementations,
+    load_methods,
     load_source,
     load_source_symbols,
     load_symbol_table,
@@ -65,30 +78,45 @@ from .records import (
     SourceRecord,
     SymbolRecord,
 )
+from .tables import ClaimRecord, EvidenceRecord, ImplementationRecord, MethodRecord
 
 __all__ = [
     "AnchorRecord",
     "AtlasDecisionRecord",
     "AtlasRelationRecord",
     "CaveatRecord",
+    "ClaimRecord",
     "CoefficientRecord",
     "DerivedModelRecord",
     "EquationRecord",
+    "EvidenceRecord",
+    "ImplementationRecord",
+    "MethodRecord",
+    "Registry",
     "RegistryError",
     "ResolvedSource",
     "SourceBundle",
     "SourceRecord",
     "SymbolRecord",
     "available_bibkeys",
+    "bibliography",
+    "bibtex_entry",
     "binding_value",
     "coefficient_value",
     "default_registry_root",
     "load_atlas_decisions",
     "load_atlas_relations",
+    "load_claims",
     "load_derived_models",
+    "load_evidence",
+    "load_implementations",
+    "load_methods",
+    "load_registry",
     "load_source",
     "load_source_symbols",
     "load_symbol_table",
+    "missing_files",
     "resolve",
     "source_directory",
+    "unresolved_implementations",
 ]

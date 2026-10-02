@@ -1,0 +1,15 @@
+[[implementation]]
+id = "IMPL-ALPHA"
+name = "Alpha kernel"
+status = "implemented"
+module = "jaxstro.registry"
+symbol = "load_registry"
+evidence_ids = ["EVID-ALPHA"]
+note = "Points at an importable jaxstro symbol so the import check has a live row."
+
+[[implementation]]
+id = "IMPL-RETIRED"
+name = "A deleted kernel"
+status = "retired"
+module = "jaxstro.no_such_module"
+symbol = "gone"

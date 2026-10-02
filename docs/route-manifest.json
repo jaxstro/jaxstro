@@ -134,6 +134,7 @@
   "50-api/randomness/stats.md": "/stats",
   "50-api/research-infrastructure/checks.md": "/checks",
   "50-api/research-infrastructure/contracts.md": "/contracts",
+  "50-api/research-infrastructure/equation-registry.md": "/equation-registry",
   "50-api/research-infrastructure/evidence.md": "/evidence",
   "50-api/research-infrastructure/jaxconfig.md": "/jaxconfig",
   "50-api/research-infrastructure/provenance.md": "/provenance-1",
