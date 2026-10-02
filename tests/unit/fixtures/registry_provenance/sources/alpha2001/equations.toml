@@ -1,0 +1,8 @@
+[[equation]]
+id = "EQ-ALPHA-001"
+name = "Alpha relation"
+representation = "algorithmic"
+equation_ref = "Eq. 1"
+emits = ["latex"]
+source_ids = ["alpha2001"]
+implementation_ids = ["IMPL-ALPHA"]

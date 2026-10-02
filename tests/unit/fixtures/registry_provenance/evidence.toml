@@ -1,0 +1,18 @@
+[[evidence]]
+id = "EVID-ALPHA"
+name = "Alpha convergence"
+status = "passing"
+equation_ids = ["EQ-ALPHA-001", "EQ-BETA-001"]
+method_ids = ["METHOD-ALPHA"]
+gates = ["tests/validation/test_alpha.py::test_order", "tests/unit/test_alpha.py"]
+criterion = "Order >= 1.9 on N = 32..256, frozen before the run."
+result = "Order 1.98 / 2.00 / 2.00."
+artifacts = ["validation/plots/alpha.png"]
+
+[[evidence]]
+id = "EVID-OLD"
+name = "A gate on deleted code"
+status = "retired"
+equation_ids = ["EQ-DERIV-001"]
+gates = ["tests/validation/test_deleted.py"]
+note = "Retired rows keep their history and are not file-checked."

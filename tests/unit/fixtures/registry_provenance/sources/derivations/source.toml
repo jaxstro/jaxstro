@@ -1,0 +1,5 @@
+[source]
+id = "derivations"
+verification = "self-verified"
+reference = "Derivations made in the consuming package"
+pdf_unavailable = "derived in this package; there is no paper"

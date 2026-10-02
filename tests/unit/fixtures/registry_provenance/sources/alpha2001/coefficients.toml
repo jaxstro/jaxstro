@@ -1,0 +1,8 @@
+[[coefficient]]
+id = "VAL-ALPHA-A"
+symbol = "a"
+name = "Alpha coefficient"
+value = 1.5
+unit = "1"
+verification = "agent-verified"
+source_ids = ["alpha2001", "beta2002"]

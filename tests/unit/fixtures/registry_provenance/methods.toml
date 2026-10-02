@@ -1,0 +1,7 @@
+[[method]]
+id = "METHOD-ALPHA"
+name = "Alpha scheme"
+status = "verified"
+formulation = "godunov-ale"
+equation_ids = ["EQ-ALPHA-001"]
+source_ids = ["alpha2001"]
