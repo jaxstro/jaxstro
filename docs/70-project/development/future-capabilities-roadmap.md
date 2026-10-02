@@ -186,3 +186,6 @@ A checkbox moves to complete only when the capability has:
 Companion evidence lives in the [](../../50-api/research-infrastructure/contracts.md),
 [](../../60-validation/evidence-index.md), [](./package-assessment-scorecard.md),
 and [](./sota-assessment.md).
+
+The planned [](./programs/unit-aware-scientific-computing.md) starts that
+quantity-adoption assessment with the existing Progenax to Informax examples.

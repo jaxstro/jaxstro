@@ -35,7 +35,7 @@ predict -> compute -> audit -> state the warranted claim
 | Linear structure and special functions | implemented | `jaxstro.numerics` linear algebra, operators, and bases | [](../../20-methods/linear-structure/linear-algebra.md) | [](../../60-validation/validation.md); rank and conditioning boundaries remain explicit |
 | Probability, keys, and resampling | implemented | `jaxstro.numerics` distributions plus `jaxstro` random helpers | [](../../20-methods/probability-sampling/random.md) | [](../../60-validation/validation.md); discrete resampling is not assigned an invented physical derivative |
 | Grids, meshes, and spatial candidates | implemented | `jaxstro.numerics` grids/meshes and `jaxstro.spatial` | [](../../20-methods/discrete-space/grids.md) | [](../../60-validation/validation.md); candidate generation is distinct from physical interaction policy |
-| Signals and spectral interpretation | planned | No `jaxstro.signal` runtime owner | [](../../20-methods/signals/signal-axes.md) | [](./future-capabilities-roadmap.md#priority-3-jaxstrosignal); these guides teach required conventions, not a shipped API |
+| Signals and spectral interpretation | planned | No `jaxstro.signal` runtime owner | [](../../20-methods/signals/signal-axes.md) | [](./future-capabilities-roadmap.md); these guides teach required conventions, not a shipped API |
 
 ## Coverage boundary
 

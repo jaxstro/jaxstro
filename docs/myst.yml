@@ -276,6 +276,10 @@ project:
         - title: Development
           children:
             - file: 70-project/development/development.md
+            - title: Programs
+              children:
+                - file: 70-project/development/programs/programs.md
+                - file: 70-project/development/programs/unit-aware-scientific-computing.md
             - file: 70-project/development/future-capabilities-roadmap.md
             - file: 70-project/development/numerical-methods-roadmap.md
             - file: 70-project/development/sota-assessment.md

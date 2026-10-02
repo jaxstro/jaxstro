@@ -91,4 +91,5 @@ a model, objective, inference procedure, or scientific conclusion.
 ## Connected ideas
 
 See [](./preprocessing.md), [](./data-plans.md), [](./auditable-training.md),
-and [](../../30-representations/parameters-state/parameters-and-transforms.md).
+[](../../30-representations/parameters-state/parameters-and-transforms.md),
+and the planned [unit-aware scientific computing program](../../70-project/development/programs/unit-aware-scientific-computing.md).

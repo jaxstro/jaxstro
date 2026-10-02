@@ -1,9 +1,61 @@
 # jaxstro — status
 
-Updated: 2026-09-24
+Updated: 2026-09-25
 
 ## Current checkpoint
 
+- 2026-09-25: The unit-aware scientific computing program page now includes
+  Phase 2 feasibility probes for affine and logarithmic AD, mixed-unit linear
+  algebra, compiled custom-AD loops, and direct JAX interoperation. Later
+  phases specify angle composition, conversion domains and dynamic contexts,
+  tangent/cotangent units, likelihood measures, compatible-unit invariance,
+  specialization and accuracy checks, and v2 dependency/artifact migration.
+  These are planned gates, not implemented capabilities or measured results.
+  The strict 189-route MyST docs gate passed after the page update. Next:
+  freeze the Phase 0 Stage 1 baseline and unit ledger before a comparison.
+- 2026-09-25: The MyST Development section now has a planned Programs
+  subsection. Its first unit-aware scientific computing program names the
+  existing Progenax to Informax kinematic-design and survey-depth examples,
+  their owners, and phases for architecture comparison, physical semantics,
+  math coverage, AD and inference contracts, ecosystem workflows, and
+  qualification. Anna selected physical-boundary Quantity checks for Phase 1
+  and a Jaxstro-owned system as the preferred end state, with Phase 2 external
+  comparisons informing the design. Anna selected a hybrid public math
+  interface: `q.math` defines tested operations, with direct JAX calls where
+  they preserve the same unit contract. Anna approved one public `Quantity`
+  container for multiplicative, affine, and logarithmic representations with
+  kind-specific conversion and operator rules. Compatible and fully specified
+  affine or logarithmic conversions are direct; physical equivalencies and
+  external calibrations require explicit context. Anna selected a verified
+  hybrid AD interface and required custom AD and dimensionless edge cases in
+  its unit and transform contracts. Anna selected photometry, dynamics, and
+  learned-surrogate workflows as independent lanes and wants Quantity adopted
+  across all ecosystem packages in their post-v1 development cycle, without
+  adding a migration gate to their first releases. Anna selected `Quantity`
+  as required for physical public inputs and outputs in v2, including
+  dimensionless physical values. She selected `Quantity` through physical
+  computations by default, with raw compiled kernels only behind justified,
+  tested conversion boundaries. The program now explains how this supports
+  scientific ML and Codex/Claude research workflows. Anna selected a clean
+  major-version cutover: each qualified package removes raw physical public
+  entry points in v2 and provides migration guidance; v1 gates stay separate.
+  Anna selected predeclared, workload-specific performance limits with trace,
+  lower, compile, warm execution, memory, and AD costs separated. Numerical
+  limits remain open. The first representative measurement is the frozen
+  Progenax to Informax Stage 1 forward, Jacobian, and Fisher workload, with
+  fixed-unit and changed-unit call sequences. The program now records
+  specialization, tracing, compiled-graph, AD, memory, and whole-workflow cost
+  controls; no Quantity performance result has been measured.
+- 2026-09-25: `jaxstro.quantity` unit identity now includes metadata, so JIT
+  distinguishes tagged radians from untagged dimensionless input. Unit
+  canonicalization preserves exact stored scales; structured serialization
+  retains custom metadata. Scaled dimensionless `log`, `exp`, and raw-scalar
+  arithmetic now use canonical values; invalid CGS scales are rejected.
+  Focused quantity checks pass. Anna approved strict angle semantics: tagged
+  angles remain tagged under untagged dimensionless scaling, while implicit
+  angle/plain mixing is rejected. The scalar-output `quantity.grad` contract
+  now returns derivative units as output/input; the quantity-aware quad replay
+  test is its first consumer.
 - 2026-09-24: cleanup and quad hardening, `main` at `3de93bc`, full gate green
   on all 8 parallel stages (run 36063431163). Task list:
   `docs/plans/2026-09-24-cleanup-ledger.md` (110 tasks: 62 done, 6 doing,
@@ -74,7 +126,7 @@ Updated: 2026-09-24
 
 ## Next
 
-next: QD-11 QAGS-style extrapolation (`GaussKronrodExtrapolated`, design approved 2026-09-24) — see `docs/plans/2026-09-24-handoff-quad-sota.md`
+next: QD-11 QAGS-style extrapolation remains queued — see `docs/plans/2026-09-24-handoff-quad-sota.md`
 blocker: fluxax `0321bcc` and progenax `cc3a0e1` are committed but unpushed, alongside other sessions' commits; Anna to decide the push
 
 1. QD-11 extrapolation, Phase 1 (`gradient="stop"`).
@@ -84,6 +136,8 @@ blocker: fluxax `0321bcc` and progenax `cc3a0e1` are committed but unpushed, alo
    performance decision is scheduled.
 4. Use the single consolidated checkpoint review to decide Phase B release
    closure without broadening the method or geometry scope.
+5. Freeze the Progenax to Informax Stage 1 example before a quantity-boundary
+   comparison; the planned program does not authorize a sibling migration.
 
 ## Scientific boundary
 

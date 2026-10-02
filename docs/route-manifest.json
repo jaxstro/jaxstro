@@ -178,6 +178,8 @@
   "70-project/development/numerical-methods-roadmap.md": "/numerical-methods-roadmap",
   "70-project/development/package-assessment-scorecard.md": "/package-assessment-scorecard",
   "70-project/development/method-coverage.md": "/method-coverage",
+  "70-project/development/programs/programs.md": "/programs",
+  "70-project/development/programs/unit-aware-scientific-computing.md": "/unit-aware-scientific-computing",
   "70-project/development/sota-assessment.md": "/sota-assessment",
   "70-project/direction/architecture.md": "/architecture",
   "70-project/direction/science-general-vision.md": "/science-general-vision",

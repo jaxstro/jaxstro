@@ -76,7 +76,9 @@ density = mass / radius**3
 Addition and subtraction require compatible dimensions. The right operand is
 converted to the left unit, and the result keeps the left unit. Multiplication,
 division, and exact powers combine unit algebra. Raw scalars may scale a quantity but
-may add only to a dimensionless quantity.
+may add only to an untagged dimensionless quantity. Angle tags must match for
+addition, selection, and conversion; scaling an angle by an untagged
+dimensionless quantity preserves its tag.
 
 ## PyTree and transform behavior
 
@@ -85,6 +87,12 @@ The value is the dynamic PyTree child. The unit is immutable auxiliary metadata,
 factors remain static. A transform is meaningful only along a fixed unit path. Unit
 selection and dimensional failures are Python boundary behavior, not differentiable
 branches.
+Raw `jax.grad` returns the input PyTree structure. For a `Quantity` input, its
+gradient therefore carries the input unit, which is generally not the physical
+derivative unit [output]/[input]. Use `q.grad` for a function of one `Quantity`
+argument returning a scalar `Quantity`; it returns a derivative tagged with
+the output unit divided by the input unit. Continue using explicit raw-array
+gradients at numerical boundaries when a unit-bearing derivative is not needed.
 
 :::{warning} Dimensionally valid does not mean physically smooth
 Clipping, thresholds, branch changes, and singular model relations can still make a

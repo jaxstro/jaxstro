@@ -69,6 +69,10 @@ design rationale is recorded in [](../../70-project/decisions/0006-build-own-qua
 A `Quantity` is a registered JAX PyTree whose dynamic child is the value. Its unit is
 static auxiliary metadata. A `Unit` is immutable and records a symbol, CGS scale,
 exact fixed-vector dimensions, and small semantic metadata such as the angle tag.
+Unit identity includes dimensions, exact stored scale, and all unit metadata. Metadata
+contains immutable JSON scalar values. The display symbol and name do not affect
+identity.
+CGS scales must be finite and positive.
 
 This split allows numeric values to trace while units remain inspectable. One
 `Quantity` array has one unit. Mixed-unit table columns and row-wise unit tags require
@@ -95,14 +99,35 @@ jaxstro.quantity
 
 ## Arithmetic and static metadata
 
-Addition and subtraction require compatible dimensions, convert the right operand to
-the left operand's unit, and preserve the left unit. Multiplication and division
-combine dimensions. Powers require integer or exact rational exponents. Raw scalars
-can scale any quantity but can only add to dimensionless quantities.
+Addition and subtraction require compatible dimensions and the same semantic tag.
+They convert the right operand to the left operand's unit and preserve the left
+unit. Multiplication and division combine dimensions. Powers require integer or
+exact rational exponents. Raw scalars can scale any quantity but can only add to
+untagged dimensionless quantities. In addition and subtraction, a raw scalar has
+the canonical dimensionless scale of 1 and is converted to the quantity's unit.
 
 Angle units are dimensionless for scale algebra but carry an angle semantic tag.
-`q.math.sin` and `q.math.cos` require that tag and convert to radians before
-evaluation. Logarithms and exponentials require dimensionless input.
+`q.math.sin` and `q.math.cos` require the tag and convert to radians before
+evaluation. `log` and `exp` require untagged dimensionless input and convert
+scaled inputs to the canonical unit before evaluation. Conversion, addition,
+subtraction, and `where` do not mix tagged angles with untagged dimensionless
+quantities. Multiplying an angle by an untagged dimensionless quantity in either
+order, or dividing an angle by one, preserves the tag and composes the scales.
+Multiplying two angles, dividing an untagged value by an angle, or raising an
+angle to a power other than one produces an untagged dimensionless unit. Products
+with dimensional units follow dimensional algebra and do not retain the angle tag.
+`to_cgs()` converts a tagged angle to radians without dropping the tag. To assign
+an angle meaning to a raw numerical value, construct `Quantity(value, q.rad)`
+explicitly; to use its numerical radian value, call `angle.to_value(q.rad)`.
+
+Raw `jax.grad` differentiates the numeric PyTree leaf. If its input is a
+`Quantity`, JAX returns the gradient in that input's PyTree structure, with the
+input unit attached. That unit is not generally the physical derivative unit.
+Use `q.grad` for a function of one `Quantity` argument that returns a scalar
+`Quantity`. It returns the JAX derivative with unit [f]/[x] for output unit [f]
+and input unit [x]. For example, `q.grad(lambda x: x**3)(3.0 * q.cm)` returns
+`27 cm^2`. The wrapper composes with `jit` and `vmap`; multi-argument functions,
+auxiliary output, and Jacobian or Hessian units are outside this contract.
 
 :::{warning} Static metadata creates a compilation boundary
 A JIT-compiled function specializes to unit metadata. Passing the same numeric shape
@@ -135,3 +160,6 @@ The current evidence verifies implementation behavior, compatibility, serializat
 and JAX transformations in Jaxstro. Ecosystem adoption requires separate downstream
 parity, performance, serialization, ergonomics, and migration-cost evidence. See
 [](#eq-unit-system-scale) for the scale relation both surfaces must preserve.
+
+The planned [unit-aware scientific computing program](../../70-project/development/programs/unit-aware-scientific-computing.md)
+uses existing Progenax to Informax examples to collect that downstream evidence.
