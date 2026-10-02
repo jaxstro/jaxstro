@@ -231,3 +231,6 @@ docs/10-theory/figures/*.png
 
 # Node tooling is installed reproducibly from package-lock.json.
 node_modules/
+
+# zvec-grep local retrieval index (machine-local cache, never tracked).
+.zvec-grep/
