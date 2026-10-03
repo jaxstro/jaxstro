@@ -40,7 +40,9 @@ def regrid_front(n: int = 32):
     total = _front_totals(edges)
     first = (np.asarray(edges), np.asarray(total / dm))
     xi = edges
-    for _ in range(REGRID_PASSES):
+    for _ in range(
+        REGRID_PASSES
+    ):  # host-loop: 4 sequential regrids, each a whole-array call
         q = total / dm
         jump = jnp.abs(jnp.diff(q))
         split_score = jnp.concatenate(
@@ -73,7 +75,7 @@ def split_error_ladder():
     monotone ``q(m) = exp(2m)``, piecewise-constant against limited-linear."""
     enable_high_precision()
     rows = []
-    for n in LADDER:
+    for n in LADDER:  # host-loop: resolution ladder, one shape per N
         m = jnp.linspace(0.0, 1.0, n + 1)
         dm = jnp.diff(m)
         total = 0.5 * jnp.diff(jnp.exp(2.0 * m))
@@ -81,7 +83,10 @@ def split_error_ladder():
         exact = 0.5 * (jnp.exp(2.0 * mid) - jnp.exp(2.0 * m[:-1]))
         plan = lr.plan_from_actions(jnp.full(n, lr.SPLIT), capacity=2 * n)
         errs = []
-        for slope in (None, lr.limited_slopes(total / dm, dm)):
+        for slope in (
+            None,
+            lr.limited_slopes(total / dm, dm),
+        ):  # host-loop: two reconstructions compared
             _, _, new = lr.apply_plan(plan, m, dm, total, slope)
             rel = jnp.abs(new[0::2] - exact) / exact
             errs.append(float(jnp.max(rel[2:-2])))

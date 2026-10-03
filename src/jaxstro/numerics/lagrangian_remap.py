@@ -327,20 +327,16 @@ def _parts(total, slope, dm, k):
     ``Q/k + s dm^2 (2j + 1 - k) / (2 k^2)`` (``k = 2``, ``j = 0``: ``Q/2 - s dm^2/8``). The
     last sub-cell is the parent minus the others, so they sum to the parent to rounding.
     """
-    expand = (slice(None),) + (None,) * (total.ndim - 1)
-    parts = []
-    for j in range(k - 1):
-        share = total / k
-        if slope is not None:
-            share = share + slope * (dm * dm)[expand] * (
-                (2 * j + 1 - k) / (2.0 * k * k)
-            )
-        parts.append(share)
-    rest = total
-    for share in parts:
-        rest = rest - share
-    parts.append(rest)
-    stacked = jnp.stack(parts, axis=1)
+    tail = (None,) * (total.ndim - 1)
+    j = jnp.arange(k - 1, dtype=total.dtype)
+    shares = jnp.broadcast_to(
+        (total / k)[:, None], (total.shape[0], k - 1) + total.shape[1:]
+    )
+    if slope is not None:
+        coeff = ((2.0 * j + 1.0 - k) / (2.0 * k * k))[(None, slice(None)) + tail]
+        shares = shares + (slope * (dm * dm)[(slice(None),) + tail])[:, None] * coeff
+    rest = total - jnp.sum(shares, axis=1)
+    stacked = jnp.concatenate([shares, rest[:, None]], axis=1)
     return stacked.reshape((k * total.shape[0],) + total.shape[1:])
 
 
@@ -351,16 +347,17 @@ def _run_sum(plan, total, parts):
     k = plan.subcells
     expand = (slice(None),) + (None,) * (total.ndim - 1)
     aligned = (plan.start % k == 0) & (plan.length % k == 0)
-    whole = jnp.zeros((plan.capacity,) + total.shape[1:], total.dtype)
-    part = jnp.zeros_like(whole)
-    first_cell = plan.start // k
-    for j in range(plan.max_length):
-        use = (j < plan.length)[expand]
-        part = part + jnp.where(use, parts[jnp.minimum(plan.start + j, k * n - 1)], 0.0)
-    for c in range(-(-plan.max_length // k)):
-        use = (k * c < plan.length)[expand]
-        whole = whole + jnp.where(use, total[jnp.minimum(first_cell + c, n - 1)], 0.0)
-    # The first whole term is the cell itself, so a one-cell run is exactly its old value.
+    tail = (None,) * (total.ndim - 1)
+    # Sub-cell terms: slots x max_length, masked beyond each run's length.
+    j = jnp.arange(plan.max_length)
+    sub = jnp.minimum(plan.start[:, None] + j[None, :], k * n - 1)
+    use = (j[None, :] < plan.length[:, None])[(slice(None), slice(None)) + tail]
+    part = jnp.sum(jnp.where(use, parts[sub], 0.0), axis=1)
+    # Whole-cell terms for aligned runs; adding zeros is exact, so a one-cell run is a copy.
+    c = jnp.arange(-(-plan.max_length // k))
+    cell = jnp.minimum((plan.start // k)[:, None] + c[None, :], n - 1)
+    use_c = ((k * c)[None, :] < plan.length[:, None])[(slice(None), slice(None)) + tail]
+    whole = jnp.sum(jnp.where(use_c, total[cell], 0.0), axis=1)
     return jnp.where(aligned[expand], whole, part)
 
 
