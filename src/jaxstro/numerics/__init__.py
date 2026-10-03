@@ -38,6 +38,8 @@ splines
     JAX-native 1D B-spline basis and evaluation helpers.
 checks
     Numerical validation helpers (finiteness, monotonicity, ranges).
+block_tridiagonal
+    Block tridiagonal solves (block Thomas) with an implicit-adjoint VJP.
 linear_algebra
     Small linear algebra convenience utilities.
 meshes
