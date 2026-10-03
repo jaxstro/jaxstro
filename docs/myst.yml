@@ -113,6 +113,7 @@ project:
           children:
             - file: 20-methods/discrete-space/grids.md
             - file: 20-methods/discrete-space/meshes.md
+            - file: 20-methods/discrete-space/lagrangian-remap.md
             - file: 20-methods/discrete-space/spatial.md
         - title: Signals as sampled evidence
           children:
@@ -229,6 +230,7 @@ project:
           children:
             - file: 50-api/discrete-space/grids.md
             - file: 50-api/discrete-space/meshes.md
+            - file: 50-api/discrete-space/lagrangian-remap.md
             - file: 50-api/discrete-space/spatial.md
         - title: Physical representations
           children:

@@ -42,6 +42,8 @@ linear_algebra
     Small linear algebra convenience utilities.
 meshes
     Structured 1D mesh and finite-volume helpers.
+lagrangian_remap
+    Split and merge of cells on a 1D Lagrangian (mass-coordinate) mesh.
 optimization
     Loss, line-search, and convergence helpers.
 ode
@@ -64,6 +66,7 @@ from . import (
     integration,
     interpolation,
     kepler,
+    lagrangian_remap,
     linear_algebra,
     meshes,
     ode,
@@ -420,6 +423,7 @@ __all__ = [
     "open_uniform_knots",
     "tensor_product_design_matrix",
     "checks",
+    "lagrangian_remap",
     "linear_algebra",
     "meshes",
     "optimization",

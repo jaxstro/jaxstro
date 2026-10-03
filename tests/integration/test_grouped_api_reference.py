@@ -39,6 +39,7 @@ API_OWNERS = {
     "randomness/stats.md": "jaxstro.numerics.stats",
     "discrete-space/grids.md": "jaxstro.numerics.grids",
     "discrete-space/meshes.md": "jaxstro.numerics.meshes",
+    "discrete-space/lagrangian-remap.md": "jaxstro.numerics.lagrangian_remap",
     "discrete-space/spatial.md": "jaxstro.spatial",
     "physical-representations/constants-api.md": "jaxstro.constants",
     "physical-representations/units.md": "jaxstro.units",
@@ -303,7 +304,8 @@ def test_random_reference_documents_zero_weight_and_tracing_boundaries() -> None
 def test_generated_manifest_counts_the_current_api_surface() -> None:
     routes = json.loads((DOCS / "route-manifest.json").read_text(encoding="utf-8"))
 
-    # + composition (2026-09-23, hydrax F13), + registry (2026-10-02)
-    assert len(API_OWNERS) == 40
+    # + composition (2026-09-23, hydrax F13), + registry (2026-10-02),
+    # + lagrangian_remap (2026-10-03)
+    assert len(API_OWNERS) == 41
     assert "jaxstro.quad" in API_OWNERS.values()
     assert all(f"50-api/{page}" in routes for page in API_OWNERS)

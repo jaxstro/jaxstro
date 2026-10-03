@@ -1,9 +1,18 @@
 # jaxstro — status
 
-Updated: 2026-09-25
+Updated: 2026-10-03
 
 ## Current checkpoint
 
+- 2026-10-03: `jaxstro.numerics.lagrangian_remap` added: split and merge of cells on a
+  1D mass-coordinate mesh, shared by hydrax (shock refinement) and stellax (MESA's mesh
+  plan, R2/R3 of its split/merge design). Plans are integer half-cell runs with static
+  capacity; the transfer copies untouched cells bitwise and conserves to 1e-14; a
+  fixed-count planner keeps N. Measured on `q = exp(2m)`: split order 1.001
+  (piecewise constant) and 3.001 (MC-limited linear), both as derived; AD vs central FD
+  3.3e-13 at a fixed plan. Method and API pages and one figure added; the strict docs
+  gate passes (192 routes). Two docs tests fail on main independent of this change:
+  the Programs TOC depth and a U+2014 in the unit-aware program page.
 - 2026-09-25: The unit-aware scientific computing program page now includes
   Phase 2 feasibility probes for affine and logarithmic AD, mixed-unit linear
   algebra, compiled custom-AD loops, and direct JAX interoperation. Later
