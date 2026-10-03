@@ -47,7 +47,11 @@ half-mass points, which is MESA's rule (at most two subcells per old cell).
 **Plan.** A `RemapPlan` lists, for each new slot, the first half cell (`start`) and the
 number of half cells (`length`): a kept cell is a run of 2 starting on an even index, a
 split child is a run of 1, a merge of two whole cells is a run of 4. Runs tile the old
-mesh in order. The plan is integer data with a static capacity.
+mesh in order. The plan is integer data with a static capacity. A plan built with
+`subcells=4` cuts every old cell into four equal-mass parts instead, so a half cell can be
+halved again; MESA's surface pass needs this once in about 230,000 faces of a 1 Msun
+pre-main-sequence to TAMS run (stellax, 2026-10-03). Sub-cell $j$ of $k$ holds
+$Q/k + s\,\Delta m^2 (2j + 1 - k)/(2k^2)$, which is the formula below for $k = 2$.
 
 ## Derive the method
 
