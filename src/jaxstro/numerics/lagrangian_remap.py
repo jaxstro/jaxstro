@@ -10,7 +10,9 @@ MESA's mesh plan) supply the criterion and decide which fields are extensive.
 numbered ``2i`` and ``2i + 1``. A new cell is a contiguous run of half cells, so its
 boundaries lie on old faces or on old half-mass points, which is MESA's rule
 (``max_num_subcells = 2``). The run is the plan; the transfer sums the contents of the half
-cells it covers. Cells are ordered centre-out (index 0 is the innermost cell) and the mesh
+cells it covers. A plan may instead use ``subcells = 4`` equal-mass parts per old cell,
+which lets a half cell be halved again (MESA's surface pass does this). Cells are ordered
+centre-out (index 0 is the innermost cell) and the mesh
 carries all ``n + 1`` faces, the inner one included.
 
 1. **Plan.** A :class:`RemapPlan` gives, for each new slot, the first half cell and the
@@ -81,15 +83,20 @@ MERGE_RIGHT = 2
 class RemapPlan(eqx.Module):
     """The integer record of one regrid: which half cells each new cell is made of.
 
-    Old cell ``i`` consists of half cells ``2i`` (inner) and ``2i + 1`` (outer).
+    Old cell ``i`` consists of sub-cells ``k i .. k i + k - 1`` of equal mass, with
+    ``k = subcells`` (2 by default: half cells ``2i`` inner and ``2i + 1`` outer).
 
     Attributes:
-        start: first half cell of each new slot.
-        length: number of half cells in each new slot; ``0`` marks an empty slot.
+        start: first sub-cell of each new slot.
+        length: number of sub-cells in each new slot; ``0`` marks an empty slot.
         n_active: number of new cells, including any that did not fit the capacity, so a
             caller detects an overflow by ``n_active > capacity``.
-        max_length: static bound on ``length`` (4 allows merges of two whole cells and a
-            half cell joined to its neighbour).
+        max_length: static bound on ``length`` (``2 * subcells`` allows a merge of two
+            whole cells).
+        subcells: static number of equal-mass sub-cells per old cell. 2 is MESA's
+            ``max_num_subcells``; 4 lets a half cell be halved again, which MESA's surface
+            pass does (stellax, 2026-10-03: one face in 230,000 over a 1 Msun PMS-TAMS run,
+            at the quarter point of the surface cell).
 
     Active slots come first and tile the old mesh in order:
     ``start[k + 1] = start[k] + length[k]``, ``start[0] = 0``. :meth:`is_valid` checks it.
@@ -101,6 +108,7 @@ class RemapPlan(eqx.Module):
     length: Int[Array, " capacity"]
     n_active: Int[Array, ""]
     max_length: int = eqx.field(static=True, default=4)
+    subcells: int = eqx.field(static=True, default=2)
 
     @property
     def capacity(self) -> int:
@@ -109,18 +117,21 @@ class RemapPlan(eqx.Module):
     @property
     def is_copy(self) -> Bool[Array, " capacity"]:
         """Slots that are one whole old cell, transferred bitwise."""
-        return (self.length == 2) & (self.start % 2 == 0)
+        k = self.subcells
+        return (self.length == k) & (self.start % k == 0)
 
     @property
     def is_split(self) -> Bool[Array, " capacity"]:
-        """Slots that are one half cell: a child of a split."""
-        return self.length == 1
+        """Slots that are part of one old cell: a child of a split."""
+        first = self.start // self.subcells
+        last = (self.start + self.length - 1) // self.subcells
+        return (self.length > 0) & (self.length < self.subcells) & (last == first)
 
     @property
     def is_merge(self) -> Bool[Array, " capacity"]:
         """Slots that contain parts of more than one old cell."""
-        first = self.start // 2
-        last = (self.start + self.length - 1) // 2
+        first = self.start // self.subcells
+        last = (self.start + self.length - 1) // self.subcells
         return (self.length > 0) & (last > first)
 
     def is_valid(self, n_old: int) -> Bool[Array, ""]:
@@ -130,7 +141,7 @@ class RemapPlan(eqx.Module):
         ordered = jnp.all(active[:-1] | ~active[1:])
         end = self.start + self.length
         chained = jnp.all(jnp.where(active[1:], self.start[1:] == end[:-1], True))
-        total = jnp.sum(self.length) == 2 * n_old
+        total = jnp.sum(self.length) == self.subcells * n_old
         bounded = jnp.all(self.length <= self.max_length)
         fits = self.n_active == count
         return ordered & chained & total & bounded & fits & (self.start[0] == 0)
@@ -309,33 +320,45 @@ def limited_slopes(
     return jnp.concatenate([zero, interior, zero], axis=0)
 
 
-def _halves(total, slope, dm):
-    """Inner and outer half-cell contents of one extensive field, interleaved to ``2n``."""
-    if slope is None:
-        inner = 0.5 * total
-    else:
-        expand = (slice(None),) + (None,) * (total.ndim - 1)
-        inner = 0.5 * total - 0.125 * slope * (dm * dm)[expand]
-    pair = jnp.stack([inner, total - inner], axis=1)
-    return pair.reshape((2 * total.shape[0],) + total.shape[1:])
+def _parts(total, slope, dm, k):
+    """The ``k`` equal-mass sub-cell contents of one extensive field, interleaved to ``kn``.
 
-
-def _run_sum(plan, total, halves):
-    """Each slot's content: a sum of whole old cells when its run is cell-aligned (so one
-    cell is a bitwise gather), otherwise a sum of half cells."""
-    n = total.shape[0]
+    Under a linear profile in mass, sub-cell ``j`` of ``k`` holds
+    ``Q/k + s dm^2 (2j + 1 - k) / (2 k^2)`` (``k = 2``, ``j = 0``: ``Q/2 - s dm^2/8``). The
+    last sub-cell is the parent minus the others, so they sum to the parent to rounding.
+    """
     expand = (slice(None),) + (None,) * (total.ndim - 1)
-    aligned = (plan.start % 2 == 0) & (plan.length % 2 == 0)
+    parts = []
+    for j in range(k - 1):
+        share = total / k
+        if slope is not None:
+            share = share + slope * (dm * dm)[expand] * (
+                (2 * j + 1 - k) / (2.0 * k * k)
+            )
+        parts.append(share)
+    rest = total
+    for share in parts:
+        rest = rest - share
+    parts.append(rest)
+    stacked = jnp.stack(parts, axis=1)
+    return stacked.reshape((k * total.shape[0],) + total.shape[1:])
+
+
+def _run_sum(plan, total, parts):
+    """Each slot's content: a sum of whole old cells when its run is cell-aligned (so one
+    cell is a bitwise gather), otherwise a sum of sub-cells."""
+    n = total.shape[0]
+    k = plan.subcells
+    expand = (slice(None),) + (None,) * (total.ndim - 1)
+    aligned = (plan.start % k == 0) & (plan.length % k == 0)
     whole = jnp.zeros((plan.capacity,) + total.shape[1:], total.dtype)
     part = jnp.zeros_like(whole)
-    first_cell = plan.start // 2
+    first_cell = plan.start // k
     for j in range(plan.max_length):
         use = (j < plan.length)[expand]
-        part = part + jnp.where(
-            use, halves[jnp.minimum(plan.start + j, 2 * n - 1)], 0.0
-        )
-    for c in range(plan.max_length // 2):
-        use = (2 * c < plan.length)[expand]
+        part = part + jnp.where(use, parts[jnp.minimum(plan.start + j, k * n - 1)], 0.0)
+    for c in range(-(-plan.max_length // k)):
+        use = (k * c < plan.length)[expand]
         whole = whole + jnp.where(use, total[jnp.minimum(first_cell + c, n - 1)], 0.0)
     # The first whole term is the cell itself, so a one-cell run is exactly its old value.
     return jnp.where(aligned[expand], whole, part)
@@ -363,7 +386,7 @@ def apply_plan(
             (leaf / dm) in mass, or ``None`` per leaf. :func:`limited_slopes` gives bounded
             ones.
         volume_slope: slope in mass of ``diff(xi_face) / dm``; ``None`` cuts the extent in
-            half.
+            equal parts.
 
     Returns:
         ``(xi_face_new, dm_new, extensive_new)`` with ``plan.capacity`` cells. Empty slots
@@ -371,21 +394,25 @@ def apply_plan(
     """
     xi_face = jnp.asarray(xi_face)
     dm = jnp.asarray(dm)
-    dm_new = _run_sum(plan, dm, _halves(dm, None, dm))
+    k = plan.subcells
+    dm_new = _run_sum(plan, dm, _parts(dm, None, dm, k))
 
     def move(slope, total):
-        return _run_sum(plan, total, _halves(total, slope, dm))
+        return _run_sum(plan, total, _parts(total, slope, dm, k))
 
     if slopes is None:
         new_fields = jax.tree.map(lambda q: move(None, q), extensive)
     else:
         new_fields = jax.tree.map(move, slopes, extensive, is_leaf=lambda x: x is None)
 
-    # Faces at half resolution: old faces at even indices, half-mass points at odd ones.
-    width = jnp.diff(xi_face)
-    inner = _halves(width, volume_slope, dm)[0::2]
-    half_faces = jnp.stack([xi_face[:-1], xi_face[:-1] + inner], axis=1).reshape(-1)
-    half_faces = jnp.concatenate([half_faces, xi_face[-1:]])
-    end = jnp.minimum(plan.start + plan.length, 2 * dm.shape[0])
-    right = jnp.where(plan.length > 0, half_faces[end], xi_face[-1])
+    # Faces at sub-cell resolution: old faces at multiples of k, sub-cell boundaries between.
+    n = dm.shape[0]
+    extent = _parts(jnp.diff(xi_face), volume_slope, dm, k).reshape(n, k)
+    inner = jnp.cumsum(extent[:, :-1], axis=1)
+    sub_faces = jnp.concatenate(
+        [xi_face[:-1, None], xi_face[:-1, None] + inner], axis=1
+    )
+    sub_faces = jnp.concatenate([sub_faces.reshape(-1), xi_face[-1:]])
+    end = jnp.minimum(plan.start + plan.length, k * n)
+    right = jnp.where(plan.length > 0, sub_faces[end], xi_face[-1])
     return jnp.concatenate([xi_face[:1], right]), dm_new, new_fields

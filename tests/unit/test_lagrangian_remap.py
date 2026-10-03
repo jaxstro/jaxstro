@@ -182,3 +182,37 @@ def test_plan_and_transfer_trace_under_jit_and_vmap():
 def test_planner_refuses_an_impossible_change_bound(bad):
     with pytest.raises(ValueError):
         lr.fixed_count_plan(jnp.zeros(12), jnp.zeros(11), 1.0, 1.0, max_changes=bad)
+
+
+def test_quarter_subcells_express_a_halved_half_cell():
+    """MESA's surface pass can halve a half cell (stellax, 2026-10-03). With
+    ``subcells = 4``: a quarter split of the outer cell, against exact integrals of a
+    specific value linear in mass, and equal shares when ``slopes`` is None."""
+    n = 4
+    dm = jnp.array([1.0, 2.0, 0.5, 1.5])
+    m = jnp.concatenate([jnp.zeros(1), jnp.cumsum(dm)])
+    a, b = 0.7, 0.3  # q(m) = a + b m, exact for the linear rule
+    total = a * dm + 0.5 * b * (m[1:] ** 2 - m[:-1] ** 2)
+    xi_face = m * 2.0  # unit specific extent 2
+    # runs: cells 0-2 whole, then the outer cell as [half, quarter, quarter]
+    plan = lr.RemapPlan(
+        start=jnp.array([0, 4, 8, 12, 14, 15]),
+        length=jnp.array([4, 4, 4, 2, 1, 1]),
+        n_active=jnp.array(6),
+        max_length=8,
+        subcells=4,
+    )
+    assert bool(plan.is_valid(n))
+    np.testing.assert_array_equal(plan.is_copy, [1, 1, 1, 0, 0, 0])
+    np.testing.assert_array_equal(plan.is_split, [0, 0, 0, 1, 1, 1])
+    q = total / dm
+    slope = jnp.full(n, b)
+    xi_new, dm_new, new = lr.apply_plan(plan, xi_face, dm, total, slope)
+    edges = m[3] + dm[3] * jnp.array([0.0, 0.5, 0.75, 1.0])
+    exact = a * jnp.diff(edges) + 0.5 * b * jnp.diff(edges**2)
+    np.testing.assert_allclose(new[3:], exact, rtol=1e-15)
+    np.testing.assert_allclose(dm_new[3:], jnp.diff(edges), rtol=0, atol=0)
+    np.testing.assert_allclose(xi_new[4:], 2.0 * edges[1:], rtol=1e-15)
+    assert jnp.array_equal(new[:3], total[:3])
+    _, _, flat = lr.apply_plan(plan, xi_face, dm, total)
+    np.testing.assert_allclose(flat[3:] / dm_new[3:], q[3], rtol=1e-15)

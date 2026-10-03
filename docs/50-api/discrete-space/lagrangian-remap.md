@@ -16,7 +16,7 @@ cells bitwise. No refinement criterion and no physics.
 
 ## Public records and callables
 
-`RemapPlan` (`start`, `length`, `n_active`, static `max_length`; `is_copy`,
+`RemapPlan` (`start`, `length`, `n_active`, static `max_length` and `subcells`; `is_copy`,
 `is_split`, `is_merge`, `is_valid`), `plan_from_actions`, `fixed_count_plan`,
 `limited_slopes`, `apply_plan`, and the action codes `KEEP`, `SPLIT`, `MERGE_RIGHT`.
 
@@ -25,7 +25,8 @@ cells bitwise. No refinement criterion and no physics.
 `xi_face` has shape `(n + 1,)`, centre-out, in a coordinate linear in volume; `dm`
 has shape `(n,)`; every leaf of `extensive` has leading axis `n` and is a cell total.
 Plans have a static capacity; `fixed_count_plan` returns capacity `n`. Old cell `i`
-is half cells `2i` and `2i + 1`.
+is sub-cells `k i` to `k i + k - 1` of equal mass, `k = subcells` (2 by default; 4 lets a
+half cell be halved again, with `max_length = 8`).
 
 ## JAX transforms and AD classification
 
