@@ -5,6 +5,7 @@ from __future__ import annotations
 from .architecture import build_jaxstro_foundation
 from .bsplines import build_bspline_local_support
 from .interpolation import build_interpolation_shape_contracts
+from .lagrangian_remap import build_lagrangian_remap_contracts
 from .linear_algebra import build_linear_algebra_contracts
 from .regular_grid import build_regular_grid_contracts
 from .rootfinding import (
@@ -100,6 +101,20 @@ FIGURES: dict[str, FigureSpec] = {
                 "implicit-function derivative answer different questions."
             ),
             tags=("rootfinding", "autodiff", "pedagogy"),
+            export=ExportSpec(width=9.4, height=4.3),
+        ),
+        FigureSpec(
+            name="lagrangian-remap-contracts",
+            builder=build_lagrangian_remap_contracts,
+            stem="lagrangian-remap-contracts",
+            page="20-methods/discrete-space/lagrangian-remap.md",
+            site_path="docs/20-methods/figures/lagrangian-remap-contracts.webp",
+            seed=0,
+            caption=(
+                "Fixed-count split/merge concentrating cells at a steep front, and the "
+                "measured order of the half-mass split."
+            ),
+            tags=("meshes", "remap", "lagrangian"),
             export=ExportSpec(width=9.4, height=4.3),
         ),
         FigureSpec(

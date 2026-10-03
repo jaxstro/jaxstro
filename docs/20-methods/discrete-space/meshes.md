@@ -150,7 +150,8 @@ discrete divergence telescopes exactly.
 
 ## Where the claim stops
 
-This module does not own multidimensional connectivity, adaptive meshes,
+This module does not own multidimensional connectivity, adaptive meshes
+(split and merge on a Lagrangian mesh is [](./lagrangian-remap.md)),
 curvilinear geometry, reconstruction, Riemann solvers, or physical boundary
 conditions. Remapping preserves totals only over the shared domain and assumes
 piecewise-constant old cell averages. Integer neighbors are not differentiable.

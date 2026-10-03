@@ -33,7 +33,7 @@ FAMILIES = {
         "random",
         "sampling",
     ),
-    "discrete-space": ("grids", "meshes", "spatial"),
+    "discrete-space": ("grids", "meshes", "lagrangian-remap", "spatial"),
 }
 
 FAMILY_TITLES = {
@@ -85,7 +85,7 @@ TOC_FAMILIES = {
         "sampling",
         "quasi-monte-carlo",
     ),
-    "discrete-space": ("grids", "meshes", "spatial"),
+    "discrete-space": ("grids", "meshes", "lagrangian-remap", "spatial"),
     "signals": (
         "signal-axes",
         "windows-spectral-leakage",
@@ -121,6 +121,7 @@ ROUTES = {
     "probability-sampling/sampling.md": "/sampling",
     "discrete-space/grids.md": "/grids",
     "discrete-space/meshes.md": "/meshes",
+    "discrete-space/lagrangian-remap.md": "/lagrangian-remap",
     "discrete-space/spatial.md": "/spatial",
 }
 
@@ -129,7 +130,7 @@ def test_current_method_pages_exist_once_in_the_toc_with_stable_routes() -> None
     myst = (DOCS / "myst.yml").read_text(encoding="utf-8")
     manifest = json.loads((DOCS / "route-manifest.json").read_text(encoding="utf-8"))
 
-    assert sum(len(pages) for pages in FAMILIES.values()) == 20
+    assert sum(len(pages) for pages in FAMILIES.values()) == 21
     for family, pages in FAMILIES.items():
         for page in pages:
             relative = f"{family}/{page}.md"
