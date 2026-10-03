@@ -45,13 +45,15 @@ run that regrids records the plans in the forward pass and replays them unchange
 plan is the frozen hierarchy). :func:`apply_plan` is then a fixed composition of gathers,
 sums and products, smooth in the faces, masses and fields. :func:`limited_slopes` is
 piecewise smooth; its derivative is that of the selected limiter branch.
+:func:`smooth_slopes` has no branch, so the transfer is smooth in the state everywhere.
 
 **Provenance.** The split/merge structure (cuts at old faces and half-mass points, merges of
 whole cells, exact copy of cells that need no change) follows the description of MESA's
 mesh adjustment in Paxton et al. (2011, ApJS 192, 3) and the stellax design note
 ``stellax/docs/plans/2026-10-02-mesh-split-merge-design.md`` section 5. No MESA source code
 was used. The half-cell share is derived above; the limiter is the monotonised central
-limiter of van Leer (1977, J. Comput. Phys. 23, 276).
+limiter of van Leer (1977, J. Comput. Phys. 23, 276); the smooth limiter is eq (37) of
+van Albada, van Leer & Roberts (1982, A&A 108, 76).
 """
 
 from __future__ import annotations
@@ -71,6 +73,8 @@ __all__ = [
     "plan_from_actions",
     "fixed_count_plan",
     "limited_slopes",
+    "smooth_slopes",
+    "face_values",
     "apply_plan",
 ]
 
@@ -318,6 +322,92 @@ def limited_slopes(
         interior = jnp.where(same, jnp.sign(s_c) * mag, 0.0)
     zero = jnp.zeros_like(q[:1])
     return jnp.concatenate([zero, interior, zero], axis=0)
+
+
+def smooth_slopes(
+    specific: Float[Array, " n ..."],
+    dm: Float[Array, " n"],
+    k_eps: float,
+    relative: bool = False,
+    sum_to_zero: bool = False,
+) -> Float[Array, " n ..."]:
+    r"""Slopes of a specific value in mass from van Albada's smooth limiter.
+
+    Van Albada, van Leer & Roberts (1982, A&A 108, 76) eq (37) averages the two one-sided
+    differences of a cell as
+
+    .. math:: \mathrm{ave}(a, b) = \frac{(b^2 + \epsilon^2)\,a + (a^2 + \epsilon^2)\,b}
+              {a^2 + b^2 + 2\epsilon^2},
+
+    a convex combination of ``a`` and ``b`` (weights ``b^2 + eps^2`` and ``a^2 + eps^2``), so
+    ``|ave| <= max(|a|, |b|)``. It is smooth for ``eps > 0``: no selection, hence no branch to
+    flip at near-equal differences. Where both differences are small against ``eps`` it tends
+    to their mean, where one is much smaller it tends to that one, and at an extremum
+    (``a b < 0``) it returns a small slope of the smaller one's sign rather than zero, so a
+    child can exceed its neighbours by a fraction of the smaller difference (not TVD).
+
+    ``a`` and ``b`` are the changes across the cell's own mass from the one-sided
+    centre-to-centre slopes, made dimensionless before eq (37):
+
+    - ``relative``: divided by the mean of the two cells each difference spans, eq (31.3) of
+      the same paper, for positive values. Each relative difference is below 2 and the factor
+      ``dm_i / h`` below 2, so ``|ave| < 4`` and the half-cell children
+      ``q_i (1 -/+ ave / 4)`` stay positive for any neighbour mass ratio.
+    - otherwise: divided by the root mean square of the three cells, for signed values.
+
+    ``eps^2 = (k_eps dm_i / sum(dm))^3``: of order (cell size)^3 as the paper prescribes,
+    with the cell size as a fraction of the total mass. ``k_eps`` is the caller's closure.
+
+    ``sum_to_zero`` (relative, trailing axis of fractions summing to one): the slopes are
+    projected to sum to zero, ``s_j - q_j sum_l s_l``, so the children of a split still sum
+    to one while each component is conserved exactly. The projection can push a trace
+    component's child below zero where the components' relative slopes differ by more than
+    4; the caller owns the bound at zero.
+
+    The first and last cells take zero slope. Returns slopes in mass, the ``slopes`` input
+    of :func:`apply_plan`.
+    """
+    q = jnp.asarray(specific)
+    dm = jnp.asarray(dm)
+    expand = (slice(None),) + (None,) * (q.ndim - 1)
+    h = (0.5 * (dm[1:] + dm[:-1]))[expand]
+    w = dm[1:-1][expand]
+    diff = q[1:] - q[:-1]
+    if relative:
+        d = diff / (0.5 * (q[1:] + q[:-1]))
+        a, b = d[:-1] * w / h[:-1], d[1:] * w / h[1:]
+        scale = q[1:-1]
+    else:
+        scale = jnp.sqrt((q[:-2] ** 2 + q[1:-1] ** 2 + q[2:] ** 2) / 3.0)
+        a, b = diff[:-1] * w / h[:-1] / scale, diff[1:] * w / h[1:] / scale
+    eps2 = ((k_eps * dm[1:-1] / jnp.sum(dm)) ** 3)[expand]
+    ave = ((b * b + eps2) * a + (a * a + eps2) * b) / (a * a + b * b + 2.0 * eps2)
+    interior = scale * ave / w
+    zero = jnp.zeros_like(q[:1])
+    s = jnp.concatenate([zero, interior, zero], axis=0)
+    if sum_to_zero:
+        frac = q / jnp.sum(q, axis=-1, keepdims=True)
+        s = s - frac * jnp.sum(s, axis=-1, keepdims=True)
+    return s
+
+
+def face_values(plan: RemapPlan, face: Float[Array, " n_plus_1"]) -> Float[Array, " capacity_plus_1"]:
+    """A face-centred field on the new faces, linear in mass between the parent's faces.
+
+    ``face`` holds all ``n + 1`` old faces, centre-out. A new face on an old face takes that
+    face's value exactly; one at sub-cell point ``j`` of old cell ``i`` takes
+    ``f_i + (j / k)(f_{i+1} - f_i)`` (sub-cells are equal in mass). Empty slots repeat the
+    outer face, as in :func:`apply_plan`.
+    """
+    face = jnp.asarray(face)
+    n = face.shape[0] - 1
+    k = plan.subcells
+    end = jnp.minimum(plan.start + plan.length, k * n)
+    i, j = end // k, end % k
+    lo = face[i]
+    hi = face[jnp.minimum(i + 1, n)]
+    right = jnp.where(plan.length > 0, lo + (j / k) * (hi - lo), face[-1])
+    return jnp.concatenate([face[:1], right])
 
 
 def _parts(total, slope, dm, k):
