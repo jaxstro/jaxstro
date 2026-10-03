@@ -327,7 +327,7 @@ def limited_slopes(
 def smooth_slopes(
     specific: Float[Array, " n ..."],
     dm: Float[Array, " n"],
-    k_eps: float,
+    eps2: float | Float[Array, ""],
     relative: bool = False,
     sum_to_zero: bool = False,
 ) -> Float[Array, " n ..."]:
@@ -355,8 +355,12 @@ def smooth_slopes(
       ``q_i (1 -/+ ave / 4)`` stay positive for any neighbour mass ratio.
     - otherwise: divided by the root mean square of the three cells, for signed values.
 
-    ``eps^2 = (k_eps dm_i / sum(dm))^3``: of order (cell size)^3 as the paper prescribes,
-    with the cell size as a fraction of the total mass. ``k_eps`` is the caller's closure.
+    ``eps2`` is the caller's closure. The paper takes it of order Delta^3, with Delta the
+    resolution (cell size over the local scale length of the solution): between the Delta^4 of
+    the differences at a smooth extremum, where the limiter must let the central slope through,
+    and the Delta^2 of the differences on a smooth gradient. On an adaptive mesh Delta is near
+    the mesh's per-cell resolution in every cell, whatever the cell's mass, so ``eps2`` is
+    usually one number rather than a function of ``dm``.
 
     ``sum_to_zero`` (relative, trailing axis of fractions summing to one): the slopes are
     projected to sum to zero, ``s_j - q_j sum_l s_l``, so the children of a split still sum
@@ -380,7 +384,6 @@ def smooth_slopes(
     else:
         scale = jnp.sqrt((q[:-2] ** 2 + q[1:-1] ** 2 + q[2:] ** 2) / 3.0)
         a, b = diff[:-1] * w / h[:-1] / scale, diff[1:] * w / h[1:] / scale
-    eps2 = ((k_eps * dm[1:-1] / jnp.sum(dm)) ** 3)[expand]
     ave = ((b * b + eps2) * a + (a * a + eps2) * b) / (a * a + b * b + 2.0 * eps2)
     interior = scale * ave / w
     zero = jnp.zeros_like(q[:1])

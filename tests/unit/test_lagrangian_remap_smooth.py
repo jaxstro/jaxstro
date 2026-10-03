@@ -24,13 +24,12 @@ def _one_sided(q, dm):
 
 def test_slopes_are_eq_37_on_rms_scaled_differences():
     rng = np.random.default_rng(0)
-    n, k = 12, 0.7
+    n, eps2 = 12, 0.05
     dm = jnp.asarray(rng.uniform(0.3, 2.0, n))
     q = jnp.asarray(rng.normal(size=n))
-    s = lr.smooth_slopes(q, dm, k)
+    s = lr.smooth_slopes(q, dm, eps2)
     a, b = _one_sided(q, dm)
     rms = jnp.sqrt((q[:-2] ** 2 + q[1:-1] ** 2 + q[2:] ** 2) / 3)
-    eps2 = (k * dm[1:-1] / jnp.sum(dm)) ** 3
     want = rms * _ave(a / rms, b / rms, eps2) / dm[1:-1]
     np.testing.assert_allclose(s[1:-1], want, rtol=1e-13)
     assert float(s[0]) == 0.0 and float(s[-1]) == 0.0
@@ -38,28 +37,27 @@ def test_slopes_are_eq_37_on_rms_scaled_differences():
 
 def test_relative_slopes_are_eq_37_on_eq_31_3_differences():
     rng = np.random.default_rng(1)
-    n, k = 12, 2.0
+    n, eps2 = 12, 2.7e-5
     dm = jnp.asarray(rng.uniform(0.3, 2.0, n))
     q = jnp.asarray(rng.uniform(0.1, 5.0, n))
-    s = lr.smooth_slopes(q, dm, k, relative=True)
+    s = lr.smooth_slopes(q, dm, eps2, relative=True)
     h = 0.5 * (dm[1:] + dm[:-1])
     rel = 2 * (q[1:] - q[:-1]) / (q[1:] + q[:-1])          # eq (31.3)
     w = dm[1:-1]
     a, b = rel[:-1] * w / h[:-1], rel[1:] * w / h[1:]
-    eps2 = (k * w / jnp.sum(dm)) ** 3
     np.testing.assert_allclose(s[1:-1], q[1:-1] * _ave(a, b, eps2) / w, rtol=1e-13)
 
 
 def test_slope_is_a_convex_combination_and_exact_for_equal_differences():
     dm = jnp.ones(5)
     q = jnp.array([0.0, 1.0, 2.0, 3.0, 4.0])                # linear, uniform: a = b
-    np.testing.assert_allclose(lr.smooth_slopes(q, dm, 1.0)[1:-1], 1.0, rtol=1e-14)
+    np.testing.assert_allclose(lr.smooth_slopes(q, dm, 2.7e-5)[1:-1], 1.0, rtol=1e-14)
     rng = np.random.default_rng(2)
     for _ in range(20):
         dm = jnp.asarray(rng.uniform(0.2, 3.0, 9))
         q = jnp.asarray(rng.normal(size=9))
         a, b = _one_sided(q, dm)
-        cell = lr.smooth_slopes(q, dm, 0.5)[1:-1] * dm[1:-1]
+        cell = lr.smooth_slopes(q, dm, 0.3)[1:-1] * dm[1:-1]
         assert bool(jnp.all(jnp.abs(cell) <= jnp.maximum(jnp.abs(a), jnp.abs(b)) * (1 + 1e-12)))
 
 
@@ -70,7 +68,7 @@ def test_relative_slopes_keep_half_cell_children_positive():
         n = 16
         dm = jnp.asarray(10.0 ** rng.uniform(-2, 2, n))     # neighbour ratios up to 1e4
         q = jnp.asarray(10.0 ** rng.uniform(-30, 0, n))     # trace species to dominant
-        s = lr.smooth_slopes(q, dm, 1.0, relative=True)
+        s = lr.smooth_slopes(q, dm, 10.0, relative=True)
         half = s * dm / 4
         assert bool(jnp.all(q - jnp.abs(half) > 0))
 
@@ -80,7 +78,7 @@ def test_sum_to_zero_keeps_fractions_summing_to_one_and_conserves_each():
     n = 10
     dm = jnp.asarray(rng.uniform(0.5, 1.5, n))
     xa = jnp.asarray(rng.dirichlet(np.ones(4), n))
-    s = lr.smooth_slopes(xa, dm, 1.0, relative=True, sum_to_zero=True)
+    s = lr.smooth_slopes(xa, dm, 2.7e-5, relative=True, sum_to_zero=True)
     np.testing.assert_allclose(jnp.sum(s, axis=1), 0.0, atol=1e-15)
     plan = lr.plan_from_actions(jnp.full(n, lr.SPLIT), capacity=2 * n)
     xi = jnp.concatenate([jnp.zeros(1), jnp.cumsum(dm)])
@@ -98,7 +96,7 @@ def test_slopes_are_smooth_through_a_near_tie():
     def slope(t):
         # b crosses a at t = 0 (the outer neighbour moves; a is fixed)
         q = jnp.array([1.0, 1.0 + 1e-14, 1.0 + 2e-14, 1.0 + 3e-14 + t, 1.0 + 4e-14])
-        return lr.smooth_slopes(q, dm, 1.0, relative=True)[2]
+        return lr.smooth_slopes(q, dm, 2.7e-5, relative=True)[2]
 
     g = jax.vmap(jax.grad(slope))(jnp.linspace(-3e-14, 3e-14, 61))
     assert bool(jnp.all(jnp.isfinite(g)))
