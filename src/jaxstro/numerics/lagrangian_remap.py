@@ -76,6 +76,8 @@ __all__ = [
     "smooth_slopes",
     "face_values",
     "apply_plan",
+    "cut_face_values",
+    "apply_cuts",
 ]
 
 # Actions on old cells, for plan_from_actions.
@@ -506,3 +508,93 @@ def apply_plan(
     end = jnp.minimum(plan.start + plan.length, k * n)
     right = jnp.where(plan.length > 0, sub_faces[end], xi_face[-1])
     return jnp.concatenate([xi_face[:1], right]), dm_new, new_fields
+
+
+# --- Cuts at arbitrary positions ---------------------------------------------------------------
+#
+# A plan whose new faces sit at arbitrary mass fractions of the old cells (MESA's surface pass halves
+# the outermost cell down to its dq cap, 15 halvings and more on a fresh model, which no sub-cell
+# lattice resolves). Face j of the new mesh, centre-out, is the pair (cell[j], frac[j]): the point
+# at mass fraction frac in [0, 1) of old cell cell[j], measured from its inner face. Face 0 is the
+# centre (0, 0); slots past the active count are empty.
+
+
+def _overlap(cell, frac, n_old: int, max_span: int):
+    """Per new cell and per old cell it may overlap: (old index, a, b, used), with [a, b] the
+    overlapped mass fraction of that old cell, and whether every overlap fits in ``max_span``."""
+    c0, f0, c1, f1 = cell[:-1], frac[:-1], cell[1:], frac[1:]
+    t = jnp.arange(max_span)
+    i = c0[:, None] + t[None, :]
+    a = jnp.where(t[None, :] == 0, f0[:, None], 0.0)
+    b = jnp.where(i < c1[:, None], 1.0, jnp.where(i == c1[:, None], f1[:, None], 0.0))
+    used = (i <= c1[:, None]) & (b > a)
+    fits = jnp.all((c1 - c0 < max_span) | ((c1 - c0 == max_span) & (f1 == 0.0)))
+    return jnp.minimum(i, n_old - 1), a, b, used, fits
+
+
+def _content(total, slope, dm, a, b):
+    """Content of old cells' mass fractions [a, b] under a linear specific value in mass:
+    Q (b - a) + s dm^2 ((b^2 - a^2) - (b - a)) / 2. A whole cell (a = 0, b = 1) gives Q exactly."""
+    tail = (None,) * (total.ndim - a.ndim)          # trailing axes of the field (components)
+    w = (b - a)[(...,) + tail]
+    out = total * w
+    if slope is not None:
+        quad = (0.5 * ((b * b - a * a) - (b - a)))[(...,) + tail]
+        out = out + slope * (dm * dm)[(...,) + tail] * quad
+    return out
+
+
+def cut_face_values(cell, frac, face):
+    """A face-centred field at the new faces, linear in mass within each old cell; exact on old
+    faces (frac 0). ``face`` holds the ``n + 1`` old faces, centre-out."""
+    face = jnp.asarray(face)
+    n = face.shape[0] - 1
+    lo = face[jnp.minimum(cell, n)]
+    hi = face[jnp.minimum(cell + 1, n)]
+    return jnp.where(frac == 0.0, lo, lo + frac * (hi - lo))
+
+
+def apply_cuts(cell, frac, n_new, xi_face, dm, extensive, slopes=None, volume_slope=None,
+               max_span: int = 4):
+    """Move a Lagrangian mesh onto new faces at arbitrary positions (module section above).
+
+    Args:
+        cell, frac: (capacity + 1,) new faces, centre-out: old cell index and mass fraction in
+            [0, 1) from its inner face; face 0 is (0, 0). Past ``n_new`` the slots are empty.
+        n_new: number of new cells (traced).
+        xi_face, dm, extensive, slopes, volume_slope: as for :func:`apply_plan`.
+        max_span: static bound on the old cells one new cell overlaps.
+
+    Returns ``(xi_face_new, dm_new, extensive_new, fits)``; ``fits`` is False when a new cell
+    overlaps more than ``max_span`` old cells (its contents are then incomplete). A new cell that
+    is one whole old cell is a bitwise copy; contents are conserved to rounding otherwise.
+    """
+    xi_face = jnp.asarray(xi_face)
+    dm = jnp.asarray(dm)
+    n_old = dm.shape[0]
+    cap = cell.shape[0] - 1
+    idx, a, b, used, fits = _overlap(cell, frac, n_old, max_span)
+    live = jnp.arange(cap) < n_new
+
+    def move(slope, total):
+        expand = (slice(None), slice(None)) + (None,) * (total.ndim - 1)
+        parts = _content(total[idx], None if slope is None else slope[idx], dm[idx], a, b)
+        summed = jnp.sum(jnp.where(used[expand], parts, 0.0), axis=1)
+        return jnp.where(live[(slice(None),) + (None,) * (total.ndim - 1)], summed, 0.0)
+
+    dm_new = move(None, dm)
+    if slopes is None:
+        new_fields = jax.tree.map(lambda q: move(None, q), extensive)
+    else:
+        new_fields = jax.tree.map(move, slopes, extensive, is_leaf=lambda x: x is None)
+
+    # Faces: exact on old faces; inside a cell, the old face plus the cut part's volume.
+    c = jnp.minimum(cell, n_old - 1)
+    v_total = xi_face[c + 1] - xi_face[c]
+    inside = _content(v_total, None if volume_slope is None else volume_slope[c], dm[c],
+                      jnp.zeros_like(frac), frac)
+    xi_new = jnp.where(frac == 0.0, xi_face[jnp.minimum(cell, n_old)], xi_face[c] + inside)
+    k = jnp.arange(cap + 1)
+    xi_new = jnp.where(k <= n_new, xi_new, xi_new[n_new])
+    return xi_new, dm_new, new_fields, fits
+
