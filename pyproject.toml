@@ -37,6 +37,10 @@ dependencies = [
   # Core infrastructure, not an add-on -- measured in startrax 2026-08-02:
   # sympy imports in 175 ms, cheaper than jax at 263 ms, already unconditional.
   "sympy>=1.12",
+  # The persistent compilation cache's size limit (jaxconfig.ensure_jax_compilation_cache): JAX's
+  # LRU eviction needs filelock (jax/_src/lru_cache.py:73). Without a limit the shared cache reached
+  # 125 GB in a week (2026-10-04).
+  "filelock>=3.12",
 ]
 
 [project.optional-dependencies]

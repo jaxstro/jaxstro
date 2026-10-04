@@ -115,6 +115,29 @@ def enable_high_precision() -> None:
 _CACHE_INITIALIZED: str | None = None
 
 
+#: Size limit of the persistent compilation cache [bytes] (Anna, 2026-10-04: 20 GB). JAX evicts the
+#: least recently accessed entries above it. Unlimited, the shared cache reached 125 GB in a week:
+#: no entry is ever removed, and programs that close over the physics carry its tables as
+#: constants (up to 1.07 GB per entry). ``JAXSTRO_JAX_CACHE_MAX_BYTES`` overrides it.
+CACHE_MAX_BYTES = 20 * 1024**3
+
+
+def _limit_cache_size() -> None:
+    """Set ``jax_compilation_cache_max_size``; JAX's LRU eviction needs ``filelock``. A package
+    whose lock file predates the filelock dependency keeps the unlimited cache, with a warning."""
+    import os
+    import warnings
+
+    try:
+        import filelock  # noqa: F401
+    except ImportError:
+        warnings.warn("filelock is not installed: the JAX compilation cache has no size limit "
+                      "(re-lock the package to pick up jaxstro's filelock dependency)", stacklevel=3)
+        return
+    limit = int(os.environ.get("JAXSTRO_JAX_CACHE_MAX_BYTES", CACHE_MAX_BYTES))
+    jax_config.update("jax_compilation_cache_max_size", limit)
+
+
 def ensure_jax_compilation_cache(base_dir: str | None = None) -> str:
     """Enable JAX's persistent on-disk compilation cache, idempotently.
 
@@ -147,6 +170,8 @@ def ensure_jax_compilation_cache(base_dir: str | None = None) -> str:
 
     import os
 
+    _limit_cache_size()
+
     existing = os.environ.get("JAX_COMPILATION_CACHE_DIR")
     if existing:
         # JAX reads the variable only at import; apply it in case it was set
@@ -171,4 +196,4 @@ def ensure_jax_compilation_cache(base_dir: str | None = None) -> str:
     return cache_dir
 
 
-__all__ = ["enable_high_precision", "ensure_jax_compilation_cache"]
+__all__ = ["CACHE_MAX_BYTES", "enable_high_precision", "ensure_jax_compilation_cache"]

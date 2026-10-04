@@ -181,6 +181,15 @@ wheels = [
 ]
 
 [[package]]
+name = "filelock"
+version = "4.0.10"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/4b/51/a182494d1d8dde1240bff84dda57d48165d982e59582ce8f167e8e3d7628/filelock-4.0.10.tar.gz", hash = "sha256:00d6a81f976a6332551c2c10f39e12b4abb7e01c64d4c497b81a615bc9186f1f", size = 252487, upload-time = "2026-10-03T23:40:48.884Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5b/2a/4b1ea3f2180be251a5cff1e70c8a5b7994ffa5c8eab8937901f8a9db58fe/filelock-4.0.10-py3-none-any.whl", hash = "sha256:698048d158dc3c9e18cc5e88b3efdd4bd0e77d76686b22adb4511cc4b2c2f0db", size = 111193, upload-time = "2026-10-03T23:40:47.334Z" },
+]
+
+[[package]]
 name = "fonttools"
 version = "4.63.0"
 source = { registry = "https://pypi.org/simple" }
@@ -289,6 +298,7 @@ source = { editable = "." }
 dependencies = [
     { name = "diffrax" },
     { name = "equinox" },
+    { name = "filelock" },
     { name = "jax" },
     { name = "jaxlib" },
     { name = "jaxtyping" },
@@ -341,6 +351,7 @@ reference = [
 requires-dist = [
     { name = "diffrax", specifier = ">=0.6" },
     { name = "equinox", specifier = ">=0.13.8" },
+    { name = "filelock", specifier = ">=3.12" },
     { name = "jax", specifier = ">=0.10.1" },
     { name = "jaxlib", specifier = ">=0.10.1" },
     { name = "jaxtyping", specifier = ">=0.3.11" },

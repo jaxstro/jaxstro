@@ -39,3 +39,18 @@ def test_default_path_creates_and_applies_the_directory(tmp_path) -> None:
     )
     assert _run(program) == "True"
     assert (tmp_path / "xla_compilation_cache").is_dir()
+
+
+def test_the_cache_has_a_size_limit():
+    """The shared cache evicts above CACHE_MAX_BYTES (2026-10-04: unlimited, it reached 125 GB)."""
+    import importlib.util
+
+    import jax
+
+    from jaxstro import jaxconfig
+
+    jaxconfig._limit_cache_size()
+    if importlib.util.find_spec("filelock") is None:
+        assert jax.config.jax_compilation_cache_max_size == -1
+    else:
+        assert jax.config.jax_compilation_cache_max_size == jaxconfig.CACHE_MAX_BYTES
