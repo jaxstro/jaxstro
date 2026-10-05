@@ -55,6 +55,7 @@ from jaxstro.contracts import get_callable_contract
 | `jaxstro.geometry` | validated | runtime | Caller-owned coordinate units; angles follow each function contract. | Generic geometric transformations. | Domain geometry policy. |
 | `jaxstro.jaxconfig` | validated | static | No physical dimensions. | Explicit JAX precision configuration. | Import-time global configuration. |
 | `jaxstro.numerics` | validated | runtime | Caller-owned units; each callable declares dimensional behavior. | Generic numerical mechanics. | Domain acceptance, retry policy, or physical state. |
+| `jaxstro.optics` | validated | mixed | Size parameters are dimensionless; refractive indices are complex with a non-negative imaginary part. | Optics of small particles: Mie scattering by homogeneous spheres. | Dust-model selection, radiative transfer, or non-spherical grains. |
 | `jaxstro.params` | validated | runtime | Leaf units remain caller-owned through transformations. | Selective PyTree/vector parameter bridges. | Inference algorithms or identifiability. |
 | `jaxstro.provenance` | validated | tooling | Metric units remain explicit in producer-owned payloads. | Runtime artifact manifests. | Scientific-source validation. |
 | `jaxstro.quad` | experimental | runtime | Raw kernels with an alpha quantity adapter, heterogeneous coordinate normalization, and unit restoration owned only by quad.integrate. | Canonical sampled-data integration, fixed and adaptive one-dimensional quadrature, finite-hyperrectangle tensor, cubature, sparse-grid, and randomized QMC methods, typed domains, measures, and result evidence. | Non-hyperrectangular geometries, direct Quantity-PyTree quotient-unit Jacobians, higher derivatives, physical-model policy, inference, ODE solving, or scientific acceptance. |
@@ -89,7 +90,7 @@ from jaxstro.contracts import get_callable_contract
 
 ## Unclassified callable surfaces
 
-The runtime export audit found **236** public callables without callable-level records:
+The runtime export audit found **242** public callables without callable-level records:
 
 - `jaxstro.atmospheres.acquisition_rows_to_markdown`
 - `jaxstro.atmospheres.build_bosz_index`
@@ -249,6 +250,12 @@ The runtime export audit found **236** public callables without callable-level r
 - `jaxstro.numerics.velocity_verlet`
 - `jaxstro.numerics.vjp`
 - `jaxstro.numerics.weighted_lstsq`
+- `jaxstro.optics.mie_efficiencies`
+- `jaxstro.optics.mie_term_counts`
+- `jaxstro.optics.mixture_optics`
+- `jaxstro.optics.n_stop`
+- `jaxstro.optics.size_distribution_term_counts`
+- `jaxstro.optics.species_cross_sections`
 - `jaxstro.provenance.environment_snapshot`
 - `jaxstro.provenance.hash_artifact`
 - `jaxstro.provenance.manifest_to_json`
@@ -415,6 +422,9 @@ These immutable record or type constructors inherit their module-level contract:
 - `jaxstro.numerics.TransposeOperator`
 - `jaxstro.numerics.UniversalKeplerResult`
 - `jaxstro.numerics.VerletResult`
+- `jaxstro.optics.MieEfficiencies`
+- `jaxstro.optics.MixtureOptics`
+- `jaxstro.optics.SpeciesCrossSections`
 - `jaxstro.params.AbstractBijector`
 - `jaxstro.params.Exp`
 - `jaxstro.params.Identity`

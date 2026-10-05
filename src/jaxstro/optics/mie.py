@@ -13,9 +13,9 @@ upward recurrence (stable: chi grows), and
     g Q_sca = (4/x^2) sum [n(n+2)/(n+1) Re(a_n a*_{n+1} + b_n b*_{n+1})
                            + (2n+1)/(n(n+1)) Re(a_n b*_n)].
 
-Terms run to N_stop(x) = x + 4 x^{1/3} + 2 (Wiscombe 1980). Under jit the series has a static
-length `n_terms` (>= N_stop of the largest x in the batch) and terms beyond each element's
-N_stop are zero; past N_stop the recurrences are frozen, so no element overflows (the upward
+Terms run to N_stop(x) = x + 4 x^{1/3} + 2 + 12 (Wiscombe 1980 plus EXTRA_TERMS; see there).
+Under jit the series has a static length `n_terms` (>= N_stop of the largest x in the
+batch) and terms beyond each element's N_stop are zero; past N_stop the recurrences are frozen, so no element overflows (the upward
 psi, chi recurrence diverges for n >> x) and gradients stay finite. D_n is recurred from the
 static `n_start` in two scans, keeping only n <= n_terms in memory: memory is n_terms per
 element, time n_start per element. Use `mie_term_counts` on the host to size both.
@@ -42,9 +42,17 @@ class MieEfficiencies(NamedTuple):
     g: Float[Array, "..."]  # asymmetry parameter <cos Theta>
 
 
+# Terms beyond Wiscombe's (1980) N_stop = x + 4 x^{1/3} + 2. Q_ext depends linearly on the
+# tail coefficients (Re(a_n + b_n)), Q_sca quadratically, so Wiscombe's count truncates Q_ext
+# at up to 3.9e-10 relative (m = 1.5 + 0.01 i, x = 189) and 6.2e-11 at x = 0.1; with 12 more
+# terms Q_ext and Q_sca agree with a 50-digit evaluation to 4.9e-15 (2026-10-04).
+EXTRA_TERMS = 12
+
+
 def n_stop(x: float) -> int:
-    """Wiscombe's (1980) number of terms for size parameter x."""
-    return int(x + 4.0 * x ** (1.0 / 3.0) + 2.0)
+    """Number of series terms for size parameter x: Wiscombe's (1980) x + 4 x^{1/3} + 2
+    plus EXTRA_TERMS."""
+    return int(x + 4.0 * x ** (1.0 / 3.0) + 2.0) + EXTRA_TERMS
 
 
 def mie_term_counts(m, x) -> tuple[int, int]:
@@ -72,7 +80,7 @@ def mie_efficiencies(
     shape = x.shape
     m, x = m.reshape(-1), x.reshape(-1)
     y = m * x
-    stop = jnp.floor(x + 4.0 * jnp.cbrt(x) + 2.0)
+    stop = jnp.floor(x + 4.0 * jnp.cbrt(x) + 2.0) + EXTRA_TERMS
 
     # D_n(y) downward: carry from n_start to n_terms + 1, then keep D_n for n = n_terms..1.
     def down(d, n):

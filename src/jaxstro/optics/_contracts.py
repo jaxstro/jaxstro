@@ -9,6 +9,7 @@ MODULE_CONTRACT = module_contract(
     "Computing extinction, scattering and absorption efficiencies and the asymmetry parameter.",
     "Size parameters are dimensionless; refractive indices are complex with a non-negative imaginary part.",
     boundary=ExecutionBoundary.MIXED,
-    # Implemented; validation against miepython and a 50-digit mpmath reference is in progress.
-    maturity=MaturityLevel.IMPLEMENTED,
+    # Validated 2026-10-04 against a 50-digit mpmath evaluation (Q_ext, Q_sca <= 1e-10, g bound)
+    # and miepython: docs/60-validation/numerical/mie-scattering.md.
+    maturity=MaturityLevel.VALIDATED,
 )

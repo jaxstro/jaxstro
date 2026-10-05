@@ -81,6 +81,9 @@
     "jaxstro.numerics.TransposeOperator",
     "jaxstro.numerics.UniversalKeplerResult",
     "jaxstro.numerics.VerletResult",
+    "jaxstro.optics.MieEfficiencies",
+    "jaxstro.optics.MixtureOptics",
+    "jaxstro.optics.SpeciesCrossSections",
     "jaxstro.params.AbstractBijector",
     "jaxstro.params.Exp",
     "jaxstro.params.Identity",
@@ -855,6 +858,20 @@
     },
     {
       "callables": [],
+      "dimensional_policy": "Size parameters are dimensionless; refractive indices are complex with a non-negative imaginary part.",
+      "evidence": [],
+      "execution_boundary": "mixed",
+      "id": "optics",
+      "import_path": "jaxstro.optics",
+      "intended_uses": [
+        "Computing extinction, scattering and absorption efficiencies and the asymmetry parameter."
+      ],
+      "maturity": "validated",
+      "non_ownership": "Dust-model selection, radiative transfer, or non-spherical grains.",
+      "ownership": "Optics of small particles: Mie scattering by homogeneous spheres."
+    },
+    {
+      "callables": [],
       "dimensional_policy": "Leaf units remain caller-owned through transformations.",
       "evidence": [],
       "execution_boundary": "runtime",
@@ -1277,7 +1294,7 @@
   ],
   "package_version": "0.1.0",
   "schema_version": "1",
-  "source_revision": "sha256:479dff547c8235b0e34e6eed24b131cac1dcbe6bd7c4881f25a92d7d1c5d9322",
+  "source_revision": "sha256:ac7b25b191ac22af59cd3115d5f28fa49027278688484370df9f5180a5db4b5e",
   "unclassified_callables": [
     "jaxstro.atmospheres.acquisition_rows_to_markdown",
     "jaxstro.atmospheres.build_bosz_index",
@@ -1437,6 +1454,12 @@
     "jaxstro.numerics.velocity_verlet",
     "jaxstro.numerics.vjp",
     "jaxstro.numerics.weighted_lstsq",
+    "jaxstro.optics.mie_efficiencies",
+    "jaxstro.optics.mie_term_counts",
+    "jaxstro.optics.mixture_optics",
+    "jaxstro.optics.n_stop",
+    "jaxstro.optics.size_distribution_term_counts",
+    "jaxstro.optics.species_cross_sections",
     "jaxstro.provenance.environment_snapshot",
     "jaxstro.provenance.hash_artifact",
     "jaxstro.provenance.manifest_to_json",
