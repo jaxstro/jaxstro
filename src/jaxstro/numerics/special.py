@@ -609,14 +609,13 @@ def ocp_free_energy_pc00(gamma: Float[Array, "..."]) -> Float[Array, "..."]:
     the square roots, use :func:`ocp_free_energy_pc00_d1` which is finite there).
     """
     g = jnp.asarray(gamma)
-    sg = jnp.sqrt(g)
     return (
         _PC00_A1
         * (
             jnp.sqrt(g * (_PC00_A2 + g))
-            - _PC00_A2 * jnp.log(sg / math.sqrt(_PC00_A2) + jnp.sqrt(1.0 + g / _PC00_A2))
+            - _PC00_A2 * jnp.log(jnp.sqrt(g / _PC00_A2) + jnp.sqrt(1.0 + g / _PC00_A2))
         )
-        + 2.0 * _PC00_A3 * (sg - jnp.arctan(sg))
+        + 2.0 * _PC00_A3 * (jnp.sqrt(g) - jnp.arctan(jnp.sqrt(g)))
         + _PC00_B1 * (g - _PC00_B2 * jnp.log1p(g / _PC00_B2))
         + 0.5 * _PC00_B3 * jnp.log1p(g * g / _PC00_B4)
     )
