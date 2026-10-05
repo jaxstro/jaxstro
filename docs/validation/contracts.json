@@ -1294,7 +1294,7 @@
   ],
   "package_version": "0.1.0",
   "schema_version": "1",
-  "source_revision": "sha256:ac7b25b191ac22af59cd3115d5f28fa49027278688484370df9f5180a5db4b5e",
+  "source_revision": "sha256:1782df55d96b546db2f175e73207f461c386ba00f38782d1eae68da5db64d2e4",
   "unclassified_callables": [
     "jaxstro.atmospheres.acquisition_rows_to_markdown",
     "jaxstro.atmospheres.build_bosz_index",
@@ -1418,6 +1418,9 @@
     "jaxstro.numerics.normal_ppf",
     "jaxstro.numerics.normalize_log_weights",
     "jaxstro.numerics.objective_summary",
+    "jaxstro.numerics.ocp_free_energy_pc00",
+    "jaxstro.numerics.ocp_free_energy_pc00_d1",
+    "jaxstro.numerics.ocp_free_energy_pc00_d2",
     "jaxstro.numerics.open_uniform_knots",
     "jaxstro.numerics.planck_lambda_cgs",
     "jaxstro.numerics.planck_nu_cgs",

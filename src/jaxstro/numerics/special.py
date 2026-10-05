@@ -574,7 +574,90 @@ def riccati_bessel_at_order(
     return s_order * (anchor_true / anchor_sweep), c
 
 
+# Potekhin & Chabrier (2000, Phys. Rev. E 62, 8554), Table I, row "Ref. [6]" (DeWitt &
+# Slattery 1999 Monte Carlo), parameters of eq. (15). The table headers are -A1 and -B3,
+# so the printed 0.9070 and 1.0[-4] are magnitudes of negative quantities. The second
+# row of Table I (Caillol 1999: A1 = -0.907347, A2 = 0.62849, B1 = 4.50e-3, B2 = 170.0,
+# B3 = -8.4e-5, B4 = 3.70e-3) is not used.
+_PC00_A1 = -0.9070
+_PC00_A2 = 0.62954
+_PC00_B1 = 4.56e-3
+_PC00_B2 = 211.6
+_PC00_B3 = -1.0e-4
+_PC00_B4 = 4.62e-3
+# A3 is constructed (PC00 below eq. 15) so the Gamma^(3/2) coefficient of eq. (16) is
+# -1/sqrt(3), the Debye-Huckel limit of eq. (14).
+_PC00_A3 = -math.sqrt(3.0) / 2.0 - _PC00_A1 / math.sqrt(_PC00_A2)
+
+
+def ocp_free_energy_pc00(gamma: Float[Array, "..."]) -> Float[Array, "..."]:
+    """Ion-ion free energy ``F_ii / (N_i k_B T)`` of a classical one-component plasma.
+
+    PC00 eq. (16), parameters of Table I row "Ref. [6]" (DeWitt & Slattery 1999).
+    ``gamma = Z^2 e^2 / (a_i k_B T)`` is the ion coupling parameter. Valid for the
+    liquid, ``0 <= gamma`` up to the freezing value (``Gamma_m = 175.0 +- 0.4``,
+    PC00); the fit itself is smooth beyond. Every term vanishes at ``gamma = 0``.
+
+    The fit approaches the Debye-Huckel limit ``-gamma^(3/2) / sqrt(3)`` (eq. 14) as
+    ``f / f_DH = 1 + c gamma^(1/2) + ...`` with ``c = 0.018726`` as ``gamma -> 0`` (measured
+    against a 60-digit evaluation, ``tests/unit/test_special.py``). The deviation from
+    Debye-Huckel is therefore 1.9e-6 at ``gamma = 1e-8`` and 1.4e-4 at ``1e-4``, set
+    by the fit and not by rounding; 1e-8 relative agreement needs ``gamma < 1e-13``. In float64 the evaluation loses digits to
+    cancellation below ``gamma ~ 1e-3``: relative error up to 2e-10 at ``1e-4``.
+
+    Differentiable (smooth for ``gamma >= 0``; ``jax.grad`` at exactly 0 is NaN through
+    the square roots, use :func:`ocp_free_energy_pc00_d1` which is finite there).
+    """
+    g = jnp.asarray(gamma)
+    sg = jnp.sqrt(g)
+    return (
+        _PC00_A1
+        * (
+            jnp.sqrt(g * (_PC00_A2 + g))
+            - _PC00_A2 * jnp.log(sg / math.sqrt(_PC00_A2) + jnp.sqrt(1.0 + g / _PC00_A2))
+        )
+        + 2.0 * _PC00_A3 * (sg - jnp.arctan(sg))
+        + _PC00_B1 * (g - _PC00_B2 * jnp.log1p(g / _PC00_B2))
+        + 0.5 * _PC00_B3 * jnp.log1p(g * g / _PC00_B4)
+    )
+
+
+def ocp_free_energy_pc00_d1(gamma: Float[Array, "..."]) -> Float[Array, "..."]:
+    """``d f / d gamma`` of :func:`ocp_free_energy_pc00`, analytic (finite at 0).
+
+    Differentiating eq. (16) term by term: the first bracket gives
+    ``A1 sqrt(gamma / (A2 + gamma))`` because ``d/dgamma asinh(sqrt(gamma/A2)) =
+    1 / (2 sqrt(gamma (A2 + gamma)))``. Checked against ``jax.grad`` of the value.
+    """
+    g = jnp.asarray(gamma)
+    return (
+        _PC00_A1 * jnp.sqrt(g / (_PC00_A2 + g))
+        + _PC00_A3 * jnp.sqrt(g) / (1.0 + g)
+        + _PC00_B1 * g / (g + _PC00_B2)
+        + _PC00_B3 * g / (_PC00_B4 + g * g)
+    )
+
+
+def ocp_free_energy_pc00_d2(gamma: Float[Array, "..."]) -> Float[Array, "..."]:
+    """``d^2 f / d gamma^2`` of :func:`ocp_free_energy_pc00`, analytic.
+
+    Diverges as ``gamma^(-1/2)`` at ``gamma = 0`` (the ``gamma^(3/2)`` Debye-Huckel
+    term); callers use ``gamma > 0``. Checked against ``jax.hessian`` of the value.
+    """
+    g = jnp.asarray(gamma)
+    sg = jnp.sqrt(g)
+    return (
+        _PC00_A1 * _PC00_A2 / (2.0 * sg * (_PC00_A2 + g) ** 1.5)
+        + _PC00_A3 * (1.0 - g) / (2.0 * sg * (1.0 + g) ** 2)
+        + _PC00_B1 * _PC00_B2 / (g + _PC00_B2) ** 2
+        + _PC00_B3 * (_PC00_B4 - g * g) / (_PC00_B4 + g * g) ** 2
+    )
+
+
 __all__ = [
+    "ocp_free_energy_pc00",
+    "ocp_free_energy_pc00_d1",
+    "ocp_free_energy_pc00_d2",
     "planck_lambda_cgs",
     "log_planck_lambda_cgs",
     "planck_nu_cgs",

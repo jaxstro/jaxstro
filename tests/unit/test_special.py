@@ -787,3 +787,61 @@ def test_the_basis_holds_on_a_DENSE_sweep_not_just_at_chosen_points():
         f"{float(x[worst]):.6f} (sin x = {float(sin_x[worst]):.3e}) -- a "
         "normalisation defect looks exactly like this and point checks miss it."
     )
+
+
+class TestOcpFreeEnergyPC00:
+    """PC00 eq. (16) one-component-plasma free energy against a 60-digit reference."""
+
+    @staticmethod
+    def _fixture():
+        import json
+        import pathlib
+
+        path = pathlib.Path(__file__).resolve().parents[1] / "fixtures/pc00/ocp_reference.json"
+        return json.loads(path.read_text())
+
+    def test_coefficients_are_table_i_ref6(self):
+        assert special._PC00_A1 == -0.9070
+        assert special._PC00_A2 == 0.62954
+        assert special._PC00_B1 == 4.56e-3
+        assert special._PC00_B2 == 211.6
+        assert special._PC00_B3 == -1.0e-4
+        assert special._PC00_B4 == 4.62e-3
+        assert special._PC00_A3 == pytest.approx(0.2771045956622158, rel=1e-15)
+
+    def test_value_matches_60_digit_reference(self):
+        rows = [r for r in self._fixture()["rows"] if float(r["gamma"]) >= 1e-3]
+        g = jnp.array([float(r["gamma"]) for r in rows])
+        ref = jnp.array([float(r["f"]) for r in rows])
+        err = jnp.abs(special.ocp_free_energy_pc00(g) / ref - 1.0)
+        assert float(err.max()) < 1e-9
+
+    def test_derivatives_match_reference_and_ad(self):
+        rows = [r for r in self._fixture()["rows"] if float(r["gamma"]) >= 1e-3]
+        g = jnp.array([float(r["gamma"]) for r in rows])
+        for name, fn in (("f1", special.ocp_free_energy_pc00_d1), ("f2", special.ocp_free_energy_pc00_d2)):
+            ref = jnp.array([float(r[name]) for r in rows])
+            assert float(jnp.abs(fn(g) / ref - 1.0).max()) < 1e-9
+        grad = jax.vmap(jax.grad(special.ocp_free_energy_pc00))(g)
+        hess = jax.vmap(jax.hessian(special.ocp_free_energy_pc00))(g)
+        assert float(jnp.abs(special.ocp_free_energy_pc00_d1(g) / grad - 1.0).max()) < 1e-12
+        assert float(jnp.abs(special.ocp_free_energy_pc00_d2(g) / hess - 1.0).max()) < 1e-12
+
+    def test_debye_huckel_approach_scales_as_sqrt_gamma(self):
+        # f / f_DH - 1 = c sqrt(gamma): c = 0.018726 as gamma -> 0 (mpmath, 60 digits).
+        for r in self._fixture()["dh"]:
+            g = float(r["gamma"])
+            if g <= 1e-8:
+                c = float(r["f_over_dh_minus_1"]) / g**0.5
+                assert c == pytest.approx(0.018726, abs=1e-4)  # c(1e-8) = 0.018683; bound set from the measurement
+        # The float64 evaluation reproduces the deviation where rounding is below it.
+        g = jnp.array([1e-6, 1e-4])
+        f = special.ocp_free_energy_pc00(g)
+        dev = f / (-(g**1.5) / math.sqrt(3.0)) - 1.0
+        ref = jnp.array([float(r["f_over_dh_minus_1"]) for r in self._fixture()["dh"] if float(r["gamma"]) in (1e-6, 1e-4)])
+        assert float(jnp.abs(dev - ref).max()) < 1e-6
+
+    def test_zero_and_d1_finite_at_origin(self):
+        z = jnp.array(0.0)
+        assert float(special.ocp_free_energy_pc00(z)) == 0.0
+        assert float(special.ocp_free_energy_pc00_d1(z)) == 0.0

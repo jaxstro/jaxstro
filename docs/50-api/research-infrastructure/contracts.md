@@ -90,7 +90,7 @@ from jaxstro.contracts import get_callable_contract
 
 ## Unclassified callable surfaces
 
-The runtime export audit found **242** public callables without callable-level records:
+The runtime export audit found **245** public callables without callable-level records:
 
 - `jaxstro.atmospheres.acquisition_rows_to_markdown`
 - `jaxstro.atmospheres.build_bosz_index`
@@ -214,6 +214,9 @@ The runtime export audit found **242** public callables without callable-level r
 - `jaxstro.numerics.normal_ppf`
 - `jaxstro.numerics.normalize_log_weights`
 - `jaxstro.numerics.objective_summary`
+- `jaxstro.numerics.ocp_free_energy_pc00`
+- `jaxstro.numerics.ocp_free_energy_pc00_d1`
+- `jaxstro.numerics.ocp_free_energy_pc00_d2`
 - `jaxstro.numerics.open_uniform_knots`
 - `jaxstro.numerics.planck_lambda_cgs`
 - `jaxstro.numerics.planck_nu_cgs`

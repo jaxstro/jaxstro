@@ -18,7 +18,10 @@ Stable Planck-law kernels, log-weight normalization, and polynomial bases.
 `log_planck_nu_cgs`, `log_normalize`, `normalize_log_weights`,
 `legendre_basis`, `chebyshev_t_basis`, `laguerre_basis`,
 `riccati_bessel_basis`, `riccati_bessel_at_order`, `riccati_seed_order`,
-and `riccati_wronskian_residual`.
+`riccati_wronskian_residual`, and the one-component-plasma Coulomb free energy
+`ocp_free_energy_pc00` with its analytic `_d1` and `_d2` derivatives (Potekhin &
+Chabrier 2000, eq. 16, Table I row Ref. [6]; owner for stellax Skye, micrax and
+nucleax; checked against a 60-digit evaluation in `tests/fixtures/pc00/`).
 
 ## Shape and dtype expectations
 
