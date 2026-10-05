@@ -117,3 +117,15 @@ def test_face_values_are_linear_in_mass_and_exact_on_old_faces():
     plan4 = lr.RemapPlan(start=jnp.array([0, 4, 5, 12]), length=jnp.array([4, 1, 7, 4]),
                          n_active=jnp.array(4), max_length=8, subcells=4)
     np.testing.assert_allclose(lr.face_values(plan4, f), [0.0, 2.0, 2.75, 6.0, 9.5])
+
+
+def test_signed_slopes_finite_with_value_and_gradient_on_a_zero_region():
+    """Three zero cells give scale 0: slope 0, finite reverse-mode gradient (stellax rotation
+    rung Q2, j = 0 where w = 0); elsewhere the slopes are unchanged."""
+    q = jnp.array([0.0, 0.0, 0.0, 0.0, 1.0, 2.5, 3.0])
+    dm = jnp.array([1.0, 2.0, 1.5, 1.0, 0.5, 1.0, 2.0])
+    s = lr.smooth_slopes(q, dm, 1e-6)
+    assert np.all(np.isfinite(np.asarray(s)))
+    assert float(s[1]) == 0.0 and float(s[2]) == 0.0
+    g = jax.grad(lambda x: jnp.sum(lr.smooth_slopes(x, dm, 1e-6) ** 2))(q)
+    assert np.all(np.isfinite(np.asarray(g)))

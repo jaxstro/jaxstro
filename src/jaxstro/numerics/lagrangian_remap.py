@@ -384,8 +384,14 @@ def smooth_slopes(
         a, b = d[:-1] * w / h[:-1], d[1:] * w / h[1:]
         scale = q[1:-1]
     else:
-        scale = jnp.sqrt((q[:-2] ** 2 + q[1:-1] ** 2 + q[2:] ** 2) / 3.0)
-        a, b = diff[:-1] * w / h[:-1] / scale, diff[1:] * w / h[1:] / scale
+        msq = (q[:-2] ** 2 + q[1:-1] ** 2 + q[2:] ** 2) / 3.0
+        # Three zero cells (a field that is 0 over a region, e.g. j where w = 0) have scale 0 and
+        # slope 0. Both the division and sqrt'(0) are guarded so value and gradient stay finite
+        # there; where msq > 0 the result is bit-identical to the unguarded form.
+        live = msq > 0.0
+        scale = jnp.where(live, jnp.sqrt(jnp.where(live, msq, 1.0)), 0.0)
+        safe = jnp.where(live, scale, 1.0)
+        a, b = diff[:-1] * w / h[:-1] / safe, diff[1:] * w / h[1:] / safe
     ave = ((b * b + eps2) * a + (a * a + eps2) * b) / (a * a + b * b + 2.0 * eps2)
     interior = scale * ave / w
     zero = jnp.zeros_like(q[:1])
