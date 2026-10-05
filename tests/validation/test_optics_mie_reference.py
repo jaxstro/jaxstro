@@ -3,6 +3,9 @@
 - 50-digit evaluation of Bohren & Huffman eq. 4.53 with mpmath (Bessel functions, no
   recurrences): the reference for the agreed tolerance. Max relative error in Q_ext and
   Q_sca <= 1e-10; |dg| <= 1e-10 max(|g|, 1e-3). Measured 2026-10-04: 1.9e-13, 5.8e-15, 7.3e-13.
+- The same 50-digit evaluation at zeros of psi_n(x) with n < x (x = pi, 2 pi, 10 pi; first
+  zeros of psi_1, psi_5; 3 m), same bounds. Building psi_n from downward ratios alone gave
+  Q_sca 48 % high at x = 2 pi (fixed 2026-10-05).
 - miepython 3.3.0 over 5 m x 200 x in [1e-3, 1e4]: cross-check of the whole domain. Q_sca
   and g to the same bounds (measured 7.9e-12, 7.5e-12); miepython truncates its series at
   x + 4.05 x^{1/3} + 2 terms, so its Q_ext differs from ours by up to 7.8e-10 for weakly
@@ -32,8 +35,9 @@ def _g_error(g, g_ref):
     return np.abs(g - g_ref) / np.maximum(np.abs(g_ref), 1e-3)
 
 
-def test_against_50_digit_reference():
-    rows = json.loads((DATA / "mie_mpmath_50digits.json").read_text())["rows"]
+@pytest.mark.parametrize("name", ["mie_mpmath_50digits.json", "mie_mpmath_zeros.json"])
+def test_against_50_digit_reference_cases(name):
+    rows = json.loads((DATA / name).read_text())["rows"]
     for n, k, x, q_ext, q_sca, g in rows:
         r = _run(complex(n, k), np.array([x]))
         assert abs(float(r.q_ext[0]) / q_ext - 1) <= 1e-10, (n, k, x)

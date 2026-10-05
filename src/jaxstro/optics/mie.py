@@ -1,10 +1,11 @@
 """Mie scattering by homogeneous spheres: Q_ext, Q_sca, Q_abs and g = <cos Theta>.
 
-Bohren & Huffman (1983, BHMIE) with two changes for accuracy: the logarithmic derivative
-D_n(m x) by downward recurrence from n_start = max(N_stop, |m x|) + 15 + 2 sqrt|m x| (the
-extra margin converges weakly absorbing large spheres), psi_n(x) from the downward ratio
-psi_n / psi_{n-1} (no cancellation at small x; as in Wiscombe 1980 and miepython), chi_n(x) by
-upward recurrence (stable: chi grows), and
+Bohren & Huffman (1983, BHMIE) with three changes for accuracy (the third, EXTRA_TERMS,
+below): the logarithmic derivative D_n(m x) by downward recurrence from
+n_start = max(N_stop, |m x|) + 15 + 2 sqrt|m x| (the extra margin converges weakly absorbing
+large spheres), psi_n(x) by upward recurrence for n <= floor(x) and from the downward ratio
+psi_n / psi_{n-1} for n > floor(x) (see below), chi_n(x) by upward recurrence (stable: chi
+grows), and
 
     a_n = [(D_n/m + n/x) psi_n - psi_{n-1}] / [(D_n/m + n/x) xi_n - xi_{n-1}]
     b_n = [(m D_n + n/x) psi_n - psi_{n-1}] / [(m D_n + n/x) xi_n - xi_{n-1}],  xi = psi - i chi,
@@ -81,6 +82,7 @@ def mie_efficiencies(
     m, x = m.reshape(-1), x.reshape(-1)
     y = m * x
     stop = jnp.floor(x + 4.0 * jnp.cbrt(x) + 2.0) + EXTRA_TERMS
+    upward = jnp.floor(x)  # psi by upward recurrence for n <= floor(x)
 
     # D_n(y) downward: carry from n_start to n_terms + 1, then keep D_n for n = n_terms..1.
     def down(d, n):
@@ -96,10 +98,14 @@ def mie_efficiencies(
     _, d_rev = jax.lax.scan(down_keep, d_top, jnp.arange(n_terms, 0, -1, dtype=jnp.float64))
     d_n = jnp.concatenate([d_rev[::-1][1:], d_top[None, :]], axis=0)  # D_1 .. D_{n_terms}
 
-    # psi_n(x) = R_n psi_{n-1}, with R_n = psi_n / psi_{n-1} by downward recurrence
-    # R_n = 1 / ((2n + 1)/x - R_{n+1}) (stable), from the same start. The upward three-term
-    # recurrence for psi cancels catastrophically for small x (relative error ~ 1/x^(2n)):
-    # g at x = 1e-3 was off by 3.8e-4 (2026-10-04).
+    # psi_n(x) for n > floor(x): R_n psi_{n-1}, with R_n = psi_n / psi_{n-1} by downward
+    # recurrence R_n = 1 / ((2n + 1)/x - R_{n+1}) (stable), from the same start. The upward
+    # three-term recurrence cancels there (relative error ~ 1/x^(2n) at small x: g at
+    # x = 1e-3 was off by 3.8e-4, 2026-10-04). For n <= floor(x) the upward recurrence is
+    # stable and is used instead: psi_{n-1} has zeros at x > n - 1 (x = k pi for n = 1), where
+    # R_n diverges and R_n psi_{n-1} loses all precision (Q_sca at x = 2 pi exactly was 2.129
+    # against 1.435 at x = 2 pi -+ 1e-3 for m = 1.666 + 0.0311i, 2026-10-05). psi_m has no
+    # zero at x for m >= floor(x): its first zero is at m + 1.86 m^{1/3} + ... > x.
     def ratio(r, n):
         return 1.0 / ((2.0 * n + 1.0) / x - r), None
 
@@ -116,7 +122,7 @@ def mie_efficiencies(
         psi0, psi1, chi0, chi1, a_prev, b_prev, ext, sca, asy = carry
         n, d, r = inputs
         active = n <= stop
-        psi = r * psi1
+        psi = jnp.where(n <= upward, (2.0 * n - 1.0) / x * psi1 - psi0, r * psi1)
         chi = (2.0 * n - 1.0) / x * chi1 - chi0
         xi, xi1 = psi - 1j * chi, psi1 - 1j * chi1
         da, db = d / m + n / x, m * d + n / x

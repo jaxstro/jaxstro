@@ -25,6 +25,7 @@ Data: `tests/validation/data/optics/` (built by `scripts/build_mie_reference.py`
 | Comparison | Q_ext | Q_sca | g (\|Δg\| / max(\|g\|, 1e-3)) |
 |---|---|---|---|
 | 50-digit mpmath, 33 cases (5 m; x = 1e-3, 0.1, 1, 10, 100, 189; x = 1000, 1552 for the weakly absorbing m) | ≤ 1.9e-13 | ≤ 5.8e-15 | ≤ 7.3e-13 |
+| 50-digit mpmath at zeros of ψ_n(x), n < x (x = π, 2π, 10π, first zeros of ψ_1 and ψ_5; 3 m), 15 cases | ≤ 4.4e-16 | ≤ 6.7e-16 | ≤ 6.7e-16 |
 | miepython 3.3.0, 1000 cases | ≤ 7.8e-10 (miepython's truncation; at x = 1552 the 50-digit value gives jaxstro 7.4e-15, miepython 7.8e-10) | ≤ 7.9e-12 | ≤ 7.5e-12 |
 
 The miepython Q_ext differences have a sawtooth in x that resets where miepython's integer
@@ -40,5 +41,6 @@ large x.
 | Issue | Measured effect | Change |
 |---|---|---|
 | D_n downward recurrence started at max(N_stop, \|m x\|) + 15 | Q_ext off by up to 9.7e-4 for m = 1.33 + 1e-8 i at large x | start + 2 √\|m x\| |
-| ψ_n by upward recurrence | cancels at small x: g off by 3.8e-4 at x = 1e-3 | ψ_n from the downward ratio ψ_n/ψ_{n−1} |
+| ψ_n by upward recurrence | cancels for n > x: g off by 3.8e-4 at x = 1e-3 | ψ_n from the downward ratio ψ_n/ψ_{n−1} for n > ⌊x⌋ (next row) |
 | series truncated at Wiscombe's x + 4 x^{1/3} + 2 | Q_ext depends linearly on the tail: off by up to 3.9e-10 (m = 1.5 + 0.01 i, x = 189) | 12 more terms; 4.9e-15 against the 50-digit reference |
+| ψ_n(x) from downward ratios for every n (the 2026-10-04 version of the previous row) | at zeros of ψ_{n−1} with n < x the ratio diverges and ψ_n loses all precision: Q_sca 48 % high at x = 2π; found 2026-10-05 by comparison with Draine's suvSil_81 table, whose grid puts a = λ (x = 2π) at every radius | upward recurrence for n ≤ ⌊x⌋ (stable there), downward ratio for n > ⌊x⌋ (no zeros); 6.7e-16 at the zeros |

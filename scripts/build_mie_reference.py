@@ -12,6 +12,9 @@ Writes tests/validation/data/optics/:
   (psi_n(z) = sqrt(pi z / 2) J_{n+1/2}(z), chi_n(x) = -sqrt(pi x / 2) Y_{n+1/2}(x)), no
   recurrences, summed to N = x + 4.05 x^{1/3} + 2 + 10 terms (adding 20 more changes Q_ext by
   < 1.4e-15). The independent reference for the 1e-10 tolerance (Anna, 2026-10-04).
+- mie_mpmath_zeros.json (--zeros; needs mpmath only): the same 50-digit evaluation at
+  zeros of psi_n(x) with n < x (x = pi, 2 pi, 10 pi; first zeros of psi_1 and psi_5),
+  where building psi_n from downward ratios alone loses all precision (2026-10-05).
 - mie_miepython_sweep.npz: miepython's efficiencies on 5 m x 200 log-spaced x in
   [1e-3, 1e4]; for |m| x < 0.1, where miepython switches to a small-sphere approximation,
   the series from miepython's own Mie coefficients. A cross-check over the whole domain;
@@ -26,7 +29,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import miepython
+import sys
+
 import mpmath as mp
 import numpy as np
 
@@ -80,7 +84,23 @@ def _miepython_series(m: complex, x: float) -> tuple[float, float, float]:
     return float(q_ext), float(q_sca), float(4 / (x**2 * q_sca) * asy)
 
 
+def zeros() -> None:
+    mp.mp.dps = 50
+    xs = [mp.pi, 2 * mp.pi, 10 * mp.pi,
+          mp.findroot(lambda z: _psi(1, z), 4.49), mp.findroot(lambda z: _psi(5, z), 9.36)]
+    ms = [(1.666, 0.03114), (1.5, 0.01), (1.7, 0.3)]
+    # Evaluated at the float x that jaxstro sees (within ~1e-16 of the zero).
+    rows = [[mr, mi, float(x), *mie_mpmath(complex(mr, mi), float(x))] for mr, mi in ms for x in xs]
+    (OUT / "mie_mpmath_zeros.json").write_text(json.dumps({
+        "source": "scripts/build_mie_reference.py --zeros (Bohren & Huffman eq. 4.53, mpmath, 50 digits)",
+        "mpmath": mp.__version__, "columns": ["n", "k", "x", "q_ext", "q_sca", "g"], "rows": rows,
+    }, indent=1))
+    print(f"wrote {OUT / 'mie_mpmath_zeros.json'}: {len(rows)} cases")
+
+
 def main() -> None:
+    import miepython
+
     OUT.mkdir(parents=True, exist_ok=True)
     sample_x = [1e-3, 0.1, 1.0, 10.0, 100.0, 188.96523396912076]
     cases = [(mr, mi, x) for mr, mi in M_SET for x in sample_x]
@@ -102,4 +122,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    zeros() if "--zeros" in sys.argv else main()
