@@ -14,6 +14,7 @@ PUBLIC_MODULES: tuple[str, ...] = (
     "geometry",
     "jaxconfig",
     "numerics",
+    "optics",
     "params",
     "provenance",
     "quad",

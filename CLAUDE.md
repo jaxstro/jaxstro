@@ -58,6 +58,8 @@ Before substantial changes, inspect:
   resampling, and prepared interpolation stencils; no photometric interpretation.
 - `jaxstro.atmospheres` — catalog and artifact preparation plus evidence-gated
   atmosphere-spectrum evaluation.
+- `jaxstro.optics` — Mie scattering by homogeneous spheres (Q_ext, Q_sca, Q_abs and
+  the asymmetry parameter g), differentiable; no dust-model selection or transport.
 - `jaxstro.params` — selective Equinox PyTree/vector parameter bridge; not an
   inference framework.
 - `jaxstro.provenance` — deterministic runtime artifact manifests.

@@ -33,6 +33,7 @@ def collect_contracts(*, source_revision: str = "unknown") -> ContractInventory:
         for name in (
             "atmospheres",
             "numerics",
+            "optics",
             "params",
             "quantity",
             "quad",

@@ -26,9 +26,11 @@ and the scattering-weighted g, the inputs of radax's spherical dust plug-in.
 
 ## Algorithm
 
-- Bohren & Huffman BHMIE: logarithmic derivative D_n(m x) by downward recurrence from
-  n = max(N_stop, |m x|) + 15 (stable for large |m| x), Riccati–Bessel ψ_n, ξ_n by upward
-  recurrence; a_n, b_n from D_n, ψ_n, ξ_n.
+- Bohren & Huffman BHMIE with two changes found against miepython (2026-10-04):
+  D_n(m x) by downward recurrence from n = max(N_stop, |m x|) + 15 + 2 √|m x| (the BHMIE
+  start leaves weakly absorbing large spheres unconverged: Q_ext off by up to 9.7e-4 at
+  m = 1.33 + 1e-8 i), and ψ_n(x) from the downward ratio ψ_n/ψ_{n−1} (the upward recurrence
+  cancels at small x: g off by 3.8e-4 at x = 1e-3); χ_n by upward recurrence (stable).
 - Terms: N_stop(x) = x + 4 x^{1/3} + 2 (Wiscombe 1980). Under jit the series has a static
   length N_max = N_stop(x_max) for the largest size parameter of the grid; terms with
   n > N_stop(x) are masked to zero, so small grains cost the same as large ones in a batch
@@ -67,7 +69,8 @@ reference; AD against finite differences in n, k, a.
 | Topic | Decision |
 |---|---|
 | Reference | miepython (Prahl, MIT) as a black-box comparison over the whole domain, run in validation only (not a jaxstro dependency), plus Wiscombe (1979) published test values transcribed into a fixture with their source page |
-| Tolerance | max relative error in Q_ext, Q_sca, g ≤ 1e-10 over x ∈ [1e-3, 1e4] and the m set; report where the error is largest |
+| Tolerance | max relative error in Q_ext and Q_sca ≤ 1e-10 over x ∈ [1e-3, 1e4] and the m set; for g, \|Δg\| ≤ 1e-10 max(\|g\|, 1e-3) (g → 0 as x → 0, where a relative bound fails at round-off); report where the error is largest |
+| Third reference | Q_ext of jaxstro and miepython differ by up to 2.7e-10 (m = 1.5 + 0.01 i, x = 189) with both converged; a 50-digit evaluation of eq. 4.53 of Bohren & Huffman with mpmath (Bessel functions, no recurrences) on a sample of cases adjudicates (Anna, 2026-10-04) |
 | Location | `jaxstro.optics.mie` (single sphere) and `jaxstro.optics.dust_mixture` (integration over a size distribution: κ_abs, κ_sca per gram, scattering-weighted g); radax only bins the result |
 
 Open: spheroids (THEMIS 2, Astrodust) are outside Mie; whether a volume-equivalent sphere

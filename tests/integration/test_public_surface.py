@@ -23,6 +23,7 @@ def test_root_exports_the_canonical_public_modules() -> None:
         "geometry",
         "jaxconfig",
         "numerics",
+        "optics",
         "params",
         "provenance",
         "quad",
