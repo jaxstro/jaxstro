@@ -32,6 +32,7 @@ def test_root_exports_the_canonical_public_modules() -> None:
         "spectra",
         "testing",
         "units",
+        "winds",
     }
     assert set(PUBLIC_MODULES) == expected
     assert set(jaxstro.__all__) == {"DEFAULT_UNITS", *expected}

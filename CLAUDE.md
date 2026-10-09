@@ -60,6 +60,8 @@ Before substantial changes, inspect:
   atmosphere-spectrum evaluation.
 - `jaxstro.optics` — Mie scattering by homogeneous spheres (Q_ext, Q_sca, Q_abs and
   the asymmetry parameter g), differentiable; no dust-model selection or transport.
+- `jaxstro.winds` — Reimers (1975) and Schroeder & Cuntz (2005) mass-loss laws in solar
+  units (Msun/yr); scheme selection and gating stay in the consumers.
 - `jaxstro.params` — selective Equinox PyTree/vector parameter bridge; not an
   inference framework.
 - `jaxstro.provenance` — deterministic runtime artifact manifests.

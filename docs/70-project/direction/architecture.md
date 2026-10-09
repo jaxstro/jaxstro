@@ -18,7 +18,7 @@ this section covers package structure and responsibility.
 `astrometry`, `atmospheres`, `composition`, `constants`, `contracts`, `coords`,
 `evidence`,
 `geometry`, `jaxconfig`, `numerics`, `optics`, `params`, `provenance`, `quad`, `quantity`,
-`spatial`, `spectra`, `testing`, and `units`. It does not own simulations, survey
+`spatial`, `spectra`, `testing`, `units`, and `winds`. It does not own simulations, survey
 rendering, stellar evolution, or inference workflows. Domain packages depend on
 `jaxstro`; `jaxstro` never imports package-specific code back from them. That
 one-way rule keeps foundation changes auditable before they reach Gravax,

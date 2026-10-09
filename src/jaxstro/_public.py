@@ -23,4 +23,5 @@ PUBLIC_MODULES: tuple[str, ...] = (
     "spectra",
     "testing",
     "units",
+    "winds",
 )
